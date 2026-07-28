@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bezpečné dveře | PREMIUM 60 – Bezpečnostní dveře do bytů a domů</title>
+  <meta name="description" content="Bezpečnostní dveře PREMIUM 60 RC3 EI60 – nejlépe zpracované bytové dveře. Největší výběr v regionu. Rodinná firma s 30letou tradicí. Most, Teplice, Chomutov.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── SLIDER (dark overlay over photos – intentional) ── */
+    .slider { position:relative; width:100%; height:100vh; min-height:500px; overflow:hidden; background:var(--navy); }
+    .slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s ease; display:flex; align-items:center; }
+    .slide.active { opacity:1; z-index:1; }
+    .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+    .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,20,50,0.86) 0%, rgba(10,20,50,0.5) 55%, rgba(10,20,50,0.15) 100%); }
+    .slide-content { position:relative; z-index:2; max-width:600px; padding:0 0 0 8vw; }
+    .slide-content .badge {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      background:rgba(232,101,10,0.2); border:1px solid rgba(232,101,10,0.45);
+      color:#ffb07a; font-size:0.76rem; font-weight:700;
+      letter-spacing:0.1em; text-transform:uppercase;
+      padding:0.38rem 1rem; border-radius:100px; margin-bottom:1.2rem;
+    }
+    .slide-content h1 { color:#fff; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.15; margin-bottom:1rem; }
+    .slide-content h1 span { color:#ffb07a; }
+    .slide-content p { color:rgba(255,255,255,0.72); font-size:1.05rem; margin-bottom:1.8rem; max-width:480px; }
+    .slide-actions { display:flex; gap:1rem; flex-wrap:wrap; }
+    .slider-dots { position:absolute; bottom:2rem; left:50%; transform:translateX(-50%); display:flex; gap:0.6rem; z-index:10; }
+    .dot { width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,0.35); cursor:pointer; transition:background 0.3s,transform 0.3s; border:none; }
+    .dot.active { background:var(--orange); transform:scale(1.3); }
+    .slider-arrow {
+      position:absolute; top:50%; transform:translateY(-50%); z-index:10;
+      background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25);
+      color:#fff; width:46px; height:46px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:1.2rem; transition:background 0.25s; backdrop-filter:blur(4px);
+    }
+    .slider-arrow:hover { background:var(--orange); border-color:var(--orange); }
+    .slider-arrow.prev { left:1.5rem; }
+    .slider-arrow.next { right:1.5rem; }
+
+    /* ── PREMIUM HERO – světlý ── */
+    .premium-hero {
+      background: linear-gradient(150deg, #f0f4fa 0%, #e8f0fb 50%, #f7f9fc 100%);
+      padding: 5rem 0;
+      position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .premium-hero::before {
+      content: '';
+      position: absolute; top: -20%; right: -5%;
+      width: 550px; height: 550px;
+      background: radial-gradient(circle, rgba(232,101,10,0.07) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .premium-hero-grid { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center; position:relative; z-index:1; }
+    .premium-star-tag {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      background:var(--orange); color:#fff;
+      font-size:0.72rem; font-weight:800;
+      letter-spacing:0.12em; text-transform:uppercase;
+      padding:0.45rem 1.1rem; border-radius:100px; margin-bottom:1rem;
+    }
+    .premium-hero h2 { color:var(--navy); font-size:clamp(1.8rem,3vw,2.6rem); margin-bottom:0.75rem; }
+    .premium-hero h2 span { color:var(--orange); }
+    .premium-hero > .container > .premium-hero-grid > div > p { color:var(--text-muted); font-size:1rem; margin-bottom:1.5rem; }
+    .premium-specs-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; margin-bottom:2rem; }
+    .pspec { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.85rem 1rem; box-shadow:var(--shadow-sm); }
+    .pspec-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange); display:block; margin-bottom:0.15rem; }
+    .pspec-value { font-size:0.93rem; font-weight:700; color:var(--navy); }
+    .premium-img-wrap { position:relative; }
+    .premium-img-wrap img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); }
+    .cert-badge {
+      position:absolute; top:1.5rem; right:-1rem;
+      background:var(--navy); border-radius:var(--radius);
+      padding:0.9rem 1.1rem; box-shadow:var(--shadow-lg); text-align:center;
+    }
+    .cert-badge .num { font-size:1.5rem; font-weight:800; color:#fff; display:block; }
+    .cert-badge .lbl { font-size:0.68rem; color:rgba(255,255,255,0.6); line-height:1.3; }
+    .discount-badge {
+      position:absolute; bottom:1.5rem; left:-1rem;
+      background:#e63535; color:#fff;
+      font-weight:800; font-size:0.83rem;
+      padding:0.55rem 1rem; border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+
+    /* ── EXTREME SECTION ── */
+    .extreme-section { background:var(--white); padding:4rem 0; border-bottom:1px solid var(--gray-200); }
+    .extreme-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; }
+    .extreme-tag {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      background:var(--navy-light); border:1px solid #c7d9f5;
+      color:var(--navy-mid); font-size:0.72rem; font-weight:800;
+      letter-spacing:0.12em; text-transform:uppercase;
+      padding:0.45rem 1.1rem; border-radius:100px; margin-bottom:1rem;
+    }
+    .extreme-section h2 { color:var(--navy); margin-bottom:0.75rem; }
+    .extreme-section h2 span { color:var(--navy-mid); }
+    .price-compare {
+      display:flex; align-items:flex-start; gap:1.5rem;
+      background:var(--bg); border-radius:var(--radius-lg);
+      padding:1.4rem 1.5rem; border:1px solid var(--gray-200);
+      box-shadow:var(--shadow-sm); margin:1.4rem 0;
+    }
+    .price-col { flex:1; }
+    .price-col .plabel { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray-400); margin-bottom:0.25rem; }
+    .price-col .pname { font-size:0.9rem; font-weight:600; color:var(--navy); }
+    .price-col .pdesc { font-size:0.76rem; color:var(--gray-400); }
+    .price-divider { width:1px; background:var(--gray-200); align-self:stretch; }
+    .extreme-img { border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); width:100%; }
+
+    /* ── SECONDARY PRODUCTS ── */
+    .secondary-products { padding:4rem 0; background:var(--bg); }
+    .secondary-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+    .secondary-card {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-lg); padding:1.5rem;
+      display:flex; gap:1.25rem; align-items:flex-start;
+      transition:var(--transition); box-shadow:var(--shadow-sm);
+    }
+    .secondary-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:var(--orange); }
+    .secondary-card img { width:95px; height:115px; object-fit:contain; flex-shrink:0; background:var(--bg); border-radius:var(--radius); padding:0.4rem; }
+    .sc-body h4 { color:var(--navy); margin-bottom:0.35rem; }
+    .sc-body p  { font-size:0.84rem; margin-bottom:0.85rem; }
+    .sc-tags { display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.85rem; }
+
+    /* ── SERVIS – světlý doplněk ── */
+    .servis-addon { background:var(--bg); padding:3.5rem 0; border-top:1px solid var(--gray-200); }
+    .servis-addon-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:2rem; }
+    .addon-card {
+      background:var(--white); border:1px solid var(--gray-200);
+      border-radius:var(--radius-lg); padding:1.5rem;
+      text-align:center; transition:var(--transition);
+      box-shadow:var(--shadow-sm); text-decoration:none;
+    }
+    .addon-card:hover { box-shadow:var(--shadow); border-color:var(--orange); transform:translateY(-4px); }
+    .addon-icon  { font-size:2rem; margin-bottom:0.6rem; }
+    .addon-title { font-size:0.9rem; font-weight:700; color:var(--navy); margin-bottom:0.25rem; }
+    .addon-desc  { font-size:0.78rem; color:var(--text-muted); line-height:1.45; }
+
+    @media (max-width:900px) {
+      .premium-hero-grid { grid-template-columns:1fr; }
+      .premium-img-wrap  { display:none; }
+      .extreme-grid      { grid-template-columns:1fr; }
+      .extreme-img       { display:none; }
+      .secondary-grid    { grid-template-columns:1fr; }
+      .servis-addon-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:600px) {
+      .servis-addon-grid { grid-template-columns:1fr 1fr; }
+      .secondary-card { flex-direction:column; }
+      .secondary-card img { width:100%; height:130px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link active">
+            Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60 – nosný produkt</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54 – levnější alternativa</a>
+            <a href="dvere-do-bytu.html#ostatni">MAGNUM 56 &amp; SECURIDO 65</a>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a>
+        </li>
+        <li class="nav-item">
+          <a href="https://www.bezpecne-dvere.cz/interierove-dvere" class="nav-link">Interiérové dveře</a>
+        </li>
+        <li class="nav-item">
+          <a href="#servis" class="nav-link">Servis</a>
+        </li>
+        <li class="nav-item">
+          <a href="#kontakt" class="nav-link">Kontakt</a>
+        </li>
+      </ul>
+
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="https://www.bezpecne-dvere.cz/poptavka" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     SLIDER
+════════════════════════════════════════ -->
+<div class="slider" id="slider" style="margin-top:72px;">
+
+  <!-- Slide 1 – PREMIUM 60 hvězda -->
+  <div class="slide active">
+    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png')"></div>
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <div class="badge">⭐ Nosný produkt</div>
+      <h1>Dveře <span>PREMIUM 60</span><br>RC3 · EI60</h1>
+      <p>Nejlépe zpracované bytové dveře. Certifikováno Národním bezpečnostním úřadem a firmou Trezor v ČR.</p>
+      <div class="slide-actions">
+        <a href="dvere-do-bytu.html#premium60" class="btn btn-primary">Zjistit více</a>
+        <a href="https://www.bezpecne-dvere.cz/poptavka" class="btn btn-outline">Poptávka</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 2 – bezpečnostní dveře obecně -->
+  <div class="slide">
+    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-bezp-dvere-1.png')"></div>
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <div class="badge">Největší výběr v regionu</div>
+      <h1>Bezpečnostní<br>dveře <span>do bytu</span></h1>
+      <p>Mnoho variant a provedení skladem. Montáž do 10 dnů, odvoz starých dveří v ceně.</p>
+      <div class="slide-actions">
+        <a href="dvere-do-bytu.html" class="btn btn-primary">Prohlédnout dveře</a>
+        <a href="tel:+420725559235" class="btn btn-outline">📞 Zavolat</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 3 – Securido -->
+  <div class="slide">
+    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/1920x730px-securido-01-2025_cz4-min.jpeg')"></div>
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <div class="badge">Slovenský výrobce</div>
+      <h1>Dveře <span>Securido</span><br>65 mm · RC3</h1>
+      <p>Bezpečnostní zárubeň v dekoru dveří. Certifikováno NBÚ SK.</p>
+      <div class="slide-actions">
+        <a href="dvere-do-bytu.html#ostatni" class="btn btn-primary">Detail</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4 – Servis oken -->
+  <div class="slide">
+    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/servis-oken-slide3.png')"></div>
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <div class="badge">Doplňková služba</div>
+      <h1>Servisujeme<br><span>okna</span></h1>
+      <p>Seřizování, opravy a kontrola plastových oken pro Vaší tepelnou pohodu.</p>
+      <div class="slide-actions">
+        <a href="servis.html#servis-oken" class="btn btn-primary">Servis oken</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5 – dveře do domu -->
+  <div class="slide">
+    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/s2.jpg')"></div>
+    <div class="slide-overlay"></div>
+    <div class="slide-content">
+      <div class="badge">Vchodové dveře do domu</div>
+      <h1>Bezpečnost<br>a <span>design domu</span></h1>
+      <p>Hliníkové dveře OPTIMAL 60 a 75. Bezpečnostní třída RC3, tepelná izolace 0,8 W/m²K.</p>
+      <div class="slide-actions">
+        <a href="dvere-do-domu.html" class="btn btn-primary">Dveře do domu</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigační šipky -->
+  <button class="slider-arrow prev" id="sliderPrev">&#8249;</button>
+  <button class="slider-arrow next" id="sliderNext">&#8250;</button>
+
+  <!-- Tečky -->
+  <div class="slider-dots" id="sliderDots">
+    <button class="dot active" data-idx="0"></button>
+    <button class="dot" data-idx="1"></button>
+    <button class="dot" data-idx="2"></button>
+    <button class="dot" data-idx="3"></button>
+    <button class="dot" data-idx="4"></button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PREMIUM 60 — HVĚZDNÝ PRODUKT
+════════════════════════════════════════ -->
+<section class="premium-hero">
+  <div class="container">
+    <div class="premium-hero-grid">
+
+      <div>
+        <div class="premium-star-tag">⭐ Nosný produkt</div>
+        <h2>Dveře <span>PREMIUM 60</span><br>RC3 · EI60</h2>
+        <p style="color:rgba(255,255,255,0.68);font-size:1rem;margin-bottom:1.5rem;">
+          Nejlépe zpracované bytové bezpečnostní dveře z těch nejlepších materiálů. Certifikováno Národním bezpečnostním úřadem a firmou Trezor v České republice.
+        </p>
+        <div class="premium-specs-grid">
+          <div class="pspec">
+            <span class="pspec-label">Tloušťka křídla</span>
+            <span class="pspec-value">60 mm</span>
+          </div>
+          <div class="pspec">
+            <span class="pspec-label">Bezpečnostní třída</span>
+            <span class="pspec-value">RC3</span>
+          </div>
+          <div class="pspec">
+            <span class="pspec-label">Protipožární</span>
+            <span class="pspec-value">EI60</span>
+          </div>
+          <div class="pspec">
+            <span class="pspec-label">Odhlučnění</span>
+            <span class="pspec-value">42 dB</span>
+          </div>
+          <div class="pspec">
+            <span class="pspec-label">Tepelná propustnost</span>
+            <span class="pspec-value">1,2 W/m²K</span>
+          </div>
+          <div class="pspec">
+            <span class="pspec-label">Certifikace</span>
+            <span class="pspec-value">NBÚ ČR + Trezor</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <a href="dvere-do-bytu.html#premium60" class="btn btn-primary">Detail PREMIUM 60</a>
+          <a href="https://www.bezpecne-dvere.cz/poptavka" class="btn btn-outline">Nezávazná poptávka</a>
+        </div>
+      </div>
+
+      <div class="premium-img-wrap">
+        <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/premium-60.png" alt="PREMIUM 60">
+        <div class="cert-badge">
+          <span class="num">RC3</span>
+          <span class="lbl">NBÚ<br>certifikát</span>
+        </div>
+        <div class="discount-badge">🏷️ AKCE SLEVA</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     EXTREME 54 — LEVNĚJŠÍ ALTERNATIVA
+════════════════════════════════════════ -->
+<section class="extreme-section">
+  <div class="container">
+    <div class="extreme-grid">
+
+      <div>
+        <img src="https://www.bezpecne-dvere.cz/userFiles/img/img12.jpeg" alt="EXTREME 54" class="extreme-img">
+      </div>
+
+      <div>
+        <div class="extreme-tag">💡 Chytřejší volba</div>
+        <h2>Dveře <span>EXTREME 54</span><br>RC3 · EI30</h2>
+        <p style="font-size:0.98rem;margin-bottom:0.5rem;">
+          Nejlepší poměr ceny a výkonu — dveře od největšího výrobce ve střední a východní Evropě s německým kováním Winkhaus.
+        </p>
+
+        <div class="price-compare">
+          <div class="price-col">
+            <div class="plabel">Zahrnuje</div>
+            <div class="pname">RC3 + EI30 + 40 dB</div>
+            <div class="pdesc">Winkhaus kování · Aquastop</div>
+          </div>
+          <div class="price-divider"></div>
+          <div class="price-col">
+            <div class="plabel">Akce</div>
+            <div class="pname" style="color:#e63535;font-size:1rem;">Sleva až 4 000 Kč</div>
+            <div class="pdesc">Skladem, montáž do 10 dnů</div>
+          </div>
+        </div>
+
+        <ul class="specs-list" style="margin-bottom:1.5rem;">
+          <li>Tloušťka dveřního křídla <strong>54 mm</strong></li>
+          <li>Odhlučnění <strong>40 dB</strong></li>
+          <li>Německé kování <strong>Winkhaus</strong></li>
+          <li>Systém <strong>Aquastop</strong> — ochrana spodní hrany</li>
+          <li>Protipožární provedení <strong>EI30</strong></li>
+        </ul>
+
+        <a href="dvere-do-bytu.html#extreme54" class="btn btn-navy">Detail EXTREME 54 →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     MAGNUM + SECURIDO — DOPLŇKOVÉ
+════════════════════════════════════════ -->
+<section class="secondary-products">
+  <div class="container">
+    <span class="section-label">Další modely</span>
+    <h2 class="section-title">Kompletní nabídka bytových dveří</h2>
+    <p class="section-subtitle">Hledáte specifické řešení? Nabízíme i tyto modely.</p>
+
+    <div class="secondary-grid">
+
+      <div class="secondary-card">
+        <img src="https://www.bezpecne-dvere.cz/userFiles/img/snimek-obrazovky_2-12-2025_154142_gerda-pl.jpg" alt="MAGNUM 56">
+        <div class="sc-body">
+          <div class="product-class">Bytové dveře</div>
+          <h4>MAGNUM 56 · RC3</h4>
+          <p>14 zamykacích bodů, přídavný zámek a hlavní rozvorový zámek. Polská certifikace s překladem.</p>
+          <div class="sc-tags">
+            <span class="spec-tag">RC3</span>
+            <span class="spec-tag">EI30</span>
+            <span class="spec-tag">56 mm</span>
+            <span class="spec-tag">14 bodů uzavření</span>
+          </div>
+          <a href="dvere-do-bytu.html#ostatni" class="btn btn-navy" style="font-size:0.85rem;padding:0.55rem 1.1rem;">Zjistit více →</a>
+        </div>
+      </div>
+
+      <div class="secondary-card">
+        <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/securido65.png" alt="SECURIDO 65">
+        <div class="sc-body">
+          <div class="product-class">Bytové dveře</div>
+          <h4>SECURIDO 65 · RC3</h4>
+          <p>Slovenský výrobce, bezpečnostní zárubeň v dekoru dveří. Certifikováno NBÚ SK.</p>
+          <div class="sc-tags">
+            <span class="spec-tag">RC3</span>
+            <span class="spec-tag">EI30</span>
+            <span class="spec-tag">65 mm</span>
+            <span class="spec-tag">NBÚ SK</span>
+          </div>
+          <a href="dvere-do-bytu.html#ostatni" class="btn btn-navy" style="font-size:0.85rem;padding:0.55rem 1.1rem;">Zjistit více →</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center;margin-top:2.5rem;">
+      <a href="dvere-do-bytu.html" class="btn btn-primary">Porovnání všech modelů →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     DVEŘE DO DOMU + INTERIÉR
+════════════════════════════════════════ -->
+<section style="background:var(--gray-100);padding:4rem 0;">
+  <div class="container">
+    <span class="section-label">Další produkty</span>
+    <h2 class="section-title">Komplexní řešení pro celý domov</h2>
+    <div class="cat-grid" style="grid-template-columns:repeat(2,1fr);">
+      <a href="dvere-do-domu.html" class="cat-card">
+        <div class="cat-card-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/img/snimek-obrazovky_2-12-2025_153351_gerda-pl.jpeg')"></div>
+        <div class="cat-card-overlay"></div>
+        <div class="cat-card-body">
+          <h3>Dveře do domu</h3>
+          <p>Hliníkové OPTIMAL 60/75 a ocelové ERKADO — bezpečnost i design Vašeho domu. RC3, skladem.</p>
+          <span class="btn btn-primary" style="font-size:0.85rem;padding:0.6rem 1.2rem;">Prohlédnout →</span>
+        </div>
+      </a>
+      <a href="https://www.bezpecne-dvere.cz/interierove-dvere" class="cat-card">
+        <div class="cat-card-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/img/snimek-obrazovky_2-12-2025_153114_dvere-erkado-cz.jpeg')"></div>
+        <div class="cat-card-overlay"></div>
+        <div class="cat-card-body">
+          <h3>Interiérové dveře</h3>
+          <p>Porta, Erkado, Invado — sety se zárubní v ceně, montáž i půjčení nářadí. Zaměření zdarma.</p>
+          <span class="btn btn-primary" style="font-size:0.85rem;padding:0.6rem 1.2rem;">Prohlédnout →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     SERVIS — DOPLNĚK
+════════════════════════════════════════ -->
+<section class="servis-addon" id="servis">
+  <div class="container">
+    <span class="section-label" style="color:var(--gold-light);">Péče po koupi</span>
+    <h2 class="section-title" style="color:var(--white);">Servis a doplňkové služby</h2>
+    <p class="section-subtitle">Jsme tu i po montáži — od seřízení oken po nouzové otevírání</p>
+
+    <div class="servis-addon-grid">
+      <a href="servis.html#servis-oken" class="addon-card">
+        <div class="addon-icon">🪟</div>
+        <div class="addon-title">Servis oken</div>
+        <div class="addon-desc">Seřizování, opravy a kontrola plastových oken</div>
+      </a>
+      <a href="servis.html#nouzove" class="addon-card">
+        <div class="addon-icon">🔑</div>
+        <div class="addon-title">Nouzové otevírání</div>
+        <div class="addon-desc">Zabouchnuté klíče? Přijedeme co nejdříve</div>
+      </a>
+      <a href="servis.html#reklamace" class="addon-card">
+        <div class="addon-icon">🔧</div>
+        <div class="addon-title">Servis a reklamace</div>
+        <div class="addon-desc">Záruční i pozáruční opravy, kontrola EI uzávěrů</div>
+      </a>
+      <a href="servis.html#klice" class="addon-card">
+        <div class="addon-icon">🗝️</div>
+        <div class="addon-title">Objednání klíčů</div>
+        <div class="addon-desc">Máte bezpečnostní kartu? Objednáme náhradní klíče</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- PROČ MY -->
+<section>
+  <div class="container">
+    <div class="why-grid">
+      <div>
+        <span class="section-label">Proč si vybrat nás</span>
+        <h2>Rodinná firma,<br>na kterou se spolehněte</h2>
+        <div class="why-list">
+          <div class="why-item">
+            <div class="why-item-icon">🏆</div>
+            <div><h4>30 let zkušeností</h4><p>Rodinná firma s dlouholetou tradicí a expertízou v oboru.</p></div>
+          </div>
+          <div class="why-item">
+            <div class="why-item-icon">✅</div>
+            <div><h4>Prověřená kvalita</h4><p>Pouze výrobky od pečlivě vybraných dodavatelů s přísným výběrem.</p></div>
+          </div>
+          <div class="why-item">
+            <div class="why-item-icon">📜</div>
+            <div><h4>České a slovenské certifikáty</h4><p>Certifikace NBÚ ČR a SK — garance souladu s normami.</p></div>
+          </div>
+          <div class="why-item">
+            <div class="why-item-icon">💰</div>
+            <div><h4>Ceny bez příplatků</h4><p>Veškeré ceny jsou koncové — odvoz dveří a hrubý úklid v ceně.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="why-image">
+        <img src="https://www.bezpecne-dvere.cz/userFiles/img/img12.jpeg" alt="Montáž bezpečnostních dveří">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCE -->
+<section class="reviews-section">
+  <div class="container">
+    <span class="section-label" style="display:block;text-align:center;">Co říkají zákazníci</span>
+    <h2 class="section-title">Více než 30 000 spokojených zákazníků</h2>
+    <p class="section-subtitle">Přečtěte si co říkají naši zákazníci</p>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">„Mockrát děkuji za parádní nedobytné dveře. Naprostá ochota, vstřícnost a turbo rychlé dodání do pár dnů. Odvedli precizní kvalitní čistou práci."</p>
+        <div class="review-author"><div class="review-avatar">DG</div><div><div class="review-name">Daniel Grund</div><div class="review-city">Most</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">„Neskutečně sehraná rodinná firma, kde vše funguje, tak jako dveře od nich. Děkuji."</p>
+        <div class="review-author"><div class="review-avatar">P</div><div><div class="review-name">Podroužek</div><div class="review-city">Chomutov</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">„Velká spokojenost, rychlé jednání. Žádná prašnost, vše po sobě uklidili, fakt profíci! Vřele doporučuji."</p>
+        <div class="review-author"><div class="review-avatar">R</div><div><div class="review-name">Recmanová Libuše</div><div class="review-city">Most</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">„Maximální spokojenost — práce rychlá a kvalitní. S dveřmi žádný problém."</p>
+        <div class="review-author"><div class="review-avatar">JP</div><div><div class="review-name">Jan Pejchar</div><div class="review-city">—</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOKALITY -->
+<section class="locations-section">
+  <div class="container" style="text-align:center;">
+    <span class="section-label">Kde montujeme</span>
+    <h2 class="section-title">Váš lokální partner</h2>
+    <p class="section-subtitle">Montáž zajišťujeme v těchto městech a okolí</p>
+    <div class="locations-grid">
+      <span class="location-tag">Most</span><span class="location-tag">Litvínov</span>
+      <span class="location-tag">Teplice</span><span class="location-tag">Louny</span>
+      <span class="location-tag">Žatec</span><span class="location-tag">Chomutov</span>
+      <span class="location-tag">Klášterec nad Ohří</span><span class="location-tag">Litoměřice</span>
+      <span class="location-tag">Česká Lípa</span><span class="location-tag">Ústí nad Labem</span>
+      <span class="location-tag">Praha</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <span class="section-label">Nezávazná poptávka</span>
+    <h2>Chcete nové bezpečnostní dveře?</h2>
+    <p>Pošlete poptávku nebo zavolejte — přijedeme zaměřit zdarma a připravíme nabídku na míru.</p>
+    <div class="cta-actions">
+      <a href="https://www.bezpecne-dvere.cz/poptavka" class="btn btn-primary">Poslat poptávku</a>
+      <a href="tel:+420725559235" class="btn btn-outline">📞 +420 725 559 235</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT BAR -->
+<div class="contact-bar" id="kontakt">
+  <div class="container">
+    <div class="contact-items">
+      <div class="contact-item">
+        <span class="contact-item-icon">📍</span>
+        <div><strong>Obchodní 36, 434 01 Most</strong><div style="font-size:0.8rem;">Vzorkovna a prodej</div></div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-item-icon">📞</span>
+        <a href="tel:+420725559235" style="color:var(--gold);font-weight:700;">+420 725 559 235</a>
+      </div>
+      <div class="contact-item">
+        <span class="contact-item-icon">✉️</span>
+        <a href="mailto:chci@bezpecne-dvere.cz" style="color:var(--gold);font-weight:700;">chci@bezpecne-dvere.cz</a>
+      </div>
+      <div class="contact-item">
+        <span class="contact-item-icon">💬</span>
+        <a href="https://wa.me/420725559235" style="color:var(--gold);font-weight:700;">WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu Severozápadních Čech.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link">f</a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link">▶</a>
+          <a href="https://wa.me/420725559235" class="social-link">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Bytové dveře</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60</a>
+          <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+          <a href="dvere-do-bytu.html#ostatni">MAGNUM 56</a>
+          <a href="dvere-do-bytu.html#ostatni">SECURIDO 65</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Další produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="https://www.bezpecne-dvere.cz/interierove-dvere">Interiérové dveře</a>
+          <a href="https://www.bezpecne-dvere.cz/druzstva-a-svj">Družstva a SVJ</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis &amp; kontakt</h5>
+        <div class="footer-links">
+          <a href="servis.html">Servis oken</a>
+          <a href="servis.html#nouzove">Nouzové otevírání</a>
+          <a href="https://www.bezpecne-dvere.cz/pobocky">Pobočky</a>
+          <a href="https://www.bezpecne-dvere.cz/poptavka">Poptávka</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+      <span>Všechna práva vyhrazena</span>
+    </div>
+  </div>
+</footer>
+
+<!-- COOKIE BAR -->
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies pro zajištění jeho správného fungování.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script>
+  // Navbar scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+
+  // Slider
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.dot');
+  let current  = 0;
+  let timer;
+
+  function goTo(idx) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (idx + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  function startAuto() {
+    clearInterval(timer);
+    timer = setInterval(() => goTo(current + 1), 5500);
+  }
+
+  document.getElementById('sliderNext').addEventListener('click', () => { goTo(current + 1); startAuto(); });
+  document.getElementById('sliderPrev').addEventListener('click', () => { goTo(current - 1); startAuto(); });
+  dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.idx); startAuto(); }));
+
+  startAuto();
+</script>
+</body>
+</html>

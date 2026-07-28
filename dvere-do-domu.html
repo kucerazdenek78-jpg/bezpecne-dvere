@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dveře do domu | Bezpečné dveře</title>
+  <meta name="description" content="Celohliníkové vchodové dveře OPTIMAL 60 a OPTIMAL 75, ocelové vstupní dveře ERKADO. RC3, tepelná izolace 0,8–0,99 W/m²K. Výprodej – sleva 5 000 Kč.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .gallery-grid a img {
+      border-radius: var(--radius);
+      height: 140px;
+      width: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .gallery-grid a:hover img {
+      transform: scale(1.03);
+      box-shadow: var(--shadow-lg);
+    }
+    .price-box {
+      background: var(--navy);
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .price-box h4 { color: var(--gold); margin-bottom: 0.75rem; }
+    .price-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.9rem;
+    }
+    .price-row:last-child { border-bottom: none; }
+    .price-row .price { color: var(--gold); font-weight: 700; font-size: 1rem; }
+    .sale-tag {
+      background: #e63535;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.3rem 0.8rem;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+    }
+    .form-section { background: var(--gray-100); }
+    .contact-form {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color var(--transition);
+      outline: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: var(--blue);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .form-consent { font-size: 0.8rem; color: var(--gray-400); margin-bottom: 1.25rem; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+            <a href="dvere-do-bytu.html#securido65">SECURIDO 65</a>
+            <a href="dvere-do-bytu.html#magnum56">MAGNUM 56</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link active">Dveře do domu</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="index.html#kontakt" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="#poptavka" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header" style="--ph-bg:url('https://www.bezpecne-dvere.cz/userFiles/img/bg-top.jpg');">
+  <div class="container">
+    <span class="section-label">Nabídka</span>
+    <h1>Dveře do domu</h1>
+    <p>Vchodové dveře pro Vaše bezpečí a teplo. Důraz na vysokou úroveň kvality a moderní vzhled. Skladem k expedici druhý den.</p>
+    <div class="breadcrumb">
+      <a href="index.html">Úvod</a>
+      <span>›</span>
+      <span>Dveře do domu</span>
+    </div>
+  </div>
+</div>
+
+<!-- OBSAH -->
+<section>
+  <div class="container">
+
+    <!-- OPTIMAL 60 -->
+    <div style="margin-bottom:4rem;">
+      <span class="section-label">Celohliníkové dveře</span>
+      <h2 style="margin-bottom:0.5rem;">OPTIMAL 60</h2>
+      <span class="sale-tag">VÝPRODEJ – SLEVA 5 000 Kč</span>
+
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:3rem;align-items:start;margin-top:1.5rem;">
+        <div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+            <a href="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0350.jpeg" target="_blank">
+              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0350.jpeg" alt="OPTIMAL 60" style="border-radius:var(--radius);width:100%;height:200px;object-fit:cover;">
+            </a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0351.png" target="_blank">
+              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0351.png" alt="OPTIMAL 60 detail" style="border-radius:var(--radius);width:100%;height:200px;object-fit:cover;">
+            </a>
+          </div>
+
+          <div class="gallery-grid">
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0000.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0000.jpg.tn.jpg" alt="Realizace 1"></a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0001.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0001.jpg.tn.jpg" alt="Realizace 2"></a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0002.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0002.jpg.tn.jpg" alt="Realizace 3"></a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0003.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0003.jpg.tn.jpg" alt="Realizace 4"></a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0004.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0004.jpg.tn.jpg" alt="Realizace 5"></a>
+            <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0005.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0005.jpg.tn.jpg" alt="Realizace 6"></a>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="margin-bottom:1.25rem;color:var(--navy);">Technické údaje</h3>
+          <ul class="specs-list">
+            <li>Bezpečnostní třída: <strong>RC3</strong></li>
+            <li>Tepelná izolace: <strong>0,99 W/m²K</strong></li>
+            <li>Druh konstrukce: <strong>hliníkové</strong></li>
+            <li>Tloušťka dveřního křídla: <strong>60 mm</strong></li>
+            <li>Šířka dveřního křídla (SKLADEM): <strong>80 a 90 cm</strong></li>
+            <li>Dekor (SKLADEM): <strong>antracit, bílá a ořech</strong></li>
+            <li>Zárubeň, dveřní madlo 1500 mm, bezp. kování, 2× bezp. vložka, okapová lišta <strong>v ceně</strong></li>
+          </ul>
+
+          <div class="price-box">
+            <h4>Ceník OPTIMAL 60</h4>
+            <div class="price-row">
+              <span>Bez montáže</span>
+              <span class="price">32 500 Kč <small style="font-weight:400;font-size:0.8rem;">vč. 21 % DPH</small></span>
+            </div>
+            <div class="price-row">
+              <span>Včetně montáže a zapravení</span>
+              <span class="price">39 890 Kč <small style="font-weight:400;font-size:0.8rem;">vč. 12 % DPH</small></span>
+            </div>
+            <p style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:0.75rem;">Platí do vyprodání zásob. Z aktuální ceny odečtěte slevu 5 000 Kč vč. DPH.</p>
+          </div>
+
+          <div style="margin-top:1.25rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/optimal60.pdf" class="btn btn-navy" target="_blank">📄 Stáhnout leták</a>
+            <a href="#poptavka" class="btn btn-primary">Poptávka →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gray-200);margin:3rem 0;">
+
+    <!-- OPTIMAL 75 -->
+    <div style="margin-bottom:4rem;">
+      <span class="section-label">Celohliníkové dveře</span>
+      <h2 style="margin-bottom:0.5rem;">OPTIMAL 75</h2>
+      <span class="sale-tag">VÝPRODEJ – SLEVA 5 000 Kč</span>
+
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:3rem;align-items:start;margin-top:1.5rem;">
+        <div>
+          <h3 style="margin-bottom:1.25rem;color:var(--navy);">Technické údaje</h3>
+          <ul class="specs-list">
+            <li>Bezpečnostní třída: <strong>RC3</strong></li>
+            <li>Tepelná izolace: <strong>0,8 W/m²K</strong></li>
+            <li>Druh konstrukce: <strong>hliníkové</strong></li>
+            <li>Tloušťka dveřního křídla: <strong>75 mm</strong></li>
+            <li>Šířka dveřního křídla (SKLADEM): <strong>90 a 100 cm</strong></li>
+            <li>Dekor (SKLADEM): <strong>antracit a bílá</strong></li>
+            <li>Zárubeň, dveřní madlo 1500 mm, bezp. kování, 2× bezp. vložka, okapová lišta <strong>v ceně</strong></li>
+          </ul>
+
+          <div class="price-box">
+            <h4>Ceník OPTIMAL 75</h4>
+            <div class="price-row">
+              <span>Bez montáže</span>
+              <span class="price">39 500 Kč <small style="font-weight:400;font-size:0.8rem;">vč. 21 % DPH</small></span>
+            </div>
+            <div class="price-row">
+              <span>Včetně montáže a zapravení</span>
+              <span class="price">46 500 Kč <small style="font-weight:400;font-size:0.8rem;">vč. 12 % DPH</small></span>
+            </div>
+            <p style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:0.75rem;">Platí do vyprodání zásob. Z aktuální ceny odečtěte slevu 5 000 Kč vč. DPH.</p>
+          </div>
+
+          <div style="margin-top:1.25rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/optimal75.pdf" class="btn btn-navy" target="_blank">📄 Stáhnout leták</a>
+            <a href="#poptavka" class="btn btn-primary">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="gallery-grid" style="grid-template-columns:repeat(3,1fr);">
+          <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0006.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0006.jpg.tn.jpg" alt="Realizace"></a>
+          <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0007.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0007.jpg.tn.jpg" alt="Realizace"></a>
+          <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0008.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0008.jpg.tn.jpg" alt="Realizace"></a>
+          <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0009.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0009.jpg.tn.jpg" alt="Realizace"></a>
+          <a href="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0010.jpg" target="_blank"><img src="https://www.bezpecne-dvere.cz/userFiles/optimal/img-20240918-wa0010.jpg.tn.jpg" alt="Realizace"></a>
+        </div>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--gray-200);margin:3rem 0;">
+
+    <!-- ERKADO -->
+    <div>
+      <span class="section-label">Ocelové vstupní dveře</span>
+      <h2 style="margin-bottom:1rem;">ERKADO RC2</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
+        <div>
+          <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/ocelove-dvere-katalog-erkado-2025-i-a-cz-ceny-v3.pdf" target="_blank">
+            <img src="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/erkado-katalog.png" alt="ERKADO katalog" style="border-radius:var(--radius-lg);box-shadow:var(--shadow);transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+          </a>
+        </div>
+        <div>
+          <p style="font-size:1.05rem;margin-bottom:1.5rem;">Nabízíme venkovní ocelové vstupní dveře ERKADO s bezpečnostní třídou <strong>RC2</strong>. Kompletní katalog s cenami ke stažení níže.</p>
+          <ul class="specs-list">
+            <li>Bezpečnostní třída: <strong>RC2</strong></li>
+            <li>Ocelová konstrukce — odolná a trvanlivá</li>
+            <li>Velký výběr dekorů a provedení</li>
+            <li>Rádi zpracujeme <strong>nabídku na míru</strong></li>
+          </ul>
+          <div style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/ocelove-dvere-katalog-erkado-2025-i-a-cz-ceny-v3.pdf" class="btn btn-navy" target="_blank">📄 Stáhnout katalog</a>
+            <a href="#poptavka" class="btn btn-primary">Poptávka na míru →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- POPTÁVKOVÝ FORMULÁŘ -->
+<section class="form-section" id="poptavka">
+  <div class="container">
+    <span class="section-label">Nezávazně</span>
+    <h2 class="section-title">Poptávka dveří na míru</h2>
+    <p class="section-subtitle">Vyplňte formulář a my Vás kontaktujeme s nabídkou</p>
+
+    <div class="contact-form">
+      <form action="https://www.bezpecne-dvere.cz/poptavka" method="post">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Jméno a příjmení *</label>
+            <input type="text" name="name" placeholder="Jan Novák" required>
+          </div>
+          <div class="form-group">
+            <label>Váš e-mail *</label>
+            <input type="email" name="email" placeholder="jan@email.cz" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefonní kontakt *</label>
+            <input type="tel" name="phone" placeholder="+420 xxx xxx xxx" required>
+          </div>
+          <div class="form-group">
+            <label>Místo instalace</label>
+            <input type="text" name="location" placeholder="Město, ulice">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Mám zájem o dveře z</label>
+          <select name="material">
+            <option value="">— vyberte —</option>
+            <option>Hliník</option>
+            <option>Ocel</option>
+            <option>Plast</option>
+            <option>Dřevo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Rozměry otvoru (cm) + poznámka</label>
+          <textarea name="note" placeholder="Šířka × Výška, případně popis situace..."></textarea>
+        </div>
+        <p class="form-consent">Odesláním poptávky berete na vědomí naše zásady o ochraně osobních údajů.</p>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">Odeslat poptávku →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="https://www.bezpecne-dvere.cz/interierove-dvere">Interiérové dveře</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis</h5>
+        <div class="footer-links">
+          <a href="servis.html#servis-oken">Servis oken</a>
+          <a href="servis.html#nouzove">Nouzové otevírání</a>
+          <a href="servis.html#reklamace">Reklamace</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="index.html#kontakt">Adresa</a>
+          <a href="#poptavka">Poptávka</a>
+          <a href="https://www.bezpecne-dvere.cz/pobocky">Pobočky</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+</body>
+</html>
