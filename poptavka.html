@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poptávka | Bezpečné dveře</title>
+  <meta name="description" content="Poptejte bezpečnostní dveře – PREMIUM 60, EXTREME 54 a další modely. Zdarma konzultace, montáž do 10 dnů. Region Most, Teplice, Chomutov.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .poptavka-hero {
+      background: linear-gradient(150deg, #f0f4fa 0%, #e8f0fb 50%, #f7f9fc 100%);
+      padding: 5rem 0 3rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .poptavka-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+      margin-top: 3rem;
+    }
+    .form-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      box-shadow: var(--shadow);
+    }
+    .form-card h3 { color: var(--navy); margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--navy); margin-bottom: 0.4rem;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-family: inherit; font-size: 0.93rem;
+      color: var(--text);
+      background: var(--white);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--orange); }
+    .form-group textarea { min-height: 110px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.75rem; }
+
+    /* Kontaktní karty */
+    .contact-cards { display: flex; flex-direction: column; gap: 1rem; }
+    .ccard {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.4rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .ccard-icon { font-size: 1.75rem; flex-shrink: 0; }
+    .ccard-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--orange); margin-bottom: 0.2rem; }
+    .ccard-value { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.1rem; }
+    .ccard-sub { font-size: 0.8rem; color: var(--text-muted); }
+    .ccard a { color: var(--navy); text-decoration: none; }
+    .ccard a:hover { color: var(--orange); }
+
+    .benefits-bar {
+      background: var(--navy);
+      padding: 2rem 0;
+    }
+    .benefits-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+    .benefit { text-align: center; }
+    .benefit-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .benefit-text { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.88); line-height: 1.35; }
+
+    @media (max-width:900px) {
+      .poptavka-grid { grid-template-columns: 1fr; }
+      .benefits-inner { grid-template-columns: repeat(2,1fr); }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60 – nosný produkt</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54 – levnější alternativa</a>
+            <a href="dvere-do-bytu.html#ostatni">MAGNUM 56 &amp; SECURIDO 65</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link active">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="poptavka.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="poptavka-hero">
+  <div class="container">
+    <span class="section-label">Nezávazná poptávka zdarma</span>
+    <h1>Mám zájem o bezpečnostní dveře</h1>
+    <p style="max-width:580px;font-size:1.05rem;">Vyplňte formulář nebo nás rovnou kontaktujte — odpovíme do 24 hodin a domluvíme konzultaci nebo montáž.</p>
+  </div>
+</div>
+
+<!-- VÝHODY -->
+<div class="benefits-bar">
+  <div class="container">
+    <div class="benefits-inner">
+      <div class="benefit">
+        <div class="benefit-icon">🚀</div>
+        <div class="benefit-text">Montáž do<br>10 pracovních dnů</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">✅</div>
+        <div class="benefit-text">Konzultace<br>zdarma</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🔒</div>
+        <div class="benefit-text">Certifikováno<br>NBÚ ČR</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🛠️</div>
+        <div class="benefit-text">Vlastní<br>montážní tým</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMULÁŘ + KONTAKT -->
+<section style="padding:4rem 0;background:var(--bg);">
+  <div class="container">
+    <div class="poptavka-grid">
+
+      <!-- FORMULÁŘ -->
+      <div class="form-card">
+        <h3>Poptávkový formulář</h3>
+        <form action="mailto:chci@bezpecne-dvere.cz" method="post" enctype="text/plain">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Jméno a příjmení *</label>
+              <input type="text" name="jmeno" placeholder="Jan Novák" required>
+            </div>
+            <div class="form-group">
+              <label>Telefon *</label>
+              <input type="tel" name="telefon" placeholder="+420 xxx xxx xxx" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" name="email" placeholder="vas@email.cz">
+          </div>
+          <div class="form-group">
+            <label>Typ dveří, o které máte zájem</label>
+            <select name="typ">
+              <option value="">– vyberte –</option>
+              <option>PREMIUM 60 (bytové, RC3 EI60)</option>
+              <option>EXTREME 54 (bytové, levnější varianta)</option>
+              <option>MAGNUM 56 (bytové)</option>
+              <option>SECURIDO 65 (bytové)</option>
+              <option>Dveře do domu (OPTIMAL 60 / 75)</option>
+              <option>Nejsem si jistý/á – chci poradit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Adresa montáže (město, ulice)</label>
+            <input type="text" name="adresa" placeholder="Most, ulice…">
+          </div>
+          <div class="form-group">
+            <label>Zpráva / dotaz</label>
+            <textarea name="zprava" placeholder="Stručně popište Váš požadavek, rozměry otvoru, stávající zárubeň…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.9rem;">Odeslat poptávku →</button>
+          <p class="form-note">* Povinné pole. Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem odpovědi na Vaši poptávku.</p>
+        </form>
+      </div>
+
+      <!-- KONTAKTNÍ KARTY -->
+      <div class="contact-cards">
+        <div class="ccard">
+          <div class="ccard-icon">📞</div>
+          <div>
+            <div class="ccard-title">Telefon</div>
+            <div class="ccard-value"><a href="tel:+420725559235">+420 725 559 235</a></div>
+            <div class="ccard-sub">Po–Pá 8:00–17:00</div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ccard-icon">💬</div>
+          <div>
+            <div class="ccard-title">WhatsApp</div>
+            <div class="ccard-value"><a href="https://wa.me/420725559235">+420 725 559 235</a></div>
+            <div class="ccard-sub">Rychlá odpověď přes zprávu</div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ccard-icon">✉️</div>
+          <div>
+            <div class="ccard-title">E-mail</div>
+            <div class="ccard-value"><a href="mailto:chci@bezpecne-dvere.cz">chci@bezpecne-dvere.cz</a></div>
+            <div class="ccard-sub">Odpovídáme do 24 hodin</div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ccard-icon">📍</div>
+          <div>
+            <div class="ccard-title">Prodejna a showroom</div>
+            <div class="ccard-value">Obchodní 36, Most</div>
+            <div class="ccard-sub">434 01 Most · Ústecký kraj</div>
+          </div>
+        </div>
+        <div class="ccard">
+          <div class="ccard-icon">🗺️</div>
+          <div>
+            <div class="ccard-title">Region</div>
+            <div class="ccard-value">Most, Teplice, Chomutov</div>
+            <div class="ccard-sub">a okolí do 60 km</div>
+          </div>
+        </div>
+        <div style="background:var(--orange-pale);border:1.5px solid var(--orange);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;">
+          <p style="font-size:0.9rem;color:var(--navy);font-weight:600;margin-bottom:0.3rem;">🎯 Rychlá konzultace telefonicky</p>
+          <p style="font-size:0.82rem;color:var(--text-muted);">Zavolejte nám a do 10 minut Vám řekneme, jaký model je pro Vás nejvhodnější a jaká bude cena montáže.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link">f</a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link">▶</a>
+          <a href="https://wa.me/420725559235" class="social-link">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+          <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis</h5>
+        <div class="footer-links">
+          <a href="servis.html#servis-oken">Servis oken</a>
+          <a href="servis.html#nouzove">Nouzové otevírání</a>
+          <a href="servis.html#reklamace">Reklamace</a>
+          <a href="servis.html#klice">Objednání klíčů</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="mailto:chci@bezpecne-dvere.cz">chci@bezpecne-dvere.cz</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+</body>
+</html>
