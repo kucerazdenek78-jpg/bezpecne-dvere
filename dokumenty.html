@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumenty | Bezpečné dveře</title>
+  <meta name="description" content="Obchodní podmínky, reklamační řád a vzor smlouvy o dílo – Bezpečné dveře.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .doc-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.75rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .doc-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+    .doc-icon {
+      font-size: 2.5rem;
+      line-height: 1;
+    }
+    .doc-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .doc-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .doc-links {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .doc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .doc-btn-pdf {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .doc-btn-pdf:hover {
+      background: #fca5a5;
+    }
+    .doc-btn-word {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .doc-btn-word:hover {
+      background: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60 – nosný produkt</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54 – levnější alternativa</a>
+            <a href="dvere-do-bytu.html#ostatni">MAGNUM 56 &amp; SECURIDO 65</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dokumenty.html" class="nav-link active">Dokumenty</a></li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="poptavka.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <span class="section-label">Právní dokumenty</span>
+    <h1>Dokumenty ke stažení</h1>
+    <p>Obchodní podmínky, reklamační řád a vzor smlouvy ke stažení ve formátu PDF nebo Word.</p>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<section style="padding: 4rem 0;">
+  <div class="container">
+    <div class="doc-grid">
+
+      <div class="doc-card">
+        <div class="doc-icon">📋</div>
+        <div class="doc-title">Obchodní podmínky</div>
+        <div class="doc-desc">Všeobecné obchodní podmínky platné pro všechny obchodní vztahy uzavřené se společností Bezpečné dveře.</div>
+        <div class="doc-links">
+          <a href="obchodni-podminky-bezpecne-dvere.pdf" class="doc-btn doc-btn-pdf" download>
+            ↓ PDF
+          </a>
+        </div>
+      </div>
+
+      <div class="doc-card">
+        <div class="doc-icon">🔄</div>
+        <div class="doc-title">Reklamační řád</div>
+        <div class="doc-desc">Postup a podmínky pro uplatnění reklamace – práva a povinnosti zákazníka i prodávajícího.</div>
+        <div class="doc-links">
+          <a href="reklamacni-rad-bezpecne-dvere.pdf" class="doc-btn doc-btn-pdf" download>
+            ↓ PDF
+          </a>
+          <a href="reklamacni-rad-bezpecne-dvere.docx" class="doc-btn doc-btn-word" download>
+            ↓ Word
+          </a>
+        </div>
+      </div>
+
+      <div class="doc-card">
+        <div class="doc-icon">📝</div>
+        <div class="doc-title">Smlouva o dílo – vzor</div>
+        <div class="doc-desc">Vzor smlouvy o dílo pro montáž bezpečnostních dveří – konečné znění 2026.</div>
+        <div class="doc-links">
+          <a href="smlouva-o-dilo-vzor-konecne-zneni 2026.docx" class="doc-btn doc-btn-word" download>
+            ↓ Word
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link">f</a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link">▶</a>
+          <a href="https://wa.me/420725559235" class="social-link">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+          <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Dokumenty</h5>
+        <div class="footer-links">
+          <a href="obchodni-podminky-bezpecne-dvere.pdf" download>Obchodní podmínky</a>
+          <a href="reklamacni-rad-bezpecne-dvere.pdf" download>Reklamační řád</a>
+          <a href="smlouva-o-dilo-vzor-konecne-zneni 2026.docx" download>Smlouva o dílo</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+</body>
+</html>

@@ -83,28 +83,28 @@
 
     /* ERKADO catalog */
     .erkado-featured { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; margin-bottom:3rem; }
-    .erkado-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:0.75rem; }
+    .erkado-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.75rem; }
     .e-card { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .2s,transform .2s; }
     .e-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); }
-    .e-card-head { height:90px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a2744 0%,#2d3f6b 100%); position:relative; }
-    .e-card-head.nov { background:linear-gradient(135deg,#b84900 0%,var(--orange) 100%); }
-    .e-card-head .model-name { color:#fff; font-size:1.45rem; font-weight:800; z-index:1; }
-    .e-card-head .nov-badge { position:absolute; top:8px; right:8px; background:#fff; color:var(--orange); font-size:0.65rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:100px; }
+    .e-card-head { height:240px; position:relative; overflow:hidden; background:#1a2744; }
+    .e-card-head img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
+    .e-card:hover .e-card-head img { transform:scale(1.04); }
+    .e-card-head .model-label { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(10,15,35,0.82)); color:#fff; font-size:1.15rem; font-weight:800; padding:2.5rem 1rem 0.85rem; }
+    .e-card-head .nov-badge { position:absolute; top:10px; right:10px; background:var(--orange); color:#fff; font-size:0.65rem; font-weight:800; padding:0.25rem 0.6rem; border-radius:100px; letter-spacing:0.04em; }
     .e-card-body { padding:1rem 1.1rem 1.1rem; }
     .e-card-desc { font-size:0.8rem; color:var(--gray-600); margin-bottom:0.6rem; line-height:1.4; }
     .e-card-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; }
     .e-card-meta .variants { font-size:0.75rem; color:var(--gray-400); }
     .e-card-meta .price { font-size:0.95rem; font-weight:700; color:var(--orange); }
-    .e-mini { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.8rem 0.9rem; transition:box-shadow .15s; }
-    .e-mini:hover { box-shadow:var(--shadow); }
+    .e-mini { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); overflow:hidden; transition:box-shadow .15s,transform .15s; display:flex; flex-direction:column; }
+    .e-mini:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+    .e-mini-img { width:100%; height:130px; object-fit:cover; display:block; }
+    .e-mini-body { padding:0.65rem 0.8rem 0.8rem; flex:1; display:flex; flex-direction:column; }
     .e-mini-name { font-weight:700; color:var(--navy); font-size:0.9rem; display:flex; align-items:center; gap:0.35rem; }
     .e-mini-badge { background:var(--orange); color:#fff; font-size:0.6rem; font-weight:700; padding:0.15rem 0.4rem; border-radius:100px; }
-    .e-mini-price { font-size:0.8rem; color:var(--gray-500); margin-top:0.2rem; }
-    .e-mini-btn { display:block; margin-top:0.6rem; text-align:center; font-size:0.75rem; color:var(--blue); font-weight:600; text-decoration:none; }
+    .e-mini-price { font-size:0.78rem; color:var(--gray-500); margin-top:0.2rem; }
+    .e-mini-btn { display:block; margin-top:auto; padding-top:0.55rem; text-align:center; font-size:0.75rem; color:var(--blue); font-weight:600; text-decoration:none; }
     .e-mini-btn:hover { color:var(--orange); }
-    .erkado-filter { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
-    .erkado-filter button { padding:0.4rem 0.9rem; font-size:0.8rem; font-weight:600; border:1.5px solid var(--gray-200); background:var(--white); color:var(--navy); border-radius:100px; cursor:pointer; transition:all .15s; }
-    .erkado-filter button.active, .erkado-filter button:hover { background:var(--navy); color:#fff; border-color:var(--navy); }
     .erkado-thermo-info { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-bottom:2rem; }
     .thermo-box { background:var(--gray-100); border-radius:var(--radius); padding:0.75rem; text-align:center; }
     .thermo-box .val { font-size:1.2rem; font-weight:800; color:var(--navy); }
@@ -146,6 +146,7 @@
             <a href="servis.html#klice">Objednání klíčů</a>
           </div>
         </li>
+        <li class="nav-item"><a href="dokumenty.html" class="nav-link">Dokumenty</a></li>
         <li class="nav-item"><a href="index.html#kontakt" class="nav-link">Kontakt</a></li>
       </ul>
       <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -329,8 +330,9 @@
 
       <!-- ARENDAL -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">ARENDAL</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/arendal.jpg" alt="ERKADO ARENDAL" loading="lazy">
+          <span class="model-label">ARENDAL</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -345,8 +347,9 @@
 
       <!-- LAHTI -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">LAHTI</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/lahti.jpg" alt="ERKADO LAHTI" loading="lazy">
+          <span class="model-label">LAHTI</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -361,8 +364,9 @@
 
       <!-- TREBUR -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">TREBUR</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/trebur.jpg" alt="ERKADO TREBUR" loading="lazy">
+          <span class="model-label">TREBUR</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -377,8 +381,9 @@
 
       <!-- LANGEN -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">LANGEN</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/langen.jpg" alt="ERKADO LANGEN" loading="lazy">
+          <span class="model-label">LANGEN</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -393,8 +398,9 @@
 
       <!-- ALTA -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">ALTA</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/alta.jpg" alt="ERKADO ALTA" loading="lazy">
+          <span class="model-label">ALTA</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -409,8 +415,9 @@
 
       <!-- UTRECHT -->
       <div class="e-card">
-        <div class="e-card-head nov">
-          <span class="model-name">UTRECHT</span>
+        <div class="e-card-head">
+          <img src="erkado-dvere/utrecht.jpg" alt="ERKADO UTRECHT" loading="lazy">
+          <span class="model-label">UTRECHT</span>
           <span class="nov-badge">NOVINKA</span>
         </div>
         <div class="e-card-body">
@@ -426,7 +433,8 @@
       <!-- ROTTERDAM -->
       <div class="e-card">
         <div class="e-card-head">
-          <span class="model-name">ROTTERDAM</span>
+          <img src="erkado-dvere/rotterdam.jpg" alt="ERKADO ROTTERDAM" loading="lazy">
+          <span class="model-label">ROTTERDAM</span>
         </div>
         <div class="e-card-body">
           <p class="e-card-desc">Velkoformátové prosklení — nadčasový prémiový design. 4 varianty s panoramatickým oknem.</p>
@@ -441,7 +449,8 @@
       <!-- SOLID -->
       <div class="e-card">
         <div class="e-card-head">
-          <span class="model-name">SOLID</span>
+          <img src="erkado-dvere/solid.jpg" alt="ERKADO SOLID" loading="lazy">
+          <span class="model-label">SOLID</span>
         </div>
         <div class="e-card-body">
           <p class="e-card-desc">Nejdostupnější model. Plné dveře bez prosklení — maximální tepelná izolace a diskrétní vzhled.</p>
@@ -459,29 +468,29 @@
     <h3 style="color:var(--navy);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gray-200);">Kompletní nabídka — všechny řady</h3>
     <div class="erkado-mini-grid">
 
-      <div class="e-mini"><div class="e-mini-name">HORN</div><div class="e-mini-price">od 38 371 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HORN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">SINGEN</div><div class="e-mini-price">od 38 304 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SINGEN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">WELS</div><div class="e-mini-price">od 40 166 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WELS'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">BAZYLEA</div><div class="e-mini-price">od 44 289 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BAZYLEA'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">HELMOND <span class="e-mini-badge">NOV</span></div><div class="e-mini-price">od 39 235 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HELMOND'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">FRYBURG</div><div class="e-mini-price">od 37 307 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO FRYBURG'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">LEIMEN</div><div class="e-mini-price">od 41 363 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEIMEN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">AMBERG</div><div class="e-mini-price">od 40 632 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO AMBERG'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">LINDEN</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LINDEN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">MURTER</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MURTER'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">EBERN</div><div class="e-mini-price">od 41 297 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO EBERN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">WIENER</div><div class="e-mini-price">od 38 371 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WIENER'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">SION</div><div class="e-mini-price">od 44 954 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SION'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">SELTERS</div><div class="e-mini-price">od 44 622 Kč · 7 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SELTERS'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">SAMEDAN</div><div class="e-mini-price">od 40 632 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SAMEDAN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">RODING</div><div class="e-mini-price">od 37 839 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO RODING'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">MELK</div><div class="e-mini-price">od 37 506 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MELK'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">LUCERNA</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUCERNA'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">KREBEN</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KREBEN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">LEOBEN</div><div class="e-mini-price">od 38 637 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEOBEN'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">LUTTER</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUTTER'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">BIENE</div><div class="e-mini-price">od 32 984 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BIENE'},50)">Poptávka →</a></div>
-      <div class="e-mini"><div class="e-mini-name">KELLA</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KELLA'},50)">Poptávka →</a></div>
+      <div class="e-mini"><img src="erkado-dvere/horn.jpg" alt="HORN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">HORN</div><div class="e-mini-price">od 38 371 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HORN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/singen.jpg" alt="SINGEN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">SINGEN</div><div class="e-mini-price">od 38 304 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SINGEN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/wels.jpg" alt="WELS" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">WELS</div><div class="e-mini-price">od 40 166 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WELS'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/bazylea.jpg" alt="BAZYLEA" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">BAZYLEA</div><div class="e-mini-price">od 44 289 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BAZYLEA'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/helmond.jpg" alt="HELMOND" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">HELMOND <span class="e-mini-badge">NOV</span></div><div class="e-mini-price">od 39 235 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HELMOND'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/fryburg.jpg" alt="FRYBURG" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">FRYBURG</div><div class="e-mini-price">od 37 307 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO FRYBURG'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/leimen.jpg" alt="LEIMEN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">LEIMEN</div><div class="e-mini-price">od 41 363 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEIMEN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/amberg.jpg" alt="AMBERG" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">AMBERG</div><div class="e-mini-price">od 40 632 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO AMBERG'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/linden.jpg" alt="LINDEN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">LINDEN</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LINDEN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/murter.jpg" alt="MURTER" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">MURTER</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MURTER'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/ebern.jpg" alt="EBERN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">EBERN</div><div class="e-mini-price">od 41 297 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO EBERN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/wiener.jpg" alt="WIENER" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">WIENER</div><div class="e-mini-price">od 38 371 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WIENER'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/sion.jpg" alt="SION" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">SION</div><div class="e-mini-price">od 44 954 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SION'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/selters.jpg" alt="SELTERS" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">SELTERS</div><div class="e-mini-price">od 44 622 Kč · 7 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SELTERS'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/samedan.jpg" alt="SAMEDAN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">SAMEDAN</div><div class="e-mini-price">od 40 632 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SAMEDAN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/roding.jpg" alt="RODING" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">RODING</div><div class="e-mini-price">od 37 839 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO RODING'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/melk.jpg" alt="MELK" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">MELK</div><div class="e-mini-price">od 37 506 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MELK'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/lucerna.jpg" alt="LUCERNA" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">LUCERNA</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUCERNA'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/kreben.jpg" alt="KREBEN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">KREBEN</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KREBEN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/leoben.jpg" alt="LEOBEN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">LEOBEN</div><div class="e-mini-price">od 38 637 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEOBEN'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/lutter.jpg" alt="LUTTER" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">LUTTER</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUTTER'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/biene.jpg" alt="BIENE" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">BIENE</div><div class="e-mini-price">od 32 984 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BIENE'},50)">Poptávka →</a></div></div>
+      <div class="e-mini"><img src="erkado-dvere/kella.jpg" alt="KELLA" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">KELLA</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KELLA'},50)">Poptávka →</a></div></div>
 
     </div><!-- /erkado-mini-grid -->
 
