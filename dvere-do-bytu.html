@@ -183,6 +183,7 @@
           </div>
         </li>
         <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link">Dveře do interiéru</a></li>
         <li class="nav-item">
           <a href="servis.html" class="nav-link">Servis
             <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
@@ -780,6 +781,52 @@
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+
+  // Hover náhled pro barevné varianty dveří
+  (function() {
+    const preview = document.createElement('div');
+    preview.style.cssText = [
+      'position:fixed', 'z-index:9999', 'pointer-events:none',
+      'border-radius:14px', 'overflow:hidden',
+      'box-shadow:0 12px 40px rgba(0,0,0,0.45)',
+      'display:none', 'background:#f8f8f8'
+    ].join(';');
+    const previewImg = document.createElement('img');
+    previewImg.style.cssText = 'width:260px;display:block;';
+    const previewLabel = document.createElement('div');
+    previewLabel.style.cssText = 'background:#1a2744;color:#fff;font-size:.82rem;font-weight:700;padding:.5rem .85rem;text-align:center;';
+    preview.appendChild(previewImg);
+    preview.appendChild(previewLabel);
+    document.body.appendChild(preview);
+
+    document.querySelectorAll('.color-thumb').forEach(thumb => {
+      const img = thumb.querySelector('img');
+      if (!img) return;
+      // Pokus o full-size URL – odstraníme .tn z cesty
+      const fullSrc = img.src.replace('.tn.jpg', '.jpg');
+      const label = thumb.textContent.trim();
+
+      thumb.style.cursor = 'pointer';
+
+      thumb.addEventListener('mouseenter', () => {
+        previewImg.src = fullSrc;
+        previewLabel.textContent = label;
+        preview.style.display = 'block';
+      });
+      thumb.addEventListener('mousemove', (e) => {
+        let x = e.clientX + 20;
+        let y = e.clientY - 140;
+        if (x + 280 > window.innerWidth)  x = e.clientX - 280;
+        if (y < 8) y = 8;
+        if (y + 320 > window.innerHeight) y = window.innerHeight - 324;
+        preview.style.left = x + 'px';
+        preview.style.top  = y + 'px';
+      });
+      thumb.addEventListener('mouseleave', () => {
+        preview.style.display = 'none';
+      });
+    });
+  })();
 </script>
 </body>
 </html>

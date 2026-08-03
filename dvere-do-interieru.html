@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dveře do interiéru – INVADO &amp; PORTA | Bezpečné dveře</title>
+  <meta name="description" content="Interiérové dveře INVADO a PORTA – falcové i bezfalcové, skladem i na objednávku. Největší výběr v regionu Most, Teplice, Chomutov.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── sekce výrobce ── */
+    .brand-section { margin-bottom: 4rem; }
+    .brand-header {
+      display: flex; align-items: center; gap: 1.2rem;
+      margin-bottom: 2rem; padding-bottom: 1rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .brand-logo-box {
+      background: var(--navy); color: #fff;
+      font-size: 1.1rem; font-weight: 900; letter-spacing: .05em;
+      padding: .5rem 1.1rem; border-radius: var(--radius);
+    }
+    .brand-header h2 { font-size: 1.6rem; color: var(--navy); margin: 0; }
+
+    /* ── dostupnost label ── */
+    .avail-label {
+      display: flex; align-items: center; gap: .6rem;
+      font-size: .78rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: 1.2rem; margin-top: 2rem;
+    }
+    .avail-label .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .avail-label.skladem .dot { background: #16a34a; }
+    .avail-label.skladem { color: #16a34a; }
+    .avail-label.objednavka .dot { background: var(--orange); }
+    .avail-label.objednavka { color: var(--orange); }
+
+    /* ── grid karet ── */
+    .int-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .int-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex; flex-direction: column;
+      transition: box-shadow .2s, transform .2s;
+      cursor: default;
+    }
+    .int-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+    .int-card-img {
+      width: 100%; height: 160px;
+      object-fit: cover; display: block;
+      background: #1a2744;
+    }
+    .int-card-body {
+      padding: .75rem 1rem .9rem;
+      flex: 1; display: flex; flex-direction: column; gap: .3rem;
+    }
+    .int-card-name {
+      font-weight: 800; color: var(--navy); font-size: .95rem;
+    }
+    .int-card-sub {
+      font-size: .75rem; color: var(--text-muted);
+    }
+    .int-card-price {
+      font-size: .82rem; color: var(--gray-500); margin-top: .1rem;
+    }
+    .int-card-price strong { color: var(--navy); }
+    .int-card-btn {
+      display: block; margin-top: auto; padding-top: .5rem;
+      text-align: center; font-size: .75rem; color: var(--blue);
+      font-weight: 600; text-decoration: none;
+    }
+    .int-card-btn:hover { color: var(--orange); }
+    .badge-skladem {
+      display: inline-block; background: #dcfce7; color: #16a34a;
+      font-size: .65rem; font-weight: 800; padding: .2rem .55rem;
+      border-radius: 100px; letter-spacing: .04em;
+    }
+    .badge-nov {
+      display: inline-block; background: var(--orange); color: #fff;
+      font-size: .65rem; font-weight: 800; padding: .2rem .55rem;
+      border-radius: 100px; letter-spacing: .04em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60 – nosný produkt</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54 – levnější alternativa</a>
+            <a href="dvere-do-bytu.html#ostatni">MAGNUM 56 &amp; SECURIDO 65</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link active">Dveře do interiéru</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dokumenty.html" class="nav-link">Dokumenty</a></li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="poptavka.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <span class="section-label">INVADO · PORTA</span>
+    <h1>Dveře do interiéru</h1>
+    <p>Falcové i bezfalcové interiérové dveře předních výrobců. Vybrané modely skladem, ostatní na objednávku.</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<section style="padding: 3rem 0 5rem;">
+  <div class="container">
+
+    <!-- ══════════════ INVADO ══════════════ -->
+    <div class="brand-section">
+      <div class="brand-header">
+        <div class="brand-logo-box">INVADO</div>
+        <h2>Interiérové dveře INVADO</h2>
+      </div>
+
+      <!-- INVADO – Skladem -->
+      <div class="avail-label skladem">
+        <span class="dot"></span> Skladem – dveře + zárubeň do tloušťky zdi 300 mm
+      </div>
+      <div class="int-grid">
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/frezia1_9.jpg" alt="FRÉZIA 1" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">FRÉZIA 1 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · falcové · dub st / bílá st / cappuccino</div>
+            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 1'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/frezia1_9.jpg" alt="FRÉZIA 9" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">FRÉZIA 9 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · falcové · dub st / bílá st / cappuccino</div>
+            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 9'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/nemez.jpg" alt="NEMÉZIA 14" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">NEMÉZIA 14 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · falcové · dub st / bílá / cappuccino</div>
+            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA 14'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA 1" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">LAURENCIA 1 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · falcové · bílá / dub přírodní</div>
+            <div class="int-card-price">Komplet <strong>od 6 600 Kč</strong><br>Křídlo od 4 050 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA 1'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/altamura1_aversa1.jpg" alt="ALTAMURA 1" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">ALTAMURA 1 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · bezfalcové · bílá st · plná deska</div>
+            <div class="int-card-price">Komplet <strong>od 4 750 Kč</strong><br>Křídlo od 2 200 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA 1'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/altamura1_aversa1.jpg" alt="AVERSA 1" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">AVERSA 1 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">ENDURO / LAMINOLACK · dub evropský / bílá</div>
+            <div class="int-card-price">Komplet <strong>od 5 650 Kč</strong><br>Křídlo od 3 500 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO AVERSA 1'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+      </div><!-- /skladem grid -->
+
+      <!-- INVADO – Na objednávku -->
+      <div class="avail-label objednavka">
+        <span class="dot"></span> Na objednávku – kompletní katalog INVADO
+      </div>
+      <div class="int-grid">
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/altamura.jpg" alt="ALTAMURA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">ALTAMURA</div>
+            <div class="int-card-sub">STCPL / PREMIUM · falcové i bezfalcové · 10+ barev</div>
+            <div class="int-card-price">Komplet <strong>od 7 800 Kč</strong> (falcové)<br>bezfalcové od 10 200 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/nemez.jpg" alt="NEMÉZIA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">NEMÉZIA</div>
+            <div class="int-card-sub">STCPL / PREMIUM / GREKO · 8 variant panelů</div>
+            <div class="int-card-price">Komplet <strong>od 6 250 Kč</strong> (PREMIUM)<br>GREKO od 8 500 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/miskant.jpg" alt="MISKANT" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">MISKANT</div>
+            <div class="int-card-sub">STCPL / PREMIUM / GREKO · falcové i bezfalcové</div>
+            <div class="int-card-price">Komplet <strong>od 7 450 Kč</strong> (falcové)<br>GREKO od 9 000 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MISKANT'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">LAURENCIA</div>
+            <div class="int-card-sub">PREMIUM / STCPL · falcové i bezfalcové · 10+ barev</div>
+            <div class="int-card-price">Komplet <strong>od 6 600 Kč</strong> (PREMIUM)<br>bezfalcové od 8 900 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/magnolia.jpg" alt="MAGNÓLIA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">MAGNÓLIA</div>
+            <div class="int-card-sub">PREMIUM / STCPL · 8 variant (1–8) · falcové i bezfalcové</div>
+            <div class="int-card-price">Komplet <strong>od 6 050 Kč</strong><br>bezfalcové od 8 350 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MAGNÓLIA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/frezia.jpg" alt="FRÉZIA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">FRÉZIA</div>
+            <div class="int-card-sub">STCPL / PREMIUM · varianty 2, 4, 6 · různé dekor</div>
+            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong> (STCPL)<br>bezfalcové od 8 900 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/daglez_altlux.jpg" alt="DAGLÉZIA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">DAGLÉZIA</div>
+            <div class="int-card-sub">STCPL / PREMIUM · skleněné výplně · 6 skupin</div>
+            <div class="int-card-price">Komplet <strong>od 4 850 Kč</strong> (STCPL)<br>PREMIUM od 7 050 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DAGLÉZIA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/daglez_altlux.jpg" alt="ALTAMURA LUX" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">ALTAMURA LUX</div>
+            <div class="int-card-sub">STCPL / PREMIUM · rovný + fazovaný panel</div>
+            <div class="int-card-price">Komplet <strong>od 6 950 Kč</strong><br>bezfalcové od 9 300 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA LUX'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/libra_norma.jpg" alt="LIBRA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">LIBRA</div>
+            <div class="int-card-sub">ENDURO / CPL · jednoduchý design · falcové</div>
+            <div class="int-card-price">Komplet <strong>od 5 000 Kč</strong><br>NORMA DECOR od 3 850 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LIBRA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/decorato.jpg" alt="DECORATO / BELGATTO" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">DECORATO / BELGATTO</div>
+            <div class="int-card-sub">ENDURO / LAMINOLACK · 14 variant panelů</div>
+            <div class="int-card-price">Komplet <strong>od 5 900 Kč</strong> (ENDURO)<br>LAMINOLACK od 7 000 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DECORATO'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/siena_linea.jpg" alt="SIENA / LINEA FORTE" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">SIENA · LINEA FORTE</div>
+            <div class="int-card-sub">ENDURO / ENDURO 3D · moderní design · falcové</div>
+            <div class="int-card-price">Komplet <strong>od 5 100 Kč</strong><br>LINEA FORTE od 5 100 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO SIENA / LINEA FORTE'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/nogaro_tamparo.jpg" alt="NOGARO / TAMPARO" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">NOGARO · TAMPARO</div>
+            <div class="int-card-sub">ENDURO / LAMINOLACK · skleněné prvky · falcové</div>
+            <div class="int-card-price">NOGARO <strong>od 5 650 Kč</strong><br>TAMPARO od 6 450 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NOGARO / TAMPARO'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/caprio_nida_roma.jpg" alt="CAPRIO / NIDA / ROMA" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">CAPRIO · NIDA · ROMA</div>
+            <div class="int-card-sub">ENDURO / ENDURO 3D · falcové i bezfalcové</div>
+            <div class="int-card-price">CAPRIO <strong>od 4 850 Kč</strong><br>NIDA · ROMA od 4 850 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO CAPRIO / NIDA / ROMA'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+      </div><!-- /na objednávku grid INVADO -->
+    </div><!-- /brand-section INVADO -->
+
+    <!-- ══════════════ PORTA ══════════════ -->
+    <div class="brand-section">
+      <div class="brand-header">
+        <div class="brand-logo-box" style="background:#c0392b;">PORTA</div>
+        <h2>Interiérové dveře PORTA</h2>
+      </div>
+
+      <!-- PORTA – Skladem -->
+      <div class="avail-label skladem">
+        <span class="dot"></span> Skladem – dveře + zárubeň do tloušťky zdi 300 mm
+      </div>
+      <div class="int-grid">
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/porta_skladem.jpg" alt="PORTA CPL 1.1" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">CPL 1.1 <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">CPL · falcové · bílá / přírodní dub</div>
+            <div class="int-card-price">Komplet <strong>od 6 550 Kč</strong><br>Křídlo od 3 050 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL 1.1'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/porta_skladem.jpg" alt="PORTA DECOR P" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">DECOR P <span class="badge-skladem">SKLADEM</span></div>
+            <div class="int-card-sub">Hliníková zárubeň · bezfalcová / reverzní</div>
+            <div class="int-card-price">Komplet <strong>od 4 500 Kč</strong></div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA DECOR P'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+      </div><!-- /porta skladem grid -->
+
+      <!-- PORTA – Na objednávku -->
+      <div class="avail-label objednavka">
+        <span class="dot"></span> Na objednávku – kompletní katalog PORTA
+      </div>
+      <div class="int-grid">
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/vector.jpg" alt="PORTA VECTOR" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">VECTOR</div>
+            <div class="int-card-sub">VECTOR T / E / U · Hydro Protect · česká norma zdarma</div>
+            <div class="int-card-price">Komplet dle varianty<br>od cca 7 000 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VECTOR'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/verte_home.jpg" alt="PORTA VERTE HOME" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">VERTE HOME G / H</div>
+            <div class="int-card-sub">Fólie / Soft CPL · falcové i bezfalcové · 4 barvy</div>
+            <div class="int-card-price">Komplet <strong>od 7 450 Kč</strong> (falcové)<br>bezfalcové od 9 450 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE HOME'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM A" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">VERTE PREMIUM A</div>
+            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Modern · 4 barvy</div>
+            <div class="int-card-price">Komplet <strong>od 8 150 Kč</strong> (falcové)<br>bezfalcové od 10 250 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM A'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM E" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">VERTE PREMIUM E</div>
+            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Rustic · prémiová řada</div>
+            <div class="int-card-price">Komplet <strong>od 9 100 Kč</strong> (falcové)<br>bezfalcové od 11 400 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM E'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/harmony.jpg" alt="PORTA HARMONY" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">HARMONY</div>
+            <div class="int-card-sub">Modern / Traditional · Soft CPL · 4 barvy · top model</div>
+            <div class="int-card-price">Komplet <strong>od 9 200 Kč</strong> (falcové)<br>bezfalcové od 11 400 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA HARMONY'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card">
+          <img src="interiery-imgs/web/cpl.jpg" alt="PORTA CPL" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">CPL</div>
+            <div class="int-card-sub">CPL · Traditional / Rustic · falcové i bezfalcové</div>
+            <div class="int-card-price">Komplet <strong>od 7 050 Kč</strong> (falcové)<br>bezfalcové od 8 500 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+        <div class="int-card" style="border-color:#fee2e2;">
+          <img src="interiery-imgs/web/extreme_rc3.jpg" alt="PORTA EXTREME RC3" class="int-card-img" loading="lazy">
+          <div class="int-card-body">
+            <div class="int-card-name">EXTREME RC3 <span class="badge-nov">RC3</span></div>
+            <div class="int-card-sub">Bezpečnostní · EI30 · akustika · česká norma</div>
+            <div class="int-card-price">Komplet <strong>15 800 Kč</strong><br>Požární varianta 16 200 Kč</div>
+            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA EXTREME RC3'},50)">Poptávka →</a>
+          </div>
+        </div>
+
+      </div><!-- /porta na objednávku grid -->
+    </div><!-- /brand-section PORTA -->
+
+    <!-- CTA -->
+    <div style="background:var(--navy);border-radius:var(--radius-lg);padding:2.5rem 2rem;text-align:center;margin-top:2rem;">
+      <h3 style="color:#fff;margin-bottom:.5rem;">Nevíte si rady s výběrem?</h3>
+      <p style="color:rgba(255,255,255,0.7);margin-bottom:1.5rem;">Poradíme vám s výběrem modelu, povrchu i zárubnně. Kontaktujte nás nebo pošlete poptávku.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="poptavka.html" class="btn btn-primary">Poslat poptávku</a>
+        <a href="tel:+420725559235" class="btn btn-navy" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);color:#fff;">+420 725 559 235</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link">f</a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link">▶</a>
+          <a href="https://wa.me/420725559235" class="social-link">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-interieru.html">Dveře do interiéru</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Dokumenty</h5>
+        <div class="footer-links">
+          <a href="dokumenty.html">Obchodní podmínky</a>
+          <a href="dokumenty.html">Reklamační řád</a>
+          <a href="dokumenty.html">Smlouva o dílo</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+
+  // Hover preview – velký náhled dveří
+  (function() {
+    const preview = document.createElement('div');
+    preview.style.cssText = [
+      'position:fixed', 'z-index:9999', 'pointer-events:none',
+      'border-radius:14px', 'overflow:hidden',
+      'box-shadow:0 12px 40px rgba(0,0,0,0.45)',
+      'display:none', 'width:240px', 'background:#1a2744'
+    ].join(';');
+    const previewImg = document.createElement('img');
+    previewImg.style.cssText = 'width:240px;display:block;';
+    preview.appendChild(previewImg);
+    document.body.appendChild(preview);
+
+    document.querySelectorAll('.int-card').forEach(card => {
+      const img = card.querySelector('img');
+      if (!img) return;
+      card.addEventListener('mouseenter', () => {
+        previewImg.src = img.src;
+        preview.style.display = 'block';
+      });
+      card.addEventListener('mousemove', (e) => {
+        let x = e.clientX + 24;
+        let y = e.clientY - 120;
+        if (x + 260 > window.innerWidth)  x = e.clientX - 264;
+        if (y < 8) y = 8;
+        if (y + 380 > window.innerHeight) y = window.innerHeight - 384;
+        preview.style.left = x + 'px';
+        preview.style.top  = y + 'px';
+      });
+      card.addEventListener('mouseleave', () => {
+        preview.style.display = 'none';
+      });
+    });
+  })();
+</script>
+</body>
+</html>
