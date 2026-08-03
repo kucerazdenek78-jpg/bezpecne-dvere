@@ -803,7 +803,7 @@
       const img = thumb.querySelector('img');
       if (!img) return;
       // Pokus o full-size URL – odstraníme .tn z cesty
-      const fullSrc = img.src.replace('.tn.jpg', '.jpg');
+      const fullSrc = img.src.replace('.tn.jpg', '');
       const label = thumb.textContent.trim();
 
       thumb.style.cursor = 'pointer';
