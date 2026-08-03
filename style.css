@@ -182,7 +182,7 @@ section.tight { padding: 3rem 0; }
 .dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
   min-width: 230px;
   background: var(--white);
@@ -190,7 +190,18 @@ section.tight { padding: 3rem 0; }
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   border: 1px solid var(--gray-200);
+  padding-top: 8px; /* visual spacing bez přerušení hoveru */
 }
+/* Průhledný most překryje mezeru mezi nav-linkem a dropdownem */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  height: 10px;
+  display: none;
+}
+.nav-item:hover::after { display: block; }
 .nav-item:hover .dropdown { display: block; }
 .dropdown a {
   display: block;
