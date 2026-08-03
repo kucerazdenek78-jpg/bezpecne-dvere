@@ -637,6 +637,44 @@
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+
+  // Hover preview – zobrazí velký náhled dveří při najetí myší
+  (function() {
+    const preview = document.createElement('div');
+    preview.style.cssText = [
+      'position:fixed', 'z-index:9999', 'pointer-events:none',
+      'border-radius:14px', 'overflow:hidden',
+      'box-shadow:0 12px 40px rgba(0,0,0,0.45)',
+      'display:none', 'width:210px', 'background:#1a2744',
+      'transition:opacity .15s ease'
+    ].join(';');
+    const previewImg = document.createElement('img');
+    previewImg.style.cssText = 'width:210px;display:block;';
+    preview.appendChild(previewImg);
+    document.body.appendChild(preview);
+
+    document.querySelectorAll('.e-mini, .e-card').forEach(card => {
+      const img = card.querySelector('img');
+      if (!img) return;
+      card.addEventListener('mouseenter', () => {
+        previewImg.src = img.src;
+        preview.style.display = 'block';
+        preview.style.opacity = '1';
+      });
+      card.addEventListener('mousemove', (e) => {
+        let x = e.clientX + 24;
+        let y = e.clientY - 120;
+        if (x + 220 > window.innerWidth)  x = e.clientX - 234;
+        if (y < 8) y = 8;
+        if (y + 440 > window.innerHeight) y = window.innerHeight - 444;
+        preview.style.left = x + 'px';
+        preview.style.top  = y + 'px';
+      });
+      card.addEventListener('mouseleave', () => {
+        preview.style.display = 'none';
+      });
+    });
+  })();
 </script>
 </body>
 </html>
