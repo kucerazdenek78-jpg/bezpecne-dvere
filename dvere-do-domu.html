@@ -80,6 +80,37 @@
     .form-group textarea { min-height: 100px; resize: vertical; }
     .form-consent { font-size: 0.8rem; color: var(--gray-400); margin-bottom: 1.25rem; }
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    /* ERKADO catalog */
+    .erkado-featured { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; margin-bottom:3rem; }
+    .erkado-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:0.75rem; }
+    .e-card { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .2s,transform .2s; }
+    .e-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); }
+    .e-card-head { height:90px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a2744 0%,#2d3f6b 100%); position:relative; }
+    .e-card-head.nov { background:linear-gradient(135deg,#b84900 0%,var(--orange) 100%); }
+    .e-card-head .model-name { color:#fff; font-size:1.45rem; font-weight:800; z-index:1; }
+    .e-card-head .nov-badge { position:absolute; top:8px; right:8px; background:#fff; color:var(--orange); font-size:0.65rem; font-weight:800; padding:0.2rem 0.5rem; border-radius:100px; }
+    .e-card-body { padding:1rem 1.1rem 1.1rem; }
+    .e-card-desc { font-size:0.8rem; color:var(--gray-600); margin-bottom:0.6rem; line-height:1.4; }
+    .e-card-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; }
+    .e-card-meta .variants { font-size:0.75rem; color:var(--gray-400); }
+    .e-card-meta .price { font-size:0.95rem; font-weight:700; color:var(--orange); }
+    .e-mini { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.8rem 0.9rem; transition:box-shadow .15s; }
+    .e-mini:hover { box-shadow:var(--shadow); }
+    .e-mini-name { font-weight:700; color:var(--navy); font-size:0.9rem; display:flex; align-items:center; gap:0.35rem; }
+    .e-mini-badge { background:var(--orange); color:#fff; font-size:0.6rem; font-weight:700; padding:0.15rem 0.4rem; border-radius:100px; }
+    .e-mini-price { font-size:0.8rem; color:var(--gray-500); margin-top:0.2rem; }
+    .e-mini-btn { display:block; margin-top:0.6rem; text-align:center; font-size:0.75rem; color:var(--blue); font-weight:600; text-decoration:none; }
+    .e-mini-btn:hover { color:var(--orange); }
+    .erkado-filter { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .erkado-filter button { padding:0.4rem 0.9rem; font-size:0.8rem; font-weight:600; border:1.5px solid var(--gray-200); background:var(--white); color:var(--navy); border-radius:100px; cursor:pointer; transition:all .15s; }
+    .erkado-filter button.active, .erkado-filter button:hover { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .erkado-thermo-info { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-bottom:2rem; }
+    .thermo-box { background:var(--gray-100); border-radius:var(--radius); padding:0.75rem; text-align:center; }
+    .thermo-box .val { font-size:1.2rem; font-weight:800; color:var(--navy); }
+    .thermo-box.hot .val { color:var(--orange); }
+    .thermo-box .lbl { font-size:0.68rem; color:var(--gray-500); margin-top:0.2rem; }
+    @media(max-width:600px){ .erkado-thermo-info{grid-template-columns:1fr 1fr;} .erkado-mini-grid{grid-template-columns:1fr 1fr;} .erkado-featured{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
@@ -258,30 +289,204 @@
 
     <hr style="border:none;border-top:1px solid var(--gray-200);margin:3rem 0;">
 
-    <!-- ERKADO -->
-    <div>
+  </div>
+</section>
+
+<!-- ═══ ERKADO KATALOG ═══ -->
+<section style="background:var(--bg-alt);padding:4rem 0;" id="erkado">
+  <div class="container">
+
+    <!-- HEADER -->
+    <div style="text-align:center;margin-bottom:2.5rem;">
       <span class="section-label">Ocelové vstupní dveře</span>
-      <h2 style="margin-bottom:1rem;">ERKADO RC2</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;">
-        <div>
-          <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/ocelove-dvere-katalog-erkado-2025-i-a-cz-ceny-v3.pdf" target="_blank">
-            <img src="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/erkado-katalog.png" alt="ERKADO katalog" style="border-radius:var(--radius-lg);box-shadow:var(--shadow);transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-          </a>
+      <h2 class="section-title">ERKADO — Katalog 2025/2026</h2>
+      <p class="section-subtitle" style="max-width:640px;margin:0 auto;">RC2 bezpečnostní třída &nbsp;·&nbsp; Ud 0,60 W/m²K &nbsp;·&nbsp; 31 řad &nbsp;·&nbsp; 100+ variant &nbsp;·&nbsp; Výroba na míru</p>
+    </div>
+
+    <!-- THERMO TYPY -->
+    <div class="erkado-thermo-info">
+      <div class="thermo-box hot">
+        <div class="val">88 mm</div>
+        <div class="lbl">THERMO HOT 88<br>Ud 0,60 W/m²K</div>
+      </div>
+      <div class="thermo-box hot">
+        <div class="val">78 mm</div>
+        <div class="lbl">THERMO HOT 78<br>Ud 0,63 W/m²K</div>
+      </div>
+      <div class="thermo-box">
+        <div class="val">78 mm</div>
+        <div class="lbl">THERMO 78<br>Ud 0,64 W/m²K</div>
+      </div>
+      <div class="thermo-box">
+        <div class="val">64 mm</div>
+        <div class="lbl">THERMO 64<br>Ud 0,77 W/m²K</div>
+      </div>
+    </div>
+
+    <!-- DOPORUČENÉ MODELY -->
+    <h3 style="color:var(--navy);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:2px solid var(--orange);">⭐ Doporučené modely</h3>
+    <div class="erkado-featured">
+
+      <!-- ARENDAL -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">ARENDAL</span>
+          <span class="nov-badge">NOVINKA</span>
         </div>
-        <div>
-          <p style="font-size:1.05rem;margin-bottom:1.5rem;">Nabízíme venkovní ocelové vstupní dveře ERKADO s bezpečnostní třídou <strong>RC2</strong>. Kompletní katalog s cenami ke stažení níže.</p>
-          <ul class="specs-list">
-            <li>Bezpečnostní třída: <strong>RC2</strong></li>
-            <li>Ocelová konstrukce — odolná a trvanlivá</li>
-            <li>Velký výběr dekorů a provedení</li>
-            <li>Rádi zpracujeme <strong>nabídku na míru</strong></li>
-          </ul>
-          <div style="margin-top:1.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
-            <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/ocelove-dvere-katalog-erkado-2025-i-a-cz-ceny-v3.pdf" class="btn btn-navy" target="_blank">📄 Stáhnout katalog</a>
-            <a href="#poptavka" class="btn btn-primary">Poptávka na míru →</a>
+        <div class="e-card-body">
+          <p class="e-card-desc">Prémiový model s FRAME lištovým zdobením, elegantní 3D efekt. 11 variant, ideální pro moderní domy.</p>
+          <div class="e-card-meta">
+            <span class="variants">11 variant · RC2</span>
+            <span class="price">od 52 269 Kč</span>
           </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO ARENDAL'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
         </div>
       </div>
+
+      <!-- LAHTI -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">LAHTI</span>
+          <span class="nov-badge">NOVINKA</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Moderní prosklené dveře s velkými okny, minimalistický design. 6 variant, výrazný vnější dojem.</p>
+          <div class="e-card-meta">
+            <span class="variants">6 variant · RC2</span>
+            <span class="price">od 44 821 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LAHTI'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- TREBUR -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">TREBUR</span>
+          <span class="nov-badge">NOVINKA</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Největší výběr — 14 variant s dekorativním lisováním STAMP. Kombinace skla a vzorů pro každý vkus.</p>
+          <div class="e-card-meta">
+            <span class="variants">14 variant · RC2</span>
+            <span class="price">od 38 304 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO TREBUR'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- LANGEN -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">LANGEN</span>
+          <span class="nov-badge">NOVINKA</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Populární řada s horizontálními prolisy, 12 variant. Čisté linie v kombinaci se sklem.</p>
+          <div class="e-card-meta">
+            <span class="variants">12 variant · RC2</span>
+            <span class="price">od 37 041 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LANGEN'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- ALTA -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">ALTA</span>
+          <span class="nov-badge">NOVINKA</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Nejširší nabídka — 14 variant od plných po prosklené. Skvělý poměr ceny a designu.</p>
+          <div class="e-card-meta">
+            <span class="variants">14 variant · RC2</span>
+            <span class="price">od 34 846 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO ALTA'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- UTRECHT -->
+      <div class="e-card">
+        <div class="e-card-head nov">
+          <span class="model-name">UTRECHT</span>
+          <span class="nov-badge">NOVINKA</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Vybrané provedení s prosklenými panely, 5 variant. Kombinace bezpečnosti a světla.</p>
+          <div class="e-card-meta">
+            <span class="variants">5 variant · RC2</span>
+            <span class="price">od 41 629 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO UTRECHT'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- ROTTERDAM -->
+      <div class="e-card">
+        <div class="e-card-head">
+          <span class="model-name">ROTTERDAM</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Velkoformátové prosklení — nadčasový prémiový design. 4 varianty s panoramatickým oknem.</p>
+          <div class="e-card-meta">
+            <span class="variants">4 variant · RC2</span>
+            <span class="price">od 45 819 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO ROTTERDAM'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+      <!-- SOLID -->
+      <div class="e-card">
+        <div class="e-card-head">
+          <span class="model-name">SOLID</span>
+        </div>
+        <div class="e-card-body">
+          <p class="e-card-desc">Nejdostupnější model. Plné dveře bez prosklení — maximální tepelná izolace a diskrétní vzhled.</p>
+          <div class="e-card-meta">
+            <span class="variants">3 varianty · RC2</span>
+            <span class="price">od 23 940 Kč</span>
+          </div>
+          <a href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SOLID'},50)" class="btn btn-primary" style="width:100%;justify-content:center;font-size:0.82rem;padding:0.55rem;">Chci poptávku →</a>
+        </div>
+      </div>
+
+    </div><!-- /erkado-featured -->
+
+    <!-- KOMPLETNÍ NABÍDKA -->
+    <h3 style="color:var(--navy);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gray-200);">Kompletní nabídka — všechny řady</h3>
+    <div class="erkado-mini-grid">
+
+      <div class="e-mini"><div class="e-mini-name">HORN</div><div class="e-mini-price">od 38 371 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HORN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">SINGEN</div><div class="e-mini-price">od 38 304 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SINGEN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">WELS</div><div class="e-mini-price">od 40 166 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WELS'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">BAZYLEA</div><div class="e-mini-price">od 44 289 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BAZYLEA'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">HELMOND <span class="e-mini-badge">NOV</span></div><div class="e-mini-price">od 39 235 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HELMOND'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">FRYBURG</div><div class="e-mini-price">od 37 307 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO FRYBURG'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">LEIMEN</div><div class="e-mini-price">od 41 363 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEIMEN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">AMBERG</div><div class="e-mini-price">od 40 632 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO AMBERG'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">LINDEN</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LINDEN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">MURTER</div><div class="e-mini-price">od 40 632 Kč · 6 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MURTER'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">EBERN</div><div class="e-mini-price">od 41 297 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO EBERN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">WIENER</div><div class="e-mini-price">od 38 371 Kč · 3 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO WIENER'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">SION</div><div class="e-mini-price">od 44 954 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SION'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">SELTERS</div><div class="e-mini-price">od 44 622 Kč · 7 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SELTERS'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">SAMEDAN</div><div class="e-mini-price">od 40 632 Kč · 5 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO SAMEDAN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">RODING</div><div class="e-mini-price">od 37 839 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO RODING'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">MELK</div><div class="e-mini-price">od 37 506 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO MELK'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">LUCERNA</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUCERNA'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">KREBEN</div><div class="e-mini-price">od 39 967 Kč · 2 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KREBEN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">LEOBEN</div><div class="e-mini-price">od 38 637 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LEOBEN'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">LUTTER</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO LUTTER'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">BIENE</div><div class="e-mini-price">od 32 984 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO BIENE'},50)">Poptávka →</a></div>
+      <div class="e-mini"><div class="e-mini-name">KELLA</div><div class="e-mini-price">od 29 992 Kč · 4 var.</div><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO KELLA'},50)">Poptávka →</a></div>
+
+    </div><!-- /erkado-mini-grid -->
+
+    <div style="text-align:center;margin-top:2rem;">
+      <a href="https://www.bezpecne-dvere.cz/userFiles/ke_stazeni/ocelove-dvere-katalog-erkado-2025-i-a-cz-ceny-v3.pdf" class="btn btn-outline" target="_blank">📄 Stáhnout kompletní katalog PDF (ceny, rozměry, příplatky)</a>
     </div>
 
   </div>
@@ -292,45 +497,83 @@
   <div class="container">
     <span class="section-label">Nezávazně</span>
     <h2 class="section-title">Poptávka dveří na míru</h2>
-    <p class="section-subtitle">Vyplňte formulář a my Vás kontaktujeme s nabídkou</p>
+    <p class="section-subtitle">Vyplňte formulář a my Vás kontaktujeme s nabídkou do 24 hodin</p>
 
     <div class="contact-form">
       <form action="https://www.bezpecne-dvere.cz/poptavka" method="post">
+
+        <div class="form-group">
+          <label>Mám zájem o model *</label>
+          <select name="model" id="erkado-model" required>
+            <option value="">— vyberte typ dveří —</option>
+            <optgroup label="Hliníkové dveře">
+              <option>OPTIMAL 60 – hliníkové (od 32 500 Kč)</option>
+              <option>OPTIMAL 75 – hliníkové (od 39 500 Kč)</option>
+            </optgroup>
+            <optgroup label="Ocelové dveře ERKADO — Doporučené">
+              <option>ERKADO ARENDAL (od 52 269 Kč)</option>
+              <option>ERKADO LAHTI (od 44 821 Kč)</option>
+              <option>ERKADO TREBUR (od 38 304 Kč)</option>
+              <option>ERKADO LANGEN (od 37 041 Kč)</option>
+              <option>ERKADO ALTA (od 34 846 Kč)</option>
+              <option>ERKADO UTRECHT (od 41 629 Kč)</option>
+              <option>ERKADO ROTTERDAM (od 45 819 Kč)</option>
+              <option>ERKADO SOLID (od 23 940 Kč)</option>
+            </optgroup>
+            <optgroup label="Ocelové dveře ERKADO — Ostatní modely">
+              <option>ERKADO HORN</option>
+              <option>ERKADO WELS</option>
+              <option>ERKADO BAZYLEA</option>
+              <option>ERKADO HELMOND</option>
+              <option>ERKADO FRYBURG</option>
+              <option>ERKADO LEIMEN</option>
+              <option>ERKADO AMBERG</option>
+              <option>ERKADO LINDEN</option>
+              <option>ERKADO MURTER</option>
+              <option>ERKADO EBERN</option>
+              <option>ERKADO WIENER</option>
+              <option>ERKADO SION</option>
+              <option>ERKADO SINGEN</option>
+              <option>ERKADO SELTERS</option>
+              <option>ERKADO SAMEDAN</option>
+              <option>ERKADO RODING</option>
+              <option>ERKADO MELK</option>
+              <option>ERKADO LUCERNA</option>
+              <option>ERKADO KREBEN</option>
+              <option>ERKADO LEOBEN</option>
+              <option>ERKADO LUTTER</option>
+              <option>ERKADO BIENE</option>
+              <option>ERKADO KELLA</option>
+            </optgroup>
+            <option value="nevim">Nevím — chci poradit</option>
+          </select>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Jméno a příjmení *</label>
             <input type="text" name="name" placeholder="Jan Novák" required>
           </div>
           <div class="form-group">
-            <label>Váš e-mail *</label>
-            <input type="email" name="email" placeholder="jan@email.cz" required>
+            <label>Telefonní kontakt *</label>
+            <input type="tel" name="phone" placeholder="+420 xxx xxx xxx" required>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Telefonní kontakt *</label>
-            <input type="tel" name="phone" placeholder="+420 xxx xxx xxx" required>
+            <label>E-mail *</label>
+            <input type="email" name="email" placeholder="jan@email.cz" required>
           </div>
           <div class="form-group">
-            <label>Místo instalace</label>
-            <input type="text" name="location" placeholder="Město, ulice">
+            <label>Adresa / místo instalace *</label>
+            <input type="text" name="address" placeholder="Ulice, město, PSČ" required>
           </div>
         </div>
         <div class="form-group">
-          <label>Mám zájem o dveře z</label>
-          <select name="material">
-            <option value="">— vyberte —</option>
-            <option>Hliník</option>
-            <option>Ocel</option>
-            <option>Plast</option>
-            <option>Dřevo</option>
-          </select>
+          <label>Rozměry otvoru (šířka × výška v cm) a poznámka</label>
+          <textarea name="note" placeholder="Např. 90 × 210 cm, stávající zárubeň ocelová, zda otevírat dovnitř / ven, barevná preference..."></textarea>
         </div>
-        <div class="form-group">
-          <label>Rozměry otvoru (cm) + poznámka</label>
-          <textarea name="note" placeholder="Šířka × Výška, případně popis situace..."></textarea>
-        </div>
-        <p class="form-consent">Odesláním poptávky berete na vědomí naše zásady o ochraně osobních údajů.</p>
+        <p class="form-consent">Odesláním souhlasíte se zpracováním osobních údajů za účelem zodpovězení Vaší poptávky.</p>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">Odeslat poptávku →</button>
       </form>
     </div>
