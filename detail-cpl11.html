@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PORTA CPL 1.1 – Detail dveří | Bezpečné dveře</title>
+  <meta name="description" content="PORTA CPL 1.1 – falcové CPL dveře, bílá a přírodní dub. Skladem.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .breadcrumb{font-size:.8rem;color:var(--text-muted);padding:1rem 0 0}.breadcrumb a{color:var(--blue);text-decoration:none}.breadcrumb span{margin:0 .4rem}
+    .detail-hero{display:grid;grid-template-columns:340px 1fr;gap:3rem;align-items:start;padding:2rem 0 3rem}
+    .detail-hero-img{border-radius:var(--radius-lg);overflow:hidden;background:#1a2744;box-shadow:var(--shadow-lg);position:sticky;top:90px}
+    .detail-hero-img img{width:100%;display:block}
+    .detail-brand{display:inline-block;background:#c0392b;color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.07em;padding:.3rem .85rem;border-radius:100px;margin-bottom:1rem}
+    .feature-pills{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 1.5rem}
+    .feature-pill{background:#f1f5f9;border:1px solid var(--gray-200);border-radius:100px;font-size:.78rem;font-weight:600;padding:.3rem .85rem;color:var(--navy)}
+    .feature-pill.green{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
+    .price-box{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:var(--radius-lg);padding:1.2rem 1.5rem;margin:1.5rem 0}
+    .price-main{font-size:1.5rem;font-weight:900;color:var(--navy)}.price-note{font-size:.8rem;color:var(--text-muted);margin-top:.3rem}
+    .section-title{font-size:1.25rem;font-weight:800;color:var(--navy);margin:0 0 1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--gray-200)}
+    .color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;margin-top:1.25rem}
+    .color-card{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow .2s,transform .2s,border-color .2s;cursor:pointer}
+    .color-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:#c0392b}
+    .color-card img{width:100%;aspect-ratio:310/413;object-fit:cover;display:block;background:#1a2744}
+    .color-card-body{padding:.75rem 1rem .9rem}
+    .swatch-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem}
+    .swatch{width:18px;height:18px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(0,0,0,.12)}
+    .color-name{font-size:.88rem;font-weight:700;color:var(--navy)}.color-sub{font-size:.72rem;color:var(--text-muted)}
+    .badge-s{display:inline-block;background:#dcfce7;color:#16a34a;font-size:.62rem;font-weight:800;padding:.15rem .5rem;border-radius:100px;margin-left:.3rem}
+    .specs-table{width:100%;border-collapse:collapse;font-size:.88rem}
+    .specs-table th{text-align:left;background:#c0392b;color:#fff;padding:.65rem 1.1rem;font-size:.75rem;font-weight:700}
+    .specs-table td{padding:.6rem 1.1rem;border-bottom:1px solid var(--gray-200)}
+    .specs-table td:first-child{font-weight:700;color:var(--navy);width:38%}.specs-table td:last-child{color:var(--text-muted)}
+    .specs-table tr:last-child td{border-bottom:none}.specs-table tr:nth-child(even) td{background:#f8fafc}
+    .size-grid{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+    .size-tag{background:#f1f5f9;border:1px solid var(--gray-200);border-radius:var(--radius);padding:.45rem .9rem;font-size:.82rem;font-weight:700;color:var(--navy)}
+    .cta-box{background:#c0392b;border-radius:var(--radius-lg);padding:2.5rem 2rem;text-align:center;margin:2rem 0 4rem}
+    .cta-box h3{color:#fff;margin:0 0 .5rem}.cta-box p{color:rgba(255,255,255,.8);margin:0 0 1.5rem}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    @media(max-width:768px){.detail-hero{grid-template-columns:1fr;gap:1.5rem}.detail-hero-img{position:static;max-width:300px;margin:0 auto}}
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar"><div class="container"><div class="nav-inner">
+  <a href="index.html" class="nav-logo"><img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img"></a>
+  <ul class="nav-menu" id="navMenu">
+    <li class="nav-item"><a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu</a></li>
+    <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+    <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link active">Dveře do interiéru</a></li>
+    <li class="nav-item"><a href="servis.html" class="nav-link">Servis</a></li>
+    <li class="nav-item"><a href="dokumenty.html" class="nav-link">Dokumenty</a></li>
+    <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:.75rem;"><a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a><a href="poptavka.html" class="btn btn-primary" style="padding:.6rem 1.2rem;font-size:.85rem;">Chci dveře</a></div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</div></div></nav>
+
+<section style="padding-bottom:5rem;"><div class="container">
+  <div class="breadcrumb"><a href="index.html">Domů</a><span>›</span><a href="dvere-do-interieru.html">Dveře do interiéru</a><span>›</span><strong>PORTA CPL 1.1</strong></div>
+
+  <div class="detail-hero">
+    <div class="detail-hero-img"><img src="interiery-imgs/web/cpl11.jpg" alt="PORTA CPL 1.1" id="heroImg"></div>
+    <div class="detail-hero-info">
+      <span class="detail-brand">PORTA</span>
+      <h1 style="font-size:2rem;color:var(--navy);margin:0 0 .4rem;">CPL 1.1</h1>
+      <p style="font-size:1rem;color:var(--text-muted);margin:0 0 1.5rem;">Falcové interiérové dveře s CPL povrchem – polský výrobce PORTA</p>
+      <div class="feature-pills">
+        <span class="feature-pill green">✓ Skladem</span>
+        <span class="feature-pill">Falcové</span>
+        <span class="feature-pill">CPL povrch</span>
+        <span class="feature-pill">Plné (bez skla)</span>
+        <span class="feature-pill">2 barevná provedení</span>
+        <span class="feature-pill">Zárubeň v ceně</span>
+      </div>
+      <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.5rem;">
+        PORTA CPL 1.1 jsou spolehlivé falcové dveře ze CPL laminátu od prémiového polského výrobce PORTA. Hladký, beznadčasový design a odolný povrch je ideální pro každodenní provoz. Dostupné ve dvou oblíbených barvách. <strong>Cena zahrnuje dveřní křídlo + falcová zárubeň</strong> do tloušťky zdi 300 mm.
+      </p>
+      <div class="price-box">
+        <div class="price-main">od 6 550 Kč</div>
+        <div class="price-note">Komplet bez kování a DPH. Pouze křídlo od 3 050 Kč.<br><span style="color:#16a34a;font-weight:700;">Montáž firmou = DPH 12 %</span></div>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <a href="poptavka.html" class="btn btn-primary" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL 1.1'},50)">Poslat poptávku</a>
+        <a href="tel:+420725559235" class="btn btn-secondary">+420 725 559 235</a>
+      </div>
+    </div>
+  </div>
+
+  <section style="margin-bottom:3rem;">
+    <h2 class="section-title">Barevné provedení</h2>
+    <div class="color-grid">
+      <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/cpl11biela_310x413.png'">
+        <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/cpl11biela_310x413.png" alt="CPL 1.1 bílá" onerror="this.src='interiery-imgs/web/cpl11.jpg'">
+        <div class="color-card-body">
+          <div class="swatch-row"><span class="swatch" style="background:#F5F2EE;border:1.5px solid #ddd;"></span><span class="color-name">Bílá <span class="badge-s">SKLADEM</span></span></div>
+          <div class="color-sub">CPL bílá · čistý matný povrch</div>
+        </div>
+      </div>
+      <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/cpl11dub_310x413.png'">
+        <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/cpl11dub_310x413.png" alt="CPL 1.1 přírodní dub" onerror="this.src='interiery-imgs/web/cpl11.jpg'">
+        <div class="color-card-body">
+          <div class="swatch-row"><span class="swatch" style="background:#C49A6C;"></span><span class="color-name">Přírodní dub <span class="badge-s">SKLADEM</span></span></div>
+          <div class="color-sub">CPL dub · přírodní textura dřeva</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-bottom:3rem;">
+    <h2 class="section-title">Technické parametry</h2>
+    <table class="specs-table"><thead><tr><th>Parametr</th><th>Hodnota</th></tr></thead><tbody>
+      <tr><td>Typ závěsu</td><td>Falcové (s falcem)</td></tr>
+      <tr><td>Povrch křídla</td><td>CPL laminát</td></tr>
+      <tr><td>Sklo</td><td>Bez skla – plné dveře</td></tr>
+      <tr><td>Zárubeň</td><td>Falcová obložková zárubeň do tl. zdi 300 mm</td></tr>
+      <tr><td>Zámek</td><td>BB (klika-klika) nebo WC (záchod)</td></tr>
+      <tr><td>Orientace</td><td>Pravé (P) nebo levé (L)</td></tr>
+      <tr><td>Výrobce</td><td>PORTA, Polsko</td></tr>
+      <tr><td>Dostupnost</td><td>Skladem</td></tr>
+    </tbody></table>
+  </section>
+
+  <section style="margin-bottom:3rem;">
+    <h2 class="section-title">Dostupné šířky</h2>
+    <div class="size-grid">
+      <div class="size-tag">60 cm (WC)</div><div class="size-tag">70 cm</div>
+      <div class="size-tag">80 cm ★</div><div class="size-tag">90 cm</div>
+    </div>
+  </section>
+
+  <div class="cta-box">
+    <h3>Zájem o PORTA CPL 1.1?</h3>
+    <p>Pošlete poptávku nebo zavolejte – poradíme s rozměry a montáží.</p>
+    <div class="cta-btns">
+      <a href="poptavka.html" class="btn btn-primary" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL 1.1'},50)" style="background:#fff;color:#c0392b;">Poslat poptávku</a>
+      <a href="tel:+420725559235" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:.7rem 1.5rem;border-radius:var(--radius);font-weight:700;text-decoration:none;">+420 725 559 235</a>
+      <a href="dvere-do-interieru.html" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:.7rem 1.5rem;border-radius:var(--radius);font-weight:700;text-decoration:none;">← Zpět na přehled</a>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="container"><div class="footer-grid">
+  <div class="footer-brand"><a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a><p>Rodinná firma s 30letou tradicí.</p></div>
+  <div class="footer-col"><h5>Produkty</h5><div class="footer-links"><a href="dvere-do-interieru.html">Dveře do interiéru</a><a href="dvere-do-bytu.html">Dveře do bytu</a></div></div>
+  <div class="footer-col"><h5>Kontakt</h5><div class="footer-links"><a href="poptavka.html">Poptávka</a><a href="tel:+420725559235">+420 725 559 235</a></div></div>
+</div><div class="footer-bottom"><span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span></div></div></footer>
+<script>const navbar=document.getElementById('navbar');window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',window.scrollY>40));document.getElementById('navToggle').addEventListener('click',()=>navbar.classList.toggle('open'));</script>
+</body></html>

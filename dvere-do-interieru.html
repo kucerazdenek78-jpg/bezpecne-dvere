@@ -27,9 +27,7 @@
       font-size: .78rem; font-weight: 800; text-transform: uppercase;
       letter-spacing: .08em; margin-bottom: 1.2rem; margin-top: 2rem;
     }
-    .avail-label .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
+    .avail-label .dot { width: 10px; height: 10px; border-radius: 50%; }
     .avail-label.skladem .dot { background: #16a34a; }
     .avail-label.skladem { color: #16a34a; }
     .avail-label.objednavka .dot { background: var(--orange); }
@@ -38,7 +36,7 @@
     /* ── grid karet ── */
     .int-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
       gap: 1rem;
     }
     .int-card {
@@ -49,37 +47,64 @@
       box-shadow: var(--shadow-sm);
       display: flex; flex-direction: column;
       transition: box-shadow .2s, transform .2s;
-      cursor: default;
     }
-    .int-card:hover {
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-3px);
-    }
+    .int-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .int-card-img-wrap { display: block; overflow: hidden; }
     .int-card-img {
-      width: 100%; height: 160px;
+      width: 100%; height: 165px;
       object-fit: cover; display: block;
       background: #1a2744;
+      transition: transform .3s;
     }
+    .int-card-img-wrap:hover .int-card-img { transform: scale(1.04); }
     .int-card-body {
       padding: .75rem 1rem .9rem;
-      flex: 1; display: flex; flex-direction: column; gap: .3rem;
+      flex: 1; display: flex; flex-direction: column; gap: .25rem;
     }
-    .int-card-name {
-      font-weight: 800; color: var(--navy); font-size: .95rem;
-    }
-    .int-card-sub {
-      font-size: .75rem; color: var(--text-muted);
-    }
-    .int-card-price {
-      font-size: .82rem; color: var(--gray-500); margin-top: .1rem;
-    }
+    .int-card-name { font-weight: 800; color: var(--navy); font-size: .95rem; }
+    .int-card-sub { font-size: .75rem; color: var(--text-muted); }
+    .int-card-price { font-size: .82rem; color: var(--gray-500); margin-top: .1rem; }
     .int-card-price strong { color: var(--navy); }
-    .int-card-btn {
-      display: block; margin-top: auto; padding-top: .5rem;
-      text-align: center; font-size: .75rem; color: var(--blue);
-      font-weight: 600; text-decoration: none;
+
+    /* Barevné čipy */
+    .color-chips {
+      display: flex; align-items: center; gap: .3rem;
+      margin: .4rem 0 .2rem; flex-wrap: wrap;
     }
-    .int-card-btn:hover { color: var(--orange); }
+    .chip {
+      display: inline-block; width: 16px; height: 16px;
+      border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid rgba(0,0,0,.12);
+      cursor: default;
+    }
+    .chip-label {
+      font-size: .68rem; color: var(--text-muted); font-weight: 600;
+      margin-left: .1rem;
+    }
+
+    /* Akční tlačítka */
+    .int-card-actions {
+      display: flex; gap: .4rem; margin-top: auto; padding-top: .5rem;
+    }
+    .int-card-btn-detail {
+      flex: 1; display: block; text-align: center;
+      font-size: .72rem; color: var(--blue); font-weight: 700;
+      text-decoration: none; padding: .4rem .3rem;
+      background: #eff6ff; border-radius: var(--radius);
+      border: 1px solid #bfdbfe;
+      transition: background .15s, color .15s;
+    }
+    .int-card-btn-detail:hover { background: var(--blue); color: #fff; }
+    .int-card-btn {
+      flex: 1; display: block; text-align: center;
+      font-size: .72rem; color: var(--orange); font-weight: 700;
+      text-decoration: none; padding: .4rem .3rem;
+      background: #fff7ed; border-radius: var(--radius);
+      border: 1px solid #fed7aa;
+      transition: background .15s, color .15s;
+    }
+    .int-card-btn:hover { background: var(--orange); color: #fff; }
+
     .badge-skladem {
       display: inline-block; background: #dcfce7; color: #16a34a;
       font-size: .65rem; font-weight: 800; padding: .2rem .55rem;
@@ -90,6 +115,20 @@
       font-size: .65rem; font-weight: 800; padding: .2rem .55rem;
       border-radius: 100px; letter-spacing: .04em;
     }
+
+    /* Zárubeň v ceně – výrazný banner */
+    .zaruben-badge {
+      display: flex; align-items: center; gap: .35rem;
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #fff; font-size: .72rem; font-weight: 900;
+      padding: .35rem .7rem; border-radius: var(--radius);
+      letter-spacing: .03em; margin-bottom: .3rem;
+      box-shadow: 0 1px 4px rgba(22,163,74,.3);
+    }
+    .zaruben-badge svg { flex-shrink: 0; }
+    .int-card-price-line { font-size: .82rem; color: var(--gray-500); }
+    .int-card-price-line strong { color: var(--navy); font-size: .9rem; }
+    .int-card-price-wing { font-size: .73rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -148,7 +187,6 @@
   </div>
 </div>
 
-
 <!-- INFO: Ceny, DPH, montáž -->
 <section style="padding:1.5rem 0 0;">
   <div class="container">
@@ -188,63 +226,141 @@
       </div>
       <div class="int-grid">
 
+        <!-- FRÉZIA 1 -->
         <div class="int-card">
-          <img src="interiery-imgs/web/frezia1.jpg" alt="FRÉZIA 1" class="int-card-img" loading="lazy">
+          <a href="detail-frezia1.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/frezia1.jpg" alt="FRÉZIA 1 – dub přírodní, falcové CPL dveře se sklem" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">FRÉZIA 1 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · falcové · dub st / bílá st / cappuccino</div>
-            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 1'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · falcové · s matným sklem</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#9B7B62;" title="Cappuccino"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub přírodní"></span>
+              <span class-"chip-label">3 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>6 750 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 4 250 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-frezia1.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 1'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
+        <!-- FRÉZIA 9 -->
         <div class="int-card">
-          <img src="interiery-imgs/web/frezia9.jpg" alt="FRÉZIA 9" class="int-card-img" loading="lazy">
+          <a href="detail-frezia9.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/frezia9.jpg" alt="FRÉZIA 9 – cappuccino, plné falcové CPL dveře" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">FRÉZIA 9 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · falcové · dub st / bílá st / cappuccino</div>
-            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 9'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · falcové · plné bez skla</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#9B7B62;" title="Cappuccino"></span>
+              <span class-"chip-label">2 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>6 750 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 4 250 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-frezia9.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA 9'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
+        <!-- NEMÉZIA 14 -->
         <div class="int-card">
-          <img src="interiery-imgs/web/nemez14.jpg" alt="NEMÉZIA 14" class="int-card-img" loading="lazy">
+          <a href="detail-nemez14.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/nemez14.jpg" alt="NEMÉZIA 14 – cappuccino, falcové CPL dveře se sklem" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">NEMÉZIA 14 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · falcové · dub st / bílá / cappuccino</div>
-            <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong><br>Křídlo od 4 250 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA 14'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · falcové · s matným sklem</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#9B7B62;" title="Cappuccino"></span>
+              <span class="chip-label">2 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>6 750 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 4 250 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-nemez14.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA 14'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
+        <!-- LAURENCIA 1 -->
         <div class="int-card">
-          <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA 1" class="int-card-img" loading="lazy">
+          <a href="detail-laurencia1.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA 1 – falcové CPL dveře plné" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">LAURENCIA 1 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · falcové · bílá / dub přírodní</div>
-            <div class="int-card-price">Komplet <strong>od 6 600 Kč</strong><br>Křídlo od 4 050 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA 1'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · falcové · plné bez skla</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub přírodní"></span>
+              <span class="chip-label">2 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>6 600 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 4 050 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-laurencia1.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA 1'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
+        <!-- ALTAMURA 1 – bezfalcové -->
         <div class="int-card">
-          <img src="interiery-imgs/web/altamura1.jpg" alt="ALTAMURA 1" class="int-card-img" loading="lazy">
+          <a href="detail-altamura1.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/altamura1.jpg" alt="ALTAMURA 1 – bílá bezfalcová CPL dveře" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">ALTAMURA 1 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · bezfalcové · bílá st · plná deska</div>
-            <div class="int-card-price">Komplet <strong>od 4 750 Kč</strong><br>Křídlo od 2 200 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA 1'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · <strong>bezfalcové</strong> · plná deska · bílá</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class-"chip-label">1 barva</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>4 750 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 2 200 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-altamura1.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA 1'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
+        <!-- AVERSA 1 -->
         <div class="int-card">
-          <img src="interiery-imgs/web/aversa1.jpg" alt="AVERSA 1" class="int-card-img" loading="lazy">
+          <a href="detail-aversa1.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/aversa1.jpg" alt="AVERSA 1 – dub evropský, falcové ENDURO dveře" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">AVERSA 1 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">ENDURO / LAMINOLACK · dub evropský / bílá</div>
-            <div class="int-card-price">Komplet <strong>od 5 650 Kč</strong><br>Křídlo od 3 500 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO AVERSA 1'},50)">Poptávka →</a>
+            <div class="int-card-sub">ENDURO / LAMINOLACK · falcové · plné</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#8B6040;" title="Dub evropský"></span>
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip-label">2 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>5 650 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 3 500 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-aversa1.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO AVERSA 1'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
@@ -260,9 +376,12 @@
           <img src="interiery-imgs/web/altamura.jpg" alt="ALTAMURA" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">ALTAMURA</div>
-            <div class="int-card-sub">STCPL / PREMIUM · falcové i bezfalcové · 10+ barev</div>
+            <div class="int-card-sub">STCPL / PREMIUM · falcové i bezfalcové</div>
+            <div class="color-chips"><span class="chip-label">10+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 7 800 Kč</strong> (falcové)<br>bezfalcové od 10 200 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -271,8 +390,11 @@
           <div class="int-card-body">
             <div class="int-card-name">NEMÉZIA</div>
             <div class="int-card-sub">STCPL / PREMIUM / GREKO · 8 variant panelů</div>
+            <div class="color-chips"><span class="chip-label">8+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 6 250 Kč</strong> (PREMIUM)<br>GREKO od 8 500 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NEMÉZIA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -281,8 +403,11 @@
           <div class="int-card-body">
             <div class="int-card-name">MISKANT</div>
             <div class="int-card-sub">STCPL / PREMIUM / GREKO · falcové i bezfalcové</div>
+            <div class="color-chips"><span class="chip-label">8+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 7 450 Kč</strong> (falcové)<br>GREKO od 9 000 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MISKANT'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MISKANT'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -290,9 +415,12 @@
           <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">LAURENCIA</div>
-            <div class="int-card-sub">PREMIUM / STCPL · falcové i bezfalcové · 10+ barev</div>
+            <div class="int-card-sub">PREMIUN / STCPL · falcové i bezfalcové</div>
+            <div class="color-chips"><span class="chip-label">10+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 6 600 Kč</strong> (PREMIUM)<br>bezfalcové od 8 900 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LAURENCIA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -301,18 +429,24 @@
           <div class="int-card-body">
             <div class="int-card-name">MAGNÓLIA</div>
             <div class="int-card-sub">PREMIUM / STCPL · 8 variant (1–8) · falcové i bezfalcové</div>
+            <div class="color-chips"><span class="chip-label">8+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 6 050 Kč</strong><br>bezfalcové od 8 350 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MAGNÓLIA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO MAGNÓLIA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/frezia.jpg" alt="FRÉZIA" class="int-card-img" loading="lazy">
+          <img src="interiery-imgs/web/frezia.jpg" alt="FRÉZIA – ostatní varianty" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">FRÉZIA</div>
-            <div class="int-card-sub">STCPL / PREMIUM · varianty 2, 4, 6 · různé dekor</div>
+            <div class="int-card-sub">STCPL / PREMIUM · varianty 2, 4, 6 · různé dekory</div>
+            <div class="color-chips"><span class="chip-label">6+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 6 750 Kč</strong> (STCPL)<br>bezfalcové od 8 900 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO FRÉZIA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -321,8 +455,11 @@
           <div class="int-card-body">
             <div class="int-card-name">DAGLÉZIA</div>
             <div class="int-card-sub">STCPL / PREMIUM · skleněné výplně · 6 skupin</div>
+            <div class="color-chips"><span class="chip-label">6+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 4 850 Kč</strong> (STCPL)<br>PREMIUM od 7 050 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DAGLÉZIA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DAGLÉZIA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -331,38 +468,55 @@
           <div class="int-card-body">
             <div class="int-card-name">ALTAMURA LUX</div>
             <div class="int-card-sub">STCPL / PREMIUM · rovný + fazovaný panel</div>
+            <div class="color-chips"><span class="chip-label">8+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 6 950 Kč</strong><br>bezfalcové od 9 300 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA LUX'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO ALTAMURA LUX'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
           <img src="interiery-imgs/web/libra_norma.jpg" alt="LIBRA" class="int-card-img" loading="lazy">
           <div class="int-card-body">
-            <div class="int-card-name">LIBRA</div>
+            <div class="int-card-name">LIBRA · NORMA DECOR</div>
             <div class="int-card-sub">ENDURO / CPL · jednoduchý design · falcové</div>
+            <div class="color-chips"><span class="chip-label">4+ barvy</span></div>
             <div class="int-card-price">Komplet <strong>od 5 000 Kč</strong><br>NORMA DECOR od 3 850 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LIBRA'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LIBRA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
           <img src="interiery-imgs/web/decorato.jpg" alt="DECORATO / BELGATTO" class="int-card-img" loading="lazy">
           <div class="int-card-body">
-            <div class="int-card-name">DECORATO / BELGATTO</div>
+            <div class="int-card-name">DECORATO · BELGATTO</div>
             <div class="int-card-sub">ENDURO / LAMINOLACK · 14 variant panelů</div>
+            <div class="color-chips"><span class="chip-label">6+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 5 900 Kč</strong> (ENDURO)<br>LAMINOLACK od 7 000 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DECORATO'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO DECORATO'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/linea_forte5.jpg" alt="SIENA / LINEA FORTE" class="int-card-img" loading="lazy">
+          <img src="interiery-imgs/web/linea_forte5.jpg" alt="LINEA FORTE 5 – INVADO ENDURO dveře" class="int-card-img" loading="lazy">
           <div class="int-card-body">
-            <div class="int-card-name">SIENA · LINEA FORTE</div>
+            <div class="int-card-name">LINEA FORTE</div>
             <div class="int-card-sub">ENDURO / ENDURO 3D · moderní design · falcové</div>
-            <div class="int-card-price">Komplet <strong>od 5 100 Kč</strong><br>LINEA FORTE od 5 100 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO SIENA / LINEA FORTE'},50)">Poptávka →</a>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#9B7B62;" title="Cappuccino"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub"></span>
+              <span class="chip-label">4+ barev</span>
+            </div>
+            <div class="int-card-price">Komplet <strong>od 5 100 Kč</strong></div>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO LINEA FORTE'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -371,8 +525,11 @@
           <div class="int-card-body">
             <div class="int-card-name">NOGARO · TAMPARO</div>
             <div class="int-card-sub">ENDURO / LAMINOLACK · skleněné prvky · falcové</div>
+            <div class="color-chips"><span class="chip-label">4+ barev</span></div>
             <div class="int-card-price">NOGARO <strong>od 5 650 Kč</strong><br>TAMPARO od 6 450 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NOGARO / TAMPARO'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO NOGARO / TAMPARO'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -381,8 +538,11 @@
           <div class="int-card-body">
             <div class="int-card-name">CAPRIO · NIDA · ROMA</div>
             <div class="int-card-sub">ENDURO / ENDURO 3D · falcové i bezfalcové</div>
-            <div class="int-card-price">CAPRIO <strong>od 4 850 Kč</strong><br>NIDA · ROMA od 4 850 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO CAPRIO / NIDA / ROMA'},50)">Poptávka →</a>
+            <div class="color-chips"><span class="chip-label">4+ barev</span></div>
+            <div class="int-card-price">od <strong>4 850 Kč</strong></div>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: INVADO CAPRIO / NIDA / ROMA'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
@@ -403,22 +563,45 @@
       <div class="int-grid">
 
         <div class="int-card">
-          <img src="interiery-imgs/web/cpl11.jpg" alt="PORTA CPL 1.1" class="int-card-img" loading="lazy">
+          <a href="detail-cpl11.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/cpl11.jpg" alt="PORTA CPL 1.1 – přírodní dub, falcové CPL dveře" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">CPL 1.1 <span class="badge-skladem">SKLADEM</span></div>
-            <div class="int-card-sub">CPL · falcové · bílá / přírodní dub</div>
-            <div class="int-card-price">Komplet <strong>od 6 550 Kč</strong><br>Křídlo od 3 050 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL 1.1'},50)">Poptávka →</a>
+            <div class="int-card-sub">CPL · falcové · plné bez skla</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Přírodní dub"></span>
+              <span class-"chip-label">2 barvy</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>6 550 Kč</strong></div>
+            <div class="int-card-price-wing">křídlo od 3 050 Kč</div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-cpl11.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL 1.1'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/decor_p.jpg" alt="PORTA DECOR P" class="int-card-img" loading="lazy">
+          <a href="detail-decor-p.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/decor_p.jpg" alt="PORTA DECOR P – bezfalcové dveře s hliníkovou zárubní" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">DECOR P <span class="badge-skladem">SKLADEM</span></div>
             <div class="int-card-sub">Hliníková zárubeň · bezfalcová / reverzní</div>
-            <div class="int-card-price">Komplet <strong>od 4 500 Kč</strong></div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA DECOR P'},50)">Poptávka →</a>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#9B7B62;" title="Cappuccino"></span>
+              <span class="chip-label">více barev</span>
+            </div>
+            <div class="zaruben-badge"><svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.39 4.84L18 6.82l-4 3.9.94 5.49L10 13.77l-4.94 2.44L6 10.72 2 6.82l5.61-.98z"/></svg> Zárubeň v ceně</div>
+            <div class="int-card-price-line">od <strong>4 500 Kč</strong></div>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-decor-p.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA DECOR P'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
@@ -435,38 +618,77 @@
           <div class="int-card-body">
             <div class="int-card-name">VECTOR</div>
             <div class="int-card-sub">VECTOR T / E / U · Hydro Protect · česká norma zdarma</div>
-            <div class="int-card-price">Komplet dle varianty<br>od cca 7 000 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VECTOR'},50)">Poptávka →</a>
+            <div class="color-chips"><span class="chip-label">4+ barev</span></div>
+            <div class="int-card-price">od cca <strong>7 000 Kč</strong></div>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VECTOR'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/verte_home_g4.jpg" alt="PORTA VERTE HOME" class="int-card-img" loading="lazy">
+          <a href="detail-porta-verte.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/verte_home_g4.jpg" alt="PORTA VERTE HOME G4 – přírodní dub" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">VERTE HOME G / H</div>
-            <div class="int-card-sub">Fólie / Soft CPL · falcové i bezfalcové · 4 barvy</div>
+            <div class="int-card-sub">Fólie / Soft CPL · falcové i bezfalcové</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub"></span>
+              <span class="chip" style="background:#7A6155;" title="Ořech"></span>
+              <span class="chip" style="background:#3B2C26;" title="Wenge"></span>
+              <span class="chip-label">4 barvy</span>
+            </div>
             <div class="int-card-price">Komplet <strong>od 7 450 Kč</strong> (falcové)<br>bezfalcové od 9 450 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE HOME'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-porta-verte.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE HOME'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM A" class="int-card-img" loading="lazy">
+          <a href="detail-porta-verte.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM A" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">VERTE PREMIUM A</div>
-            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Modern · 4 barvy</div>
+            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Modern</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub"></span>
+              <span class="chip" style="background:#7A6155;" title="Ořech"></span>
+              <span class="chip" style="background:#3B2C26;" title="Wenge"></span>
+              <span class="chip-label">4 barvy</span>
+            </div>
             <div class="int-card-price">Komplet <strong>od 8 150 Kč</strong> (falcové)<br>bezfalcové od 10 250 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM A'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-porta-verte.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM A'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM E" class="int-card-img" loading="lazy">
+          <a href="detail-porta-verte.html" class="int-card-img-wrap">
+            <img src="interiery-imgs/web/verte_premium.jpg" alt="PORTA VERTE PREMIUM E" class="int-card-img" loading="lazy">
+          </a>
           <div class="int-card-body">
             <div class="int-card-name">VERTE PREMIUM E</div>
-            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Rustic · prémiová řada</div>
+            <div class="int-card-sub">Fólie / Soft CPL · Traditional + Rustic</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub"></span>
+              <span class="chip" style="background:#7A6155;" title="Ořech"></span>
+              <span class="chip" style="background:#3B2C26;" title="Wenge"></span>
+              <span class="chip-label">4 barvy</span>
+            </div>
             <div class="int-card-price">Komplet <strong>od 9 100 Kč</strong> (falcové)<br>bezfalcové od 11 400 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM E'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn-detail" href="detail-porta-verte.html">Detail →</a>
+              <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA VERTE PREMIUM E'},50)">Poptávka</a>
+            </div>
           </div>
         </div>
 
@@ -474,31 +696,34 @@
           <img src="interiery-imgs/web/harmony.jpg" alt="PORTA HARMONY" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">HARMONY</div>
-            <div class="int-card-sub">Modern / Traditional · Soft CPL · 4 barvy · top model</div>
+            <div class="int-card-sub">Modern / Traditional · Soft CPL · top model</div>
+            <div class="color-chips">
+              <span class="chip" style="background:#F5F2EE;border-color:#ccc;" title="Bílá"></span>
+              <span class="chip" style="background:#C49A6C;" title="Dub"></span>
+              <span class="chip" style="background:#7A6155;" title="Ořech"></span>
+              <span class="chip" style="background:#3B2C26;" title="Wenge"></span>
+              <span class="chip-label">4 barvy</span>
+            </div>
             <div class="int-card-price">Komplet <strong>od 9 200 Kč</strong> (falcové)<br>bezfalcové od 11 400 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA HARMONY'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA HARMONY'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
         <div class="int-card">
-          <img src="interiery-imgs/web/cpl.jpg" alt="PORTA CPL" class="int-card-img" loading="lazy">
+          <img src="interiery-imgs/web/cpl.jpg" alt="PORTA CPL – celá řada" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">CPL</div>
             <div class="int-card-sub">CPL · Traditional / Rustic · falcové i bezfalcové</div>
+            <div class="color-chips"><span class="chip-label">4+ barev</span></div>
             <div class="int-card-price">Komplet <strong>od 7 050 Kč</strong> (falcové)<br>bezfalcové od 8 500 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL'},50)">Poptávka →</a>
+            <div class="int-card-actions">
+              <a class="int-card-btn" href="poptavka.html" style="flex:2" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA CPL'},50)">Poptávka →</a>
+            </div>
           </div>
         </div>
 
-        <div class="int-card" style="border-color:#fee2e2;">
-          <img src="interiery-imgs/web/extreme_rc3.jpg" alt="PORTA EXTREME RC3" class="int-card-img" loading="lazy">
-          <div class="int-card-body">
-            <div class="int-card-name">EXTREME RC3 <span class="badge-nov">RC3</span></div>
-            <div class="int-card-sub">Bezpečnostní · EI30 · akustika · česká norma</div>
-            <div class="int-card-price">Komplet <strong>15 800 Kč</strong><br>Požární varianta 16 200 Kč</div>
-            <a class="int-card-btn" href="poptavka.html" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: PORTA EXTREME RC3'},50)">Poptávka →</a>
-          </div>
-        </div>
 
       </div><!-- /porta na objednávku grid -->
     </div><!-- /brand-section PORTA -->

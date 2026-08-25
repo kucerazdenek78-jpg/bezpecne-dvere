@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRÉZIA 1 – Detail dveří ERKADO | Bezpečné dveře</title>
+  <meta name="description" content="Interiérové dveře ERKADO FRÉZIA 1. Falcové CPL dveře s matným sklem. 3 barevná provedení: bílá, cappuccino, dub. Skladem.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .breadcrumb { font-size:.8rem; color:var(--text-muted); padding:1rem 0 0; }
+    .breadcrumb a { color:var(--blue); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--orange); }
+    .breadcrumb span { margin:0 .4rem; }
+
+    .detail-hero {
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:3rem;
+      align-items:start;
+      padding:2rem 0 3rem;
+    }
+    .detail-hero-img {
+      border-radius:var(--radius-lg);
+      overflow:hidden;
+      background:#1a2744;
+      box-shadow:var(--shadow-lg);
+      position:sticky;
+      top:90px;
+    }
+    .detail-hero-img img { width:100%; display:block; }
+    .detail-brand { display:inline-block; background:var(--navy); color:#fff; font-size:.72rem; font-weight:800; letter-spacing:.07em; padding:.3rem .85rem; border-radius:100px; margin-bottom:1rem; }
+    .detail-hero-info h1 { font-size:2rem; color:var(--navy); margin:0 0 .4rem; }
+    .detail-tagline { font-size:1rem; color:var(--text-muted); margin:0 0 1.5rem; }
+
+    .feature-pills { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0 1.5rem; }
+    .feature-pill { background:#f1f5f9; border:1px solid var(--gray-200); border-radius:100px; font-size:.78rem; font-weight:600; padding:.3rem .85rem; color:var(--navy); }
+    .feature-pill.green { background:#f0fdf4; border-color:#bbf7d0; color:#16a34a; }
+
+    .price-box { background:#f0f7ff; border:1px solid #bfdbfe; border-radius:var(--radius-lg); padding:1.2rem 1.5rem; margin:1.5rem 0; }
+    .price-main { font-size:1.5rem; font-weight:900; color:var(--navy); }
+    .price-note { font-size:.8rem; color:var(--text-muted); margin-top:.3rem; }
+
+    .section-title { font-size:1.25rem; font-weight:800; color:var(--navy); margin:0 0 1.25rem; padding-bottom:.6rem; border-bottom:2px solid var(--gray-200); }
+
+    /* Barvy */
+    .color-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1.25rem; margin-top:1.25rem; }
+    .color-card { background:var(--white); border:2px solid var(--gray-200); border-radius:var(--radius-lg); overflow:hidden; transition:box-shadow .2s,transform .2s,border-color .2s; cursor:default; }
+    .color-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); border-color:var(--blue); }
+    .color-card img { width:100%; aspect-ratio:310/413; object-fit:cover; display:block; background:#1a2744; }
+    .color-card-body { padding:.75rem 1rem .9rem; }
+    .swatch-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem; }
+    .swatch { width:18px; height:18px; border-radius:50%; flex-shrink:0; border:1.5px solid rgba(0,0,0,.12); }
+    .color-name { font-size:.88rem; font-weight:700; color:var(--navy); }
+    .color-sub { font-size:.72rem; color:var(--text-muted); }
+    .badge-skladem-sm { display:inline-block; background:#dcfce7; color:#16a34a; font-size:.62rem; font-weight:800; padding:.15rem .5rem; border-radius:100px; margin-left:.3rem; }
+
+    /* Specs */
+    .specs-table { width:100%; border-collapse:collapse; font-size:.88rem; border-radius:var(--radius-lg); overflow:hidden; }
+    .specs-table th { text-align:left; background:var(--navy); color:#fff; padding:.65rem 1.1rem; font-size:.75rem; font-weight:700; letter-spacing:.05em; }
+    .specs-table td { padding:.6rem 1.1rem; border-bottom:1px solid var(--gray-200); }
+    .specs-table td:first-child { font-weight:700; color:var(--navy); width:38%; }
+    .specs-table td:last-child { color:var(--text-muted); }
+    .specs-table tr:last-child td { border-bottom:none; }
+    .specs-table tr:nth-child(even) td { background:#f8fafc; }
+
+    /* Rozměry */
+    .size-grid { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1rem; }
+    .size-tag { background:#f1f5f9; border:1px solid var(--gray-200); border-radius:var(--radius); padding:.45rem .9rem; font-size:.82rem; font-weight:700; color:var(--navy); text-align:center; }
+
+    /* Info box */
+    .info-box { background:#fffbeb; border:1px solid #fde68a; border-radius:var(--radius-lg); padding:1rem 1.5rem; font-size:.85rem; color:#92400e; }
+    .info-box strong { color:#78350f; }
+
+    /* CTA */
+    .cta-box { background:var(--navy); border-radius:var(--radius-lg); padding:2.5rem 2rem; text-align:center; margin:2rem 0 4rem; }
+    .cta-box h3 { color:#fff; margin:0 0 .5rem; }
+    .cta-box p { color:rgba(255,255,255,.7); margin:0 0 1.5rem; }
+    .cta-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+
+    @media(max-width:768px) {
+      .detail-hero { grid-template-columns:1fr; gap:1.5rem; }
+      .detail-hero-img { position:static; max-width:300px; margin:0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.svg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">⭐ PREMIUM 60 – nosný produkt</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54 – levnější alternativa</a>
+            <a href="dvere-do-bytu.html#ostatni">MAGNUM 56 &amp; SECURIDO 65</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link active">Dveře do interiéru</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dokumenty.html" class="nav-link">Dokumenty</a></li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a href="poptavka.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<section style="padding-bottom:5rem;">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="index.html">Domů</a><span>›</span>
+      <a href="dvere-do-interieru.html">Dveře do interiéru</a><span>›</span>
+      <strong>FRÉZIA 1</strong>
+    </div>
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      <div class="detail-hero-img">
+        <img src="interiery-imgs/web/frezia1.jpg" alt="FRÉZIA 1 – dub přírodní" id="heroImg">
+      </div>
+      <div class="detail-hero-info">
+        <span class="detail-brand">ERKADO · INVADO</span>
+        <h1>FRÉZIA 1</h1>
+        <p class="detail-tagline">Falcové interiérové dveře s matným sklem a CPL povrchem</p>
+
+        <div class="feature-pills">
+          <span class="feature-pill green">✓ Skladem</span>
+          <span class="feature-pill">Falcové</span>
+          <span class="feature-pill">CPL povrch</span>
+          <span class="feature-pill">Matné sklo</span>
+          <span class="feature-pill">3 barevná provedení</span>
+          <span class="feature-pill">Zárubeň v ceně</span>
+        </div>
+
+        <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.5rem;">
+          FRÉZIA 1 je moderní falcové dveře s horizontálně drážkovaným panelem a matným sklem. Odolný CPL laminát chrání povrch před škrábanci a vlhkostí – ideální volba do chodby, obývacího pokoje nebo koupelny. <strong>Cena zahrnuje kompletní sadu: dveřní křídlo + falcová zárubeň</strong> do tloušťky zdi 300 mm.
+        </p>
+
+        <div class="price-box">
+          <div class="price-main">od 6 750 Kč</div>
+          <div class="price-note">
+            Komplet (křídlo + zárubeň) bez kování a bez DPH.<br>
+            Pouze křídlo od 4 250 Kč. · <span style="color:#16a34a;font-weight:700;">Montáž firmou = DPH 12 %</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <a href="poptavka.html" class="btn btn-primary" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: ERKADO FRÉZIA 1'},50)">Poslat poptávku</a>
+          <a href="tel:+420725559235" class="btn btn-secondary">+420 725 559 235</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAREVNÉ PROVEDENÍ -->
+    <section style="margin-bottom:3rem;">
+      <h2 class="section-title">Barevné provedení</h2>
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;">FRÉZIA 1 je dostupná ve 3 dekorech CPL laminátu. Kliknutím na barvu zobrazíte náhled.</p>
+      <div class="color-grid">
+
+        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-dub_310x413.png'">
+          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-dub_310x413.png"
+               alt="FRÉZIA 1 – dub přírodní"
+               onerror="this.src='interiery-imgs/web/frezia1.jpg'">
+          <div class="color-card-body">
+            <div class="swatch-row">
+              <span class="swatch" style="background:#C49A6C;"></span>
+              <span class="color-name">Dub přírodní <span class="badge-skladem-sm">SKLADEM</span></span>
+            </div>
+            <div class="color-sub">dub st CPL · přírodní struktura dřeva</div>
+          </div>
+        </div>
+
+        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-biela_310x413.png'">
+          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-biela_310x413.png"
+               alt="FRÉZIA 1 – bílá"
+               onerror="this.src='interiery-imgs/web/frezia1.jpg'">
+          <div class="color-card-body">
+            <div class="swatch-row">
+              <span class="swatch" style="background:#F5F2EE;border:1.5px solid #ddd;"></span>
+              <span class="color-name">Bílá <span class="badge-skladem-sm">SKLADEM</span></span>
+            </div>
+            <div class="color-sub">biela st CPL · čistá bílá</div>
+          </div>
+        </div>
+
+        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-capucino_310x413.png'">
+          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-capucino_310x413.png"
+               alt="FRÉZIA 1 – cappuccino"
+               onerror="this.style.display='none';this.parentElement.querySelector('.color-placeholder').style.display='flex'">
+          <div class="color-placeholder" style="display:none;height:160px;align-items:center;justify-content:center;background:#9B7B62;color:#fff;font-size:.85rem;font-weight:700;">Cappuccino</div>
+          <div class="color-card-body">
+            <div class="swatch-row">
+              <span class="swatch" style="background:#9B7B62;"></span>
+              <span class="color-name">Cappuccino <span class="badge-skladem-sm">SKLADEM</span></span>
+            </div>
+            <div class="color-sub">capucino st CPL · teplý hnědý tón</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TECHNICKÉ PARAMETRY -->
+    <section style="margin-bottom:3rem;">
+      <h2 class="section-title">Technické parametry</h2>
+      <table class="specs-table">
+        <thead>
+          <tr><th>Parametr</th><th>Hodnota</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Typ závěsu</td><td>Falcové (s falcem 12 mm)</td></tr>
+          <tr><td>Povrch křídla</td><td>CPL laminát – odolný vįsōi otěstu a vlhkosti</td></tr>
+          <tr><td>Sklo</td><td>Matné průhledné sklo (2. panel)</td></tr>
+          <tr><td>Z�Ρrubeň</td><td>Falcová obložková zárubeň do tl. zdi 300 mm</td></tr>
+          <tr><td>Zámek</td><td>BB (klika-klika) nebo WC (záchod)</td></tr>
+          <tr><td>Orientace</td><td>Pravé (P) nebo levé (L)</td></tr>
+          <tr><td>Plnění křídla</td><td>Sendvičová konstrukce – dutinová deska</td></tr>
+          <tr><td>Výrobce</td><td>ERKADO (skupina INVADO), Polsko</td></tr>
+          <tr><td>Dostupnost</td><td>Skladem – expediční lhůta 1–5 pracovních dní</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- DOSTUPNÉ ROZMĚRY -->
+    <section style="margin-bottom:3rem;">
+      <h2 class="section-title">Dostupné šírŝky</h2>
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;">StandardníƗka dveří 197 cm. Zárubeň do tloušťky zdi 300 mm.</p>
+      <div class="size-grid">
+        <div class="size-tag">60 cm (WC)</div>
+        <div class="size-tag">70 cm</div>
+        <div class="size-tag">80 cm ★</div>
+        <div class="size-tag">90 cm</div>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-muted);margin-top:.75rem;">★ Nejoblíbenější rozměr pro standardní interiérové dveře</p>
+    </section>
+
+    <!-- INFO BOX -->
+    <div class="info-box" style="margin-bottom:3rem;">
+      <strong>Na co nezapomenout při objednávce:</strong> Určete správnou orientaci dveří (P = pravé, L = levé) – stojíte před dveřmi, v jaké ruce máte kliku. Dále tloušťku stěny a typ zámku (BB do pokojů, WC do koupelen/záchodů). Při nejistotě vám s výběrem poradíme telefonicky.
+    </div>
+
+    <!-- PODOBNÉ MODELY -->
+    <section style="margin-bottom:3rem;">
+      <h2 class="section-title">Podobné modely ze skladu</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1.25rem;">
+
+        <a href="detail-frezia9.html" style="text-decoration:none;">
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none'">
+            <img src="interiery-imgs/web/frezia9.jpg" alt="FRÉZIA 9" style="width:100%;height:140px;object-fit:cover;display:block;background:#1a2744;">
+            <div style="padding:.7rem 1rem;">
+              <div style="font-weight:800;color:var(--navy);font-size:.9rem;">FRÉZIA 9</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">2 barvy · plné dveře bez skla</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="detail-nemez14.html" style="text-decoration:none;">
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none'">
+            <img src="interiery-imgs/web/nemez14.jpg" alt="NEMÉZIA 14" style="width:100%;height:140px;object-fit:cover;display:block;background:#1a2744;">
+            <div style="padding:.7rem 1rem;">
+              <div style="font-weight:800;color:var(--navy);font-size:.9rem;">NEMÉZIA 14</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">2 barvy · se sklem</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="detail-laurencia1.html" style="text-decoration:none;">
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='var(--shadow-sm)';this.style.transform='none'">
+            <img src="interiery-imgs/web/laurencia1.jpg" alt="LAURENCIA 1" style="width:100%;height:140px;object-fit:cover;display:block;background:#1a2744;">
+            <div style="padding:.7rem 1rem;">
+              <div style="font-weight:800;color:var(--navy);font-size:.9rem;">LAURENCIA 1</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">2 barvy · plné dveře</div>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h3>Máte zájem o FRÉZIA 1?</h3>
+      <p>Kontaktujte nás nebo pošlete poptávku – poradíme s rozměry, orientací i montáží.</p>
+      <div class="cta-btns">
+        <a href="poptavka.html" class="btn btn-primary" onclick="setTimeout(()=>{const m=document.getElementById('message');if(m)m.value='Zájem o dveře: ERKADO FRÉZIA 1'},50)">Poslat poptávku</a>
+        <a href="tel:+420725559235" class="btn btn-navy" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;">+420 725 559 235</a>
+        <a href="dvere-do-interieru.html" class="btn btn-navy" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;">← Zpět na přehled</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo-white.svg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodilná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-interieru.html">Dveře do interiéru</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+</body>
+</html>
