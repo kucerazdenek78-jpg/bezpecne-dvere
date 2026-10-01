@@ -569,3 +569,26 @@ footer {
   color: rgba(255,255,255,0.75); flex-wrap: wrap;
 }
 .cookie-bar.hidden { display: none; }
+
+/* ─── MOBILE: opravy mřížek a dotykových ploch (audit 1. 10. 2026) ─── */
+@media (max-width: 768px) {
+  /* dvousloupcové bloky zapsané přímo ve stránkách → pod sebe */
+  [style*="grid-template-columns:1fr 1fr;gap:3rem"],
+  [style*="grid-template-columns:1fr 1.2fr"],
+  [style*="grid-template-columns:1.2fr 1fr"],
+  .cat-grid[style] { grid-template-columns: 1fr !important; gap: 2rem !important; }
+  #reference-grid,
+  .gallery-grid[style*="repeat(3,1fr)"] { grid-template-columns: repeat(2, 1fr) !important; }
+  /* obsah buněk mřížky nesmí roztáhnout stránku do šířky */
+  [style*="display:grid"] > * { min-width: 0; }
+  .nav-inner { gap: 1rem; }
+  /* větší dotykové plochy */
+  .navbar.open .nav-link { padding: 0.75rem 0.85rem; }
+  .navbar.open .dropdown a { padding: 0.7rem 1.2rem; }
+  .footer-links { gap: 0.25rem; }
+  .footer-links a { padding: 0.35rem 0; }
+  .breadcrumb a { padding: 0.35rem 0; }
+}
+@media (max-width: 480px) {
+  #reference-grid { grid-template-columns: 1fr !important; }
+}
