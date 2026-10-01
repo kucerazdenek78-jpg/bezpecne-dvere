@@ -23,7 +23,6 @@
     .slide.active { opacity:1; z-index:1; }
     .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
     .slide-video { overflow:hidden; }
-    @media (max-width: 900px) { .slide-video iframe { display:none; } }
     .slide-video iframe { position:absolute; top:50%; left:50%; width:100vw; height:56.25vw; min-height:100%; min-width:177.78vh; transform:translate(-50%,-50%); border:0; pointer-events:none; }
     .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.62) 55%, rgba(10,20,50,0.3) 100%); }
     @media (max-width: 900px) { .slide-overlay { background:rgba(10,20,50,0.8); } }
@@ -238,7 +237,8 @@
     </div>
   </div>
 
-  <!-- Slide 2 – bezpečnostní dveře obecně -->
+  <!-- VYPNUTÉ STATICKÉ SLIDY (2–5: bezpečnostní dveře, Securido, servis oken, dveře do domu) – kód zachován níže
+  <!- - Slide 2 – bezpečnostní dveře obecně - ->
   <div class="slide">
     <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-bezp-dvere-1.png')"></div>
     <div class="slide-overlay"></div>
@@ -253,7 +253,7 @@
     </div>
   </div>
 
-  <!-- Slide 3 – Securido -->
+  <!- - Slide 3 – Securido - ->
   <div class="slide">
     <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/1920x730px-securido-01-2025_cz4-min.jpeg')"></div>
     <div class="slide-overlay"></div>
@@ -267,7 +267,7 @@
     </div>
   </div>
 
-  <!-- Slide 4 – Servis oken -->
+  <!- - Slide 4 – Servis oken - ->
   <div class="slide">
     <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/servis-oken-slide3.png')"></div>
     <div class="slide-overlay"></div>
@@ -281,7 +281,7 @@
     </div>
   </div>
 
-  <!-- Slide 5 – dveře do domu -->
+  <!- - Slide 5 – dveře do domu - ->
   <div class="slide">
     <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/s2.jpg')"></div>
     <div class="slide-overlay"></div>
@@ -295,6 +295,8 @@
     </div>
   </div>
 
+  -->
+
   <!-- Navigační šipky -->
   <button class="slider-arrow prev" id="sliderPrev">&#8249;</button>
   <button class="slider-arrow next" id="sliderNext">&#8250;</button>
@@ -302,10 +304,6 @@
   <!-- Tečky -->
   <div class="slider-dots" id="sliderDots">
     <button class="dot active" data-idx="0"></button>
-    <button class="dot" data-idx="1"></button>
-    <button class="dot" data-idx="2"></button>
-    <button class="dot" data-idx="3"></button>
-    <button class="dot" data-idx="4"></button>
   </div>
 </div>
 
@@ -775,7 +773,7 @@
     document.querySelectorAll('.slide-video[data-yt]').forEach(el => {
       const active = el.closest('.slide').classList.contains('active');
       const ifr = el.querySelector('iframe');
-      if (active && !ifr && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && window.matchMedia('(min-width: 901px)').matches) {
+      if (active && !ifr && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const id = el.dataset.yt;
         const f = document.createElement('iframe');
         f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + id + '&playsinline=1&rel=0&modestbranding=1&disablekb=1';
@@ -810,8 +808,10 @@
   document.getElementById('sliderPrev').addEventListener('click', () => { goTo(current - 1); startAuto(); });
   dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.idx); startAuto(); }));
 
+  if (slides.length < 2) {
+    ['sliderPrev','sliderNext','sliderDots'].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; });
+  } else { startAuto(); }
   syncVideo();
-  startAuto();
 </script>
 </body>
 </html>
