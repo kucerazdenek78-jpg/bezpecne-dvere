@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akční katalog interiérových dveří 9/2026 | Bezpečné dveře</title>
+  <meta name="description" content="Prolistujte si akční katalog interiérových dveří 9/2026 – skladový sortiment Porta, Erkado a Invado, zárubně a soklové lišty.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .page-header { padding: 7.5rem 0 2.5rem; }
+    .catalog-section { background: #0f1a33; padding: 2rem 0 2.5rem; }
+    .catalog-toolbar {
+      display: flex; align-items: center; justify-content: center; gap: .6rem;
+      flex-wrap: wrap; margin-bottom: 1.25rem; color: rgba(255,255,255,.8); font-size: .9rem;
+    }
+    .cat-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+      min-width: 44px; height: 44px; padding: 0 .9rem;
+      background: rgba(255,255,255,.08); color: #fff;
+      border: 1px solid rgba(255,255,255,.2); border-radius: var(--radius);
+      font: inherit; font-weight: 600; cursor: pointer; transition: var(--transition);
+    }
+    .cat-btn:hover { background: var(--orange); border-color: var(--orange); }
+    .cat-btn:disabled { opacity: .35; cursor: default; background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); }
+    .cat-btn svg { width: 18px; height: 18px; }
+    .page-jump { display: inline-flex; align-items: center; gap: .4rem; }
+    .page-jump input {
+      width: 3.6rem; height: 44px; text-align: center;
+      background: #fff; color: var(--navy); border: none; border-radius: var(--radius);
+      font: inherit; font-weight: 700;
+    }
+    .catalog-stage { position: relative; display: flex; justify-content: center; }
+    .catalog-book { margin: 0 auto; }
+    .catalog-book .page { background: #fff; overflow: hidden; }
+    .catalog-book .page img { width: 100%; height: 100%; object-fit: contain; display: block; user-select: none; -webkit-user-drag: none; }
+    .catalog-book .page.loading::after {
+      content: 'Načítám…'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: var(--gray-400); font-size: .85rem;
+    }
+    .side-nav {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition);
+    }
+    .side-nav:hover { background: var(--orange); border-color: var(--orange); }
+    .side-nav.prev { left: .5rem; } .side-nav.next { right: .5rem; }
+    .side-nav svg { width: 22px; height: 22px; }
+    .catalog-hint { text-align: center; color: rgba(255,255,255,.55); font-size: .82rem; margin-top: 1rem; }
+    .catalog-error { display: none; text-align: center; color: #fff; padding: 3rem 1rem; }
+
+    /* Přiblížení strany */
+    .zoom-overlay {
+      position: fixed; inset: 0; z-index: 2000; background: rgba(8,14,30,.96);
+      display: none; flex-direction: column;
+    }
+    .zoom-overlay.open { display: flex; }
+    .zoom-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: .75rem 1rem; color: #fff; font-size: .9rem; border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .zoom-scroll { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; text-align: center; padding: 1rem; }
+    .zoom-scroll img { max-width: none; width: min(1240px, 100%); margin: 0 auto; background: #fff; }
+    .zoom-scroll.large img { width: 1240px; }
+
+    .catalog-cta { text-align: center; }
+    .catalog-cta .cta-actions { margin-top: 1.5rem; }
+
+    @media (max-width: 768px) {
+      .page-header { padding: 6.5rem 0 2rem; }
+      .side-nav { display: none; }
+      .catalog-section { padding: 1.25rem 0 2rem; }
+    }
+    @media (max-width: 480px) {
+      #btnFirst, #btnLast { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.jpg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Dveře do bytu
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+            <a href="dvere-do-bytu.html#securido65">SECURIDO 65</a>
+            <a href="dvere-do-bytu.html#magnum56">MAGNUM 56</a>
+            <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Dveře do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link active">Dveře do interiéru</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+            <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+          </a>
+          <div class="dropdown">
+            <a href="servis.html#servis-oken">Servis oken</a>
+            <a href="servis.html#nouzove">Nouzové otevírání</a>
+            <a href="servis.html#reklamace">Reklamace</a>
+            <a href="servis.html#klice">Objednání klíčů</a>
+          </div>
+        </li>
+        <li class="nav-item"><a href="dokumenty.html" class="nav-link">Dokumenty</a></li>
+        <li class="nav-item"><a href="index.html#kontakt" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="tel:+420725559235" class="nav-tel">+420 725 559 235</a>
+        <a rel="noopener" target="_blank" href="https://form.jotform.com/253084834051050" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <span class="section-label">Interiérové dveře</span>
+    <h1>Akční katalog 9/2026</h1>
+    <p>Skladový sortiment interiérových dveří Porta, Erkado a Invado, zárubní a soklových lišt – akční ceny.</p>
+    <div class="breadcrumb">
+      <a href="index.html">Úvod</a>
+      <span>›</span>
+      <a href="dvere-do-interieru.html">Interiérové dveře</a>
+      <span>›</span>
+      <span>Akční katalog</span>
+    </div>
+  </div>
+</div>
+
+<!-- KATALOG -->
+<section class="catalog-section" aria-label="Listovací akční katalog">
+  <div class="container">
+    <div class="catalog-toolbar">
+      <button class="cat-btn" id="btnFirst" aria-label="První strana" title="První strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
+      </button>
+      <button class="cat-btn" id="btnPrev" aria-label="Předchozí strana" title="Předchozí strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <label class="page-jump">
+        <span>Strana</span>
+        <input type="number" id="pageInput" min="1" max="44" value="1" inputmode="numeric" aria-label="Číslo strany">
+        <span>/ <span id="pageTotal">44</span></span>
+      </label>
+      <button class="cat-btn" id="btnNext" aria-label="Další strana" title="Další strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button class="cat-btn" id="btnLast" aria-label="Poslední strana" title="Poslední strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+      </button>
+      <button class="cat-btn" id="btnZoom" title="Přiblížit stranu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5M11 8v6M8 11h6"/></svg>
+        <span>Přiblížit</span>
+      </button>
+      <button class="cat-btn" id="btnFull" title="Celá obrazovka">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+
+    <div class="catalog-stage" id="stage">
+      <button class="side-nav prev" id="sidePrev" aria-label="Předchozí strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="catalog-book" id="book"></div>
+      <button class="side-nav next" id="sideNext" aria-label="Další strana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="catalog-error" id="catalogError">Katalog se nepodařilo načíst. Zkuste prosím stránku obnovit.</div>
+    <p class="catalog-hint">Listujte kliknutím na roh strany, tažením, šipkami na klávesnici nebo tlačítky. Drobný text zvětšíte tlačítkem Přiblížit. <a href="akciovy-katalog-9-2026.pdf" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Stáhnout katalog jako PDF</a>.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="tight">
+  <div class="container catalog-cta">
+    <span class="section-label">Vybrali jste si?</span>
+    <h2>Pomůžeme s výběrem i montáží</h2>
+    <p>Pošlete nám model z katalogu nebo zavolejte – poradíme s výběrem a připravíme nabídku.</p>
+    <div class="cta-actions">
+      <a href="https://form.jotform.com/253084834051050" target="_blank" rel="noopener" class="btn btn-primary">Nezávazná poptávka</a>
+      <a href="tel:+420725559235" class="btn btn-outline">📞 +420 725 559 235</a>
+    </div>
+  </div>
+</section>
+
+<!-- ZOOM -->
+<div class="zoom-overlay" id="zoom" role="dialog" aria-modal="true" aria-label="Přiblížená strana katalogu">
+  <div class="zoom-bar">
+    <span id="zoomTitle">Strana 1</span>
+    <div style="display:flex;gap:.5rem;">
+      <button class="cat-btn" id="zoomPrev" aria-label="Předchozí strana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="cat-btn" id="zoomNext" aria-label="Další strana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+      <button class="cat-btn" id="zoomSize" title="Plná velikost">100 %</button>
+      <button class="cat-btn" id="zoomClose" aria-label="Zavřít">✕</button>
+    </div>
+  </div>
+  <div class="zoom-scroll" id="zoomScroll"><img id="zoomImg" alt=""></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo.jpg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Rodinná firma s 30letou tradicí. Největší výběr bezpečnostních dveří v regionu.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="servis.html">Servis</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis</h5>
+        <div class="footer-links">
+          <a href="servis.html#servis-oken">Servis oken</a>
+          <a href="servis.html#nouzove">Nouzové otevírání</a>
+          <a href="servis.html#reklamace">Reklamace</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="dvere-do-domu.html#poptavka">Poptávka dveří do domu</a>
+          <a href="poptavka.html">Kontaktní stránka</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Bezpečné dveře – Obchodní 36, 434 01 Most</span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden')">Rozumím</button>
+</div>
+
+<script src="katalog-akcni/page-flip.browser.js"></script>
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+
+  (function () {
+    const TOTAL = 44;
+    const PAGE_W = 1240, PAGE_H = 1754;          // rozměr obrázků stran
+    const src = n => 'katalog-akcni/s-' + String(n).padStart(2, '0') + '.jpg';
+
+    const book = document.getElementById('book');
+    const pageInput = document.getElementById('pageInput');
+    const $ = id => document.getElementById(id);
+
+    // Strany vložíme jako HTML; obrázky se načítají postupně kolem aktuální strany
+    for (let i = 1; i <= TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'page loading';
+      d.dataset.n = i;
+      if (i === 1 || i === TOTAL) d.dataset.density = 'hard';
+      const img = document.createElement('img');
+      img.alt = 'Akční katalog – strana ' + i;
+      img.dataset.src = src(i);
+      img.addEventListener('load', () => d.classList.remove('loading'));
+      d.appendChild(img);
+      book.appendChild(d);
+    }
+    const pages = book.querySelectorAll('.page');
+
+    function ensureLoaded(idx) {          // idx = 0-based
+      for (let k = idx - 2; k <= idx + 5; k++) {
+        if (k < 0 || k >= TOTAL) continue;
+        const img = pages[k].querySelector('img');
+        if (!img.src) img.src = img.dataset.src;
+      }
+    }
+
+    if (typeof St === 'undefined' || !St.PageFlip) {
+      // Knihovna se nenačetla – ukážeme strany pod sebou, aby katalog šel aspoň prohlédnout
+      pages.forEach((p, i) => { const img = p.querySelector('img'); img.loading = 'lazy'; img.src = img.dataset.src; p.style.margin = '0 auto 1rem'; p.style.maxWidth = '620px'; });
+      document.querySelector('.catalog-toolbar').style.display = 'none';
+      document.querySelectorAll('.side-nav').forEach(b => b.style.display = 'none');
+      return;
+    }
+
+    ensureLoaded(0);
+
+    // výška knihy se vejde do okna (pod lištu s tlačítky)
+    const maxH = Math.max(420, Math.min(1008, window.innerHeight - 150));
+    const maxW = Math.round(maxH * PAGE_W / PAGE_H);
+    const flip = new St.PageFlip(book, {
+      width: maxW, height: maxH,
+      size: 'stretch',
+      minWidth: 260, maxWidth: maxW,
+      minHeight: 374, maxHeight: maxH,
+      showCover: true,
+      usePortrait: true,
+      maxShadowOpacity: 0.45,
+      mobileScrollSupport: true,
+      flippingTime: 700
+    });
+    flip.loadFromHTML(pages);
+
+    function current() { return flip.getCurrentPageIndex(); }   // 0-based
+    function update() {
+      const i = current();
+      ensureLoaded(i);
+      pageInput.value = i + 1;
+      const atStart = i <= 0, atEnd = i >= TOTAL - 1 || (flip.getOrientation() === 'landscape' && i >= TOTAL - 2);
+      $('btnFirst').disabled = $('btnPrev').disabled = $('sidePrev').disabled = atStart;
+      $('btnLast').disabled = $('btnNext').disabled = $('sideNext').disabled = atEnd;
+      $('sidePrev').style.visibility = atStart ? 'hidden' : '';
+      $('sideNext').style.visibility = atEnd ? 'hidden' : '';
+      if (history.replaceState) history.replaceState(null, '', '#strana-' + (i + 1));
+    }
+    flip.on('flip', update);
+    flip.on('changeOrientation', update);
+    flip.on('changeState', e => { if (e.data === 'read') ensureLoaded(current()); });
+
+    $('btnPrev').onclick = $('sidePrev').onclick = () => flip.flipPrev();
+    $('btnNext').onclick = $('sideNext').onclick = () => flip.flipNext();
+    $('btnFirst').onclick = () => flip.turnToPage(0) || update();
+    $('btnLast').onclick = () => flip.turnToPage(TOTAL - 1) || update();
+    function goTo(n) {
+      n = Math.max(1, Math.min(TOTAL, parseInt(n, 10) || 1));
+      ensureLoaded(n - 1);
+      flip.turnToPage(n - 1); update();
+    }
+    pageInput.addEventListener('change', () => goTo(pageInput.value));
+    pageInput.addEventListener('keydown', e => { if (e.key === 'Enter') goTo(pageInput.value); });
+
+    document.addEventListener('keydown', e => {
+      if (e.target === pageInput) return;
+      if ($('zoom').classList.contains('open')) {
+        if (e.key === 'Escape') closeZoom();
+        if (e.key === 'ArrowRight') zoomStep(1);
+        if (e.key === 'ArrowLeft') zoomStep(-1);
+        return;
+      }
+      if (e.key === 'ArrowRight') flip.flipNext();
+      if (e.key === 'ArrowLeft') flip.flipPrev();
+    });
+
+    // Přiblížení
+    let zoomN = 1;
+    function openZoom(n) {
+      zoomN = Math.max(1, Math.min(TOTAL, n));
+      $('zoomImg').src = src(zoomN);
+      $('zoomImg').alt = 'Akční katalog – strana ' + zoomN;
+      $('zoomTitle').textContent = 'Strana ' + zoomN + ' / ' + TOTAL;
+      $('zoomScroll').scrollTop = 0;
+      $('zoom').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeZoom() {
+      $('zoom').classList.remove('open');
+      document.body.style.overflow = '';
+      goTo(zoomN);
+    }
+    function zoomStep(d) { openZoom(zoomN + d); }
+    $('btnZoom').onclick = () => openZoom(current() + 1);
+    $('zoomPrev').onclick = () => zoomStep(-1);
+    $('zoomNext').onclick = () => zoomStep(1);
+    $('zoomClose').onclick = closeZoom;
+    $('zoomSize').onclick = () => {
+      const s = $('zoomScroll'); s.classList.toggle('large');
+      $('zoomSize').textContent = s.classList.contains('large') ? 'Na šířku' : '100 %';
+    };
+    // dvojklik / dvojí ťuknutí na stranu otevře přiblížení
+    book.addEventListener('dblclick', e => {
+      const p = e.target.closest('.page'); if (p) openZoom(+p.dataset.n);
+    });
+
+    // Celá obrazovka
+    $('btnFull').onclick = () => {
+      const el = document.querySelector('.catalog-section');
+      if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen();
+      else if (document.exitFullscreen) document.exitFullscreen();
+    };
+    if (!document.fullscreenEnabled) $('btnFull').style.display = 'none';
+
+    // Odkaz na konkrétní stranu: katalog-akcni.html#strana-12
+    const m = location.hash.match(/strana-(\d+)/);
+    if (m) goTo(m[1]); else update();
+  })();
+</script>
+</body>
+</html>
