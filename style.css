@@ -639,3 +639,5 @@ footer p { color: rgba(255,255,255,0.6); }
 .yt-short-wrap { margin-top:1.75rem; }
 .yt-short { position:relative; width:100%; max-width:320px; aspect-ratio:9/16; border-radius:var(--radius-lg); overflow:hidden; background:#000; box-shadow:var(--shadow-lg); }
 .yt-short iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+.yt-wide { position:relative; width:100%; aspect-ratio:16/9; border-radius:var(--radius-lg); overflow:hidden; background:#000; box-shadow:var(--shadow-lg); }
+.yt-wide iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
