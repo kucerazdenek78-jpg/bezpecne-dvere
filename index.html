@@ -12,7 +12,8 @@
     .slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s ease; display:flex; align-items:center; }
     .slide.active { opacity:1; z-index:1; }
     .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
-    .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,20,50,0.86) 0%, rgba(10,20,50,0.5) 55%, rgba(10,20,50,0.15) 100%); }
+    .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.62) 55%, rgba(10,20,50,0.3) 100%); }
+    @media (max-width: 900px) { .slide-overlay { background:rgba(10,20,50,0.8); } }
     .slide-content { position:relative; z-index:2; max-width:600px; padding:0 0 0 8vw; }
     .slide-content .badge {
       display:inline-flex; align-items:center; gap:0.5rem;
@@ -66,7 +67,7 @@
     .premium-hero > .container > .premium-hero-grid > div > p { color:var(--text-muted); font-size:1rem; margin-bottom:1.5rem; }
     .premium-specs-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; margin-bottom:2rem; }
     .pspec { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.85rem 1rem; box-shadow:var(--shadow-sm); }
-    .pspec-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange); display:block; margin-bottom:0.15rem; }
+    .pspec-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange-text); display:block; margin-bottom:0.15rem; }
     .pspec-value { font-size:0.93rem; font-weight:700; color:var(--navy); }
     .premium-img-wrap { position:relative; }
     .premium-img-wrap img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); }
@@ -79,7 +80,7 @@
     .cert-badge .lbl { font-size:0.68rem; color:rgba(255,255,255,0.6); line-height:1.3; }
     .discount-badge {
       position:absolute; bottom:1.5rem; left:-1rem;
-      background:#e63535; color:#fff;
+      background:#d42a2a; color:#fff;
       font-weight:800; font-size:0.83rem;
       padding:0.55rem 1rem; border-radius:var(--radius); box-shadow:var(--shadow);
     }
@@ -126,6 +127,7 @@
 
     /* ── SERVIS – světlý doplněk ── */
     .servis-addon { background:var(--bg); padding:3.5rem 0; border-top:1px solid var(--gray-200); }
+    .servis-addon .section-title { color:var(--navy); }
     .servis-addon-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-top:2rem; }
     .addon-card {
       background:var(--white); border:1px solid var(--gray-200);
@@ -379,7 +381,7 @@
           <div class="price-divider"></div>
           <div class="price-col">
             <div class="plabel">Akce</div>
-            <div class="pname" style="color:#e63535;font-size:1rem;">Sleva až 4 000 Kč</div>
+            <div class="pname" style="color:#d42a2a;font-size:1rem;">Sleva až 4 000 Kč</div>
             <div class="pdesc">Skladem, montáž do 10 dnů</div>
           </div>
         </div>
@@ -411,7 +413,7 @@
     <div class="secondary-grid">
 
       <div class="secondary-card">
-        <img src="https://www.bezpecne-dvere.cz/userFiles/img/snimek-obrazovky_2-12-2025_154142_gerda-pl.jpg" alt="MAGNUM 56">
+        <img src="https://www.bezpecne-dvere.cz/userFiles/barva-dveri/magnum56/magnum-3-uvod.jpg" alt="MAGNUM 56">
         <div class="sc-body">
           <div class="product-class">Bytové dveře</div>
           <h4>MAGNUM 56 · RC3</h4>
@@ -486,7 +488,7 @@
 <section class="servis-addon" id="servis">
   <div class="container">
     <span class="section-label" style="color:var(--gold-light);">Péče po koupi</span>
-    <h2 class="section-title" style="color:var(--white);">Servis a doplňkové služby</h2>
+    <h2 class="section-title">Servis a doplňkové služby</h2>
     <p class="section-subtitle">Jsme tu i po montáži — od seřízení oken po nouzové otevírání</p>
 
     <div class="servis-addon-grid">
