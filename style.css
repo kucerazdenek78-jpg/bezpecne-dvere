@@ -628,3 +628,9 @@ footer p { color: rgba(255,255,255,0.6); }
 .stock-band-card a { color:#fff; font-weight:700; text-decoration:underline; text-underline-offset:3px; font-size:.92rem; }
 .stock-band-delivery { margin-top:2rem; background:#fff; color:#14532d; border-radius:var(--radius-lg); padding:1.1rem 1.5rem; text-align:center; font-size:1.2rem; font-weight:800; }
 @media (max-width:900px){ .stock-band-grid{grid-template-columns:1fr;} .stock-band-top{text-align:center;} }
+
+/* ─── SOCIÁLNÍ SÍTĚ ─── */
+.social-link svg { display:block; }
+.social-section { background: var(--bg); border-top: 1px solid var(--gray-200); }
+.social-buttons { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+.social-buttons .btn { display:inline-flex; align-items:center; gap:.5rem; }
