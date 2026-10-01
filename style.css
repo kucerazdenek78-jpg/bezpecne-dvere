@@ -9,8 +9,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --orange:       #E8650A;
-  --orange-light: #f07830;
+  --orange:       #c2410c;   /* ztmaveno 1. 10. 2026 kvůli čitelnosti bílého textu na tlačítkách (dříve #E8650A) */
+  --orange-light: #b33f0c;   /* hover tlačítka – o odstín tmavší (dříve #f07830) */
   --orange-pale:  #fff3eb;
   --orange-text:  #c2410c;   /* oranžová pro TEXT na světlém podkladu (kontrast ≥ 4,5:1) */
   --navy:         #0d1b3e;
@@ -93,7 +93,7 @@ section.tight { padding: 3rem 0; }
   background: var(--orange-light);
   border-color: var(--orange-light);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(232,101,10,0.3);
+  box-shadow: 0 6px 20px rgba(194,65,12,0.3);
 }
 .btn-outline {
   background: transparent;
@@ -402,7 +402,7 @@ section.tight { padding: 3rem 0; }
   display: flex; align-items: center; gap: 0.35rem;
   transition: var(--transition); box-shadow: var(--shadow-sm);
 }
-.location-tag:hover { background: var(--orange); color: var(--white); border-color: var(--orange); box-shadow: 0 4px 12px rgba(232,101,10,0.25); }
+.location-tag:hover { background: var(--orange); color: var(--white); border-color: var(--orange); box-shadow: 0 4px 12px rgba(194,65,12,0.25); }
 .location-tag::before { content: '📍'; font-size: 0.8rem; }
 
 /* ─── CTA BANNER ─── */
@@ -414,7 +414,7 @@ section.tight { padding: 3rem 0; }
 .cta-section::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 60% 50%, rgba(232,101,10,0.15) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 60% 50%, rgba(194,65,12,0.15) 0%, transparent 65%);
 }
 .cta-section .container { position: relative; z-index: 1; }
 .cta-section h2 { color: var(--white); margin-bottom: 0.9rem; }
@@ -604,3 +604,6 @@ footer p { color: rgba(255,255,255,0.6); }
 /* obrysová tlačítka na tmavém podkladu (CTA pruh, slider) – dříve tmavě modrý text na tmavě modré */
 .cta-section .btn-outline, .slide-actions .btn-outline { color: var(--white); border-color: rgba(255,255,255,0.5); }
 .cta-section .btn-outline:hover, .slide-actions .btn-outline:hover { background: rgba(255,255,255,0.12); border-color: var(--white); color: var(--white); }
+
+/* oranžový text na tmavém podkladu – světlejší odstín */
+.footer-links a:hover { color: #ffb07a; }
