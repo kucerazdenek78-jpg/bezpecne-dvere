@@ -22,6 +22,8 @@
     .slide { position:absolute; inset:0; opacity:0; transition:opacity 0.9s ease; display:flex; align-items:center; }
     .slide.active { opacity:1; z-index:1; }
     .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
+    .slide-video { overflow:hidden; }
+    .slide-video iframe { position:absolute; top:50%; left:50%; width:100vw; height:56.25vw; min-height:100%; min-width:177.78vh; transform:translate(-50%,-50%); border:0; pointer-events:none; }
     .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,20,50,0.88) 0%, rgba(10,20,50,0.62) 55%, rgba(10,20,50,0.3) 100%); }
     @media (max-width: 900px) { .slide-overlay { background:rgba(10,20,50,0.8); } }
     .slide-content { position:relative; z-index:2; max-width:600px; padding:0 0 0 8vw; }
@@ -222,7 +224,7 @@
 
   <!-- Slide 1 – PREMIUM 60 hvězda -->
   <div class="slide active">
-    <div class="slide-bg" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png')"></div>
+    <div class="slide-bg slide-video" data-yt="SJvn6uLK0WQ" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png')"></div>
     <div class="slide-overlay"></div>
     <div class="slide-content">
       <div class="badge">⭐ TOP dveře</div>
@@ -767,23 +769,47 @@
   let current  = 0;
   let timer;
 
+  // Video na pozadí prvního slidu (YouTube, bez zvuku, ve smyčce) – načítá se jen dokud je slide aktivní
+  function syncVideo() {
+    document.querySelectorAll('.slide-video[data-yt]').forEach(el => {
+      const active = el.closest('.slide').classList.contains('active');
+      const ifr = el.querySelector('iframe');
+      if (active && !ifr && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const id = el.dataset.yt;
+        const f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&controls=0&loop=1&playlist=' + id + '&playsinline=1&rel=0&modestbranding=1&disablekb=1';
+        f.title = 'Video PREMIUM 60 od GERDA';
+        f.setAttribute('allow', 'autoplay; encrypted-media');
+        f.setAttribute('tabindex', '-1');
+        f.setAttribute('aria-hidden', 'true');
+        el.appendChild(f);
+      } else if (!active && ifr) {
+        ifr.remove();
+      }
+    });
+  }
+
   function goTo(idx) {
     slides[current].classList.remove('active');
     dots[current].classList.remove('active');
     current = (idx + slides.length) % slides.length;
     slides[current].classList.add('active');
     dots[current].classList.add('active');
+    syncVideo();
   }
 
+  // Slide s videem se drží 30 s, ostatní 5,5 s
   function startAuto() {
-    clearInterval(timer);
-    timer = setInterval(() => goTo(current + 1), 5500);
+    clearTimeout(timer);
+    const delay = slides[current].querySelector('.slide-video[data-yt]') ? 30000 : 5500;
+    timer = setTimeout(() => { goTo(current + 1); startAuto(); }, delay);
   }
 
   document.getElementById('sliderNext').addEventListener('click', () => { goTo(current + 1); startAuto(); });
   document.getElementById('sliderPrev').addEventListener('click', () => { goTo(current - 1); startAuto(); });
   dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.idx); startAuto(); }));
 
+  syncVideo();
   startAuto();
 </script>
 </body>
