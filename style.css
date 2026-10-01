@@ -607,3 +607,7 @@ footer p { color: rgba(255,255,255,0.6); }
 
 /* oranžový text na tmavém podkladu – světlejší odstín */
 .footer-links a:hover { color: #ffb07a; }
+
+/* ─── SKLADEM – zvýrazněný štítek ─── */
+.stock-tag { display:inline-flex; align-items:center; gap:.45rem; background:#15803d; color:#fff; font-weight:800; font-size:.85rem; letter-spacing:.04em; text-transform:uppercase; padding:.4rem .95rem; border-radius:100px; margin:0 .5rem .6rem 0; box-shadow:0 4px 14px rgba(21,128,61,.3); }
+.stock-tag.on-dark { background:#fff; color:#15803d; box-shadow:none; }
