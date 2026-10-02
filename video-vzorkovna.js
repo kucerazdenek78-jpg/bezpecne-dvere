@@ -1,7 +1,8 @@
 /* Video vzorkovny – hlavní banner stránky Kontakt (YouTube IFrame API, ztlumené, ve smyčce) */
 (function () {
   var el = document.querySelector('.kv-video[data-yt]');
-  if (!el || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  if (!el) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.style.backgroundImage = "url('https://img.youtube.com/vi/Eg0iccEatjQ/maxresdefault.jpg')"; return; }
   var id = el.getAttribute('data-yt');
   function restart(p) { try { p.seekTo(0, true); p.playVideo(); } catch (e) {} }
   function start() {
@@ -16,6 +17,7 @@
         onReady: function (e) { e.target.mute(); e.target.playVideo(); },
         onStateChange: function (e) {
           if (e.data === YT.PlayerState.ENDED) restart(e.target);
+          if (e.data === YT.PlayerState.PLAYING) el.classList.add('playing');
           if (e.data === YT.PlayerState.PLAYING && !guard) {
             guard = setInterval(function () {
               try { var d = e.target.getDuration(); if (d > 1 && e.target.getCurrentTime() >= d - 0.35) restart(e.target); } catch (x) {}

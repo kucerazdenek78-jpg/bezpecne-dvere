@@ -23,6 +23,9 @@
     .slide.active { opacity:1; z-index:1; }
     .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
     .slide-video { overflow:hidden; }
+    .slide-video { background:var(--navy); }
+    .slide-video iframe { opacity:0; transition:opacity .9s ease; }
+    .slide-video.playing iframe { opacity:1; }
     .slide-video iframe { position:absolute; top:50%; left:50%; width:100vw; height:56.25vw; min-height:100%; min-width:177.78vh; transform:translate(-50%,-50%); border:0; pointer-events:none; }
     .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0) 85%); }
     @media (max-width: 900px) { .slide-overlay { background:linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.5) 100%); } }
@@ -223,7 +226,7 @@
 
   <!-- Slide 1 – PREMIUM 60 hvězda -->
   <div class="slide active">
-    <div class="slide-bg slide-video" data-yt="SJvn6uLK0WQ" style="background-image:url('https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png')"></div>
+    <div class="slide-bg slide-video" data-yt="SJvn6uLK0WQ" data-poster="https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png"></div>
     <div class="slide-overlay"></div>
     <div class="slide-content">
       <div class="badge">⭐ TOP dveře</div>
@@ -794,6 +797,7 @@
         onReady: e => { e.target.mute(); e.target.playVideo(); },
         onStateChange: e => {
           if (e.data === YT.PlayerState.ENDED) restart(e.target);
+          if (e.data === YT.PlayerState.PLAYING) el.classList.add('playing');
           if (e.data === YT.PlayerState.PLAYING && !guard) {
             // pojistka: těsně před koncem skočit na začátek, ať se nezobrazí koncová obrazovka
             guard = setInterval(() => {
@@ -810,12 +814,14 @@
     document.querySelectorAll('.slide-video[data-yt]').forEach(el => {
       const active = el.closest('.slide').classList.contains('active');
       const has = el._player || el.querySelector('iframe');
-      if (active && !has && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { if (el.dataset.poster) el.style.backgroundImage = "url('" + el.dataset.poster + "')"; return; }
+      if (active && !has) {
         withYT(() => { if (!el._player) startPlayer(el); });
       } else if (!active && has) {
         if (el._guardStop) el._guardStop();
         if (el._player && el._player.destroy) { try { el._player.destroy(); } catch (e) {} }
         el._player = null;
+        el.classList.remove('playing');
         el.querySelectorAll('iframe,div').forEach(n => n.remove());
       }
     });
