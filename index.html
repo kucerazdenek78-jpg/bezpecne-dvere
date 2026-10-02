@@ -24,9 +24,9 @@
     .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; }
     .slide-video { overflow:hidden; }
     .slide-video iframe { position:absolute; top:50%; left:50%; width:100vw; height:56.25vw; min-height:100%; min-width:177.78vh; transform:translate(-50%,-50%); border:0; pointer-events:none; }
-    .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,38,24,0.88) 0%, rgba(10,38,24,0.62) 55%, rgba(10,38,24,0.3) 100%); }
-    @media (max-width: 900px) { .slide-overlay { background:rgba(10,38,24,0.8); } }
-    .slide-content { position:relative; z-index:2; max-width:600px; padding:0 0 0 8vw; }
+    .slide-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0) 85%); }
+    @media (max-width: 900px) { .slide-overlay { background:linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.5) 100%); } }
+    .slide-content { position:relative; z-index:2; max-width:600px; padding:0 0 0 8vw; text-shadow:0 2px 14px rgba(0,0,0,0.55); }
     .slide-content .badge {
       display:inline-flex; align-items:center; gap:0.5rem;
       background:rgba(194,65,12,0.2); border:1px solid rgba(194,65,12,0.45);
@@ -54,7 +54,7 @@
 
     /* ── PREMIUM HERO – světlý ── */
     .premium-hero {
-      background: linear-gradient(150deg, #f0f4fa 0%, #e8f5ee 50%, #f7f9fc 100%);
+      background: linear-gradient(150deg, #eef6f1 0%, #e8f5ee 50%, #f6faf7 100%);
       padding: 5rem 0;
       position: relative; overflow: hidden;
       border-bottom: 1px solid var(--gray-200);
@@ -729,7 +729,6 @@
         <div class="footer-links">
           <a href="dokumenty.html">Obchodní podmínky</a>
           <a href="dokumenty.html">Reklamační řád</a>
-          <a href="dokumenty.html">Smlouva o dílo</a>
         </div>
       </div>
       <div class="footer-col">
