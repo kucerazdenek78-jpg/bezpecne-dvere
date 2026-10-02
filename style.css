@@ -678,3 +678,9 @@ footer p { color: rgba(255,255,255,0.6); }
   .nav-toggle { grid-column: 2; grid-row: 1; justify-self: center; }
   .nav-inner > div[style*="display:flex"] { grid-column: 3; grid-row: 1; justify-self: end; margin-left: 0; }
 }
+
+/* Dvojice tlačítek Detail (zelené) + Poptávka (oranžové) vedle sebe i na mobilu */
+.btn-green{background:var(--navy-mid);color:var(--white);border-color:var(--navy-mid)}
+.btn-green:hover{background:var(--navy);border-color:var(--navy);transform:translateY(-2px);box-shadow:var(--shadow)}
+.btn-row{display:flex;gap:1rem;flex-wrap:nowrap}
+@media(max-width:600px){.btn-row{gap:.5rem}.btn-row .btn{flex:1 1 0;min-width:0;padding:.8rem .5rem;font-size:.95rem;text-align:center;white-space:nowrap;justify-content:center}}
