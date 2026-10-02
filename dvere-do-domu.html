@@ -19,17 +19,14 @@
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      align-items: start;
       gap: 0.75rem;
       margin-top: 1.5rem;
     }
     .gallery-grid a img {
       border-radius: var(--radius);
-      height: auto;
-      max-height: 320px;
+      height: 140px;
       width: 100%;
-      object-fit: contain;
-      background: var(--gray-100);
+      object-fit: cover;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .gallery-grid a:hover img {
