@@ -452,7 +452,7 @@ section.tight { padding: 3rem 0; }
 
 /* ─── FOOTER ─── */
 footer {
-  background: #0f2a1c;
+  background: var(--navy);
   color: rgba(255,255,255,0.5);
   padding: 3.5rem 0 2rem;
 }
