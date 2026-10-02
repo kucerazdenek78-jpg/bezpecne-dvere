@@ -154,11 +154,19 @@ section.tight { padding: 3rem 0; }
 .nav-logo { align-self: flex-start; position: relative; z-index: 2; }
 .nav-logo-img {
   height: 104px; width: auto; display: block;
-  background: #fff; padding: 6px 12px 8px;
-  border-radius: 0 0 14px 14px;
-  box-shadow: 0 8px 22px rgba(10,22,40,0.22);
+  background: #fff; padding: 3px 6px 4px;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 6px 16px rgba(10,22,40,0.18);
 }
-@media (max-width: 900px) { .nav-logo-img { height: 86px; padding: 4px 8px 6px; } }
+@media (max-width: 900px) { .nav-logo-img { height: 86px; padding: 2px 4px 3px; } }
+/* menu se nesmí lámat do více řádků */
+.nav-tel { white-space: nowrap; flex-shrink: 0; margin-left: 1rem; }
+.nav-inner .btn { white-space: nowrap; flex-shrink: 0; }
+.nav-inner { gap: 1rem; }
+.nav-menu { min-width: 0; }
+@media (max-width: 1240px) { .nav-link { padding: 0.5rem 0.6rem; font-size: 0.84rem; } .nav-tel { font-size: 0.8rem; } }
+@media (max-width: 1240px) { .nav-tel { display: none; } }
+
 .footer-logo-img { height: 52px; width: auto; display: block; margin-bottom: 1rem; }
 
 .nav-menu {
@@ -649,3 +657,6 @@ footer p { color: rgba(255,255,255,0.6); }
 .yt-short iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 .yt-wide { position:relative; width:100%; aspect-ratio:16/9; border-radius:var(--radius-lg); overflow:hidden; background:#000; box-shadow:var(--shadow-lg); }
 .yt-wide iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+/* hamburger už od 1100 px (velké logo + 6 položek se vedle sebe nevejde) */
+@media (max-width: 1100px) { .nav-menu { display: none; } .nav-toggle { display: flex; } .navbar.open .nav-menu { display: flex; } }
