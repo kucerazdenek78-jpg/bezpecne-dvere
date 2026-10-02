@@ -226,7 +226,7 @@
 
   <!-- Slide 1 – PREMIUM 60 hvězda -->
   <div class="slide active">
-    <div class="slide-bg slide-video" data-yt="SJvn6uLK0WQ" data-start="5" data-poster="https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png"></div>
+    <div class="slide-bg slide-video" data-yt="SJvn6uLK0WQ" data-start="5" data-end="32" data-poster="https://www.bezpecne-dvere.cz/userFiles/slider/slide-premium.png"></div>
     <div class="slide-overlay"></div>
     <div class="slide-content">
       <div class="badge">⭐ TOP dveře</div>
@@ -788,12 +788,13 @@
     el.appendChild(host);
     const id = el.dataset.yt;
     const startAt = parseInt(el.dataset.start || '0', 10) || 0;
+    const endAt = parseInt(el.dataset.end || '0', 10) || 0;
     let guard = null;
     const restart = p => { try { p.seekTo(startAt, true); p.playVideo(); } catch (e) {} };
     el._player = new YT.Player(host, {
       host: 'https://www.youtube-nocookie.com',
       videoId: id,
-      playerVars: { autoplay: 1, mute: 1, controls: 0, loop: 1, playlist: id, playsinline: 1, start: startAt, rel: 0, modestbranding: 1, disablekb: 1, iv_load_policy: 3, fs: 0 },
+      playerVars: { autoplay: 1, mute: 1, controls: 0, loop: 1, playlist: id, playsinline: 1, start: startAt, end: endAt || undefined, rel: 0, modestbranding: 1, disablekb: 1, iv_load_policy: 3, fs: 0 },
       events: {
         onReady: e => { e.target.mute(); e.target.playVideo(); },
         onStateChange: e => {
@@ -803,8 +804,8 @@
           if (e.data === YT.PlayerState.PLAYING && !guard) {
             // pojistka: těsně před koncem skočit na začátek, ať se nezobrazí koncová obrazovka
             guard = setInterval(() => {
-              try { const d = e.target.getDuration(); if (d > 1 && e.target.getCurrentTime() >= d - 0.35) restart(e.target); } catch (x) {}
-            }, 250);
+              try { const d = e.target.getDuration(); const t = e.target.getCurrentTime(); const stop = (endAt && (!d || endAt < d)) ? endAt : (d > 1 ? d - 0.35 : 0); if (stop && t >= stop) restart(e.target); } catch (x) {}
+            }, 150);
           }
         }
       }
