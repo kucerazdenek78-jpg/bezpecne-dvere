@@ -17,6 +17,7 @@
         onReady: function (e) { e.target.mute(); e.target.playVideo(); },
         onStateChange: function (e) {
           if (e.data === YT.PlayerState.ENDED) restart(e.target);
+          if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.CUED) { try { e.target.playVideo(); } catch (x) {} }
           if (e.data === YT.PlayerState.PLAYING) el.classList.add('playing');
           if (e.data === YT.PlayerState.PLAYING && !guard) {
             guard = setInterval(function () {
