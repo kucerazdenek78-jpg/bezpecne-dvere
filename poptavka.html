@@ -98,6 +98,23 @@
       .form-row { grid-template-columns: 1fr; }
     }
   </style>
+
+  <style>
+    /* ── VIDEO BANNER VZORKOVNY (nahoře na Kontaktu) ── */
+    .kv-hero { position:relative; margin-top:72px; width:100%; height:78vh; min-height:440px; overflow:hidden; background:var(--navy); display:flex; align-items:center; }
+    .kv-video { position:absolute; inset:0; overflow:hidden; background-size:cover; background-position:center; }
+    .kv-video iframe { position:absolute; top:50%; left:50%; width:100vw; height:56.25vw; min-height:100%; min-width:177.78vh; transform:translate(-50%,-50%); border:0; pointer-events:none; }
+    .kv-overlay { position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0) 85%); }
+    @media (max-width: 900px) { .kv-overlay { background:linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.5) 100%); } }
+    .kv-content { position:relative; z-index:2; max-width:600px; padding:0 1.5rem 0 8vw; text-shadow:0 2px 14px rgba(0,0,0,0.55); }
+    .kv-badge { display:inline-flex; align-items:center; gap:.5rem; background:rgba(194,65,12,.2); border:1px solid rgba(194,65,12,.45); color:#ffb07a; font-size:.76rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:.38rem 1rem; border-radius:100px; margin-bottom:1.2rem; }
+    .kv-content h1 { color:#fff; font-size:clamp(2rem,4.5vw,3.4rem); line-height:1.15; margin-bottom:1rem; }
+    .kv-content h1 span { color:#ffb07a; }
+    .kv-content p { color:rgba(255,255,255,.85); font-size:1.05rem; margin-bottom:1.8rem; max-width:480px; }
+    .kv-actions { display:flex; gap:1rem; flex-wrap:wrap; }
+    .kv-actions .btn-outline { color:#fff; border-color:rgba(255,255,255,.7); background:rgba(255,255,255,.08); }
+    .kv-actions .btn-outline:hover { background:#fff; color:var(--navy); }
+  </style>
 </head>
 <body>
 
@@ -144,6 +161,21 @@
     </div>
   </div>
 </nav>
+
+<!-- VIDEO VZORKOVNY – banner nahoře -->
+<section class="kv-hero" id="vzorkovna" style="padding:0;">
+  <div class="kv-video" data-yt="Eg0iccEatjQ" style="background-image:url('https://img.youtube.com/vi/Eg0iccEatjQ/maxresdefault.jpg')"></div>
+  <div class="kv-overlay"></div>
+  <div class="kv-content">
+    <div class="kv-badge">📍 Vzorkovna Most</div>
+    <h1>Přijďte si dveře <span>vyzkoušet</span></h1>
+    <p>Vzorkovna Most, Obchodní 36. Dveře si prohlédnete naživo a poradíme vám s výběrem.</p>
+    <div class="kv-actions">
+      <a href="https://www.google.com/maps/place/?q=place_id:ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener" class="btn btn-primary">Navigovat na vzorkovnu</a>
+      <a href="https://form.jotform.com/253084834051050" target="_blank" rel="noopener" class="btn btn-outline">Poptávka</a>
+    </div>
+  </div>
+</section>
 
 <!-- HERO -->
 <div class="poptavka-hero">
@@ -349,5 +381,6 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
+<script src="video-vzorkovna.js?v=20261002c"></script>
 </body>
 </html>
