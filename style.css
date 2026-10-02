@@ -150,7 +150,15 @@ section.tight { padding: 3rem 0; }
   align-items: center;
   flex-shrink: 0;
 }
-.nav-logo-img  { height: 44px; width: auto; display: block; }
+/* logo přesahuje spodní hranu menu do obsahu (video / hlavička) */
+.nav-logo { align-self: flex-start; position: relative; z-index: 2; }
+.nav-logo-img {
+  height: 104px; width: auto; display: block;
+  background: #fff; padding: 6px 12px 8px;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 8px 22px rgba(10,22,40,0.22);
+}
+@media (max-width: 900px) { .nav-logo-img { height: 86px; padding: 4px 8px 6px; } }
 .footer-logo-img { height: 52px; width: auto; display: block; margin-bottom: 1rem; }
 
 .nav-menu {
