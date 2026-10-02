@@ -664,9 +664,9 @@ footer p { color: rgba(255,255,255,0.6); }
 /* mobil: menší logo a kompaktní tlačítko, aby se vešel i hamburger */
 .nav-toggle { flex-shrink: 0; }
 @media (max-width: 600px) {
-  .nav-logo-img { height: 64px; padding: 2px 4px 3px; border-radius: 0 0 8px 8px; }
+  .nav-logo-img { height: clamp(56px, 20vw, 88px); padding: 2px 4px 3px; border-radius: 0 0 8px 8px; }
   .nav-inner { gap: .5rem; }
   .nav-inner .btn { padding: .5rem .8rem !important; font-size: .78rem !important; }
   .nav-inner > div[style*="display:flex"] { margin-left: auto; gap: .4rem !important; }
 }
-@media (max-width: 380px) { .nav-logo-img { height: 54px; } .nav-inner .btn { padding: .45rem .65rem !important; font-size: .74rem !important; } }
+@media (max-width: 380px) { .nav-inner .btn { padding: .45rem .65rem !important; font-size: .74rem !important; } }
