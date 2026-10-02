@@ -14,19 +14,22 @@
   <meta property="og:url" content="https://kucerazdenek78-jpg.github.io/bezpecne-dvere/dvere-do-domu.html">
   <meta property="og:image" content="https://kucerazdenek78-jpg.github.io/bezpecne-dvere/logo.jpg">
   <meta name="twitter:card" content="summary">
-  <link rel="stylesheet" href="style.css?v=20261002h">
+  <link rel="stylesheet" href="style.css?v=20261002i">
   <style>
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      align-items: start;
       gap: 0.75rem;
       margin-top: 1.5rem;
     }
     .gallery-grid a img {
       border-radius: var(--radius);
-      height: 140px;
+      height: auto;
+      max-height: 320px;
       width: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      background: var(--gray-100);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .gallery-grid a:hover img {
@@ -202,12 +205,12 @@
 
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:3rem;align-items:start;margin-top:1.5rem;">
         <div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;align-items:start;">
             <a href="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0350.jpeg" target="_blank">
-              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0350.jpeg" alt="OPTIMAL 60" style="border-radius:var(--radius);width:100%;height:200px;object-fit:cover;">
+              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0350.jpeg" alt="OPTIMAL 60" style="border-radius:var(--radius);width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--gray-100);">
             </a>
             <a href="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0351.png" target="_blank">
-              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0351.png" alt="OPTIMAL 60 detail" style="border-radius:var(--radius);width:100%;height:200px;object-fit:cover;">
+              <img src="https://www.bezpecne-dvere.cz/userFiles/dvere/img_0351.png" alt="OPTIMAL 60 detail" style="border-radius:var(--radius);width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--gray-100);">
             </a>
           </div>
 
