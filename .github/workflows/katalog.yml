@@ -1,0 +1,37 @@
+name: Aktualizace akčního katalogu
+
+on:
+  schedule:
+    - cron: '30 5 * * *'   # každý den ráno (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  katalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Nástroje
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils && pip install -q pillow
+      - name: Zkontrolovat katalog
+        id: k
+        run: python3 tools/update_katalog.py
+      - name: Uložit změny
+        if: steps.k.outputs.changed == 'true'
+        run: |
+          git config user.name "katalog-bot"
+          git config user.email "katalog-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Aktualizace akčního katalogu (${{ steps.k.outputs.label }}, ${{ steps.k.outputs.pages }} stran)"
+          git push
+      - name: Upozornit na kontrolu cen a modelů
+        if: steps.k.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "Nový akční katalog ${{ steps.k.outputs.label }} – zkontrolovat ceny a modely" --body "Bot stáhl nový katalog (${{ steps.k.outputs.pages }} stran) z ${{ steps.k.outputs.url }} a aktualizoval listování a PDF ke stažení.
+
+Karty na stránce Dveře do interiéru (ceny, modely, čísla stran u odkazů „Více v katalogu“) se automaticky NEMĚNÍ. Je potřeba je ručně porovnat s novým katalogem."
