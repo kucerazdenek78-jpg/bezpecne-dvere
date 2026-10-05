@@ -54,6 +54,14 @@
     .kov-price{display:flex;justify-content:space-between;font-size:.82rem;color:var(--gray-500)}
     .kov-price strong{color:var(--navy)}
     @media(max-width:480px){.kov-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}}
+    /* zarovnání karet do řádků */
+    .int-card{position:relative}
+    .badge-skladem{position:absolute;top:.6rem;left:.6rem;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+    .int-card-name{min-height:2.5em;line-height:1.25}
+    .int-card-sub{min-height:3.7em}
+    .color-chips{min-height:1.3rem}
+    .int-card-price-line,.int-card-price{min-height:1.3em}
+    .int-card-catalog{margin-top:.5rem}
     /* ── grid karet ── */
     .int-grid {
       display: grid;
@@ -74,7 +82,7 @@
     .int-card-img {
       width: 100%; height: auto; aspect-ratio: 1 / 2;
       object-fit: contain; display: block;
-      background: #f7f7f7;
+      background: #ecEEEB;
       transition: transform .3s;
     }
     .int-card-img-wrap:hover .int-card-img { transform: scale(1.03); }
@@ -394,7 +402,7 @@
           </div>
         </div>
         <div class="int-card">
-          <img src="interiery-imgs/katalog/altamura1-falcove.jpg" alt="ALTAMURA 1 – falcové CPL dveře" class="int-card-img" loading="lazy">
+          <img src="interiery-imgs/katalog/altamura1-falcove.jpg" alt="ALTAMURA 1 – falcové CPL dveře, dub" class="int-card-img" loading="lazy">
           <div class="int-card-body">
             <div class="int-card-name">ALTAMURA 1 – falcové <span class="badge-skladem">SKLADEM</span></div>
             <div class="int-card-sub">CPL · falcové · plná deska</div>
