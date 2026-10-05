@@ -560,7 +560,11 @@
     <p class="section-subtitle">Vyplňte formulář a my Vás kontaktujeme s nabídkou do 24 hodin</p>
 
     <div class="contact-form">
-      <form action="https://www.bezpecne-dvere.cz/poptavka" method="post">
+      <form action="https://formsubmit.co/chci@bezpecne-dvere.cz" method="POST" data-email-form>
+          <input type="hidden" name="_subject" value="Poptávka z webu – dveře do domu">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
 
         <div class="form-group">
           <label>Mám zájem o model *</label>
@@ -729,5 +733,6 @@
     });
   })();
 </script>
+<script src="form-submit.js?v=1"></script>
 </body>
 </html>
