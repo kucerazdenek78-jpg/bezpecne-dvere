@@ -701,3 +701,23 @@ footer p { color: rgba(255,255,255,0.6); }
   .nav-link svg { display: inline; }
   .nav-logo-img { height: 80px; }
 }
+
+/* ─── MODERNÍ HLAVIČKA (dveře do interiéru / do domu) ─── */
+.page-header.hero-modern{padding:8.5rem 0 3.2rem;text-align:left;background:
+  radial-gradient(900px 380px at 85% 0%,rgba(255,255,255,.10),transparent 60%),
+  linear-gradient(135deg,#0f3a24 0%,#17503a 55%,#1f6b43 100%)}
+.page-header.hero-modern::before{inset:0;opacity:1;background:
+  repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 96px),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 96px)}
+.page-header.hero-modern::after{content:'';position:absolute;right:max(2rem,calc(50% - 560px));top:50%;transform:translateY(-38%);width:150px;height:270px;border:2px solid rgba(255,255,255,.16);border-radius:6px;background:
+  linear-gradient(rgba(255,255,255,.10),rgba(255,255,255,.10)) 50% 14%/60% 26% no-repeat,
+  linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)) 50% 62%/60% 40% no-repeat;pointer-events:none}
+.page-header.hero-modern h1{font-size:clamp(2rem,5vw,3.2rem);letter-spacing:-.01em;margin-bottom:.9rem}
+.page-header.hero-modern p{margin:.4rem 0 0;max-width:620px;color:rgba(255,255,255,.78)}
+.page-header.hero-modern .section-label{color:#86efac;letter-spacing:.16em}
+.hero-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.2rem 0 .4rem}
+.hero-chips span{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700;color:#fff;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);border-radius:99px;padding:.38rem .85rem}
+.hero-chips span.on{background:#fff;color:#15803d;border-color:#fff}
+@media(max-width:700px){.page-header.hero-modern{padding:7rem 0 2.2rem}.page-header.hero-modern::after{display:none}}
+.page-header.hero-modern .hero-chips{margin-bottom:1rem}
+.page-header.hero-modern .breadcrumb{justify-content:flex-start;margin-top:1rem}
