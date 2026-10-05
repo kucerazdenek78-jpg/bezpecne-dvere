@@ -99,13 +99,16 @@
     .erkado-miru h3 { color:var(--navy); margin:0 0 .6rem; font-size:1.15rem; }
     .erkado-miru p { color:var(--text); font-size:.95rem; line-height:1.65; margin:0; }
     /* ERKADO catalog */
-    .erkado-featured { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; margin-bottom:3rem; }
-    .erkado-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0.75rem; }
+    @media(max-width:480px){.erkado-featured{grid-template-columns:repeat(3,1fr)!important;gap:.5rem}.e-card-more{display:none!important}.e-card-meta .variants{display:none}.e-card-body{padding:.5rem!important}.e-card-meta .variants{font-size:.65rem}.e-card-meta .price{font-size:.78rem}.e-card .btn{font-size:.68rem!important;padding:.45rem .2rem!important}.erkado-featured .e-card-head .model-label{font-size:.6rem!important;padding:1.5rem .3rem .5rem!important;letter-spacing:-.01em}.e-card-head .nov-badge{font-size:.55rem;padding:.15rem .4rem;top:6px;right:6px}.erkado-mini-grid{grid-template-columns:repeat(3,1fr)!important;gap:.5rem}.e-mini-body{padding:.45rem .45rem .55rem}.e-mini-name{font-size:.78rem}.e-mini-price{font-size:.68rem}.e-mini-more{font-size:.68rem}.e-mini-btn{font-size:.7rem}}
+    .erkado-featured { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1rem; margin-bottom:3rem; }
+    .erkado-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:0.75rem; }
     .e-card { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .2s,transform .2s; }
     .e-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); }
-    .e-card-head { height:240px; position:relative; overflow:hidden; background:#184a31; }
-    .e-card-head img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
-    .e-card:hover .e-card-head img { transform:scale(1.04); }
+    .e-card-head { aspect-ratio:302/600; background:#f3f4f2; position:relative; overflow:hidden; background:#184a31; }
+    .e-card-head img { width:100%; height:100%; object-fit:contain; display:block; transition:transform .35s ease; }
+    .e-card:hover .e-card-head img { transform:scale(1.03); }
+    .e-card-body{padding:.8rem .8rem .9rem!important}.e-card-desc{display:none}.e-card-meta{flex-direction:column;align-items:flex-start;gap:.15rem}.e-card .btn{font-size:.78rem!important}
+    .erkado-featured .model-label{font-size:1rem}
     .e-card-head .model-label { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(10,28,20,0.82)); color:#fff; font-size:1.15rem; font-weight:800; padding:2.5rem 1rem 0.85rem; }
     .e-card-head .nov-badge { position:absolute; top:10px; right:10px; background:var(--orange); color:#fff; font-size:0.65rem; font-weight:800; padding:0.25rem 0.6rem; border-radius:100px; letter-spacing:0.04em; }
     .e-card-body { padding:1rem 1.1rem 1.1rem; }
@@ -115,7 +118,7 @@
     .e-card-meta .price { font-size:0.95rem; font-weight:700; color:var(--orange-text); }
     .e-mini { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); overflow:hidden; transition:box-shadow .15s,transform .15s; display:flex; flex-direction:column; }
     .e-mini:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
-    .e-mini-img { width:100%; height:130px; object-fit:cover; display:block; }
+    .e-mini-img { width:100%; height:auto; aspect-ratio:302/600; object-fit:contain; background:#f3f4f2; display:block; }
     .e-mini-body { padding:0.65rem 0.8rem 0.8rem; flex:1; display:flex; flex-direction:column; }
     .e-mini-name { font-weight:700; color:var(--navy); font-size:0.9rem; display:flex; align-items:center; gap:0.35rem; }
     .e-mini-badge { background:var(--orange); color:#fff; font-size:0.6rem; font-weight:700; padding:0.15rem 0.4rem; border-radius:100px; }
