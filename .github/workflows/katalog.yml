@@ -1,8 +1,7 @@
 name: Aktualizace akčního katalogu
 
 on:
-  schedule:
-    - cron: '30 5 * * *'   # každý den ráno (UTC)
+  # automatické denní spouštění je vypnuté – katalog se aktualizuje ručně (příloha PDF)
   workflow_dispatch:
 
 permissions:
