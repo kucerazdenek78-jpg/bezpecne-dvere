@@ -45,6 +45,15 @@
     .avail-label.objednavka .dot { background: var(--orange); }
     .avail-label.objednavka { color:var(--orange-text); }
 
+    .kov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem}
+    .kov-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+    .kov-img{width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;display:block;background:#f7f7f7}
+    .kov-body{padding:.7rem .9rem .85rem;display:flex;flex-direction:column;gap:.2rem}
+    .kov-name{font-weight:800;color:var(--navy);font-size:.95rem}
+    .kov-sub{font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem}
+    .kov-price{display:flex;justify-content:space-between;font-size:.82rem;color:var(--gray-500)}
+    .kov-price strong{color:var(--navy)}
+    @media(max-width:480px){.kov-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}}
     /* ── grid karet ── */
     .int-grid {
       display: grid;
@@ -780,6 +789,92 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ══════════════ KOVÁNÍ ══════════════ -->
+    <div class="brand-section" id="kovani">
+      <div class="brand-header">
+        <div class="brand-logo-box" style="background:#4b5563;">KOVÁNÍ</div>
+        <h2>Kliky k akčním kompletům</h2>
+      </div>
+      <p style="color:var(--text-muted);font-size:.9rem;margin:0 0 1.2rem;">K akčním kompletům nabízíme tyto kliky (MP Kovania). Ceny jsou v Kč bez DPH, v ceně je klika s vybraným typem rozety. Cena podle typu rozety BB / PZ nebo WC (viz katalog, str. 30).</p>
+      <div class="kov-grid">
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/favorit.jpg" alt="Klika Favorit – nerez matný" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Favorit</div>
+            <div class="kov-sub">nerez matný</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>330 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>430 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/hit-cerna.jpg" alt="Klika Hit – černá matná" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Hit</div>
+            <div class="kov-sub">černá matná</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>490 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>550 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/hit-nikel.jpg" alt="Klika Hit – nikl matný" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Hit</div>
+            <div class="kov-sub">nikl matný</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>490 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>550 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/cynthia.jpg" alt="Klika Cynthia – nikl matný / chróm lesklý" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Cynthia</div>
+            <div class="kov-sub">nikl matný / chróm lesklý</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>490 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>550 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/topaz.jpg" alt="Klika Topaz – nerez matný" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Topaz</div>
+            <div class="kov-sub">nerez matný</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>370 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>420 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/rumba.jpg" alt="Klika Rumba – černá matná" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Rumba</div>
+            <div class="kov-sub">černá matná</div>
+            <div class="kov-price"><span>BB / PZ</span><strong>490 Kč</strong></div>
+            <div class="kov-price"><span>WC</span><strong>570 Kč</strong></div>
+          </div>
+        </div>
+      </div>
+      <h3 style="color:var(--navy);font-size:1rem;margin:1.6rem 0 .3rem;">Klika s uzamykáním k bezfalcovým dveřím ALTAMURA 1 (bez spodní rozety)</h3>
+      <p style="color:var(--text-muted);font-size:.85rem;margin:0 0 1rem;">Pro skladové bezfalcové dveře Altamura 1.</p>
+      <div class="kov-grid">
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/perfecta.jpg" alt="Klika Perfecta – nikl matný s uzamykáním" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Perfecta</div>
+            <div class="kov-sub">nikl matný</div>
+            <div class="kov-price"><span>s uzamykáním</span><strong>1 913 Kč</strong></div>
+          </div>
+        </div>
+        <div class="kov-card">
+          <img src="interiery-imgs/kovani/impressa.jpg" alt="Klika Impressa – černá matná s uzamykáním" class="kov-img" loading="lazy">
+          <div class="kov-body">
+            <div class="kov-name">Impressa</div>
+            <div class="kov-sub">černá matná</div>
+            <div class="kov-price"><span>s uzamykáním</span><strong>1 913 Kč</strong></div>
+          </div>
+        </div>
+      </div>
+      <a class="int-card-catalog" style="text-align:left;margin-top:1rem;" href="katalog-akcni.html#strana-30">📖 Více v katalogu (str. 30)</a>
     </div>
 
     <!-- CTA -->
