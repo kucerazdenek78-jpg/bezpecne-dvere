@@ -29,7 +29,12 @@
     .price-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-lg);padding:1.2rem 1.5rem;margin:1.5rem 0}
     .price-main{font-size:1.5rem;font-weight:900;color:var(--navy)}.price-note{font-size:.8rem;color:var(--text-muted);margin-top:.3rem}
     .section-title{font-size:1.25rem;font-weight:800;color:var(--navy);margin:0 0 1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--gray-200)}
-    .color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;margin-top:1.25rem}
+    .color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;margin-top:1.25rem}
+    .color-swatch-card{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1rem;text-align:center}
+    .swatch-big{width:48px;height:48px;border-radius:50%;margin:0 auto .6rem;border:2px solid rgba(0,0,0,.1)}
+    .swatch-name{font-size:.9rem;font-weight:700;color:var(--navy)}
+    .swatch-sub{font-size:.72rem;color:var(--text-muted);margin-top:.15rem}
+    .swatch-sklad{display:inline-block;margin-top:.45rem;font-size:.62rem;font-weight:800;letter-spacing:.04em;color:#15803d;background:#dcfce7;border-radius:99px;padding:.15rem .55rem}
     .color-card{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow .2s,transform .2s,border-color .2s;cursor:pointer}
     .color-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--blue)}
     .color-card img{width:100%;aspect-ratio:310/413;object-fit:cover;display:block;background:#184a31}
@@ -107,19 +112,17 @@
     <h2 class="section-title">Barevné provedení</h2>
     <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;">AVERSA 1 je dostupná ve 2 dekorech ENDURO nebo LAMINOLACK laminátu.</p>
     <div class="color-grid">
-      <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/aversa1dub_310x413.png'">
-        <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/aversa1dub_310x413.png" alt="AVERSA 1 dub" onerror="this.src='interiery-imgs/katalog/aversa1.jpg'">
-        <div class="color-card-body">
-          <div class="swatch-row"><span class="swatch" style="background:#8B6040;"></span><span class="color-name">Dub evropský <span class="badge-s">SKLADEM</span></span></div>
-          <div class="color-sub">ENDURO / LAMINOLACK · tmavší dub</div>
-        </div>
+      <div class="color-swatch-card">
+        <div class="swatch-big" style="background:#8B6040;"></div>
+        <div class="swatch-name">Dub evropský</div>
+        <div class="swatch-sub">ENDURO / LAMINOLACK · tmavší dub</div>
+        <span class="swatch-sklad">SKLADEM</span>
       </div>
-      <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/aversa1biela_310x413.png'">
-        <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/aversa1biela_310x413.png" alt="AVERSA 1 bílá" onerror="this.src='interiery-imgs/katalog/aversa1.jpg'">
-        <div class="color-card-body">
-          <div class="swatch-row"><span class="swatch" style="background:#F5F2EE;border:1.5px solid #ddd;"></span><span class="color-name">Bílá <span class="badge-s">SKLADEM</span></span></div>
-          <div class="color-sub">ENDURO / LAMINOLACK · čistá bílá</div>
-        </div>
+      <div class="color-swatch-card">
+        <div class="swatch-big" style="background:#F5F2EE;border:1.5px solid #ddd;"></div>
+        <div class="swatch-name">Bílá</div>
+        <div class="swatch-sub">ENDURO / LAMINOLACK · čistá bílá</div>
+        <span class="swatch-sklad">SKLADEM</span>
       </div>
     </div>
   </section>

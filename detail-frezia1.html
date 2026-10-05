@@ -55,7 +55,12 @@
     .section-title { font-size:1.25rem; font-weight:800; color:var(--navy); margin:0 0 1.25rem; padding-bottom:.6rem; border-bottom:2px solid var(--gray-200); }
 
     /* Barvy */
-    .color-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:1.25rem; margin-top:1.25rem; }
+    .color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;margin-top:1.25rem}
+    .color-swatch-card{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1rem;text-align:center}
+    .swatch-big{width:48px;height:48px;border-radius:50%;margin:0 auto .6rem;border:2px solid rgba(0,0,0,.1)}
+    .swatch-name{font-size:.9rem;font-weight:700;color:var(--navy)}
+    .swatch-sub{font-size:.72rem;color:var(--text-muted);margin-top:.15rem}
+    .swatch-sklad{display:inline-block;margin-top:.45rem;font-size:.62rem;font-weight:800;letter-spacing:.04em;color:#15803d;background:#dcfce7;border-radius:99px;padding:.15rem .55rem}
     .color-card { background:var(--white); border:2px solid var(--gray-200); border-radius:var(--radius-lg); overflow:hidden; transition:box-shadow .2s,transform .2s,border-color .2s; cursor:default; }
     .color-card:hover { box-shadow:var(--shadow-lg); transform:translateY(-3px); border-color:var(--blue); }
     .color-card img { width:100%; aspect-ratio:310/413; object-fit:cover; display:block; background:#184a31; }
@@ -196,51 +201,28 @@
     <!-- BAREVNÉ PROVEDENÍ -->
     <section style="margin-bottom:3rem;">
       <h2 class="section-title">Barevné provedení</h2>
-      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;">FRÉZIA 1 je dostupná ve 3 dekorech CPL laminátu. Kliknutím na barvu zobrazíte náhled.</p>
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:.5rem;">FRÉZIA 1 je dostupná ve 3 dekorech CPL laminátu. </p>
       <div class="color-grid">
-
-        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-dub_310x413.png'">
-          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-dub_310x413.png"
-               alt="FRÉZIA 1 – dub přírodní"
-               onerror="this.src='interiery-imgs/katalog/frezia1.jpg'">
-          <div class="color-card-body">
-            <div class="swatch-row">
-              <span class="swatch" style="background:#C49A6C;"></span>
-              <span class="color-name">Dub přírodní <span class="badge-skladem-sm">SKLADEM</span></span>
-            </div>
-            <div class="color-sub">dub st CPL · přírodní struktura dřeva</div>
-          </div>
-        </div>
-
-        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-biela_310x413.png'">
-          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-biela_310x413.png"
-               alt="FRÉZIA 1 – bílá"
-               onerror="this.src='interiery-imgs/katalog/frezia1.jpg'">
-          <div class="color-card-body">
-            <div class="swatch-row">
-              <span class="swatch" style="background:#F5F2EE;border:1.5px solid #ddd;"></span>
-              <span class="color-name">Bílá <span class="badge-skladem-sm">SKLADEM</span></span>
-            </div>
-            <div class="color-sub">biela st CPL · čistá bílá</div>
-          </div>
-        </div>
-
-        <div class="color-card" onclick="document.getElementById('heroImg').src='https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-capucino_310x413.png'">
-          <img src="https://eshop.svetdveri.sk/images/virtuemart/product/resized/frezia-1-capucino_310x413.png"
-               alt="FRÉZIA 1 – cappuccino"
-               onerror="this.style.display='none';this.parentElement.querySelector('.color-placeholder').style.display='flex'">
-          <div class="color-placeholder" style="display:none;height:160px;align-items:center;justify-content:center;background:#9B7B62;color:#fff;font-size:.85rem;font-weight:700;">Cappuccino</div>
-          <div class="color-card-body">
-            <div class="swatch-row">
-              <span class="swatch" style="background:#9B7B62;"></span>
-              <span class="color-name">Cappuccino <span class="badge-skladem-sm">SKLADEM</span></span>
-            </div>
-            <div class="color-sub">capucino st CPL · teplý hnědý tón</div>
-          </div>
-        </div>
-
+      <div class="color-swatch-card">
+        <div class="swatch-big" style="background:#C49A6C;"></div>
+        <div class="swatch-name">Dub přírodní</div>
+        <div class="swatch-sub">dub st CPL · přírodní struktura dřeva</div>
+        <span class="swatch-sklad">SKLADEM</span>
       </div>
-    </section>
+      <div class="color-swatch-card">
+        <div class="swatch-big" style="background:#F5F2EE;border:1.5px solid #ddd;"></div>
+        <div class="swatch-name">Bílá</div>
+        <div class="swatch-sub">biela st CPL · čistá bílá</div>
+        <span class="swatch-sklad">SKLADEM</span>
+      </div>
+      <div class="color-swatch-card">
+        <div class="swatch-big" style="background:#9B7B62;"></div>
+        <div class="swatch-name">Cappuccino</div>
+        <div class="swatch-sub">capucino st CPL · teplý hnědý tón</div>
+        <span class="swatch-sklad">SKLADEM</span>
+      </div>
+    </div>
+  </section>
 
     <!-- TECHNICKÉ PARAMETRY -->
     <section style="margin-bottom:3rem;">
