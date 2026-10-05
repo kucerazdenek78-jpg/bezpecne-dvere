@@ -79,7 +79,7 @@
       display: flex; flex-direction: column;
       transition: box-shadow .2s, transform .2s;
     }
-    .int-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    @media (hover:hover){.int-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }}
     .int-card-img-wrap { display: block; overflow: hidden; }
     .int-card-img {
       width: 100%; height: auto; aspect-ratio: 1 / 2;
@@ -87,7 +87,7 @@
       background: #ecEEEB;
       transition: transform .3s;
     }
-    .int-card-img-wrap:hover .int-card-img { transform: scale(1.03); }
+    @media (hover:hover){.int-card-img-wrap:hover .int-card-img { transform: scale(1.03); }}
     @media(max-width:480px){.int-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}.int-card-body{padding:.6rem .6rem .7rem}}
     .int-card-body {
       padding: .75rem 1rem .9rem;

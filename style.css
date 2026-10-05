@@ -192,7 +192,7 @@ section.tight { padding: 3rem 0; }
   background: var(--gray-100);
 }
 .nav-link svg { width: 11px; height: 11px; transition: transform var(--transition); }
-.nav-item:hover .nav-link svg { transform: rotate(180deg); }
+@media (hover:hover){.nav-item:hover .nav-link svg { transform: rotate(180deg); }}
 .nav-tel { font-size: 0.85rem; color: var(--navy); font-weight: 600; margin-right: 0.4rem; }
 
 /* Dropdown */
@@ -310,14 +310,14 @@ section.tight { padding: 3rem 0; }
   transition: var(--transition);
   border: 1px solid var(--gray-200);
 }
-.product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+@media (hover:hover){.product-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }}
 .product-card-image {
   height: 220px; background: var(--bg);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden; position: relative;
 }
 .product-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-.product-card:hover .product-card-image img { transform: scale(1.04); }
+@media (hover:hover){.product-card:hover .product-card-image img { transform: scale(1.04); }}
 .product-badge {
   position: absolute; top: 1rem; left: 1rem;
   background: var(--orange); color: var(--white);
@@ -349,13 +349,13 @@ section.tight { padding: 3rem 0; }
   display: flex; align-items: flex-end;
   transition: var(--transition);
 }
-.cat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+@media (hover:hover){.cat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }}
 .cat-card-bg {
   position: absolute; inset: 0;
   background-size: cover; background-position: center;
   transition: transform 0.4s ease;
 }
-.cat-card:hover .cat-card-bg { transform: scale(1.04); }
+@media (hover:hover){.cat-card:hover .cat-card-bg { transform: scale(1.04); }}
 .cat-card-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to top, rgba(10,38,24,0.82) 0%, rgba(10,38,24,0.2) 60%, transparent 100%);
@@ -376,7 +376,7 @@ section.tight { padding: 3rem 0; }
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
 }
-.why-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }
+@media (hover:hover){.why-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }}
 .why-item-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.05rem; }
 .why-item h4   { color: var(--navy); margin-bottom: 0.15rem; }
 .why-item p    { font-size: 0.88rem; }
@@ -395,7 +395,7 @@ section.tight { padding: 3rem 0; }
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
 }
-.review-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--orange); }
+@media (hover:hover){.review-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--orange); }}
 .review-stars { color: var(--orange); font-size: 1rem; margin-bottom: 0.7rem; }
 .review-text  { color: var(--text-muted); font-size: 0.88rem; line-height: 1.65; margin-bottom: 1rem; font-style: italic; }
 .review-author { display: flex; align-items: center; gap: 0.7rem; }
@@ -525,10 +525,10 @@ footer {
   border: 1px solid var(--gray-200);
   display: flex; flex-direction: column; transition: var(--transition);
 }
-.servis-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--orange); }
+@media (hover:hover){.servis-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--orange); }}
 .servis-card-image { height: 200px; overflow: hidden; }
 .servis-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-.servis-card:hover .servis-card-image img { transform: scale(1.04); }
+@media (hover:hover){.servis-card:hover .servis-card-image img { transform: scale(1.04); }}
 .servis-card-body { padding: 1.75rem; flex: 1; }
 .servis-card-body h3 { color: var(--navy); margin-bottom: 0.7rem; }
 .servis-card-body p  { font-size: 0.88rem; }
@@ -681,7 +681,7 @@ footer p { color: rgba(255,255,255,0.6); }
 
 /* Dvojice tlačítek Detail (zelené) + Poptávka (oranžové) vedle sebe i na mobilu */
 .btn-green{background:var(--navy-mid);color:var(--white);border-color:var(--navy-mid)}
-.btn-green:hover{background:var(--navy);border-color:var(--navy);transform:translateY(-2px);box-shadow:var(--shadow)}
+@media (hover:hover){.btn-green:hover{background:var(--navy);border-color:var(--navy);transform:translateY(-2px);box-shadow:var(--shadow)}}
 .btn-row{display:flex;gap:1rem;flex-wrap:nowrap}
 @media(max-width:600px){.btn-row{gap:.5rem}.btn-row .btn{flex:1 1 0;min-width:0;padding:.8rem .5rem;font-size:.95rem;text-align:center;white-space:nowrap;justify-content:center}}
 
