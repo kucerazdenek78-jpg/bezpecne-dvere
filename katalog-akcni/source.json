@@ -1,7 +1,9 @@
 {
   "pdf_url": "https://svetdveri.cz/wp-content/uploads/2026/06/Akciovy-katalog-9_26-C-.pdf",
-  "discover_pages": ["https://svetdveri.cz/"],
+  "discover_pages": [
+    "https://svetdveri.cz/"
+  ],
   "label": "9/2026",
-  "sha256": "",
+  "sha256": "93afdeba048c40cf2b4b50767711821c927471169cd669d3ddabed85a9569e48",
   "pages": 44
 }
