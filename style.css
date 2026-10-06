@@ -721,3 +721,12 @@ footer p { color: rgba(255,255,255,0.6); }
 @media(max-width:700px){.page-header.hero-modern{padding:7rem 0 2.2rem}.page-header.hero-modern::after{display:none}}
 .page-header.hero-modern .hero-chips{margin-bottom:1rem}
 .page-header.hero-modern .breadcrumb{justify-content:flex-start;margin-top:1rem}
+
+/* SERVIS – sjednocené ikonové dlaždice místo fotek */
+.svc-tile{width:100%;height:100%;min-height:200px;display:flex;align-items:center;justify-content:center;color:#fff;
+  background:radial-gradient(circle at 80% 15%,rgba(255,255,255,.12),transparent 55%),linear-gradient(135deg,#0f3a24 0%,#17503a 55%,#1f6b43 100%);position:relative;overflow:hidden}
+.svc-tile::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:32px 32px}
+.svc-tile svg{position:relative;width:96px;height:96px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+.svc-tile.svc-big{min-height:260px;border-radius:var(--radius-lg)}
+.svc-tile.svc-big svg{width:130px;height:130px}
+.servis-card-image .svc-tile{transition:transform .4s ease}
