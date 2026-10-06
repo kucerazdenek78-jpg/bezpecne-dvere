@@ -30,7 +30,9 @@ jobs:
         if: steps.k.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          LABEL: ${{ steps.k.outputs.label }}
+          PAGES: ${{ steps.k.outputs.pages }}
+          URL: ${{ steps.k.outputs.url }}
         run: |
-          gh issue create --title "Nový akční katalog ${{ steps.k.outputs.label }} – zkontrolovat ceny a modely" --body "Bot stáhl nový katalog (${{ steps.k.outputs.pages }} stran) z ${{ steps.k.outputs.url }} a aktualizoval listování a PDF ke stažení.
-
-Karty na stránce Dveře do interiéru (ceny, modely, čísla stran u odkazů „Více v katalogu“) se automaticky NEMĚNÍ. Je potřeba je ručně porovnat s novým katalogem."
+          gh issue create --title "Nový akční katalog $LABEL – zkontrolovat ceny a modely" \
+            --body "Bot stáhl nový katalog ($PAGES stran) z $URL a aktualizoval listování a PDF ke stažení. Karty na stránce Dveře do interiéru (ceny, modely, čísla stran) se automaticky NEMĚNÍ, je potřeba je ručně porovnat s novým katalogem."
