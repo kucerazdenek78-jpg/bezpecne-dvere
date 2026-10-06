@@ -24,6 +24,40 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#123d27">
+  <style>
+    .so-intro{display:grid;grid-template-columns:1.2fr .8fr;gap:2rem;align-items:center;margin-bottom:2.5rem}
+    .so-intro-text h2{color:var(--navy);margin:.3rem 0 .8rem}
+    .so-intro-text p{margin-bottom:.7rem}
+    .so-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1rem}
+    .so-intro-img img{width:100%;border-radius:var(--radius-lg);max-height:320px;object-fit:cover}
+    .so-h{color:var(--navy);margin:2rem 0 1rem;font-size:1.3rem}
+    .so-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+    .so-grid-2{grid-template-columns:repeat(2,1fr)}
+    .so-box{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.4rem}
+    .so-box h4{color:var(--navy);margin-bottom:.5rem;font-size:1.05rem}
+    .so-box p{font-size:.92rem;margin-bottom:.5rem}
+    .so-box ul{padding-left:1.1rem;margin-top:.4rem;display:flex;flex-direction:column;gap:.35rem;font-size:.9rem;color:var(--gray-600)}
+    .so-box li{list-style:disc}
+    .so-box-svj{border-color:#15803d;background:#f6fcf8}
+    .so-cities{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
+    .so-cities span{background:#e8f5ee;color:var(--navy);font-weight:700;font-size:.85rem;padding:.35rem .9rem;border-radius:99px}
+    .so-form-wrap{max-width:760px;margin:0 auto}
+    .so-form-wrap h2{color:var(--navy);margin-bottom:.5rem}
+    .so-form-wrap>p{margin-bottom:1.3rem}
+    .so-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .so-f{margin-bottom:1rem}
+    .so-f label{display:block;font-weight:700;font-size:.85rem;color:var(--navy);margin-bottom:.35rem}
+    .so-f input[type=text],.so-f input[type=tel],.so-f input[type=email],.so-f textarea{width:100%;padding:.75rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff}
+    .so-f input:focus,.so-f textarea:focus{outline:none;border-color:var(--orange)}
+    .so-f textarea{min-height:120px;resize:vertical}
+    .so-radios{display:flex;gap:1.5rem}.so-radios label{font-weight:600;display:flex;align-items:center;gap:.4rem;margin:0}
+    .so-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;margin:.5rem 0 1.1rem;line-height:1.5}
+    .so-note{font-size:.88rem;margin-bottom:1rem}
+    .so-wide{max-width:760px;margin:0 auto}
+    .so-partner{line-height:1.7}
+    section[id]{scroll-margin-top:90px}
+    @media(max-width:820px){.so-intro,.so-grid,.so-grid-2,.so-row{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 
@@ -76,7 +110,7 @@
   <div class="container">
     <span class="section-label">Péče po montáži</span>
     <h1>Servis a opravy</h1>
-    <p>Profesionální servis oken a dveří, nouzové otevírání, reklamace i objednání klíčů — jsme tu pro Vás i po koupi.</p>
+    <p>Servis oken a dveří pro domácnosti, SVJ i bytová družstva, nahlášení reklamace a objednání klíčů — jsme tu pro Vás i po koupi.</p>
     <div class="breadcrumb">
       <a href="index.html">Úvod</a>
       <span>›</span>
@@ -85,103 +119,142 @@
   </div>
 </div>
 
-<!-- SERVIS KARTY -->
-<section>
+<!-- SERVIS OKEN -->
+<section id="servis-oken" style="padding-bottom:1rem;">
   <div class="container">
-    <div class="servis-grid">
-
-      <!-- SERVIS OKEN -->
-      <div class="servis-card" id="servis-oken">
-        <div class="servis-card-image">
-          <img src="userFiles/montaz-dvere/servis-oken.png" alt="Servis oken">
-        </div>
-        <div class="servis-card-body">
-          <div class="product-class">Servis</div>
-          <h3>Servis a opravy plastových oken</h3>
-          <p>Seřizujeme, kontrolujeme a opravujeme okna pro Vaší domácí pohodu. Špatně zavírající okno způsobuje tepelné úniky a vlhkost — nenechte to dojít dál.</p>
-          <br>
-          <p>Co provádíme:</p>
-          <ul style="margin-top:0.5rem;padding-left:1.2rem;color:var(--gray-600);font-size:0.9rem;display:flex;flex-direction:column;gap:0.3rem;">
-            <li style="list-style:disc;">Seřízení kování a pantů</li>
-            <li style="list-style:disc;">Výměna těsnění</li>
-            <li style="list-style:disc;">Oprava nebo výměna skla</li>
-            <li style="list-style:disc;">Pravidelná údržba a kontrola</li>
-            <li style="list-style:disc;">Servis protipožárních uzávěrů dle normy</li>
-          </ul>
-        </div>
-        <div class="servis-card-footer">
-          <a href="poptavka.html" class="btn btn-primary">Poptejte servis →</a>
+    <div class="so-intro">
+      <div class="so-intro-text">
+        <span class="section-label" style="color:var(--orange-text);">Servis oken a dveří</span>
+        <h2>Profesionální servis oken a dveří: Mostecko, Lounsko a okolí</h2>
+        <p>Vdechněte svým oknům nový život. Nabízíme odborné seřízení kování, výměnu rozbitých skel a kompletní servis pro plastová, hliníková i eurookna.</p>
+        <p>Díky našim rozsáhlým zkušenostem z instalací přesně víme, kde vznikají problémy a jak je efektivně řešit. Nečekejte na drahou výměnu celých oken – často stačí odborný zásah a budou sloužit a těsnit jako nová.</p>
+        <div class="so-actions">
+          <a href="#servis-formular" class="btn btn-primary">Nahlásit servis →</a>
+          <a href="tel:+420725559235" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);">📞 +420 725 559 235</a>
         </div>
       </div>
+      <div class="so-intro-img"><img src="userFiles/montaz-dvere/servis-oken.png" alt="Servis oken" loading="lazy"></div>
+    </div>
 
-      <!-- NOUZOVÉ OTEVÍRÁNÍ -->
-      <div class="servis-card" id="nouzove">
-        <div class="servis-card-image">
-          <img src="userFiles/servis/nouzove_otevirani.jpg" alt="Nouzové otevírání dveří">
-        </div>
-        <div class="servis-card-body">
-          <div class="product-class">Servis</div>
-          <h3>Nouzové otevírání dveří</h3>
-          <p>Ztratili jste klíče nebo jste si zabouchli dveře a klíče jsou uvnitř? Zavolejte — přijedeme co nejdříve.</p>
-          <br>
-          <p>Nabízíme:</p>
-          <ul style="margin-top:0.5rem;padding-left:1.2rem;color:var(--gray-600);font-size:0.9rem;display:flex;flex-direction:column;gap:0.3rem;">
-            <li style="list-style:disc;">Nouzové otevření bytu nebo domu</li>
-            <li style="list-style:disc;">Otevření bez poškození zárubně (pokud to typ dveří umožní)</li>
-            <li style="list-style:disc;">Výměna vložky po otevření</li>
-            <li style="list-style:disc;">Rychlý zásah v regionu Most a okolí</li>
-          </ul>
-        </div>
-        <div class="servis-card-footer">
-          <a href="poptavka.html" class="btn btn-primary">Zavolat / napsat →</a>
-        </div>
+    <h3 class="so-h">Co přesně pro vaše okna uděláme?</h3>
+    <div class="so-grid">
+      <div class="so-box">
+        <h4>Seřízení a opravy kování</h4>
+        <p>Drhne vám klička, okno nedovírá nebo jde ztuha otevřít? Specializujeme se na servis a opravy celoobvodového kování renomovaných výrobců.</p>
+        <ul>
+          <li><strong>Značkový servis:</strong> Perfektně známe systémy Winkhaus, Roto, Maco, G-U a Schüco.</li>
+          <li><strong>Těsnost:</strong> Správným seřízením přítlaku výrazně omezíme úniky tepla a odstraníme průvan.</li>
+        </ul>
       </div>
-
-      <!-- REKLAMACE -->
-      <div class="servis-card" id="reklamace">
-        <div class="servis-card-image">
-          <img src="userFiles/servis/servis.jpeg" alt="Servis a reklamace">
-        </div>
-        <div class="servis-card-body">
-          <div class="product-class">Servis</div>
-          <h3>Nahlášení servisu a reklamace</h3>
-          <p>Máte problém s našimi dveřmi v záruce nebo po záruce? Potřebujete pravidelnou kontrolu pro dodržení normy na požární uzávěry?</p>
-          <br>
-          <p>Kde nás najdete:</p>
-          <ul style="margin-top:0.5rem;padding-left:1.2rem;color:var(--gray-600);font-size:0.9rem;display:flex;flex-direction:column;gap:0.3rem;">
-            <li style="list-style:disc;">Záruční i pozáruční opravy</li>
-            <li style="list-style:disc;">Pravidelná kontrola protipožárních uzávěrů EI</li>
-            <li style="list-style:disc;">Seřízení dveří po osazení</li>
-            <li style="list-style:disc;">Výměna poškozených dílů</li>
-          </ul>
-        </div>
-        <div class="servis-card-footer">
-          <a href="poptavka.html" class="btn btn-primary">Nahlásit servis →</a>
-        </div>
+      <div class="so-box">
+        <h4>Výměna skel</h4>
+        <p>Skla neopravujeme, ale měníme za nová a kvalitnější.</p>
+        <ul>
+          <li><strong>Rozbitá skla:</strong> Rychlá výměna prasklých či jinak poškozených skel.</li>
+          <li><strong>Izolační upgrade:</strong> Původní starší skla vyměníme za moderní izolační dvojskla či trojskla, která lépe drží teplo a tlumí hluk z ulice.</li>
+        </ul>
       </div>
-
-      <!-- KLÍČE -->
-      <div class="servis-card" id="klice">
-        <div class="servis-card-image">
-          <img src="userFiles/servis/objednani_klicu.jpeg" alt="Objednání klíčů">
-        </div>
-        <div class="servis-card-body">
-          <div class="product-class">Servis</div>
-          <h3>Objednání klíčů</h3>
-          <p>Potřebujete objednat klíče a máte bezpečnostní kartu? Klíče k bezpečnostním dveřím nelze kopírovat v běžné klíčové službě — jsou chráněny patentní ochranou.</p>
-          <br>
-          <p>Jak to funguje:</p>
-          <ul style="margin-top:0.5rem;padding-left:1.2rem;color:var(--gray-600);font-size:0.9rem;display:flex;flex-direction:column;gap:0.3rem;">
-            <li style="list-style:disc;">Máte bezpečnostní kartu dodanou s dveřmi</li>
-            <li style="list-style:disc;">Kontaktujte nás telefonicky nebo e-mailem</li>
-            <li style="list-style:disc;">Klíče doručíme nebo si je vyzvedněte u nás</li>
-          </ul>
-        </div>
-        <div class="servis-card-footer">
-          <a href="poptavka.html" class="btn btn-primary">Objednat klíče →</a>
-        </div>
+      <div class="so-box">
+        <h4>Servis PVC, Alu a Eurooken</h4>
+        <p>Nezáleží na materiálu. Máme praxi s plastovými profily, hliníkovými konstrukcemi i dřevěnými eurookny.</p>
       </div>
+    </div>
 
+    <h3 class="so-h">Řešení pro domácnosti, firmy i bytová družstva</h3>
+    <div class="so-grid so-grid-2">
+      <div class="so-box">
+        <h4>Pro jednotlivce</h4>
+        <p>Rychlý servis pro váš byt či dům. Přijedeme, posoudíme závadu, vyměníme poškozené díly a seřídíme okna pro maximální úsporu tepla.</p>
+      </div>
+      <div class="so-box so-box-svj">
+        <h4>Pro SVJ, bytová družstva a firmy</h4>
+        <p>Nabízíme kompletní péči o okenní výplně vašich nemovitostí.</p>
+        <ul>
+          <li><strong>Mapování stavu:</strong> Provedeme audit oken v celém objektu a zpracujeme přehled závad.</li>
+          <li><strong>Pravidelný servis:</strong> Nabízíme slevový program pro dlouhodobé partnery a pravidelné údržby.</li>
+          <li><strong>Úspora:</strong> Funkční okna znamenají nižší náklady na vytápění celého domu.</li>
+        </ul>
+        <a href="#servis-formular" class="btn btn-primary" style="margin-top:.9rem;">Poptat servis pro dům / SVJ →</a>
+      </div>
+    </div>
+
+    <h3 class="so-h">Kde působíme?</h3>
+    <p style="max-width:640px;">Jsme váš lokální partner. Servis oken a dveří zajišťujeme v těchto městech a jejich okolí:</p>
+    <div class="so-cities"><span>Most</span><span>Litvínov</span><span>Teplice</span><span>Louny</span><span>Žatec</span><span>Chomutov</span></div>
+  </div>
+</section>
+
+<!-- REKLAMACE / NAHLÁŠENÍ SERVISU – FORMULÁŘ -->
+<section id="reklamace" style="background:var(--gray-50,#f6f8f6);">
+  <div class="container">
+    <div class="so-form-wrap" id="servis-formular">
+      <h2>Nahlášení servisu a reklamace</h2>
+      <p>Vyplňte formulář a popište, co vás trápí. Po odeslání Vás budeme kontaktovat do 48 hodin (neplatí o svátky a víkendy).</p>
+      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
+        <input type="hidden" name="_subject" value="Nahlášení servisu / reklamace z webu – bezpecne-dvere">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+        <div class="so-row">
+          <div class="so-f"><label>Jméno *</label><input type="text" name="jmeno" required></div>
+          <div class="so-f"><label>Příjmení *</label><input type="text" name="prijmeni" required></div>
+        </div>
+        <div class="so-row">
+          <div class="so-f"><label>Ulice a číslo popisné *</label><input type="text" name="ulice" required></div>
+          <div class="so-f"><label>Město *</label><input type="text" name="mesto" required></div>
+        </div>
+        <div class="so-row">
+          <div class="so-f"><label>E-mail *</label><input type="email" name="email" required></div>
+          <div class="so-f"><label>Telefon *</label><input type="tel" name="telefon" required></div>
+        </div>
+        <div class="so-f"><label>Číslo objednávky – rok *</label><input type="text" name="cislo_objednavky" required></div>
+        <div class="so-f"><label>Detailně nám popište, co vás trápí *</label><textarea name="popis" required></textarea></div>
+        <div class="so-f"><label>Můžete i přiložit fotografii</label><input type="file" name="attachment" accept="image/*"></div>
+        <label class="so-check"><input type="checkbox" name="souhlas" value="ano" required> <span>Souhlasím se zpracováním údajů pro vyřízení požadavku servisu. Po odeslání Vás budeme kontaktovat do 48 hodin (neplatí o svátky a víkendy).</span></label>
+        <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Odeslat →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- NOUZOVÉ OTEVÍRÁNÍ -->
+<section id="nouzove">
+  <div class="container">
+    <div class="so-box so-wide">
+      <h2 style="font-size:1.5rem;">Nouzové otevírání dveří</h2>
+      <p>Potřebujete nouzově otevřít dveře? Kontaktujte našeho partnera v Mostě:</p>
+      <p class="so-partner"><strong>OBEX Klíče s.r.o.</strong><br>Josefa Skupy 2518/9, 434 01 Most<br>tel. <a href="tel:+420725069076">+420 725 069 076</a><br><a href="https://www.obexklice.cz" target="_blank" rel="noopener">www.obexklice.cz</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- OBJEDNÁNÍ KLÍČŮ – FORMULÁŘ -->
+<section id="klice" style="background:var(--gray-50,#f6f8f6);">
+  <div class="container">
+    <div class="so-form-wrap">
+      <h2>Formulář pro objednání klíčů</h2>
+      <p>Zde si můžete objednat klíče od námi instalovaných bezpečnostních dveří PREMIUM 60 a EXTREME 54, pokud máte bezpečnostní kartu.</p>
+      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
+        <input type="hidden" name="_subject" value="Objednání klíčů z webu – bezpecne-dvere">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+        <div class="so-row">
+          <div class="so-f"><label>Jméno a příjmení na dokladu o koupi *</label><input type="text" name="jmeno" required></div>
+          <div class="so-f"><label>Telefon *</label><input type="tel" name="telefon" required></div>
+        </div>
+        <div class="so-row">
+          <div class="so-f"><label>Číslo dokladu o zaplacení *</label><input type="text" name="cislo_dokladu" required></div>
+          <div class="so-f"><label>Číslo bezpečnostní karty *</label><input type="text" name="cislo_karty" required></div>
+        </div>
+        <div class="so-f"><label>Počet požadovaných klíčů *</label>
+          <div class="so-radios"><label><input type="radio" name="pocet_klicu" value="1" required> 1</label><label><input type="radio" name="pocet_klicu" value="2"> 2</label><label><input type="radio" name="pocet_klicu" value="3"> 3</label></div>
+        </div>
+        <div class="so-f"><label>Fotka bezpečnostní karty s číslem *</label><input type="file" name="attachment" accept="image/*" required></div>
+        <div class="so-f"><label>E-mail *</label><input type="email" name="email" required></div>
+        <p class="so-note">Před výrobou Vás budeme kontaktovat na dohodnutí vyzvednutí klíčů, termínu výroby a ceny. Veškeré zde uvedené informace se nikde dále nezpracovávají, jen se odešlou k nám na e-mail.</p>
+        <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Objednat →</button>
+      </form>
     </div>
   </div>
 </section>
@@ -227,7 +300,6 @@
         <div class="footer-links">
           <a href="#servis-oken">Servis oken</a>
           <a href="#nouzove">Nouzové otevírání</a>
-          <a href="#nouzove">Nouzové otevírání</a>
           <a href="#reklamace">Reklamace</a>
           <a href="#klice">Objednání klíčů</a>
         </div>
@@ -259,5 +331,6 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
+<script src="form-submit.js?v=2"></script>
 </body>
 </html>
