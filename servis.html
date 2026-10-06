@@ -47,7 +47,8 @@
     .so-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
     .so-f{margin-bottom:1rem}
     .so-f label{display:block;font-weight:700;font-size:.85rem;color:var(--navy);margin-bottom:.35rem}
-    .so-f input[type=text],.so-f input[type=tel],.so-f input[type=email],.so-f textarea{width:100%;padding:.75rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff}
+    .so-f input[type=text],.so-f input[type=tel],.so-f input[type=email],.so-f select{width:100%;padding:.75rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff}
+    .so-f textarea{width:100%;padding:.75rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff}
     .so-f input:focus,.so-f textarea:focus{outline:none;border-color:var(--orange)}
     .so-f textarea{min-height:120px;resize:vertical}
     .so-radios{display:flex;gap:1.5rem}.so-radios label{font-weight:600;display:flex;align-items:center;gap:.4rem;margin:0}
@@ -88,7 +89,7 @@
           <div class="dropdown">
             <a href="#servis-oken">Servis oken</a>
             <a href="#nouzove">Nouzové otevírání</a>
-            <a href="#reklamace">Reklamace</a>
+            <a href="#reklamace">Servis dveří a reklamace</a>
             <a href="#klice">Objednání klíčů</a>
           </div>
         </li>
@@ -110,7 +111,7 @@
   <div class="container">
     <span class="section-label">Péče po montáži</span>
     <h1>Servis a opravy</h1>
-    <p>Servis oken a dveří pro domácnosti, SVJ i bytová družstva, nahlášení reklamace a objednání klíčů — jsme tu pro Vás i po koupi.</p>
+    <p>Poptávka servisu oken pro domácnosti, SVJ i bytová družstva a servis dveří, které jsme nainstalovali — reklamace, objednání klíčů.</p>
     <div class="breadcrumb">
       <a href="index.html">Úvod</a>
       <span>›</span>
@@ -124,12 +125,12 @@
   <div class="container">
     <div class="so-intro">
       <div class="so-intro-text">
-        <span class="section-label" style="color:var(--orange-text);">Servis oken a dveří</span>
-        <h2>Profesionální servis oken a dveří: Mostecko, Lounsko a okolí</h2>
+        <span class="section-label" style="color:var(--orange-text);">Servis oken</span>
+        <h2>Profesionální servis oken: Mostecko, Lounsko a okolí</h2>
         <p>Vdechněte svým oknům nový život. Nabízíme odborné seřízení kování, výměnu rozbitých skel a kompletní servis pro plastová, hliníková i eurookna.</p>
         <p>Díky našim rozsáhlým zkušenostem z instalací přesně víme, kde vznikají problémy a jak je efektivně řešit. Nečekejte na drahou výměnu celých oken – často stačí odborný zásah a budou sloužit a těsnit jako nová.</p>
         <div class="so-actions">
-          <a href="#servis-formular" class="btn btn-primary">Nahlásit servis →</a>
+          <a href="#servis-oken-poptavka" class="btn btn-primary">Poptat servis oken →</a>
           <a href="tel:+420725559235" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);">📞 +420 725 559 235</a>
         </div>
       </div>
@@ -174,13 +175,46 @@
           <li><strong>Pravidelný servis:</strong> Nabízíme slevový program pro dlouhodobé partnery a pravidelné údržby.</li>
           <li><strong>Úspora:</strong> Funkční okna znamenají nižší náklady na vytápění celého domu.</li>
         </ul>
-        <a href="#servis-formular" class="btn btn-primary" style="margin-top:.9rem;">Poptat servis pro dům / SVJ →</a>
+        <a href="#servis-oken-poptavka" class="btn btn-primary" style="margin-top:.9rem;">Poptat servis pro dům / SVJ →</a>
       </div>
     </div>
 
     <h3 class="so-h">Kde působíme?</h3>
-    <p style="max-width:640px;">Jsme váš lokální partner. Servis oken a dveří zajišťujeme v těchto městech a jejich okolí:</p>
+    <p style="max-width:640px;">Jsme váš lokální partner. Servis oken zajišťujeme v těchto městech a jejich okolí:</p>
     <div class="so-cities"><span>Most</span><span>Litvínov</span><span>Teplice</span><span>Louny</span><span>Žatec</span><span>Chomutov</span></div>
+
+    <div class="so-form-wrap so-okna-form" id="servis-oken-poptavka">
+      <h3 class="so-h" style="margin-top:2.5rem;">Poptávka servisu oken</h3>
+      <p>Napište nám, co potřebujete — nezávazně a bez čísla objednávky. Ozveme se Vám a domluvíme prohlídku nebo termín servisu.</p>
+      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
+        <input type="hidden" name="_subject" value="Poptávka servisu oken z webu – bezpecne-dvere">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+        <div class="so-row">
+          <div class="so-f"><label>Jméno a příjmení *</label><input type="text" name="jmeno" required></div>
+          <div class="so-f"><label>Telefon *</label><input type="tel" name="telefon" required></div>
+        </div>
+        <div class="so-row">
+          <div class="so-f"><label>E-mail</label><input type="email" name="email"></div>
+          <div class="so-f"><label>Město, ulice *</label><input type="text" name="adresa" required></div>
+        </div>
+        <div class="so-f"><label>Pro koho servis chcete *</label>
+          <select name="typ_zakaznika" required>
+            <option value="">– vyberte –</option>
+            <option>Byt</option>
+            <option>Rodinný dům</option>
+            <option>SVJ / bytové družstvo (celý dům)</option>
+            <option>Firma</option>
+          </select>
+        </div>
+        <div class="so-f"><label>Co potřebujete vyřešit *</label><textarea name="popis" placeholder="Např. okno nedovírá, rozbité sklo, seřízení kování, audit oken v celém domě…" required></textarea></div>
+        <div class="so-f"><label>Můžete i přiložit fotografii</label><input type="file" name="attachment" accept="image/*"></div>
+        <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Odeslat poptávku →</button>
+        <p class="so-note" style="margin-top:.8rem;">Odesláním souhlasíte se zpracováním údajů pro vyřízení poptávky.</p>
+      </form>
+    </div>
+
   </div>
 </section>
 
@@ -188,8 +222,9 @@
 <section id="reklamace" style="background:var(--gray-50,#f6f8f6);">
   <div class="container">
     <div class="so-form-wrap" id="servis-formular">
-      <h2>Nahlášení servisu a reklamace</h2>
-      <p>Vyplňte formulář a popište, co vás trápí. Po odeslání Vás budeme kontaktovat do 48 hodin (neplatí o svátky a víkendy).</p>
+      <span class="section-label" style="color:var(--orange-text);">Servis dveří</span>
+      <h2>Servis a reklamace nainstalovaných dveří</h2>
+      <p>Formulář je pro dveře, které jsme Vám dodali a nainstalovali. Číslo objednávky potřebujeme, abychom ověřili, zda jde o záruční, nebo pozáruční opravu. Po odeslání Vás budeme kontaktovat do 48 hodin (neplatí o svátky a víkendy).</p>
       <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
         <input type="hidden" name="_subject" value="Nahlášení servisu / reklamace z webu – bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
@@ -300,7 +335,7 @@
         <div class="footer-links">
           <a href="#servis-oken">Servis oken</a>
           <a href="#nouzove">Nouzové otevírání</a>
-          <a href="#reklamace">Reklamace</a>
+          <a href="#reklamace">Servis dveří a reklamace</a>
           <a href="#klice">Objednání klíčů</a>
         </div>
       </div>
