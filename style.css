@@ -737,3 +737,12 @@ footer p { color: rgba(255,255,255,0.6); }
 .refer-pill{display:inline-block;background:#15803d;color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .7rem;border-radius:99px;margin-right:.6rem}
 a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shadow:none;text-decoration:none}
 @media (hover:hover){a.stock-tag.warr:hover{background:#e8f5ee}}
+
+/* Partneři – výměnné bannery (Thajské masáže Most, Podologie Most) */
+.partners-band{padding:2.5rem 0;background:#fff;border-top:1px solid var(--border,#e5e7e4)}
+.partners-band .pb-in{display:flex;align-items:center;justify-content:center;gap:2rem;flex-wrap:wrap}
+.partners-band .pb-label{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:#6b7280;font-weight:700}
+.partners-band .pb-card{display:flex;align-items:center;justify-content:center;width:300px;height:104px;padding:16px 24px;text-decoration:none;border-radius:16px;border:1.5px solid #cfd8d2;background:#fff;box-shadow:0 0 0 5px #fff,0 0 0 6px #e5e7e4;transition:.25s}
+.partners-band .pb-card img{max-height:60px;max-width:100%;width:auto;height:auto}
+@media (hover:hover){.partners-band .pb-card:hover{transform:translateY(-2px);border-color:#15803d}}
+@media (max-width:700px){.partners-band .pb-card{width:100%;max-width:320px}}
