@@ -155,8 +155,8 @@
         <div class="so-f"><label>Číslo faktury *</label><input type="text" name="cislo_faktury" required></div>
         <div class="so-f"><label>Kde jste recenzi napsali? *</label>
           <select name="kde" required><option value="">Vyberte</option><option>Google</option><option>Firmy.cz</option><option>Facebook</option></select></div>
-        <div class="so-f"><label>Odkaz na recenzi (nepovinné)</label><input type="text" name="odkaz_recenze"></div>
-        <div class="so-f"><label>Screenshot recenze (nepovinné)</label><input type="file" name="attachment" accept="image/*"></div>
+        <div class="so-f"><label>Odkaz na recenzi <small style="font-weight:400">(vyplňte odkaz nebo nahrajte screenshot – aspoň jedno je nutné)</small></label><input type="text" name="odkaz_recenze"></div>
+        <div class="so-f"><label>Screenshot recenze <small style="font-weight:400">(nebo odkaz výše)</small></label><input type="file" name="attachment" accept="image/*"></div>
         <div class="so-f"><label>Poznámka (nepovinné)</label><textarea name="poznamka"></textarea></div>
         <label class="so-check"><input type="checkbox" name="souhlas" value="ano" required> <span>Souhlasím se zpracováním údajů pro ověření recenze a prodloužení záruky a s <a href="podminky-prodlouzeni-zaruky.html" target="_blank">podmínkami akce</a>.</span></label>
         <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Odeslat →</button>
@@ -248,6 +248,13 @@
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+<script>
+(function(){var f=document.querySelector('form[data-email-form]');if(!f)return;
+var l=f.querySelector('[name=odkaz_recenze]'),a=f.querySelector('[name=attachment]');
+function chk(){var ok=l.value.trim()!==''||(a.files&&a.files.length>0);
+l.setCustomValidity(ok?'':'Vyplňte odkaz na recenzi nebo nahrajte screenshot.');}
+l.addEventListener('input',chk);a.addEventListener('change',chk);chk();})();
 </script>
 <script src="form-submit.js?v=2"></script>
 </body>
