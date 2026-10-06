@@ -735,3 +735,5 @@ footer p { color: rgba(255,255,255,0.6); }
 .refer-text{color:var(--navy);line-height:1.5;flex:1;min-width:260px}
 .refer-text strong{font-size:1.1rem}
 .refer-pill{display:inline-block;background:#15803d;color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .7rem;border-radius:99px;margin-right:.6rem}
+a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shadow:none;text-decoration:none}
+@media (hover:hover){a.stock-tag.warr:hover{background:#e8f5ee}}
