@@ -33,3 +33,5 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
 - Statický HTML + `style.css`, inline CSS v některých stránkách; formuláře přes FormSubmit.
 - Hover efekty (zvětšení/posun) jen v `@media (hover:hover)` kvůli iPadu.
 - Commity česky; připojit řádky Co-Authored-By a Claude-Session podle instrukce session.
+- Při každé změně `style.css` zvýšit číslo verze `style.css?v=…` ve všech HTML (jinak prohlížeče drží starou kopii):
+  `sed -i 's/style\.css?v=[0-9a-z]*/style.css?v=RRRRMMDDx/g' *.html`.
