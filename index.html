@@ -827,7 +827,6 @@
     document.querySelectorAll('.slide-video[data-yt]').forEach(el => {
       const active = el.closest('.slide').classList.contains('active');
       const has = el._player || el.querySelector('iframe');
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { if (el.dataset.poster) el.style.backgroundImage = "url('" + el.dataset.poster + "')"; return; }
       if (active && !has) {
         withYT(() => { if (!el._player) startPlayer(el); });
       } else if (!active && has) {

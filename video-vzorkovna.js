@@ -2,7 +2,6 @@
 (function () {
   var el = document.querySelector('.kv-video[data-yt]');
   if (!el) return;
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.style.backgroundImage = "url('https://img.youtube.com/vi/Eg0iccEatjQ/maxresdefault.jpg')"; return; }
   var id = el.getAttribute('data-yt');
   function restart(p) { try { p.seekTo(0, true); p.playVideo(); } catch (e) {} }
   function start() {
