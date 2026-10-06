@@ -728,3 +728,10 @@ footer p { color: rgba(255,255,255,0.6); }
 .servis-card-image::after,.so-intro-img::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
   background:linear-gradient(135deg,rgba(15,58,36,.62),rgba(31,107,67,.45))}
 .so-intro-img{border-radius:var(--radius-lg)}
+
+/* Pruh Doporuč a získej */
+.refer-band{background:#e8f5ee;border-top:1px solid #cfe8d9;border-bottom:1px solid #cfe8d9;padding:1.3rem 0}
+.refer-inner{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap}
+.refer-text{color:var(--navy);line-height:1.5;flex:1;min-width:260px}
+.refer-text strong{font-size:1.1rem}
+.refer-pill{display:inline-block;background:#15803d;color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .7rem;border-radius:99px;margin-right:.6rem}
