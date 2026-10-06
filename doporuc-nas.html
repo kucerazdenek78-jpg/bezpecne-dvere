@@ -133,7 +133,7 @@
     <div class="so-form-wrap" id="doporuceni-formular">
       <span class="section-label" style="color:var(--orange-text);">Doporuč a získej</span>
       <h2>Doporučit PREMIUM 60</h2>
-      <p>Vyplňte kontakt na sebe a na toho, komu chcete dveře doporučit. Číslo účtu pro výplatu odměny si od Vás vyžádáme až po montáži.</p>
+      <p>Vyplňte kontakt na sebe včetně čísla faktury z Vašeho nákupu u nás a na toho, komu chcete dveře doporučit. Číslo účtu pro výplatu odměny si od Vás vyžádáme až po montáži.</p>
       <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" data-email-form>
         <input type="hidden" name="_subject" value="Doporuč a získej – nové doporučení z webu bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
@@ -143,7 +143,10 @@
           <div class="so-f"><label>Jméno a příjmení *</label><input type="text" name="doporucujici_jmeno" required></div>
           <div class="so-f"><label>Telefon *</label><input type="tel" name="doporucujici_telefon" required></div>
         </div>
-        <div class="so-f"><label>E-mail *</label><input type="email" name="email" required></div>
+        <div class="so-row">
+          <div class="so-f"><label>E-mail *</label><input type="email" name="email" required></div>
+          <div class="so-f"><label>Číslo faktury *</label><input type="text" name="cislo_faktury_doporucujiciho" required></div>
+        </div>
         <h3 class="so-h">Koho doporučujete</h3>
         <div class="so-row">
           <div class="so-f"><label>Jméno a příjmení *</label><input type="text" name="doporuceny_jmeno" required></div>
@@ -165,7 +168,7 @@
       <ul style="margin-top:1rem;">
         <li><b>Pořadatel:</b> Zdeněk Kučera, IČ 64682676, Zd. Štěpánka 2764/1, 434 01 Most.</li>
         <li><b>Trvání:</b> akce platí do odvolání.</li>
-        <li><b>Kdo se může zúčastnit:</b> fyzická osoba starší 18 let. Doporučující a doporučený musí být dvě různé osoby.</li>
+        <li><b>Kdo se může zúčastnit:</b> fyzická osoba starší 18 let, která je naším zákazníkem a uvede číslo své faktury. Doporučující a doporučený musí být dvě různé osoby.</li>
         <li><b>Čeho se akce týká:</b> pouze bezpečnostní dveře PREMIUM 60 včetně montáže. Nevztahuje se na jiné dveře.</li>
         <li><b>Úspěšné doporučení:</b> doporučený uzavře s pořadatelem závaznou objednávku na PREMIUM 60 včetně montáže, při objednávce uvede jméno doporučujícího a dveře jsou namontovány a zaplaceny.</li>
         <li><b>Odměna doporučujícího:</b> 1&nbsp;500&nbsp;Kč za každé úspěšné doporučení, nejvýše za 3 doporučení (4&nbsp;500&nbsp;Kč celkem). Vyplatí se bezhotovostně na účet po namontování dveří.</li>
