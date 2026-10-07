@@ -746,3 +746,6 @@ a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shad
 .partners-band .pb-card img{max-height:60px;max-width:100%;width:auto;height:auto}
 @media (hover:hover){.partners-band .pb-card:hover{transform:translateY(-2px);border-color:#15803d}}
 @media (max-width:700px){.partners-band .pb-card{width:100%;max-width:320px}}
+
+/* Výhody u PREMIUM 60 (doprava, bez příplatků) */
+.perks-line{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin:0 0 1.25rem;font-weight:700;font-size:.95rem;color:#15803d}
