@@ -881,14 +881,15 @@
     document.querySelectorAll('.color-thumb').forEach(thumb => {
       const img = thumb.querySelector('img');
       if (!img) return;
-      // Pokus o full-size URL – odstraníme .tn z cesty
-      const fullSrc = img.src.replace('.tn.jpg', '');
+      // Velké verze na serveru nejsou – náhled zvětšíme z miniatury
+      const fullSrc = img.src;
       const label = thumb.textContent.trim();
 
       thumb.style.cursor = 'pointer';
 
       thumb.addEventListener('mouseenter', () => {
         previewImg.src = fullSrc;
+        previewImg.style.width = Math.min(260, Math.round((img.naturalWidth || 175) * 1.7)) + 'px';
         previewLabel.textContent = label;
         preview.style.display = 'block';
       });
