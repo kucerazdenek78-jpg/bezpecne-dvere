@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Objednávka z poptávky | Bezpečné dveře</title>
+<style>
+  :root{--bg:#f6f7f5;--fg:#123d27;--muted:#5b6b62;--accent:#c2410c}
+  @media (prefers-color-scheme:dark){:root{--bg:#111814;--fg:#e8efe9;--muted:#9fb0a6;--accent:#fb923c}}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  main{max-width:560px;margin:15vh auto;padding:0 16px;text-align:center}
+  a{color:var(--accent);font-weight:700}
+  p{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <h1 style="font-size:1.3rem">Otevírám objednávku…</h1>
+  <p id="msg">Převádím údaje z poptávky do objednávkového formuláře.</p>
+  <p><a id="go" href="https://form.jotform.com/262796120303048">Otevřít objednávku ručně</a></p>
+</main>
+<script>
+/* Převod poptávky (Jotform 253084834051050) -> objednávka (Jotform 262796120303048).
+   Údaje chodí ve fragmentu (#), takže se neposílají na server. */
+(function () {
+  var ORDER = 'https://form.jotform.com/262796120303048';
+
+  // Volby objednávkového formuláře (musí přesně odpovídat textům v Jotformu)
+  var OPT = {
+    odstinP: ['Dub (skladem)','Ořech (skladem)','Světlé wenge (skladem)','Bílá (skladem)','Černá s perletí (skladem)','Antracit (skladem)','Bílá wenge – na objednávku (příplatek 4 000 Kč)','Ocelově šedá – na objednávku (příplatek 4 000 Kč)','Zlatý dub – na objednávku (příplatek 4 000 Kč)'],
+    kovaniP: ['Zaoblené černé kování, černé krytky a kukátko','Zaoblené INOX kování, inox krytky a stříbrné kukátko','Hranaté INOX kování, inox krytky a stříbrné kukátko'],
+    odstinE: ['Ořech natura (skladem)','Dub natura (skladem)','Ořech bělený (na objednávku)','Bílá (na objednávku)','Antracit (na objednávku)','Beton tmavý (příplatek 5 000 Kč)','Dub Milano 4 (příplatek 5 000 Kč)'],
+    zarubenE: ['Hnědá matná (skladem)','Béžová matná','Bílá matná','Šedá','Antracit','Černá'],
+    kovaniE: ['INOX, stříbrné kukátko (v ceně)','Černé, černé kukátko (příplatek 500 Kč)','Bronz, bronzové kukátko (příplatek 500 Kč)'],
+    odstinM: ['Antracit','Bílá','Dub sonoma','Světlý ořech','Tmavý ořech','Zlatý dub','Venge','Šedá','Dub přírodní'],
+    vlozkaM: ['Nesjednocené (v ceně)','Sjednocené s vrtulkou nahoře (příplatek 1 500 Kč)','Sjednocené s vrtulkami dole i nahoře (příplatek 2 000 Kč)'],
+    odstinS: ['Dub elegant','Dub hladký','Ořech intarzie','Ořech elegant','Ořech hladký','Javor elegant','Antracit','Bílé'],
+    kovaniS: ['Leštěné stříbrné, stříbrné kukátko (v ceně)','Matné stříbrné, stříbrné kukátko (příplatek 500 Kč)']
+  };
+
+  function clean(s) {
+    return String(s || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function low(s) { return clean(s).toLowerCase(); }
+  // Základ názvu: text před " - ", " – ", " (", " +"
+  function base(s) { return low(s).split(/\s*[-–]\s|\s\(|\s\+|\s*-\s*na\s/)[0].replace(/[-–]\s*$/, '').trim(); }
+
+  // Najde volbu podle shodného základu názvu (Bílá ≠ Bílá wenge)
+  function byBase(val, opts) {
+    var b = base(val);
+    if (!b) return '';
+    for (var i = 0; i < opts.length; i++) if (base(opts[i]) === b) return opts[i];
+    return '';
+  }
+  // Najde volbu podle prvních 2 slov, jinak 1 slova (jen když je jednoznačná)
+  function byWords(val, opts) {
+    var w = low(val).replace(/[,+]/g, ' ').split(/\s+/).filter(Boolean);
+    for (var n = 2; n >= 1; n--) {
+      if (w.length < n) continue;
+      var pre = w.slice(0, n).join(' ');
+      var hit = opts.filter(function (o) { return low(o).replace(/[,+]/g, ' ').replace(/\s+/g, ' ').indexOf(pre) === 0; });
+      if (hit.length === 1) return hit[0];
+    }
+    return '';
+  }
+
+  var h = new URLSearchParams(location.hash.replace(/^#/, ''));
+  function g(k) { return clean(h.get(k)); }
+
+  var out = {};
+  var notes = [];
+  function set(k, v) { if (v) out[k] = v; }
+
+  // Zákazník
+  set('fullname7[first]', g('jmeno'));
+  set('fullname7[last]', g('prijmeni'));
+  set('address9[addr_line1]', g('ulice'));
+  set('address9[city]', g('mesto'));
+  set('address9[postal]', g('psc'));
+  set('phone12[full]', g('tel').replace(/\D/g, '').slice(-9));
+  set('email13', g('email'));
+  set('textbox5', g('id'));
+
+  // Model
+  var modelRaw = low(g('model'));
+  var models = [];
+  if (modelRaw.indexOf('premium') > -1) models.push('PREMIUM 60');
+  if (modelRaw.indexOf('extreme') > -1) models.push('EXTREME 54');
+  if (modelRaw.indexOf('magnum') > -1) models.push('MAGNUM 56');
+  if (modelRaw.indexOf('securido') > -1) models.push('SECURIDO 65');
+  var model = models[0] || '';
+  if (models.length > 1) notes.push('V poptávce zaškrtnuto více modelů: ' + models.join(', ') + ' – převzat ' + model + '.');
+  set('dropdown15', model);
+
+  // Otevírání
+  var ot = low(g('otevirani'));
+  // „Levé dovnitř (klika na pravé straně)“ – rozhoduje první slovo; víc zaškrtnutých = do poznámky
+  var otL = /(^|\s)levé dovnitř/.test(ot), otP = /(^|\s)pravé dovnitř/.test(ot);
+  if (otL && !otP) set('radio16', 'Levé');
+  else if (otP && !otL) set('radio16', 'Pravé');
+  else if (ot) notes.push('Otevírání z poptávky: ' + g('otevirani'));
+  if (model === 'MAGNUM 56') { if (ot.indexOf('dovnitř') > -1) set('radio18', 'Dovnitř'); }
+  else if (model) set('radio17', 'Dovnitř');
+
+  // Šíře
+  var sire = low(g('sire'));
+  var rozmer = sire.indexOf('90') > -1 ? '90 cm' : (sire.indexOf('80') > -1 ? '80 cm' : '');
+  if (!rozmer && sire) notes.push('Šíře z poptávky: ' + g('sire'));
+  if (rozmer === '90 cm' && model && model !== 'MAGNUM 56') { notes.push('Zákazník chce šíři 90 cm – u ' + model + ' je jen 80 cm, ověřit.'); rozmer = '80 cm'; }
+
+  // Zeď
+  var zed = low(g('zed'));
+  if (zed.indexOf('beton') > -1) set('radio19', 'Beton');
+  else if (zed.indexOf('cihla') > -1) set('radio19', 'Cihla');
+
+  // Záruka
+  var zar = low(g('zaruka'));
+  var z = zar.indexOf('10') > -1 ? 10 : (zar.indexOf('5') > -1 ? 5 : (zar ? 2 : 0));
+  if (model === 'EXTREME 54') { if (z === 10) set('zarukaExtreme', '10 let (příplatek 2 000 Kč)'); else if (z) set('zarukaExtreme', '5 let (v ceně)'); }
+  else if (model && z) set('dropdown25', z === 10 ? '10 let (příplatek 2 000 Kč)' : (z === 5 ? '5 let (příplatek 1 000 Kč)' : '2 roky (v ceně)'));
+
+  function mapped(label, raw, val) { if (raw && !val) notes.push(label + ' z poptávky: ' + raw + ' – nepřevedeno, vybrat ručně.'); return val; }
+
+  if (model === 'PREMIUM 60') {
+    set('dropdown27', mapped('Odstín', g('odstinP'), byBase(g('odstinP'), OPT.odstinP)));
+    set('dropdown29', mapped('Kování', g('kovaniP'), byWords(g('kovaniP'), OPT.kovaniP)));
+    set('dropdown28', 'V dekoru dveří'); set('dropdown30', 'S překrytím chrom'); set('dropdown31', '80 cm');
+    set('dropdown33', 'S olivou, 5+2 klíče'); set('dropdown34', 'Nerez s těsněním v dekoru dveří');
+  } else if (model === 'EXTREME 54') {
+    set('dropdown35', mapped('Odstín', g('odstinE'), byBase(g('odstinE'), OPT.odstinE)));
+    set('dropdown36', mapped('Zárubeň', g('zarubenE'), byBase(g('zarubenE'), OPT.zarubenE)));
+    set('dropdown37', mapped('Kování', g('kovaniE'), byWords(g('kovaniE'), OPT.kovaniE)));
+    set('dropdown39', '80 cm');
+  } else if (model === 'MAGNUM 56') {
+    set('dropdown43', mapped('Odstín', g('odstinM'), byBase(g('odstinM'), OPT.odstinM)));
+    set('dropdown45', rozmer);
+    var vl = low(g('vlozky'));
+    var vlv = vl.indexOf('nesjednocen') === 0 ? OPT.vlozkaM[0] : (vl.indexOf('dole i nahoře') > -1 ? OPT.vlozkaM[2] : (vl.indexOf('nahoře') > -1 ? OPT.vlozkaM[1] : ''));
+    set('dropdown47', mapped('Vložky', g('vlozky'), vlv));
+  } else if (model === 'SECURIDO 65') {
+    set('dropdown50', mapped('Odstín', g('odstinS'), byBase(g('odstinS'), OPT.odstinS)));
+    set('dropdown51', mapped('Kování', g('kovaniS'), byWords(g('kovaniS'), OPT.kovaniS)));
+    set('dropdown53', '80 cm'); set('dropdown55', '6+2 klíče'); set('dropdown56', 'Nerez s těsněním');
+  }
+
+  // Poznámky
+  set('textarea69', g('pozadavek'));
+  var info = [];
+  if (g('cena')) info.push('Cena v poptávce: ' + g('cena') + ' Kč');
+  if (g('vyska')) info.push('Výška podlaha–nadpraží: ' + g('vyska') + ' cm');
+  if (zed.indexOf('nevím') > -1) info.push('Materiál zdi: zákazník neví');
+  if (g('ic')) info.push('IČ z poptávky: ' + g('ic'));
+  var interni = info.concat(notes);
+  if (interni.length) set('interniPoznamka', 'Z poptávky: ' + interni.join(' | '));
+
+  var q = Object.keys(out).map(function (k) { return encodeURIComponent(k).replace(/%5B/g, '[').replace(/%5D/g, ']') + '=' + encodeURIComponent(out[k]); }).join('&');
+  var url = ORDER + (q ? '?' + q : '');
+  document.getElementById('go').href = url;
+  window.__prefill = { out: out, url: url };
+  if (!/[?&]nopresmerovani\b/.test(location.search)) location.replace(url);
+})();
+</script>
+</body>
+</html>

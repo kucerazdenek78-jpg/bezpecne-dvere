@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /bezpecne-dvere/objednavka-z-poptavky.html
+Disallow: /objednavka-z-poptavky.html
 
 Sitemap: https://kucerazdenek78-jpg.github.io/bezpecne-dvere/sitemap.xml
