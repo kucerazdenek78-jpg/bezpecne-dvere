@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Panel prodejce | Bezpečné dveře</title>
+<link rel="icon" href="favicon.ico">
+<style>
+  :root{--bg:#f6faf7;--card:#fff;--line:#dce9e1;--fg:#0f2a1c;--muted:#4f6a5b;--green:#123d27;--accent:#c2410c;--accent-pale:#fff3eb}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1712;--card:#15211a;--line:#25362c;--fg:#e6efe9;--muted:#9fb3a7;--green:#9fd3b2;--accent:#fb923c;--accent-pale:#2a1c12}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 48px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  header img{height:40px;border-radius:6px}
+  h1{font-size:1.35rem;margin:0;color:var(--green)}
+  h2{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--fg)}
+  .tile strong{display:block;font-size:1rem;margin-bottom:2px}
+  .tile span{font-size:.85rem;color:var(--muted)}
+  a.tile.primary{border-color:var(--accent);background:var(--accent-pale)}
+  a.tile.primary strong{color:var(--accent)}
+  @media (hover:hover){a.tile:hover{border-color:var(--accent)}}
+  .tile.soon{opacity:.55;pointer-events:none}
+  .note{font-size:.85rem;color:var(--muted);margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+  #gate{max-width:320px;margin:18vh auto;padding:0 16px;text-align:center}
+  #gate input{width:100%;font-size:1.4rem;text-align:center;letter-spacing:.3em;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
+  #gate button{margin-top:10px;width:100%;padding:10px;font-size:1rem;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  #err{color:var(--accent);min-height:1.5em;font-size:.9rem}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<form id="gate" autocomplete="off">
+  <h1 style="margin-bottom:12px">Panel prodejce</h1>
+  <input id="pin" type="password" inputmode="numeric" placeholder="PIN" aria-label="PIN" autofocus>
+  <button type="submit">Vstoupit</button>
+  <p id="err"></p>
+</form>
+
+<div class="wrap" id="panel" hidden>
+  <header>
+    <img src="logo.jpg" alt="Bezpečné dveře">
+    <h1>Panel prodejce</h1>
+  </header>
+
+  <h2>Objednávky</h2>
+  <div class="grid">
+    <a class="tile primary" href="https://form.jotform.com/262796120303048" target="_blank" rel="noopener"><strong>Nová objednávka</strong><span>Zákazník na prodejně – vyplnit, uložit, vytisknout</span></a>
+    <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Kartotéka objednávek</strong><span>Hledání, úpravy, stav, export do Excelu</span></a>
+    <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Uzavřené objednávky</strong><span>V kartotéce filtr „Stav“ = Namontováno / Zaplaceno</span></a>
+  </div>
+
+  <h2>Poptávky</h2>
+  <div class="grid">
+    <a class="tile" href="https://eu.jotform.com/tables/253084834051050" target="_blank" rel="noopener"><strong>Poptávky z webu</strong><span>Přehled všech poptávek dveří</span></a>
+    <a class="tile" href="https://form.jotform.com/253084834051050" target="_blank" rel="noopener"><strong>Nová poptávka</strong><span>Zadat poptávku za zákazníka (telefon, e-mail)</span></a>
+    <a class="tile" href="https://eu.jotform.com/tables/253372752254357" target="_blank" rel="noopener"><strong>Poptávky servisu</strong><span>Servis z webu</span></a>
+  </div>
+
+  <h2>Nabídky</h2>
+  <div class="grid">
+    <div class="tile soon"><strong>Nová nabídka</strong><span>Připravujeme – více dveří, položky, slevy</span></div>
+  </div>
+
+  <h2>Ostatní</h2>
+  <div class="grid">
+    <a class="tile" href="https://form.jotform.com/253133038171044" target="_blank" rel="noopener"><strong>Servisní protokol – okna</strong><span>Seřízení oken</span></a>
+    <a class="tile" href="https://eu.jotform.com/myforms/" target="_blank" rel="noopener"><strong>Všechny formuláře</strong><span>Jotform – správa formulářů</span></a>
+    <a class="tile" href="dvere-do-bytu.html" target="_blank" rel="noopener"><strong>Ceny a provedení dveří</strong><span>Aktuální nabídka na webu</span></a>
+  </div>
+
+  <p class="note">Kartotéka a poptávky se otevírají v Jotformu a vyžadují přihlášení do Jotformu. PIN na této stránce jen skrývá odkazy před náhodnými návštěvníky.</p>
+</div>
+
+<script>
+(function () {
+  var HASH = 'a60b7d5357d24291ae8605d0faf45f5008c890575c3691cee5ceb1148f6410ac';
+  var KEY = 'bd-panel-ok';
+  function show() { document.getElementById('gate').hidden = true; document.getElementById('panel').hidden = false; }
+  try { if (localStorage.getItem(KEY) === HASH) show(); } catch (e) {}
+  async function sha(s) {
+    var b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+  }
+  document.getElementById('gate').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var h = await sha('bezpecne-dvere:' + document.getElementById('pin').value.trim());
+    if (h === HASH) { try { localStorage.setItem(KEY, HASH); } catch (e2) {} show(); }
+    else { document.getElementById('err').textContent = 'Nesprávný PIN'; }
+  });
+})();
+</script>
+</body>
+</html>

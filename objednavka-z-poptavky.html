@@ -37,8 +37,8 @@
     kovaniE: ['INOX, stříbrné kukátko (v ceně)','Černé, černé kukátko (příplatek 500 Kč)','Bronz, bronzové kukátko (příplatek 500 Kč)'],
     odstinM: ['Antracit','Bílá','Dub sonoma','Světlý ořech','Tmavý ořech','Zlatý dub','Venge','Šedá','Dub přírodní'],
     vlozkaM: ['Nesjednocené (v ceně)','Sjednocené s vrtulkou nahoře (příplatek 1 500 Kč)','Sjednocené s vrtulkami dole i nahoře (příplatek 2 000 Kč)'],
-    odstinS: ['Dub elegant','Dub hladký','Ořech intarzie','Ořech elegant','Ořech hladký','Javor elegant','Antracit','Bílé'],
-    kovaniS: ['Leštěné stříbrné, stříbrné kukátko (v ceně)','Matné stříbrné, stříbrné kukátko (příplatek 500 Kč)']
+    odstinS: ['Kombi – bílá, černá zárubeň a kování (příplatek 2 000 Kč)','Bílá','Šedá','Mocca','Antracit','Dub Artisan hladký','Dub Artisan elegant','Ořech hladký','Ořech elegant','Mahagon hladký','Mahagon elegant'],
+    kovaniS: ['Hranaté, chrom matný','Oblé, chrom matný','Hranaté, černé','Oblé, černé']
   };
 
   function clean(s) {
@@ -109,7 +109,7 @@
   var sire = low(g('sire'));
   var rozmer = sire.indexOf('90') > -1 ? '90 cm' : (sire.indexOf('80') > -1 ? '80 cm' : '');
   if (!rozmer && sire) notes.push('Šíře z poptávky: ' + g('sire'));
-  if (rozmer === '90 cm' && model && model !== 'MAGNUM 56') { notes.push('Zákazník chce šíři 90 cm – u ' + model + ' je jen 80 cm, ověřit.'); rozmer = '80 cm'; }
+  if (rozmer === '90 cm' && model && model !== 'MAGNUM 56' && model !== 'SECURIDO 65') { notes.push('Zákazník chce šíři 90 cm – u ' + model + ' je jen 80 cm, ověřit.'); rozmer = '80 cm'; }
 
   // Zeď
   var zed = low(g('zed'));
@@ -139,7 +139,9 @@
     set('dropdown47', mapped('Vložky', g('vlozky'), vlv));
   } else if (model === 'SECURIDO 65') {
     set('dropdown50', mapped('Odstín', g('odstinS'), byBase(g('odstinS'), OPT.odstinS)));
-    set('dropdown51', mapped('Kování', g('kovaniS'), byWords(g('kovaniS'), OPT.kovaniS)));
+    var kS = low(g('kovaniS')).replace(/\s*kování/, '');
+    set('dropdown51', mapped('Kování', g('kovaniS'), OPT.kovaniS.filter(function (o) { return low(o) === kS; })[0] || ''));
+    if (rozmer === '90 cm') set('dropdown53', '90 cm (příplatek 1 500 Kč)');
   }
 
   // Poznámky
