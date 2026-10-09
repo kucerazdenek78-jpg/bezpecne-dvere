@@ -56,6 +56,15 @@
     .so-note{font-size:.88rem;margin-bottom:1rem}
     .so-wide{max-width:760px;margin:0 auto}
     .so-partner{line-height:1.7}
+    .rz-steps{display:flex;gap:.5rem;list-style:none;padding:0;margin:0 0 1.4rem;flex-wrap:wrap}
+    .rz-steps li{display:flex;align-items:center;gap:.45rem;font-size:.85rem;font-weight:600;color:var(--gray-600);background:#fff;border:2px solid var(--gray-200);border-radius:99px;padding:.3rem .9rem .3rem .35rem}
+    .rz-steps li span{width:1.6rem;height:1.6rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--gray-200);color:var(--navy);font-size:.8rem}
+    .rz-steps li.on{border-color:var(--orange);color:var(--navy)}
+    .rz-steps li.on span{background:var(--orange);color:#fff}
+    .rz-link{background:none;border:0;padding:.4rem 0;font:inherit;font-size:.85rem;color:var(--gray-600);text-decoration:underline;cursor:pointer}
+    .rz-msg{margin-top:1rem;padding:1rem 1.1rem;border-radius:10px;background:#fdecea;color:#7a1c12;font-size:.95rem}
+    .rz-ok{display:inline-block;margin:0 0 .6rem;padding:.25rem .8rem;border-radius:99px;background:#e8f5ee;color:#123d27;font-weight:700;font-size:.85rem}
+    .rz-step[hidden]{display:none}
     section[id]{scroll-margin-top:90px}
     @media(max-width:820px){.so-intro,.so-grid,.so-grid-2,.so-row{grid-template-columns:1fr}}
   </style>
@@ -134,48 +143,100 @@
       <span class="section-label" style="color:var(--orange-text);">Registrace záruky</span>
       <h2>Registrace dveří</h2>
       <p>Registraci odešlete do 30 dnů od předání dveří. Prodloužení o 1 rok se vztahuje jen na základní záruku, ne na prodlouženou.</p>
-      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" data-email-form>
+      <ol class="rz-steps" aria-label="Postup registrace">
+        <li class="on" data-step-dot="1"><span>1</span>Vaše údaje</li>
+        <li data-step-dot="2"><span>2</span>Zpětná vazba</li>
+        <li data-step-dot="3"><span>3</span>Hodnocení</li>
+      </ol>
+      <form id="rzForm" novalidate>
         <input type="hidden" name="_subject" value="Registrace záruky – z webu bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
-        <div class="so-row">
-          <div class="so-f"><label for="rz-jmeno">Jméno *</label><input type="text" id="rz-jmeno" name="jmeno" required></div>
-          <div class="so-f"><label for="rz-prijmeni">Příjmení *</label><input type="text" id="rz-prijmeni" name="prijmeni" required></div>
+        <div class="rz-step" data-step="1">
+          <div class="so-row">
+            <div class="so-f"><label for="rz-jmeno">Jméno *</label><input type="text" id="rz-jmeno" name="jmeno" required></div>
+            <div class="so-f"><label for="rz-prijmeni">Příjmení *</label><input type="text" id="rz-prijmeni" name="prijmeni" required></div>
+          </div>
+          <div class="so-row">
+            <div class="so-f"><label for="rz-tel">Telefon *</label><input type="tel" id="rz-tel" name="telefon" required></div>
+            <div class="so-f"><label for="rz-email">E-mail *</label><input type="email" id="rz-email" name="email" required></div>
+          </div>
+          <div class="so-row">
+            <div class="so-f"><label for="rz-obj">Číslo objednávky nebo faktury *</label><input type="text" id="rz-obj" name="cislo_objednavky" required></div>
+            <div class="so-f"><label for="rz-datum">Datum předání dveří *</label><input type="date" id="rz-datum" name="datum_predani" required></div>
+          </div>
+          <button type="button" class="btn btn-primary" data-next style="padding:.85rem 2rem;">Pokračovat →</button>
         </div>
-        <div class="so-row">
-          <div class="so-f"><label for="rz-tel">Telefon *</label><input type="tel" id="rz-tel" name="telefon" required></div>
-          <div class="so-f"><label for="rz-email">E-mail *</label><input type="email" id="rz-email" name="email" required></div>
+        <div class="rz-step" data-step="2" hidden>
+          <div class="so-f"><label for="rz-hodnoceni">Jak jste byli spokojeni s montáží? *</label>
+            <select id="rz-hodnoceni" name="spokojenost" required><option value="">Vyberte</option><option>Velmi spokojen/a</option><option>Spokojen/a</option><option>Částečně spokojen/a</option><option>Nespokojen/a</option></select></div>
+          <div class="so-f"><label for="rz-pozn">Krátce popište, co se Vám líbilo a co můžeme zlepšit</label><textarea id="rz-pozn" name="zpetna_vazba"></textarea></div>
+          <label class="so-check"><input type="checkbox" name="souhlas" value="ano" required> <span>Souhlasím se zpracováním údajů pro registraci a prodloužení záruky a s <a href="podminky-prodlouzeni-zaruky.html" target="_blank">podmínkami prodloužení záruky</a>.</span></label>
+          <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+            <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Pokračovat →</button>
+            <button type="button" class="rz-link" data-back>← Zpět</button>
+          </div>
         </div>
-        <div class="so-row">
-          <div class="so-f"><label for="rz-obj">Číslo objednávky nebo faktury *</label><input type="text" id="rz-obj" name="cislo_objednavky" required></div>
-          <div class="so-f"><label for="rz-datum">Datum předání dveří *</label><input type="date" id="rz-datum" name="datum_predani" required></div>
-        </div>
-        <div class="so-f"><label for="rz-hodnoceni">Jak jste byli spokojeni s montáží? *</label>
-          <select id="rz-hodnoceni" name="spokojenost" required><option value="">Vyberte</option><option>Velmi spokojen/a</option><option>Spokojen/a</option><option>Částečně spokojen/a</option><option>Nespokojen/a</option></select></div>
-        <div class="so-f"><label for="rz-pozn">Co se Vám líbilo a co můžeme zlepšit? <small style="font-weight:400">(nepovinné)</small></label><textarea id="rz-pozn" name="zpetna_vazba"></textarea></div>
-        <label class="so-check"><input type="checkbox" name="souhlas" value="ano" required> <span>Souhlasím se zpracováním údajů pro registraci a prodloužení záruky a s <a href="podminky-prodlouzeni-zaruky.html" target="_blank">podmínkami prodloužení záruky</a>.</span></label>
-        <button type="submit" class="btn btn-primary" style="padding:.85rem 2rem;">Zaregistrovat →</button>
+        <div class="rz-msg" role="status" hidden></div>
       </form>
+      <div class="rz-step" data-step="3" hidden>
+        <p class="rz-ok">Registrace odeslána ✓</p>
+        <h3 style="color:var(--navy);margin:.2rem 0 .5rem;">Ohodnoťte nás na Googlu nebo Facebooku</h3>
+        <p>Vaše zkušenost pomůže lidem, kteří dveře teprve vybírají. Stačí pár vět.</p>
+        <div class="so-actions">
+          <a href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener" class="btn btn-primary" data-done>Hodnotit na Googlu →</a>
+          <a href="https://www.facebook.com/BezpecneDvere/reviews" target="_blank" rel="noopener" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);" data-done>Hodnotit na Facebooku →</a>
+        </div>
+        <button type="button" class="rz-link" data-done style="margin-top:1rem">Přeskočit</button>
+      </div>
+      <div class="rz-step" data-step="4" hidden>
+        <h3 style="color:var(--navy);margin:0 0 .5rem;">Děkujeme, registrace je hotová</h3>
+        <p>Registraci ověříme podle objednávky a prodloužení základní záruky Vám potvrdíme e-mailem.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="container so-wide">
-    <div class="so-grid so-grid-2">
-      <div class="so-box">
-        <h4>Podmínky v kostce</h4>
-        <p>Rok záruky navíc se vztahuje <b>pouze na základní záruku</b>, ne na prodlouženou. Jedna registrace na jednu objednávku, odeslaná do 30 dnů od předání. Na prodloužení nemá vliv, jak montáž ohodnotíte.</p>
-        <div class="so-actions"><a href="podminky-prodlouzeni-zaruky.html" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);">Úplné podmínky →</a></div>
-      </div>
-      <div class="so-box">
-        <h4>Hodnocení na Googlu</h4>
-        <p>Pokud chcete, budeme rádi za Vaše upřímné hodnocení na Google Mapách. Je to dobrovolné a se zárukou nijak nesouvisí.</p>
-        <div class="so-actions"><a href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);">Napsat hodnocení →</a></div>
-      </div>
+    <div class="so-box">
+      <h4>Podmínky v kostce</h4>
+      <p>Rok záruky navíc se vztahuje <b>pouze na základní záruku</b>, ne na prodlouženou. Jedna registrace na jednu objednávku, odeslaná do 30 dnů od předání.</p>
+      <div class="so-actions"><a href="podminky-prodlouzeni-zaruky.html" class="btn btn-outline" style="color:var(--navy);border-color:var(--gray-200);">Úplné podmínky →</a></div>
     </div>
   </div>
 </section>
+
+<script>
+(function(){
+  var form=document.getElementById('rzForm'), wrap=form.parentNode, msg=form.querySelector('.rz-msg');
+  function go(n){
+    wrap.querySelectorAll('.rz-step').forEach(function(el){el.hidden=el.getAttribute('data-step')!=String(n);});
+    wrap.querySelectorAll('[data-step-dot]').forEach(function(li){var k=+li.getAttribute('data-step-dot');li.classList.toggle('on',k<=n);});
+    msg.hidden=true;
+    document.getElementById('registrace-formular').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function valid(step){
+    var ok=true;
+    step.querySelectorAll('input,select,textarea').forEach(function(el){ if(ok&&!el.checkValidity()){el.reportValidity();ok=false;} });
+    return ok;
+  }
+  form.querySelector('[data-next]').addEventListener('click',function(){ if(valid(form.querySelector('[data-step="1"]'))) go(2); });
+  form.querySelector('[data-back]').addEventListener('click',function(){ go(1); });
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(!valid(form.querySelector('[data-step="2"]'))) return;
+    var btn=form.querySelector('button[type="submit"]'), label=btn.textContent;
+    btn.disabled=true; btn.textContent='Odesílám…';
+    fetch('https://formsubmit.co/ajax/kucerazd@kksystem.cz',{method:'POST',headers:{'Accept':'application/json'},body:new FormData(form)})
+      .then(function(r){return r.json();})
+      .then(function(d){ if(d&&(d.success===true||d.success==='true')){ form.reset(); go(3); } else throw new Error('fail'); })
+      .catch(function(){ msg.hidden=false; msg.innerHTML='Odeslání se nepodařilo. Napište nám prosím na <a href="mailto:chci@bezpecne-dvere.cz">chci@bezpecne-dvere.cz</a> nebo zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.'; })
+      .then(function(){ btn.disabled=false; btn.textContent=label; });
+  });
+  wrap.querySelectorAll('[data-done]').forEach(function(el){ el.addEventListener('click',function(){ setTimeout(function(){go(4);},300); }); });
+})();
+</script>
 
 <!-- KONTAKT CTA -->
 <section class="cta-section">
