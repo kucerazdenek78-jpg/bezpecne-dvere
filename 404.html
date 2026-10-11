@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Stránka nenalezena | Bezpečné dveře</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f8f5;color:#123d27;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:1.5rem;box-sizing:border-box}
+  .box{max-width:560px;text-align:center}
+  h1{font-size:1.8rem;margin:0 0 .6rem}
+  p{color:#4a5d52;line-height:1.55;margin:.4rem 0 1.2rem}
+  a.btn{display:inline-block;background:#c2410c;color:#fff;text-decoration:none;font-weight:700;padding:.75rem 1.4rem;border-radius:10px;margin:.25rem}
+  a.btn.o{background:#fff;color:#123d27;border:2px solid #cfe0d5}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Stránku jsme nenašli</h1>
+  <p id="msg">Adresa už neexistuje nebo se změnila. Pokračujte prosím na úvodní stránku nebo nám zavolejte: <a href="tel:+420725559235" style="color:#c2410c;font-weight:700">+420 725 559 235</a>.</p>
+  <a class="btn" id="home" href="index.html">Úvodní stránka</a>
+  <a class="btn o" id="byt" href="dvere-do-bytu.html">Dveře do bytu</a>
+</div>
+<script>
+// Přesměrování starých adres (původní web bezpecne-dvere.cz) na nové stránky.
+(function () {
+  var base = /github\.io$/.test(location.hostname) ? '/bezpecne-dvere/' : '/';
+  var map = {
+    '/dvere-do-bytu/premium-60': 'dvere-do-bytu.html#premium60',
+    '/dvere-do-bytu/extreme-54': 'dvere-do-bytu.html#extreme54',
+    '/dvere-do-bytu/magnum-56': 'dvere-do-bytu.html#magnum56',
+    '/dvere-do-bytu/securido-65': 'dvere-do-bytu.html#securido65',
+    '/dvere-do-bytu/porovnani-dveri': 'dvere-do-bytu.html#porovnani',
+    '/dvere-do-bytu/fotky-z-instalaci': 'dvere-do-bytu.html#reference',
+    '/reference': 'dvere-do-bytu.html#reference',
+    '/dvere-do-domu/optimal-60': 'dvere-do-domu.html',
+    '/interierove-dvere': 'dvere-do-interieru.html',
+    '/poradna/prubeh-montaze': 'montaz-extreme-54.html',
+    '/poradna': 'index.html',
+    '/servis/servis-oken': 'servis-oken.html',
+    '/servis/nouzove-otevirani-dveri': 'nouzove-otevirani.html',
+    '/servis/nahlaseni-servisu-a-reklamace': 'servis-dveri.html',
+    '/servis/objednani-klicu': 'objednani-klicu.html',
+    '/druzstva-a-svj': 'servis-oken.html',
+    '/pobocky': 'kontakt.html',
+    '/o-nas': 'kontakt.html',
+    '/dekujeme': 'index.html',
+    '/doprava-zdarma': 'dvere-do-bytu.html',
+    '/obchodni-podminky': 'dokumenty.html',
+    '/reklamacni-rad': 'dokumenty.html',
+    '/cookies': 'dokumenty.html',
+    '/zasady-zpracovani-osobnich-udaju': 'dokumenty.html'
+  };
+  var p = location.pathname;
+  if (base !== '/' && p.indexOf(base) === 0) p = '/' + p.slice(base.length);
+  p = p.replace(/\/+$/, '').replace(/\.html$/, '') || '/';
+  if (map[p]) location.replace(base + map[p]);
+  document.getElementById('home').href = base + 'index.html';
+  document.getElementById('byt').href = base + 'dvere-do-bytu.html';
+})();
+</script>
+</body>
+</html>
