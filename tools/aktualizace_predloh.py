@@ -5,6 +5,7 @@ Spouštět vždy, když se změní některá předloha v prodejce/:
   - objednavka-*.pdf   → právní text (smluvní ujednání) a řádek zhotovitele se propíše
                          do poptavka-pdf/poptavka-pdf.js (konstanty LEGAL a ZHOTOVITEL),
                          takže PDF objednávky z webu má vždy stejný text jako papírová objednávka
+  - voucher-doporuc-a-ziskej.pdf → zkontroluje polohu popisků „Doporučuje“ (web tam dopisuje jméno zákazníka)
   - predavaci-list.pdf → zkontroluje, že popisky políček jsou na stejném místě, kam web
                          dopisuje údaje (jinak vypíše, co se posunulo)
 
@@ -55,15 +56,23 @@ def zhotovitel(pdf):
     return s.rstrip(',')
 
 
-def kontrola_predavaci_list():
-    out = text(ROOT / 'prodejce' / 'predavaci-list.pdf', '-bbox')
+# voucher: popisek „Doporučuje“ na 3 voucherech (VOUCHER_RADKY v poptavka-pdf.js)
+VOUCHER_POLICKA = [('Doporučuje', (209.2, 79.8)), ('Doporučuje', (209.2, 360.3)), ('Doporučuje', (209.2, 641.5))]
+
+
+def _kontrola(soubor, policka, min_y=0):
+    out = text(ROOT / 'prodejce' / soubor, '-bbox')
     slova = re.findall(r'xMin="([\d.]+)" yMin="([\d.]+)"[^>]*>([^<]+)</word>', out)
     chyby = []
-    for popisek, (x, y) in PL_POLICKA.items():
-        nalez = [(float(a), float(b)) for a, b, w in slova if w == popisek and float(b) > 150]
+    for popisek, (x, y) in policka:
+        nalez = [(float(a), float(b)) for a, b, w in slova if w == popisek and float(b) > min_y]
         if not any(abs(a - x) <= 3 and abs(b - y) <= 3 for a, b in nalez):
-            chyby.append('%s: čekám (%.1f, %.1f), v PDF %s' % (popisek, x, y, nalez or 'nenalezeno'))
+            chyby.append('%s – %s: čekám (%.1f, %.1f), v PDF %s' % (soubor, popisek, x, y, nalez or 'nenalezeno'))
     return chyby
+
+
+def kontrola_predavaci_list():
+    return _kontrola('predavaci-list.pdf', PL_POLICKA.items(), 150) + _kontrola('voucher-doporuc-a-ziskej.pdf', VOUCHER_POLICKA)
 
 
 def main():
@@ -83,7 +92,7 @@ def main():
 
     chyby = kontrola_predavaci_list()
     for c in chyby:
-        print('Předávací list – posunuté políčko:', c)
+        print('Posunuté políčko:', c)
 
     if js2 == js:
         print('Právní text a zhotovitel: web je aktuální.')
@@ -93,7 +102,7 @@ def main():
         GEN.write_text(js2, encoding='utf8')
         print('Aktualizováno: poptavka-pdf/poptavka-pdf.js (LEGAL, ZHOTOVITEL). Zvyšte ?v= u poptavka-pdf.js v HTML.')
     if not chyby:
-        print('Předávací list: políčka sedí.')
+        print('Předávací list a voucher: políčka sedí.')
     sys.exit(1 if (jen_kontrola and (js2 != js or chyby or ruzne)) else 0)
 
 

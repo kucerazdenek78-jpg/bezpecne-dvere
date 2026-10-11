@@ -277,5 +277,29 @@
     }).then(function (bytes) { return new Blob([bytes], { type: 'application/pdf' }); });
   }
 
-  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder, buildHandover: buildHandover, preparePL: preparePL };
+  /* ── voucher Doporuč a získej: jméno zákazníka do „Doporučuje“ na všech 3 voucherech (prodejce/voucher-doporuc-a-ziskej.pdf) ── */
+  var VOUCHER_PLATI_DO = '2026-12-31';   // akce platí do 31. 12. 2026 nebo do odvolání – po tomto dni se voucher nepřikládá
+  var VOUCHER_RADKY = [79.8, 360.3, 641.5];   // yMin popisku „Doporučuje“ na 1.–3. voucheru (pt od horního okraje)
+  function voucherActive() { return new Date().toISOString().slice(0, 10) <= VOUCHER_PLATI_DO; }
+  function buildVoucher(d) {
+    if (!voucherActive()) return Promise.resolve(null);
+    return preparePL().then(function (b) {
+      return fetch(new URL('../prodejce/voucher-doporuc-a-ziskej.pdf', BASE).href).then(function (r) { if (!r.ok) throw new Error('voucher'); return r.arrayBuffer(); })
+        .then(function (vb) {
+          var L = window.PDFLib;
+          return L.PDFDocument.load(vb).then(function (pdf) {
+            pdf.registerFontkit(window.fontkit);
+            return pdf.embedFont(b[1], { subset: true }).then(function (fnt) {
+              var page = pdf.getPages()[0], H = page.getHeight(), name = (d.jmeno + ' ' + d.prijmeni).trim();
+              if (!name) return pdf.save();
+              var sz = 10.5; while (sz > 7 && fnt.widthOfTextAtSize(name, sz) > 280) sz -= 0.25;
+              VOUCHER_RADKY.forEach(function (yTop) { page.drawText(name, { x: 268, y: H - (yTop + 8.6), size: sz, font: fnt, color: L.rgb(0.07, 0.24, 0.15) }); });
+              return pdf.save();
+            });
+          });
+        });
+    }).then(function (bytes) { return bytes ? new Blob([bytes], { type: 'application/pdf' }) : null; });
+  }
+
+  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder, buildHandover: buildHandover, buildVoucher: buildVoucher, voucherActive: voucherActive, preparePL: preparePL };
 })();
