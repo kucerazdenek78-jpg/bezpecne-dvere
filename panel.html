@@ -28,6 +28,11 @@
   a.tile.old strong{color:#5f6669}
   a.tile.old span{color:#80878b}
   .tile.soon{opacity:.55;pointer-events:none}
+  details.howto{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 20px;margin:18px 0 0}
+  details.howto summary{font-size:1.2rem;font-weight:700;color:var(--green);cursor:pointer;padding:10px 0}
+  details.howto ol,details.howto ul{padding-left:1.4em;margin:6px 0 12px}
+  details.howto li{margin:6px 0}
+  details.howto h3{font-size:1.05rem;margin:16px 0 4px;color:var(--fg)}
   .note{font-size:.95rem;color:var(--muted);margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
   #gate{max-width:320px;margin:18vh auto;padding:0 16px;text-align:center}
   #gate input{width:100%;font-size:1.4rem;text-align:center;letter-spacing:.3em;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
@@ -52,6 +57,36 @@
   </header>
 
   <p style="font-size:1.05rem;margin:0 0 6px">Nový zákazník? Použijte oranžovou dlaždici <strong>Nová objednávka</strong>, nebo níže v části Poptávky <strong>Nová poptávka</strong>. Šedé dlaždice jsou starší záloha.</p>
+
+  <details class="howto" open>
+    <summary>Jak to funguje – krátký návod</summary>
+
+    <h3>Nová objednávka (zákazník si dveře objednává)</h3>
+    <ol>
+      <li>Klepněte na oranžovou dlaždici <strong>Nová objednávka</strong>.</li>
+      <li>Projděte 4 kroky: <strong>1 Dveře</strong> (model, barva, kování…), <strong>2 Zákazník</strong>, <strong>3 Objednávka</strong>, <strong>4 Odeslat</strong>. Cena dveří se počítá sama a vidíte ji v souhrnu.</li>
+      <li>V posledním kroku zkontrolujte údaje se zákazníkem, zaškrtněte potvrzení a klepněte na <strong>Potvrdit a odeslat objednávku</strong>.</li>
+      <li>Objednávka s PDF přijde e-mailem oběma prodejcům, na obchod@bezpecne-dvere.cz a v kopii zákazníkovi. Předávací list dostanete jen vy, voucher „Doporuč a získej“ jen zákazník.</li>
+      <li>Po odeslání se objeví tlačítka ke stažení nebo vytištění PDF a <strong>Nová objednávka</strong> pro dalšího zákazníka.</li>
+    </ol>
+
+    <h3>Nová poptávka (zákazník se jen ptá na cenu)</h3>
+    <ol>
+      <li>Klepněte na <strong>Nová poptávka</strong> v části Poptávky a vyplňte údaje za zákazníka.</li>
+      <li>Po odeslání je k dispozici shrnutí ke stažení (PDF). Poptávka dorazí e-mailem.</li>
+    </ol>
+
+    <h3>Z poptávky udělat objednávku</h3>
+    <ul>
+      <li>V e-mailu s poptávkou klepněte na <strong>Vytvořit objednávku</strong>. Údaje se načtou do objednávky a můžete je upravit.</li>
+    </ul>
+
+    <h3>Dobré vědět</h3>
+    <ul>
+      <li>Doplatek se dopočítá sám (cena celkem − záloha) a platí se hotově po montáži.</li>
+      <li>Starší objednávky a poptávky do 11. 10. 2026 jsou v Jotformu (šedé dlaždice) – tam je potřeba přihlášení do Jotformu.</li>
+    </ul>
+  </details>
 
   <h2>Objednávky</h2>
   <div class="grid">
