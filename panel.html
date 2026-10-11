@@ -50,8 +50,10 @@
 
   <h2>Objednávky</h2>
   <div class="grid">
-    <a class="tile primary" href="https://form.jotform.com/262796120303048" target="_blank" rel="noopener"><strong>Nová objednávka</strong><span>Zákazník na prodejně – vyplnit, uložit, vytisknout</span></a>
-    <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Kartotéka objednávek</strong><span>Hledání, úpravy, stav, export do Excelu</span></a>
+    <a class="tile primary" href="objednavka-dvere.html"><strong>Nová objednávka</strong><span>Nový formulář – výběr obrázky, výpočet ceny, PDF s právním textem, e-mail nám i zákazníkovi</span></a>
+    <div class="tile"><strong>Objednávka z poptávky</strong><span>V e-mailu s poptávkou klikněte na „Vytvořit objednávku“ – údaje se načtou a jdou upravit</span></div>
+    <a class="tile" href="https://form.jotform.com/262796120303048" target="_blank" rel="noopener"><strong>Objednávka v Jotformu</strong><span>Původní formulář – záloha, dokud neběží systém na NAS</span></a>
+    <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Kartotéka objednávek (Jotform)</strong><span>Jen objednávky z Jotformu – nové objednávky jsou zatím v e-mailu obchod@</span></a>
     <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Uzavřené objednávky</strong><span>V kartotéce filtr „Stav“ = Namontováno / Zaplaceno</span></a>
   </div>
 
@@ -92,7 +94,14 @@
   var HASH = '1d0b7bb48b3fdfe1c03405713c48c4672463bd5004f6c8ac46de6adbb7949429';
   var KEY = 'bd-panel-ok';
   function show() { document.getElementById('gate').hidden = true; document.getElementById('panel').hidden = false; }
-  try { if (localStorage.getItem(KEY) === HASH) show(); } catch (e) {}
+  // návrat na stránku, ze které prodejce přišel bez odemčení (např. odkaz „Vytvořit objednávku“ z e-mailu)
+  function goNext() {
+    var m = location.hash.match(/^#next=(.+)$/); if (!m) return false;
+    var url = decodeURIComponent(m[1]);
+    if (!/^objednavka-dvere\.html(#.*)?$/.test(url)) return false;
+    location.replace(url); return true;
+  }
+  try { if (localStorage.getItem(KEY) === HASH) { goNext() || show(); } } catch (e) {}
   async function sha(s) {
     var b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
     return Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
@@ -100,7 +109,7 @@
   document.getElementById('gate').addEventListener('submit', async function (e) {
     e.preventDefault();
     var h = await sha('bezpecne-dvere:' + document.getElementById('pin').value.trim());
-    if (h === HASH) { try { localStorage.setItem(KEY, HASH); } catch (e2) {} show(); }
+    if (h === HASH) { try { localStorage.setItem(KEY, HASH); } catch (e2) {} goNext() || show(); }
     else { document.getElementById('err').textContent = 'Nesprávný PIN'; }
   });
 })();

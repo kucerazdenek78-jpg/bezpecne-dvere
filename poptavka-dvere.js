@@ -6,6 +6,8 @@
   'use strict';
   var TO = 'kucerazd@kksystem.cz';
   var CC = 'chci@bezpecne-dvere.cz';
+  var CC_OBJ = 'kucerovadn@kksystem.cz,obchod@bezpecne-dvere.cz';   // objednávky: oba prodavači + vždy kopie obchod@
+  var PRODAVACI = ['Kučerová', 'Kučera Zd.'];
   var C = 'userFiles/barva-dveri/';
   /* Mapy.com REST API (adresy + trasa). Klíč je veřejný v prohlížeči – omezit v developer.mapy.com
      („Security by HTTP referers“) na kucerazdenek78-jpg.github.io a bezpecne-dvere.cz. */
@@ -145,8 +147,21 @@
       included: 'Nová zárubeň v dekoru dveří, integrovaný nerezový práh, bezpečnostní kování, 6 klíčů + 2 montážní, kukátko, montáž na klíč, odvoz starých dveří a hrubý úklid.'
     }
   };
+  /* údaje jen pro objednávku (podle papírových vzorů prodejce/objednavka-*.pdf, revize 10/2026) */
+  MODELS.premium60.order = { frame: ['11,5 cm'], zaloha: 10000, zalohaLabel: 'Rezervace', extras: [] };
+  MODELS.extreme54.order = { frame: ['15 cm', '10 cm'], zaloha: 'sklad', zalohaLabel: 'Záloha', extras: [
+    { id: 'vrtulka', n: 'Vložka s vrtulkou a 5 klíči', p: 1000, type: 'check' },
+    { id: 'klice', n: 'Klíče navíc', p: 300, type: 'qty' }] };
+  MODELS.magnum56.order = { frame: ['15 cm', '9 cm'], zaloha: null, zalohaLabel: 'Záloha', openOut: true, extras: [
+    { id: 'omezovac', n: 'Omezovač otevírání (jen pro 15 cm zárubeň)', p: 800, type: 'check' },
+    { id: 'venecek', n: 'Držák věnečku', p: 299, type: 'check' },
+    { id: 'zednicke', n: 'Zednické práce', type: 'amount' }] };
+  MODELS.securido65.order = { frame: ['10 cm', '15 cm'], zaloha: 10000, zalohaLabel: 'Rezervace', extras: [
+    { id: 'zednicke', n: 'Zednické práce', type: 'choice', opts: [['Panel 11 cm pouzdro', 0], ['Zapuštěné pouzdro', 2000], ['Cihla do 16 cm', 2000], ['Cihla 17 cm a víc', 3000]] }] };
+
   var ORDER = ['premium60', 'extreme54', 'magnum56', 'securido65'];
   var OPENING = ['Levé dovnitř (klika na pravé straně)', 'Pravé dovnitř (klika na levé straně)'];
+  var OPENING_OUT = ['Levé ven (klika na pravé straně)', 'Pravé ven (klika na levé straně)'];
   var BILLING = ['Stejná jako instalační', 'Jiná adresa – soukromá osoba', 'Jiná adresa – firma nebo OSVČ'];
   var WALL = ['Beton / panel', 'Cihla', 'Nevím'];
 
@@ -155,6 +170,10 @@
   var kc = function (n) { return n.toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var form = $('#pq');
+  var MODE = form.getAttribute('data-mode') === 'objednavka' ? 'objednavka' : 'poptavka';
+  var OBJ = MODE === 'objednavka';
+  function fv(n) { var el = form.elements[n]; return el && el.value != null ? String(el.value).trim() : ''; }
+  function num(n) { var x = parseInt(fv(n).replace(/\s/g, ''), 10); return isNaN(x) ? 0 : x; }
   var state = { model: null, step: 1, photos: {}, addr: null, trip: null };
 
   /* ── kreslené obrázky (SVG) ── */
@@ -257,9 +276,11 @@
       return radio('vlozky', h.n, svgLocks(h.d < 2) + '<span>' + esc(h.n) + '</span>' + plus(h.p), 'pq-tile', ' data-p="' + h.p + '"');
     }).join('');
 
-    $('#pqOpening').innerHTML = OPENING.map(function (o, i) {
-      return radio('otevirani', o, svgOpening(i === 0) + '<span>' + esc(o) + '</span>', 'pq-tile');
+    var opens = OPENING.slice(); if (OBJ && m.order && m.order.openOut) opens = opens.concat(OPENING_OUT);
+    $('#pqOpening').innerHTML = opens.map(function (o, i) {
+      return radio('otevirani', o, svgOpening(i % 2 === 0) + '<span>' + esc(o) + '</span>', 'pq-tile');
     }).join('');
+    if (OBJ) buildOrderOptions(k);
 
     $('#pqWidth').innerHTML = m.widths.map(function (w) {
       var lbl = w[0] === 'Nevím' ? 'Nevím' : w[0] + ' cm';
@@ -278,6 +299,64 @@
   function buildStatic() {
     $('#pqBilling').innerHTML = BILLING.map(function (b, i) { return radio('fakturace', b, esc(b), 'pq-chip', i === 0 ? ' checked' : ''); }).join('');
     $('#pqWall').innerHTML = WALL.map(function (w, i) { return radio('zed', w, svgWall(i) + '<span>' + w + '</span>', 'pq-tile'); }).join('');
+  }
+
+  /* ── objednávka: volby navíc ── */
+  function buildOrderOptions(k) {
+    var m = MODELS[k], o = m.order;
+    var fr = $('#poFrame');
+    fr.innerHTML = o.frame.map(function (f) { return radio('tl_zarubne', f, esc(f), 'pq-chip', o.frame.length === 1 ? ' checked' : ''); }).join('');
+    $('#poExtras').innerHTML = (o.extras || []).map(function (x) {
+      if (x.type === 'check') return '<label class="pq-check"><input type="checkbox" name="x_' + x.id + '"> ' + esc(x.n) + ' <em class="po-p">+ ' + kc(x.p) + '</em></label>';
+      if (x.type === 'qty') return '<label class="pq-f pq-f-short">' + esc(x.n) + ' (' + kc(x.p) + '/ks)<input name="x_' + x.id + '" inputmode="numeric" placeholder="0"></label>';
+      if (x.type === 'amount') return '<div class="pq-grid2"><label class="pq-f">' + esc(x.n) + ' – popis<input name="x_' + x.id + '_text" placeholder="např. vybourání, zednické začištění"></label><label class="pq-f">Cena (Kč)<input name="x_' + x.id + '" inputmode="numeric" placeholder="0"></label></div>';
+      if (x.type === 'choice') return '<div class="pq-block-in"><p class="pq-help" style="margin:0 0 .6rem">' + esc(x.n) + ' *</p><div class="pq-chips">' + x.opts.map(function (op) {
+        return radio('x_' + x.id, op[0], esc(op[0]) + ' <em>' + (op[1] ? '+ ' + kc(op[1]) : '0 Kč') + '</em>', 'pq-chip', ' data-p="' + op[1] + '"');
+      }).join('') + '</div></div>';
+      return '';
+    }).join('') || '<p class="pq-help" style="margin:0">K tomuto modelu není žádná příplatková výbava navíc.</p>';
+    if (!state.zalohaTouched) setZaloha();
+  }
+  function zalohaLabel() { var m = MODELS[state.model]; return m && m.order ? m.order.zalohaLabel : 'Záloha'; }
+  function defaultZaloha() {
+    var m = MODELS[state.model]; if (!m) return 0; var z = m.order.zaloha;
+    if (z === 'sklad') { var sk = false; m.shades.forEach(function (sh) { if (sh[0] === val('odstin') && sh[2]) sk = true; }); return val('odstin') ? (sk ? 0 : 10000) : 0; }
+    return z == null ? 0 : z;
+  }
+  function setZaloha() { var el = form.elements.zaloha_kc; if (el) el.value = defaultZaloha(); }
+  function zaloha() { return form.elements.zaloha_kc ? num('zaloha_kc') : 0; }
+
+  /* ── objednávka: načtení poptávky z odkazu ── */
+  function setRadio(name, value) {
+    if (value == null || value === '') return;
+    var el = $$('input[name="' + name + '"]').filter(function (i) { return i.value === String(value); })[0];
+    if (el) el.checked = true; else state.missing.push(name + ': ' + value);
+  }
+  function prefill() {
+    var h = (location.hash.match(/[#&]d=([A-Za-z0-9_-]+)/) || [])[1];
+    if (!h) return false;
+    var d; try { d = JSON.parse(unb64u(h)); } catch (e) { $('#poLoaded').hidden = false; $('#poLoaded').className = 'pq-note pq-note-warn'; $('#poLoaded').textContent = 'Odkaz z poptávky se nepodařilo přečíst – vyplňte objednávku ručně.'; return false; }
+    state.missing = [];
+    if (!MODELS[d.model_kod]) return false;
+    var mr = form.querySelector('input[name="model"][value="' + d.model_kod + '"]'); mr.checked = true; state.model = d.model_kod; buildOptions(d.model_kod);
+    ['odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'fakturace', 'zed', 'vytah'].forEach(function (n) { setRadio(n, d[n]); });
+    ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'fak_jmeno', 'fak_adresa', 'ic', 'poznamka'].forEach(function (n) { if (form.elements[n] && d[n] != null) form.elements[n].value = d[n]; });
+    if (d.platce_dph && form.platce_dph) form.platce_dph.checked = true;
+    if (d.patro != null) { form.patro.value = String(d.patro); $('#pqLift').hidden = !(+d.patro > 0); }
+    $('#pqBillingFields').hidden = val('fakturace') === BILLING[0] || !val('fakturace');
+    $('#pqCompany').hidden = val('fakturace') !== BILLING[2];
+    if (d.souradnice) state.addr = { lon: d.souradnice[0], lat: d.souradnice[1], picked: true, key: addrKey() };
+    if (d.doprava_km != null) { state.trip = { km: d.doprava_km, fee: d.doprava_cena == null ? null : d.doprava_cena, forKey: addrKey() }; showTrip(); }
+    state.fromRef = d.cislo || '';
+    setZaloha();
+    var info = $('#poLoaded'); info.hidden = false;
+    info.innerHTML = '✓ Načteno z poptávky <b>' + esc(d.cislo || '') + '</b> – ' + esc((d.jmeno || '') + ' ' + (d.prijmeni || '')) + '. Vše můžete upravit.' +
+      (state.missing.length ? '<br><small>Nenašel jsem volbu (mezitím se mohla změnit nabídka): ' + esc(state.missing.join('; ')) + ' – vyberte prosím znovu.</small>' : '');
+    return true;
+  }
+  function orderNumber() {
+    var t = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+    return 'OBJ-' + t.getFullYear() + '-' + p(t.getMonth() + 1) + p(t.getDate()) + '-' + p(t.getHours()) + p(t.getMinutes());
   }
 
   /* ── cena a souhrn ── */
@@ -300,6 +379,24 @@
     } else if (t && t.failed) lines.push(['Doprava', 'podle adresy', 0, 'upřesníme']);
     var st = stairs();
     if (st.fee) { total += st.fee; lines.push(['Schody', st.patro + '. patro bez výtahu', st.fee]); }
+    if (OBJ) {
+      // doprava: ruční cena přepíše vypočtenou
+      if (fv('doprava_kc') !== '') {
+        lines = lines.filter(function (l) { return l[0] !== 'Doprava'; });
+        if (t && t.fee) total -= t.fee;
+        var dk = num('doprava_kc'); total += dk;
+        lines.push(['Doprava', (t && t.km != null ? String(t.km).replace('.', ',') + ' km' : 'dle dohody'), dk, dk ? '' : 'zdarma']);
+      }
+      (m.order.extras || []).forEach(function (x) {
+        var el = form.elements['x_' + x.id]; if (!el) return;
+        if (x.type === 'check' && el.checked) { total += x.p; lines.push([x.n, 'ano', x.p]); }
+        if (x.type === 'qty' && num('x_' + x.id) > 0) { var q = num('x_' + x.id); total += q * x.p; lines.push([x.n, q + ' ks × ' + kc(x.p), q * x.p]); }
+        if (x.type === 'amount' && num('x_' + x.id) > 0) { total += num('x_' + x.id); lines.push([x.n, fv('x_' + x.id + '_text') || 'dle zaměření', num('x_' + x.id)]); }
+        if (x.type === 'choice' && val('x_' + x.id)) { var cp = price('x_' + x.id); total += cp; lines.push([x.n, val('x_' + x.id), cp, cp ? '' : '0 Kč']); }
+      });
+      if (num('vybava_kc') || fv('vybava_text')) { total += num('vybava_kc'); lines.push(['Další výbava', fv('vybava_text') || '–', num('vybava_kc')]); }
+      if (num('sleva_kc') > 0) { total -= num('sleva_kc'); lines.push(['Sleva', fv('sleva_text') || '', -num('sleva_kc')]); }
+    }
     return { total: total, lines: lines };
   }
 
@@ -309,9 +406,10 @@
     var img = $('#sumImg'); img.src = m.img; img.alt = m.name; img.hidden = false;
     $('#sumModel').textContent = m.name;
     $('#sumLines').innerHTML = '<li>Základní cena<b>' + kc(m.price) + '</b></li>' + r.lines.map(function (l) {
-      return '<li><span>' + esc(l[0]) + ': ' + esc(l[1]) + '</span><b>' + (l[2] ? '+ ' + kc(l[2]) : esc(l[3] || '')) + '</b></li>';
+      return '<li><span>' + esc(l[0]) + ': ' + esc(l[1]) + '</span><b>' + (l[2] > 0 ? '+ ' + kc(l[2]) : l[2] < 0 ? '− ' + kc(-l[2]) : esc(l[3] || '')) + '</b></li>';
     }).join('');
     $('#sumPrice').textContent = kc(r.total);
+    if (OBJ) { var z = zaloha(); $('#sumPay').innerHTML = (zalohaLabel() + ': <b>' + kc(z) + '</b> · doplatek po montáži: <b>' + kc(Math.max(0, r.total - z)) + '</b>'); }
     $('#sumNote').textContent = 'Vč. 12 % DPH, montáže na klíč a odvozu starých dveří. ' +
       (state.trip && state.trip.km != null ? '' : 'Doprava do 40 km zdarma, přesně ji spočítáme podle adresy montáže.') +
       (m.masonry ? ' Případné zednické práce upřesníme podle stavu zdi.' : ' Bez příplatku za cihlu a zapuštěnou zárubeň.');
@@ -350,6 +448,13 @@
       var tel = form.telefon.value.replace(/\D/g, '');
       if (form.telefon.value && tel.length < 9) { form.telefon.classList.add('bad'); first = first || form.telefon; }
     }
+    if (step === 3 && OBJ) {
+      ['obj_cislo'].forEach(function (n) { var i = form.elements[n]; var bad = !i.value.trim(); i.classList.toggle('bad', bad); if (bad && !first) first = i; });
+      var bp = !val('prodavac'); markBlock('prodavac', bp); if (bp && !first) first = $('#poSeller');
+      var m3 = MODELS[state.model];
+      if (m3.order.frame.length > 1) { var bf = !val('tl_zarubne'); markBlock('tl_zarubne', bf); if (bf && !first) first = $('#poFrame'); }
+      (m3.order.extras || []).forEach(function (x) { if (x.type === 'choice') { var bc = !val('x_' + x.id); markBlock('x_' + x.id, bc); if (bc && !first) first = $('#poExtras'); } });
+    }
     if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (first.focus && first.tagName === 'INPUT') setTimeout(function () { first.focus({ preventScroll: true }); }, 350); }
     return !first;
   }
@@ -370,15 +475,24 @@
       odstin: val('odstin'), zarubne: val('zarubne'), kovani: val('kovani'), kukatko: val('kukatko'), vlozky: val('vlozky'),
       otevirani: val('otevirani'), sire: val('sire'), zaruka: val('zaruka'),
       cena_zaklad: m.price, cena_celkem: r.total, polozky: r.lines.map(function (l) { return { co: l[0], volba: l[1], priplatek: l[2], info: l[3] || '' }; }),
-      jmeno: f.jmeno.value.trim(), prijmeni: f.prijmeni.value.trim(), telefon: f.telefon.value.trim(), email: f.email.value.trim(),
-      ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(),
+      jmeno: fv('jmeno'), prijmeni: fv('prijmeni'), telefon: fv('telefon'), email: fv('email'),
+      ulice: fv('ulice'), mesto: fv('mesto'), psc: fv('psc'),
       patro: f.patro.value === '' ? null : +f.patro.value, vytah: +f.patro.value > 0 ? val('vytah') : '',
       doprava_km: state.trip ? state.trip.km : null, doprava_cena: state.trip && state.trip.km != null ? state.trip.fee : null,
       souradnice: state.addr ? [state.addr.lon, state.addr.lat] : null, adresa_overena: !!(state.addr && state.addr.picked),
-      fakturace: val('fakturace'), fak_jmeno: f.fak_jmeno.value.trim(), fak_adresa: f.fak_adresa.value.trim(), ic: f.ic.value.trim(), platce_dph: f.platce_dph.checked,
-      zed: val('zed'), vyska_cm: f.vyska_cm.value.trim(), poznamka: f.poznamka.value.trim(),
+      fakturace: val('fakturace'), fak_jmeno: fv('fak_jmeno'), fak_adresa: fv('fak_adresa'), ic: fv('ic'), platce_dph: !!(f.platce_dph && f.platce_dph.checked),
+      zed: val('zed'), vyska_cm: fv('vyska_cm'), poznamka: fv('poznamka'),
       fotky: Object.keys(state.photos)
     };
+    if (OBJ) {
+      d.zdroj = 'web-objednavka'; d.typ = 'objednavka';
+      d.z_poptavky = state.fromRef || '';
+      d.obj_cislo = fv('obj_cislo'); d.obj_datum = fv('obj_datum'); d.prodavac = val('prodavac');
+      d.op = fv('op'); d.zvonek = fv('zvonek'); d.tl_zarubne = val('tl_zarubne') || (m.order.frame.length === 1 ? m.order.frame[0] : '');
+      d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.interni = fv('interni');
+      d.zaloha_label = zalohaLabel(); d.zaloha = zaloha(); d.doplatek = Math.max(0, r.total - d.zaloha);
+      d.cena_zakladni_bezna = m.regular || m.price;
+    }
     return d;
   }
 
@@ -394,6 +508,14 @@
       ['Fakturace', d.fakturace, 2]
     ];
     if (d.fakturace !== BILLING[0]) { rows.push(['Objednatel', d.fak_jmeno, 2], ['Fakturační adresa', d.fak_adresa, 2]); if (d.ic) rows.push(['IČ', d.ic + (d.platce_dph ? ', plátce DPH' : ''), 2]); }
+    if (OBJ) {
+      rows[9] = ['Cena celkem', kc(d.cena_celkem) + ' vč. 12 % DPH a montáže', 1];
+      rows.splice(10, 0, ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek) + ' po montáži hotově', 1]);
+      rows.push(['Číslo OP', d.op, 2], ['Zvonek', d.zvonek, 2]);
+      rows.push(['Číslo objednávky', d.obj_cislo, 3], ['Datum', d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : '', 3], ['Prodavač', d.prodavac, 3],
+        ['Tloušťka zárubně', d.tl_zarubne, 3], ['Zeď', [d.zed, d.tl_zdi ? d.tl_zdi + ' cm' : ''].filter(Boolean).join(', '), 3],
+        ['Termín montáže', d.termin, 3], ['Poznámka pro zákazníka', d.poznamka, 3], ['Interní poznámka', d.interni, 3], ['Z poptávky', d.z_poptavky, 3]);
+    } else
     rows.push(['Zeď', d.zed, 3], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : '', 3], ['Fotky', d.fotky.length ? d.fotky.length + ' ks' : '', 3], ['Poznámka', d.poznamka, 3]);
     return rows.filter(function (r) { return r[1]; });
   }
@@ -448,8 +570,18 @@
     if (d.email) f.push(['_replyto', d.email]);
     f.push(['Číslo poptávky', d.cislo]);
     reviewRows(d).forEach(function (r) { f.push([r[0], r[1]]); });
+    if (!OBJ) f.push(['Vytvořit objednávku', orderLink(d)]);
     f.push(['Odesláno', new Date(d.odeslano).toLocaleString('cs-CZ')], ['data_json', JSON.stringify(d)]);
     return f;
+  }
+  /* data poptávky v odkazu (za #, na server se neposílají) → objednavka-dvere.html si je načte */
+  var LINK_KEYS = ['cislo', 'model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'jmeno', 'prijmeni', 'telefon', 'email',
+    'ulice', 'mesto', 'psc', 'patro', 'vytah', 'doprava_km', 'doprava_cena', 'souradnice', 'fakturace', 'fak_jmeno', 'fak_adresa', 'ic', 'platce_dph', 'zed', 'vyska_cm', 'poznamka'];
+  function b64u(str) { var b = new TextEncoder().encode(str), s2 = ''; for (var i = 0; i < b.length; i++) s2 += String.fromCharCode(b[i]); return btoa(s2).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function unb64u(t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; var bin = atob(t), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new TextDecoder().decode(u); }
+  function orderLink(d) {
+    var o = {}; LINK_KEYS.forEach(function (k) { if (d[k] !== '' && d[k] != null && d[k] !== false) o[k] = d[k]; });
+    return new URL('objednavka-dvere.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
   }
   /* AJAX – spolehlivé, ale FormSubmit přílohy zahodí → jen záloha bez souborů */
   function sendAjax(d) {
@@ -462,14 +594,15 @@
   /* klasické odeslání (multipart) do skrytého iframe – tak FormSubmit přílohy doručí;
      úspěch = iframe skončí na naší stránce poptavka-odeslano.html (_next) */
   var canFiles = (function () { try { return !!new DataTransfer().items; } catch (e) { return false; } })();
-  function sendClassic(d, files) {
+  function sendClassic(d, files) { return sendClassicFields(fields(d), files, d.cislo); }
+  function sendClassicFields(fieldList, files, ref) {
     return new Promise(function (ok, ko) {
       var name = 'pqSend' + Date.now(), done = false;
       var ifr = document.createElement('iframe'); ifr.name = name; ifr.hidden = true; ifr.setAttribute('aria-hidden', 'true');
       var f = document.createElement('form');
       f.action = 'https://formsubmit.co/' + TO; f.method = 'POST'; f.enctype = 'multipart/form-data'; f.target = name; f.hidden = true;
-      var next = new URL('poptavka-odeslano.html?ref=' + encodeURIComponent(d.cislo), location.href).href;
-      fields(d).concat([['_next', next]]).forEach(function (x) {
+      var next = new URL('poptavka-odeslano.html?ref=' + encodeURIComponent(ref), location.href).href;
+      fieldList.concat([['_next', next]]).forEach(function (x) {
         var i = document.createElement('input'); i.type = 'hidden'; i.name = x[0]; i.value = x[1]; f.appendChild(i);
       });
       files.forEach(function (fl) {
@@ -494,9 +627,68 @@
       priceNote: m.masonry ? 'Případné zednické práce podle stavu zdi nejsou v ceně.' : 'Bez příplatku za cihlu a zapuštěnou zárubeň.' };
   }
 
+  /* objednávka: 1) interní e-mail nám (data_json, interní poznámka), 2) e-mail s PDF nám + kopie zákazníkovi */
+  function customerFields(d) {
+    var f = [
+      ['_subject', 'Objednávka ' + d.obj_cislo + ' – bezpečnostní dveře ' + d.model + ' – Bezpečné dveře'],
+      ['_template', 'table'], ['_captcha', 'false'],
+      ['_cc', [CC_OBJ, d.email].filter(Boolean).join(',')], ['_replyto', CC]
+    ];
+    f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
+    reviewRows(d).forEach(function (r) { if (['Interní poznámka', 'Z poptávky', 'Číslo OP'].indexOf(r[0]) < 0 && r[2] !== 'x') f.push([r[0], r[1]]); });
+    return f;
+  }
+  function sendAjaxFields(f) {
+    var fd = new FormData(); f.forEach(function (x) { fd.append(x[0], x[1]); });
+    return fetch('https://formsubmit.co/ajax/' + TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
+      .then(function (r) { return r.json(); }).then(function (j) { if (!(j && (j.success === true || j.success === 'true'))) throw new Error('fail'); });
+  }
+  function submitOrder() {
+    var msg = $('#pqMsg'), btn = $('#pqSubmit');
+    btn.disabled = true; btn.textContent = 'Připravuji PDF…';
+    var d = collect(), pdf = null, custOk = true;
+    d.odeslano = new Date().toISOString(); d.cislo = d.obj_cislo;
+    var pdfP = window.PoptavkaPDF ? window.PoptavkaPDF.buildOrder(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
+    pdfP.then(function (blob) {
+      pdf = blob; btn.textContent = 'Odesílám…';
+      var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
+        ['Číslo objednávky', d.obj_cislo], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Číslo OP', d.op || '–'], ['Interní poznámka', d.interni || '–'],
+        ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)], ['data_json', JSON.stringify(d)]];
+      return sendAjaxFields(internal);
+    }).then(function () {
+      var files = pdf ? [{ name: 'objednavka_pdf', file: 'Objednavka-' + d.obj_cislo + '.pdf', blob: pdf }] : [];
+      var cf = customerFields(d);
+      if (!canFiles || !files.length) { custOk = !files.length; return sendAjaxFields(cf); }
+      return sendClassicFields(cf, files, d.obj_cislo).catch(function () { custOk = false; return sendAjaxFields(cf); });
+    }).then(function () {
+      $('#doneRef').textContent = d.obj_cislo;
+      var w = $('#doneWarn');
+      if (!d.email) { w.innerHTML = 'Zákazník nemá vyplněný e-mail – objednávka odešla jen vám. PDF si stáhněte a předejte mu ho.'; w.hidden = false; }
+      else if (!custOk) { w.innerHTML = 'E-mail odešel, ale bez přiloženého PDF. Stáhněte si PDF a pošlete ho zákazníkovi tlačítkem „Poslat zákazníkovi“.'; w.hidden = false; }
+      if (pdf) {
+        var url = URL.createObjectURL(pdf), a = $('#donePdf'); a.href = url; a.download = 'Objednavka-' + d.obj_cislo + '.pdf'; a.hidden = false;
+        var pr = $('#donePrint'); if (pr) { pr.hidden = false; pr.onclick = function () { var wnd = window.open(url, '_blank'); if (wnd) wnd.focus(); }; }
+        var sh = $('#doneShare'); if (sh) { sh.hidden = false; sh.onclick = function () { shareToCustomer(d, pdf); }; }
+      }
+      $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
+      window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
+    }).catch(function () {
+      msg.innerHTML = 'Odeslání se nepodařilo – zkontrolujte připojení a zkuste to znovu. PDF si můžete stáhnout tlačítkem níže.'; msg.hidden = false;
+      btn.disabled = false; btn.textContent = 'Potvrdit a odeslat objednávku';
+    });
+  }
+  function shareToCustomer(d, pdf) {
+    var file = new File([pdf], 'Objednavka-' + d.obj_cislo + '.pdf', { type: 'application/pdf' });
+    var text = 'Dobrý den, v příloze posíláme objednávku ' + d.obj_cislo + ' (bezpečnostní dveře ' + d.model + '). S pozdravem, Bezpečné dveře, +420 725 559 235';
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'Objednávka ' + d.obj_cislo, text: text }).catch(function () {}); return; }
+    var a = document.createElement('a'); a.href = URL.createObjectURL(pdf); a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+    location.href = 'mailto:' + encodeURIComponent(d.email || '') + '?subject=' + encodeURIComponent('Objednávka ' + d.obj_cislo + ' – Bezpečné dveře') + '&body=' + encodeURIComponent(text + '\n\n(PDF se stáhlo do počítače – přiložte ho prosím k e-mailu.)');
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var msg = $('#pqMsg'); msg.hidden = true;
+    if (OBJ) { if (!$('#pqConsent').checked) { msg.innerHTML = 'Potvrďte prosím, že objednávka je zkontrolovaná.'; msg.hidden = false; return; } submitOrder(); return; }
     if (!$('#pqConsent').checked) { msg.innerHTML = 'Pro odeslání prosím potvrďte souhlas se zpracováním osobních údajů.'; msg.hidden = false; return; }
     if (form._honey.value) return;
     var btn = $('#pqSubmit'); btn.disabled = true; btn.textContent = 'Připravuji…';
@@ -572,6 +764,10 @@
     }).then(showTrip);
   }
   function showTrip() {
+    showTrip2();
+    var po = $('#poTripInfo'); if (po) { po.hidden = $('#pqTrip').hidden; po.className = $('#pqTrip').className; po.innerHTML = $('#pqTrip').innerHTML; }
+  }
+  function showTrip2() {
     var el = $('#pqTrip'), t = state.trip;
     if (!t) { el.hidden = true; return; }
     el.hidden = false;
@@ -641,6 +837,8 @@
       markBlock('model', false);
       setTimeout(function () { $('#pqModelOptions').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
     } else if (t.type === 'radio') markBlock(t.name, false);
+    if (t.name === 'zaloha_kc') state.zalohaTouched = true;
+    if (OBJ && t.name === 'odstin' && !state.zalohaTouched) setZaloha();
     if (t.name === 'patro') { $('#pqLift').hidden = !(+t.value > 0); t.classList.remove('bad'); }
     if (t.name === 'fakturace') {
       $('#pqBillingFields').hidden = t.value === BILLING[0];
@@ -649,7 +847,10 @@
     if (t.classList && t.classList.contains('bad')) t.classList.remove('bad');
     updateSummary();
   });
-  form.addEventListener('input', function (e) { if (e.target.classList.contains('bad') && e.target.value.trim()) e.target.classList.remove('bad'); });
+  form.addEventListener('input', function (e) {
+    if (e.target.classList.contains('bad') && e.target.value.trim()) e.target.classList.remove('bad');
+    if (OBJ && /^(x_|vybava_|sleva_|doprava_|zaloha_)/.test(e.target.name || '')) { if (e.target.name === 'zaloha_kc') state.zalohaTouched = true; updateSummary(); }
+  });
   form.addEventListener('click', function (e) {
     var t = e.target.closest('[data-next],[data-prev],[data-goto]'); if (!t) return;
     if (t.hasAttribute('data-next')) {
@@ -664,6 +865,12 @@
   });
 
   buildModels(); buildStatic();
+  if (OBJ) {
+    $('#poSeller').innerHTML = PRODAVACI.map(function (p) { return radio('prodavac', p, esc(p), 'pq-chip'); }).join('');
+    form.obj_cislo.value = orderNumber();
+    form.obj_datum.value = new Date().toISOString().slice(0, 10);
+    if (prefill()) updateSummary();
+  }
   // předvolba modelu z odkazu: poptavka-dvere.html?model=premium60
   var pre = (location.search.match(/[?&]model=([a-z0-9]+)/) || [])[1];
   if (pre && MODELS[pre]) { var r = form.querySelector('input[name="model"][value="' + pre + '"]'); r.checked = true; state.model = pre; buildOptions(pre); updateSummary(); }

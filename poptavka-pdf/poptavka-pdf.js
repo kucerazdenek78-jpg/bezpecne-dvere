@@ -6,6 +6,16 @@
   var BASE = (function () { var s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^/]*$/, '') : 'poptavka-pdf/'; })();
   var GREEN = [18, 61, 39], ORANGE = [194, 65, 12], MUTED = [79, 106, 91], LINE = [220, 233, 225], PALE = [246, 250, 247];
   var fontsReady = null;
+  /* Právní ujednání objednávky – doslovně z papírových vzorů prodejce/objednavka-*.pdf (Revize 10/2026, shodné pro všechny modely) */
+  var LEGAL = [
+      "Zhotovitel se zavazuje provést na svůj náklad a nebezpečí pro objednatele dílo — dodávku a montáž bezpečnostních bytových dveří dle výše uvedených parametrů — s odbornou péčí, v rozsahu a kvalitě podle této objednávky a v uvedené době plnění. Objednatel se zavazuje dokončené dílo převzít a zaplatit sjednanou cenu; cena je splatná v hotovosti při převzetí díla, není-li sjednáno jinak. Objednatel nabývá vlastnické právo k dílu jeho převzetím a úplným zaplacením ceny; převzetím na něj přechází nebezpečí škody na věci. Zjevné vady je objednatel povinen vytknout při převzetí díla.",
+      "Práva z vadného plnění se řídí zákonem č. 89/2012 Sb., občanský zákoník (u spotřebitele zejména § 2161 až 2174b, jinak § 2099 až 2117), a Reklamačním řádem zhotovitele. Objednatel-spotřebitel může vytknout vadu, která se projeví do 24 měsíců od převzetí díla, není-li sjednána prodloužená záruka dle této objednávky (5 let / 10 let). Reklamaci lze uplatnit na provozovně Obchodní 36, Most, e-mailem na chci@bezpecne-dvere.cz, telefonicky nebo formulářem na www.bezpecne-dvere.cz; písemně na adresu Zd. Štěpánka 2764/1, 434 01 Most. Odpovědnost za vady se nevztahuje zejména na mechanické poškození, běžné opotřebení a poškození vlivem stavby či neodborného zacházení — podrobně Reklamační řád.",
+      "Nedílnou součástí této objednávky jsou Obchodní podmínky a Reklamační řád zhotovitele, dostupné na www.bezpecne-dvere.cz a na provozovně. Objednatel podpisem potvrzuje, že se s nimi před uzavřením smlouvy seznámil.",
+      "Byla-li tato objednávka uzavřena distančním způsobem nebo mimo obchodní prostory zhotovitele, je objednatel-spotřebitel oprávněn od smlouvy odstoupit bez udání důvodu ve lhůtě 14 dnů (§ 1829 občanského zákoníku). Právo odstoupit nenáleží u zboží vyrobeného podle požadavků spotřebitele nebo přizpůsobeného jeho osobním potřebám (dveře v provedení dle výběru objednatele — rozměr, dekor, kování a výbava) a v rozsahu služeb (montáže) zcela splněných s předchozím výslovným souhlasem spotřebitele před uplynutím lhůty pro odstoupení. Objednatel podpisem této objednávky výslovně žádá, aby montáž byla provedena před uplynutím lhůty pro odstoupení, a bere na vědomí, že jejím úplným splněním právo odstoupit od smlouvy v rozsahu montáže zaniká.",
+      "K mimosoudnímu řešení spotřebitelských sporů z této smlouvy je příslušná Česká obchodní inspekce (www.coi.cz, adr.coi.cz). Objednatel bere na vědomí, že čistý průchod u dveří šíře 80 cm je 80 cm. Pro správné fungování požárního uzávěru je nutná pravidelná roční kontrola provozuschopnosti dle vyhlášky č. 246/2001 Sb.; kontrola není zahrnuta v ceně a zhotovitel ji nabízí jako placenou službu. Osobní údaje objednatele zpracovává zhotovitel pro uzavření a plnění smlouvy a plnění zákonných povinností dle Zásad zpracování osobních údajů na www.bezpecne-dvere.cz; číslo občanského průkazu se uvádí výhradně pro účely dokladu o likvidaci odpadu (demontovaných dveří). Zámečnickou pohotovost při zabouchnutí dveří či ztrátě klíčů naleznete na www.bezpecne-dvere.cz."
+  ];
+  var ZHOTOVITEL = 'Zhotovitel: Zdeněk Kučera, Zd. Štěpánka 2764/1, Most. IČO: 64682676, DIČ: CZ7801242768, bankovní spojení: RB Teplice, číslo účtu: 1821576001/5500. Vzorkovna: KK SYSTEM, Obchodní 36, Most, www.kksystem.cz';
+  var NORMA = 'Dveře splňují normu požárního uzávěru dle § 6 a 7 vyhl. MV č. 246/2001 Sb., o požární prevenci';
 
   function loadScript(src) {
     return new Promise(function (ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
@@ -41,6 +51,7 @@
 
   function build(d, x) {
     x = x || {};
+    var O = !!x.order;
     var shade = x.shadeImg && x.shadeImg.indexOf('color:') !== 0 ? x.shadeImg : null;
     var photos = x.photos || {};
     return prepare().then(function (fonts) {
@@ -49,18 +60,34 @@
         var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
         doc.addFileToVFS('Inter-Regular.ttf', fonts[0]); doc.addFont('Inter-Regular.ttf', 'Inter', 'normal');
         doc.addFileToVFS('Inter-Bold.ttf', fonts[1]); doc.addFont('Inter-Bold.ttf', 'Inter', 'bold');
-        var W = 210, M = 14, y;
+        var W = 210, M = 14, y, page = 1;
         var font = function (st, sz, col) { doc.setFont('Inter', st); doc.setFontSize(sz); doc.setTextColor.apply(doc, col || [15, 42, 28]); };
 
         /* hlavička */
         doc.setFillColor.apply(doc, GREEN); doc.rect(0, 0, W, 30, 'F');
         if (im[0]) { var lh = 16, lw = lh * im[0].w / im[0].h; doc.addImage(im[0].data, 'JPEG', M, 7, lw, lh); }
-        font('bold', 15, [255, 255, 255]); doc.text('Poptávka bezpečnostních dveří', W - M, 13, { align: 'right' });
-        font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.cislo + '  ·  ' + new Date(d.odeslano).toLocaleString('cs-CZ'), W - M, 19.5, { align: 'right' });
-        doc.text('Odesláno z webu bezpecne-dvere', W - M, 24.5, { align: 'right' });
+        font('bold', 15, [255, 255, 255]); doc.text(O ? 'Objednávka bezpečnostních dveří' : 'Poptávka bezpečnostních dveří', W - M, 13, { align: 'right' });
+        if (O) {
+          font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.obj_cislo + '  ·  ' + (d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : new Date(d.odeslano).toLocaleDateString('cs-CZ')), W - M, 19.5, { align: 'right' });
+          doc.text('Prodavač: ' + (d.prodavac || '–') + (d.z_poptavky ? '  ·  z poptávky ' + d.z_poptavky : ''), W - M, 24.5, { align: 'right' });
+        } else {
+          font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.cislo + '  ·  ' + new Date(d.odeslano).toLocaleString('cs-CZ'), W - M, 19.5, { align: 'right' });
+          doc.text('Odesláno z webu bezpecne-dvere', W - M, 24.5, { align: 'right' });
+        }
         y = 40;
+        if (O) {
+          font('normal', 7.5, MUTED); var zl = doc.splitTextToSize(ZHOTOVITEL, W - 2 * M); doc.text(zl, M, 36); y = 36 + zl.length * 3.2 + 1.5;
+          font('bold', 8, GREEN); doc.text(NORMA, M, y); y += 7;
+        }
+        function footer() {
+          font('normal', 7.5, MUTED);
+          if (O) { doc.text('Revize 10/2026 · Objednávka č. ' + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: chci@bezpecne-dvere.cz · +420 725 559 235', W - M, 289, { align: 'right' }); }
+          else doc.text('Bezpečné dveře · Zdeněk Kučera, IČ 64682676 · vzorkovna Obchodní 36, Most · +420 725 559 235 · chci@bezpecne-dvere.cz', W / 2, 289, { align: 'center' });
+        }
+        function ensure(h) { if (y + h > 280) { footer(); doc.addPage(); page++; y = 18; } }
 
         function section(t) {
+          ensure(16);
           font('bold', 9, ORANGE); doc.text(t.toUpperCase(), M, y); y += 2;
           doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 5.5;
         }
@@ -78,7 +105,7 @@
         /* zákazník */
         section('Zákazník');
         var adr = [d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-        var yl = pairs([['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email]], M, 22, 66);
+        var yl = pairs([['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email]].concat(O ? [['Číslo OP', d.op ? d.op + ' (pro likvidaci odpadu)' : ''], ['Zvonek', d.zvonek]] : []), M, 22, 66);
         var bill = d.fakturace;
         if (d.fakturace && d.fakturace.indexOf('Stejná') !== 0) bill = d.fak_jmeno + '\n' + d.fak_adresa + (d.ic ? '\nIČ ' + d.ic + (d.platce_dph ? ', plátce DPH' : '') : '');
         var yr = pairs([['Montáž', adr], ['Patro', d.patro == null ? '' : (d.patro === 0 ? 'přízemí' : d.patro + '. patro, ' + (d.vytah === 'Ano' ? 's výtahem' : 'bez výtahu'))], ['Fakturace', bill]], 108, 22, 66);
@@ -99,33 +126,56 @@
         y = top + 13;
         var spec = [['Barva', d.odstin], ['Zárubeň', d.zarubne], ['Kování', d.kovani], ['Kukátko', d.kukatko], ['Vložky', d.vlozky],
           ['Otevírání', d.otevirani], ['Šířka', d.sire && d.sire !== 'Nevím' ? d.sire + ' cm' : d.sire], ['Záruka', d.zaruka]];
+        if (O) spec.push(['Tl. zárubně', d.tl_zarubne], ['Zeď', [d.zed, d.tl_zdi ? 'tloušťka ' + d.tl_zdi + ' cm' : ''].filter(Boolean).join(', ')]);
         var yd = pairs(spec, M + imgW + 8, 22, W - M - (M + imgW + 8) - 22);
         y = Math.max(yd, sy + 18) + 3;
 
         /* cena */
-        section('Orientační cena');
+        section(O ? 'Cena' : 'Orientační cena');
         var cx = M, cw = W - 2 * M;
         var priceRow = function (l, v, bold) { font(bold ? 'bold' : 'normal', bold ? 10 : 9.5, bold ? [15, 42, 28] : MUTED); doc.text(l, cx, y); doc.text(v, cx + cw, y, { align: 'right' }); y += 5.4; };
-        priceRow('Základní cena ' + d.model + ' (montáž na klíč)', fmt(d.cena_zaklad));
-        (d.polozky || []).forEach(function (p) { if (p.priplatek || p.info) priceRow(p.co + ': ' + p.volba, p.priplatek ? '+ ' + fmt(p.priplatek) : p.info); });
+        priceRow('Dveře ' + d.model + ' s montáží na klíč' + (O && d.cena_zakladni_bezna > d.cena_zaklad ? ' (běžná cena ' + fmt(d.cena_zakladni_bezna) + ', akční cena)' : ''), fmt(d.cena_zaklad));
+        (d.polozky || []).forEach(function (p) { if (p.priplatek || p.info) { ensure(6); priceRow(p.co + ': ' + p.volba, p.priplatek > 0 ? '+ ' + fmt(p.priplatek) : p.priplatek < 0 ? '– ' + fmt(-p.priplatek) : p.info); } });
+        ensure(14);
         y += 1;
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(cx, y - 4.5, cw, 12, 2, 2, 'FD');
         font('bold', 11, GREEN); doc.text('Celkem vč. 12 % DPH', cx + 4, y + 3);
         font('bold', 15, ORANGE); doc.text(fmt(d.cena_celkem), cx + cw - 4, y + 3.4, { align: 'right' });
         y += 12;
         font('normal', 8, MUTED);
-        var noteL = doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
+        var noteL = O ? doc.splitTextToSize('DPH bude vyčísleno na konečné faktuře. Cena zahrnuje dodávku, montáž na klíč, demontáž a odvoz starých dveří a hrubý úklid.' + (d.doprava_km != null ? ' Vzdálenost od vzorkovny Obchodní 36, Most: ' + String(d.doprava_km).replace('.', ',') + ' km.' : ''), cw) : doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
         y += noteL.length * 3.4 + 5;
+
+        if (O) {
+          /* platba a termín */
+          section('Platba a termín');
+          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)], ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
+            ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']], M, 34, cw - 34) + 1;
+          if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, M, y); y += pl.length * 4.4 + 3; }
+          /* právní ujednání */
+          section('Smluvní ujednání');
+          font('normal', 7.4, [40, 60, 50]);
+          LEGAL.forEach(function (par) {
+            var ll = doc.splitTextToSize(par, cw);
+            ll.forEach(function (line) { ensure(3.3); doc.text(line, M, y); y += 3.15; });
+            y += 1.6;
+          });
+          /* podpisy */
+          ensure(38); y += 6;
+          font('normal', 9, MUTED); doc.text('Dne ' + (d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : ''), M, y); y += 16;
+          doc.setDrawColor(120, 140, 130); doc.setLineWidth(0.3);
+          doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
+          font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
+          font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
+          doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235, +420 471 008 994'], W - M - 75, y);
+          footer();
+          return doc.output('blob');
+        }
 
         /* doplňující */
         var extra = [['Zeď', d.zed], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : ''], ['Poznámka', d.poznamka], ['Fotky', (im[3] || im[4]) ? 'v příloze na další straně' : '']];
         if (extra.some(function (e) { return e[1]; })) { section('Doplňující informace'); y = pairs(extra, M, 34, cw - 34) + 2; }
 
-        /* patička */
-        function footer() {
-          font('normal', 7.5, MUTED);
-          doc.text('Bezpečné dveře · Zdeněk Kučera, IČ 64682676 · vzorkovna Obchodní 36, Most · +420 725 559 235 · chci@bezpecne-dvere.cz', W / 2, 289, { align: 'center' });
-        }
         footer();
 
         /* fotky */
@@ -147,5 +197,6 @@
   }
   function fmt(n) { return Number(n || 0).toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; }
 
-  window.PoptavkaPDF = { prepare: prepare, build: build };
+  function buildOrder(d, x) { x = x || {}; x.order = true; x.photos = {}; return build(d, x); }
+  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder };
 })();
