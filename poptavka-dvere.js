@@ -685,14 +685,13 @@
     var vP = P && P.buildVoucher ? P.buildVoucher(d).catch(function () { return null; }) : Promise.resolve(null);
     Promise.all([pdfP, plP, vP]).then(function (res) {
       pdf = res[0]; plist = res[1]; voucher = res[2]; btn.textContent = 'Odesílám…';
-      var vFile = voucher ? { name: 'voucher_doporuc_a_ziskej_pdf', file: 'Voucher-Doporuc-a-ziskej-' + d.obj_cislo + '.pdf', blob: voucher } : null;
       var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
         ['Číslo objednávky', d.obj_cislo], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Číslo OP', d.op || '–'], ['Interní poznámka', d.interni || '–'],
         ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)],
         ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'],
-        ['Voucher Doporuč a získej', voucher ? 'v příloze – vytisknout a předat při montáži' : '–'], ['data_json', JSON.stringify(d)]];
-      // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane; voucher k vytištění
-      var intFiles = []; if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist }); if (vFile) intFiles.push(vFile);
+        ['Voucher Doporuč a získej', voucher ? 'poslán zákazníkovi s objednávkou' : '–'], ['data_json', JSON.stringify(d)]];
+      // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane; voucher jde jen zákazníkovi
+      var intFiles = []; if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });
       if (intFiles.length && canFiles) return sendClassicFields(internal, intFiles, d.obj_cislo + '-int')
         .catch(function () { return sendAjaxFields(internal); });
       return sendAjaxFields(internal);
