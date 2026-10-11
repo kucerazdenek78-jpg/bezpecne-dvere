@@ -53,3 +53,7 @@ ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
 - Opačně: změna textů/cen ve formuláři → upravit i papírové předlohy v `prodejce/` (nebo na rozdíl upozornit Zdenka).
 - Po každé změně JS zvýšit `?v=` u `poptavka-dvere.js` / `poptavka-pdf.js` v obou HTML, otestovat (Playwright, mock Mapy.com
   a FormSubmit) a commit + push do `main`.
+
+## Ceník pro prodejce (pokaždé, když se změní ceny/akce vchodových dveří)
+`cenik-prodejce.html` (+ PDF `prodejce/cenik-bezpecnostni-dvere.pdf`, odkazy v `panel.html`) je statický výtah z webu (`dvere-do-bytu.html`, `MODELS` v `poptavka-dvere.js`).
+Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF (Playwright `page.pdf`, A4, okraje 12 mm); datum „stav k" aktualizovat.
