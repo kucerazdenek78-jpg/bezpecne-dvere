@@ -35,3 +35,18 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
 - Commity česky; připojit řádky Co-Authored-By a Claude-Session podle instrukce session.
 - Při každé změně `style.css` zvýšit číslo verze `style.css?v=…` ve všech HTML (jinak prohlížeče drží starou kopii):
   `sed -i 's/style\.css?v=[0-9a-z]*/style.css?v=RRRRMMDDx/g' *.html`.
+
+## Předlohy prodejce a formuláře poptávky/objednávky (pokaždé, když se změní dokument)
+
+Web generuje PDF poptávky, objednávky a předávacího listu v prohlížeči (`poptavka-dvere.js`, `poptavka-pdf/poptavka-pdf.js`,
+stránky `poptavka-dvere.html` a `objednavka-dvere.html`). **Když se upraví kterýkoli z těchto dokumentů, musí se hned doplnit i na web,
+ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
+- **Papírové objednávky** `prodejce/objednavka-*.pdf` (právní text, zhotovitel, příplatky): po nahrazení spustit
+  `python3 tools/aktualizace_predloh.py` → propíše smluvní ujednání a řádek zhotovitele do `poptavka-pdf.js`.
+  Změněné ceny/příplatky/zálohy ručně přenést do `MODELS` a `MODELS.*.order` v `poptavka-dvere.js`.
+- **Předávací list** `prodejce/predavaci-list.pdf`: web ho vyplňuje přímo z tohoto souboru. Po změně spustit
+  `python3 tools/aktualizace_predloh.py --check`; když hlásí posunutá políčka, upravit souřadnice ve funkci `buildHandover`.
+- **Ceny a provedení na webu** (`dvere-do-bytu.html`) → stejné změny do `MODELS` v `poptavka-dvere.js` (ceny, odstíny, příplatky).
+- Opačně: změna textů/cen ve formuláři → upravit i papírové předlohy v `prodejce/` (nebo na rozdíl upozornit Zdenka).
+- Po každé změně JS zvýšit `?v=` u `poptavka-dvere.js` / `poptavka-pdf.js` v obou HTML, otestovat (Playwright, mock Mapy.com
+  a FormSubmit) a commit + push do `main`.
