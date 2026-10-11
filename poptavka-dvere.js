@@ -474,7 +474,7 @@
     state.step = step;
     $$('.pq-step').forEach(function (s) { s.hidden = +s.getAttribute('data-step') !== step; });
     $$('[data-step-ind]').forEach(function (li) { var n = +li.getAttribute('data-step-ind'); li.classList.toggle('on', n === step); li.classList.toggle('done', n < step); });
-    if (step === 4) { buildReview(); if (window.PoptavkaPDF) window.PoptavkaPDF.prepare(); }
+    if (step === 4) { buildReview(); if (window.PoptavkaPDF) { window.PoptavkaPDF.prepare(); if (OBJ && window.PoptavkaPDF.preparePL) window.PoptavkaPDF.preparePL(); } }
     var top = $('.pq-steps').getBoundingClientRect().top + window.scrollY - 90;
     window.scrollTo({ top: top, behavior: 'smooth' });
   }
@@ -677,14 +677,20 @@
   function submitOrder() {
     var msg = $('#pqMsg'), btn = $('#pqSubmit');
     btn.disabled = true; btn.textContent = 'Připravuji PDF…';
-    var d = collect(), pdf = null, custOk = true;
+    var d = collect(), pdf = null, plist = null, custOk = true;
     d.odeslano = new Date().toISOString(); d.cislo = d.obj_cislo;
-    var pdfP = window.PoptavkaPDF ? window.PoptavkaPDF.buildOrder(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
-    pdfP.then(function (blob) {
-      pdf = blob; btn.textContent = 'Odesílám…';
+    var P = window.PoptavkaPDF;
+    var pdfP = P ? P.buildOrder(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
+    var plP = P && P.buildHandover ? P.buildHandover(d).catch(function () { return null; }) : Promise.resolve(null);
+    Promise.all([pdfP, plP]).then(function (res) {
+      pdf = res[0]; plist = res[1]; btn.textContent = 'Odesílám…';
       var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
         ['Číslo objednávky', d.obj_cislo], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Číslo OP', d.op || '–'], ['Interní poznámka', d.interni || '–'],
-        ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)], ['data_json', JSON.stringify(d)]];
+        ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)],
+        ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'], ['data_json', JSON.stringify(d)]];
+      // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane
+      if (plist && canFiles) return sendClassicFields(internal, [{ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist }], d.obj_cislo + '-int')
+        .catch(function () { return sendAjaxFields(internal); });
       return sendAjaxFields(internal);
     }).then(function () {
       var files = pdf ? [{ name: 'objednavka_pdf', file: 'Objednavka-' + d.obj_cislo + '.pdf', blob: pdf }] : [];
@@ -701,6 +707,7 @@
         var pr = $('#donePrint'); if (pr) { pr.hidden = false; pr.onclick = function () { var wnd = window.open(url, '_blank'); if (wnd) wnd.focus(); }; }
         var sh = $('#doneShare'); if (sh) { sh.hidden = false; sh.onclick = function () { shareToCustomer(d, pdf); }; }
       }
+      if (plist) { var hl = $('#doneHandover'); if (hl) { hl.href = URL.createObjectURL(plist); hl.download = 'Predavaci-list-' + d.obj_cislo + '.pdf'; hl.hidden = false; } }
       $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
       window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
     }).catch(function () {

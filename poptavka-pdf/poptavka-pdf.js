@@ -223,5 +223,59 @@
     }
     return attempt(0);
   }
-  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder };
+  /* ── předávací list: vyplní prodejce/predavaci-list.pdf údaji z objednávky (pdf-lib, vektorově, jen pro prodejce) ── */
+  var plReady = null;
+  function preparePL() {
+    if (plReady) return plReady;
+    plReady = (window.PDFLib ? Promise.resolve() : loadScript(BASE + 'pdf-lib.min.js'))
+      .then(function () { return window.fontkit ? null : loadScript(BASE + 'fontkit.umd.min.js'); })
+      .then(function () {
+        return Promise.all([fetch(new URL('../prodejce/predavaci-list.pdf', BASE).href), fetch(BASE + 'Inter-Bold.ttf'), fetch(BASE + 'Inter-Regular.ttf')])
+          .then(function (rs) { rs.forEach(function (r) { if (!r.ok) throw new Error('pl'); }); return Promise.all(rs.map(function (r) { return r.arrayBuffer(); })); });
+      });
+    plReady.catch(function () { plReady = null; });
+    return plReady;
+  }
+  function keysText(d) {
+    var k = d.model_kod;
+    if (k === 'premium60') return '5 + 2 instalační';
+    if (k === 'extreme54') {
+      var n = /vrtulk/i.test(JSON.stringify(d.polozky || [])) ? 5 : 3, extra = 0;
+      (d.polozky || []).forEach(function (p) { if (p.co === 'Klíče navíc') extra = parseInt(p.volba, 10) || 0; });
+      return (n + extra) + (extra ? ' (vč. ' + extra + ' navíc)' : '');
+    }
+    if (k === 'magnum56') return /dole i nahoře/.test(d.vlozky || '') ? '7 (sjednocené)' : /vrtulkou nahoře/.test(d.vlozky || '') ? '5 (sjednocené)' : '2 × 5';
+    if (k === 'securido65') return '6 + 2 montážní';
+    return '';
+  }
+  function buildHandover(d) {
+    return preparePL().then(function (b) {
+      var L = window.PDFLib;
+      return L.PDFDocument.load(b[0]).then(function (pdf) {
+        pdf.registerFontkit(window.fontkit);
+        return Promise.all([pdf.embedFont(b[1], { subset: true }), pdf.embedFont(b[2], { subset: true })]).then(function (f) {
+          var page = pdf.getPages()[0], H = page.getHeight(), col = L.rgb(0.07, 0.24, 0.15);
+          // text do pole: x, baseline (y od horního okraje v pt), max. šířka – písmo se zmenší, aby se vešlo
+          function put(text, x, yTop, maxW, size, regular) {
+            if (!text) return;
+            var fnt = regular ? f[1] : f[0], sz = size || 9.5;
+            while (sz > 6 && fnt.widthOfTextAtSize(text, sz) > maxW) sz -= 0.25;
+            while (fnt.widthOfTextAtSize(text, sz) > maxW && text.length > 3) text = text.slice(0, -2) + '…';
+            page.drawText(text, { x: x, y: H - yTop, size: sz, font: fnt, color: col });
+          }
+          var prov = [d.model, d.odstin, d.sire && d.sire !== 'Nevím' ? d.sire + ' cm' : '', (d.otevirani || '').replace(/ \(.*\)/, '').toLowerCase()].filter(Boolean).join(' · ');
+          put(prov, 136, 216.5, 148);                    // Model a provedení
+          put(d.obj_cislo, 389, 216.5, 154);             // Číslo objednávky
+          put(keysText(d), 103, 267.5, 181);             // Počet klíčů
+          var adr = [d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+          put(adr, 51, 754, 150, 8, true);               // Místo (datum doplní montážník)
+          put((d.jmeno + ' ' + d.prijmeni).trim(), 392, 782, 150, 8, true);   // pod „Objednatel (podpis)“
+          put('Objednávka ' + d.obj_cislo + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 490, 7, true);
+          return pdf.save();
+        });
+      });
+    }).then(function (bytes) { return new Blob([bytes], { type: 'application/pdf' }); });
+  }
+
+  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder, buildHandover: buildHandover, preparePL: preparePL };
 })();

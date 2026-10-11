@@ -487,7 +487,7 @@
           </fieldset>
 
           <div class="pq-gdpr">
-            <p>Po odeslání přijde objednávka s PDF vám oběma (kucerazd@, kucerovadn@), na obchod@bezpecne-dvere.cz a v kopii zákazníkovi, pokud má vyplněný e-mail. PDF si můžete také stáhnout a vytisknout k podpisu.</p>
+            <p>Po odeslání přijde objednávka s PDF vám oběma (kucerazd@, kucerovadn@), na obchod@bezpecne-dvere.cz a v kopii zákazníkovi. Předvyplněný předávací list dostanete jen vy prodejci, pokud má vyplněný e-mail. PDF si můžete také stáhnout a vytisknout k podpisu.</p>
             <label class="pq-check"><input type="checkbox" id="pqConsent"> Objednávku jsem zkontroloval(a) se zákazníkem. *</label>
           </div>
 
@@ -520,9 +520,9 @@
       <div class="pq-done-ico" aria-hidden="true">✓</div>
       <h2>Objednávka je odeslaná</h2>
       <p>Číslo objednávky: <strong id="doneRef"></strong></p>
-      <p>E-mail s PDF odešel vám a v kopii zákazníkovi. PDF si stáhněte nebo vytiskněte k podpisu.</p>
+      <p>E-mail s PDF odešel vám a v kopii zákazníkovi. Předvyplněný předávací list přišel jen vám (prodejcům). Oba dokumenty si můžete stáhnout níže.</p>
       <p id="doneWarn" class="pq-done-warn" hidden></p>
-      <div class="pq-done-btns"><a id="donePdf" class="btn btn-primary" hidden>Stáhnout PDF</a><button type="button" id="donePrint" class="btn btn-outline" hidden>Otevřít k tisku</button><button type="button" id="doneShare" class="btn btn-outline" hidden>Poslat zákazníkovi ze svého e-mailu</button><a href="objednavka-dvere.html" class="btn btn-outline" onclick="location.href='objednavka-dvere.html';location.reload();return false;">Nová objednávka</a><a href="panel.html" class="btn btn-outline">Panel prodejce</a></div>
+      <div class="pq-done-btns"><a id="donePdf" class="btn btn-primary" hidden>Stáhnout PDF</a><button type="button" id="donePrint" class="btn btn-outline" hidden>Otevřít k tisku</button><a id="doneHandover" class="btn btn-outline" hidden>Předávací list (PDF)</a><button type="button" id="doneShare" class="btn btn-outline" hidden>Poslat zákazníkovi ze svého e-mailu</button><a href="objednavka-dvere.html" class="btn btn-outline" onclick="location.href='objednavka-dvere.html';location.reload();return false;">Nová objednávka</a><a href="panel.html" class="btn btn-outline">Panel prodejce</a></div>
     </div>
   </div>
 </section>
@@ -589,7 +589,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="poptavka-pdf/poptavka-pdf.js?v=20261011e"></script>
-<script src="poptavka-dvere.js?v=20261011e"></script>
+<script src="poptavka-pdf/poptavka-pdf.js?v=20261011f"></script>
+<script src="poptavka-dvere.js?v=20261011f"></script>
 </body>
 </html>
