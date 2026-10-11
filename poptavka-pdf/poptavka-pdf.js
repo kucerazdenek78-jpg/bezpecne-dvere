@@ -81,7 +81,7 @@
         var yl = pairs([['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email]], M, 22, 66);
         var bill = d.fakturace;
         if (d.fakturace && d.fakturace.indexOf('Stejná') !== 0) bill = d.fak_jmeno + '\n' + d.fak_adresa + (d.ic ? '\nIČ ' + d.ic + (d.platce_dph ? ', plátce DPH' : '') : '');
-        var yr = pairs([['Montáž', adr], ['Fakturace', bill]], 108, 22, 66);
+        var yr = pairs([['Montáž', adr], ['Patro', d.patro == null ? '' : (d.patro === 0 ? 'přízemí' : d.patro + '. patro, ' + (d.vytah === 'Ano' ? 's výtahem' : 'bez výtahu'))], ['Fakturace', bill]], 108, 22, 66);
         y = Math.max(yl, yr) + 3;
 
         /* dveře */
@@ -107,15 +107,15 @@
         var cx = M, cw = W - 2 * M;
         var priceRow = function (l, v, bold) { font(bold ? 'bold' : 'normal', bold ? 10 : 9.5, bold ? [15, 42, 28] : MUTED); doc.text(l, cx, y); doc.text(v, cx + cw, y, { align: 'right' }); y += 5.4; };
         priceRow('Základní cena ' + d.model + ' (montáž na klíč)', fmt(d.cena_zaklad));
-        (d.polozky || []).forEach(function (p) { if (p.priplatek) priceRow(p.co + ': ' + p.volba, '+ ' + fmt(p.priplatek)); });
+        (d.polozky || []).forEach(function (p) { if (p.priplatek || p.info) priceRow(p.co + ': ' + p.volba, p.priplatek ? '+ ' + fmt(p.priplatek) : p.info); });
         y += 1;
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(cx, y - 4.5, cw, 12, 2, 2, 'FD');
         font('bold', 11, GREEN); doc.text('Celkem vč. 12 % DPH', cx + 4, y + 3);
         font('bold', 15, ORANGE); doc.text(fmt(d.cena_celkem), cx + cw - 4, y + 3.4, { align: 'right' });
         y += 12;
         font('normal', 8, MUTED);
-        doc.text(doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří, hrubý úklid a dopravu do 40 km. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw), cx, y);
-        y += 10;
+        var noteL = doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
+        y += noteL.length * 3.4 + 5;
 
         /* doplňující */
         var extra = [['Zeď', d.zed], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : ''], ['Poznámka', d.poznamka], ['Fotky', (im[3] || im[4]) ? 'v příloze na další straně' : '']];

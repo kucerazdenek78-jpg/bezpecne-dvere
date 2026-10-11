@@ -7,6 +7,13 @@
   var TO = 'kucerazd@kksystem.cz';
   var CC = 'chci@bezpecne-dvere.cz';
   var C = 'userFiles/barva-dveri/';
+  /* Mapy.com REST API (adresy + trasa). Klíč je veřejný v prohlížeči – omezit v developer.mapy.com
+     („Security by HTTP referers“) na kucerazdenek78-jpg.github.io a bezpecne-dvere.cz. */
+  var MAPY_KEY = '2J4qFfalnxab9uD2PnIQrF57PRw2Qnmel9a5Vt4x6-k';
+  var MAPY = 'https://api.mapy.com/v1/';
+  var SHOWROOM = 'Obchodní 36, Most';      // odkud se měří doprava
+  var DOPRAVA = [[40, 0], [80, 1200]];     // do 40 km zdarma, do 80 km 1 200 Kč, nad 80 km upřesníme
+  var SCHODY = 250;                        // Kč za patro bez výtahu
 
   /* ── barvy kování pro kreslené obrázky ── */
   var COL = { inox: '#b9c0c6', chrom: '#cfd4d8', cerna: '#26292b', bronz: '#8a6a43' };
@@ -148,7 +155,7 @@
   var kc = function (n) { return n.toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var form = $('#pq');
-  var state = { model: null, step: 1, photos: {} };
+  var state = { model: null, step: 1, photos: {}, addr: null, trip: null };
 
   /* ── kreslené obrázky (SVG) ── */
   function svgHardware(shape, col) {
@@ -286,6 +293,13 @@
       var x = price(p[0]); total += x;
       lines.push([p[1], p[0] === 'sire' && v !== 'Nevím' ? v + ' cm' : v, x]);
     });
+    var t = state.trip;
+    if (t && t.km != null) {
+      if (t.fee == null) lines.push(['Doprava', String(t.km).replace('.', ',') + ' km', 0, 'upřesníme']);
+      else { total += t.fee; lines.push(['Doprava', String(t.km).replace('.', ',') + ' km', t.fee, t.fee ? '' : 'zdarma']); }
+    } else if (t && t.failed) lines.push(['Doprava', 'podle adresy', 0, 'upřesníme']);
+    var st = stairs();
+    if (st.fee) { total += st.fee; lines.push(['Schody', st.patro + '. patro bez výtahu', st.fee]); }
     return { total: total, lines: lines };
   }
 
@@ -295,10 +309,11 @@
     var img = $('#sumImg'); img.src = m.img; img.alt = m.name; img.hidden = false;
     $('#sumModel').textContent = m.name;
     $('#sumLines').innerHTML = '<li>Základní cena<b>' + kc(m.price) + '</b></li>' + r.lines.map(function (l) {
-      return '<li><span>' + esc(l[0]) + ': ' + esc(l[1]) + '</span><b>' + (l[2] ? '+ ' + kc(l[2]) : '') + '</b></li>';
+      return '<li><span>' + esc(l[0]) + ': ' + esc(l[1]) + '</span><b>' + (l[2] ? '+ ' + kc(l[2]) : esc(l[3] || '')) + '</b></li>';
     }).join('');
     $('#sumPrice').textContent = kc(r.total);
-    $('#sumNote').textContent = 'Vč. 12 % DPH, montáže na klíč, odvozu starých dveří a dopravy do 40 km.' +
+    $('#sumNote').textContent = 'Vč. 12 % DPH, montáže na klíč a odvozu starých dveří. ' +
+      (state.trip && state.trip.km != null ? '' : 'Doprava do 40 km zdarma, přesně ji spočítáme podle adresy montáže.') +
       (m.masonry ? ' Případné zednické práce upřesníme podle stavu zdi.' : ' Bez příplatku za cihlu a zapuštěnou zárubeň.');
   }
 
@@ -330,6 +345,8 @@
         i.classList.toggle('bad', bad);
         if (bad && !first) first = i;
       });
+      if (form.patro.value === '') { form.patro.classList.add('bad'); first = first || form.patro; }
+      if (+form.patro.value > 0) { var bv = !val('vytah'); markBlock('vytah', bv); if (bv && !first) first = $('#pqLift'); }
       var tel = form.telefon.value.replace(/\D/g, '');
       if (form.telefon.value && tel.length < 9) { form.telefon.classList.add('bad'); first = first || form.telefon; }
     }
@@ -352,9 +369,12 @@
       model: m.name, model_kod: state.model,
       odstin: val('odstin'), zarubne: val('zarubne'), kovani: val('kovani'), kukatko: val('kukatko'), vlozky: val('vlozky'),
       otevirani: val('otevirani'), sire: val('sire'), zaruka: val('zaruka'),
-      cena_zaklad: m.price, cena_celkem: r.total, polozky: r.lines.map(function (l) { return { co: l[0], volba: l[1], priplatek: l[2] }; }),
+      cena_zaklad: m.price, cena_celkem: r.total, polozky: r.lines.map(function (l) { return { co: l[0], volba: l[1], priplatek: l[2], info: l[3] || '' }; }),
       jmeno: f.jmeno.value.trim(), prijmeni: f.prijmeni.value.trim(), telefon: f.telefon.value.trim(), email: f.email.value.trim(),
       ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(),
+      patro: f.patro.value === '' ? null : +f.patro.value, vytah: +f.patro.value > 0 ? val('vytah') : '',
+      doprava_km: state.trip ? state.trip.km : null, doprava_cena: state.trip && state.trip.km != null ? state.trip.fee : null,
+      souradnice: state.addr ? [state.addr.lon, state.addr.lat] : null, adresa_overena: !!(state.addr && state.addr.picked),
       fakturace: val('fakturace'), fak_jmeno: f.fak_jmeno.value.trim(), fak_adresa: f.fak_adresa.value.trim(), ic: f.ic.value.trim(), platce_dph: f.platce_dph.checked,
       zed: val('zed'), vyska_cm: f.vyska_cm.value.trim(), poznamka: f.poznamka.value.trim(),
       fotky: Object.keys(state.photos)
@@ -368,7 +388,10 @@
       ['Otevírání', d.otevirani, 1], ['Šířka', d.sire && d.sire !== 'Nevím' ? d.sire + ' cm' : d.sire, 1], ['Záruka', d.zaruka, 1],
       ['Orientační cena', kc(d.cena_celkem) + ' vč. DPH a montáže', 1],
       ['Jméno', d.jmeno + ' ' + d.prijmeni, 2], ['Telefon', d.telefon, 2], ['E-mail', d.email, 2],
-      ['Adresa montáže', [d.ulice, d.psc, d.mesto].filter(Boolean).join(', '), 2], ['Fakturace', d.fakturace, 2]
+      ['Adresa montáže', [d.ulice, d.psc, d.mesto].filter(Boolean).join(', '), 2],
+      ['Patro', d.patro == null ? '' : (d.patro === 0 ? 'přízemí' : d.patro + '. patro, ' + (d.vytah === 'Ano' ? 's výtahem' : 'bez výtahu')), 2],
+      ['Doprava', d.doprava_km != null ? String(d.doprava_km).replace('.', ',') + ' km – ' + (d.doprava_cena == null ? 'upřesníme' : d.doprava_cena ? kc(d.doprava_cena) : 'zdarma') : 'upřesníme', 2],
+      ['Fakturace', d.fakturace, 2]
     ];
     if (d.fakturace !== BILLING[0]) { rows.push(['Objednatel', d.fak_jmeno, 2], ['Fakturační adresa', d.fak_adresa, 2]); if (d.ic) rows.push(['IČ', d.ic + (d.platce_dph ? ', plátce DPH' : ''), 2]); }
     rows.push(['Zeď', d.zed, 3], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : '', 3], ['Fotky', d.fotky.length ? d.fotky.length + ' ks' : '', 3], ['Poznámka', d.poznamka, 3]);
@@ -501,6 +524,115 @@
     });
   });
 
+  /* ── doprava (Mapy.com) a schody ── */
+  function stairs() {
+    var p = form.patro ? form.patro.value : '';
+    var n = p === '' ? 0 : +p;
+    return { patro: n, fee: n > 0 && val('vytah') === 'Ne' ? n * SCHODY : 0 };
+  }
+  function addrKey() { return [form.ulice.value, form.mesto.value, form.psc.value].join('|').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function mapy(path, params) {
+    var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var to = setTimeout(function () { if (ctrl) ctrl.abort(); }, 7000);
+    return fetch(MAPY + path + '?' + q + '&apikey=' + MAPY_KEY, ctrl ? { signal: ctrl.signal } : {})
+      .then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('mapy ' + r.status); return r.json(); });
+  }
+  var showroomP = null;
+  function showroom() {
+    if (!showroomP) showroomP = mapy('geocode', { query: SHOWROOM, lang: 'cs', limit: 1, type: 'regional.address' })
+      .then(function (j) { var it = j.items && j.items[0]; if (!it) throw new Error('showroom'); return it.position; })
+      .catch(function (e) { showroomP = null; throw e; });
+    return showroomP;
+  }
+  function geocodeTyped() {
+    var q = [form.ulice.value, form.psc.value, form.mesto.value].map(function (x) { return x.trim(); }).filter(Boolean).join(', ');
+    return mapy('geocode', { query: q, lang: 'cs', limit: 1, type: 'regional.address', locality: 'cz' }).then(function (j) {
+      var it = j.items && j.items[0];
+      if (it) return { lon: it.position.lon, lat: it.position.lat, picked: false };
+      // adresa nenalezena → aspoň obec (na pásma 40/80 km stačí)
+      return mapy('geocode', { query: form.mesto.value.trim(), lang: 'cs', limit: 1, type: 'regional.municipality', locality: 'cz' }).then(function (j2) {
+        var m = j2.items && j2.items[0]; if (!m) throw new Error('nenalezeno');
+        return { lon: m.position.lon, lat: m.position.lat, picked: false, approx: true };
+      });
+    });
+  }
+  function computeTrip() {
+    var key = addrKey();
+    var addrP = state.addr && state.addr.key === key ? Promise.resolve(state.addr) : geocodeTyped().then(function (a) { a.key = key; state.addr = a; return a; });
+    return Promise.all([showroom(), addrP]).then(function (r) {
+      return mapy('routing/route', { start: r[0].lon + ',' + r[0].lat, end: r[1].lon + ',' + r[1].lat, routeType: 'car_fast', format: 'polyline' });
+    }).then(function (j) {
+      if (typeof j.length !== 'number') throw new Error('route');
+      var km = Math.round(j.length / 100) / 10, fee = null;
+      for (var i = 0; i < DOPRAVA.length; i++) if (km <= DOPRAVA[i][0]) { fee = DOPRAVA[i][1]; break; }
+      state.trip = { km: km, fee: fee, forKey: key, approx: !!(state.addr && state.addr.approx) };
+    }).catch(function () {
+      state.trip = { km: null, fee: null, failed: true, forKey: key };
+    }).then(showTrip);
+  }
+  function showTrip() {
+    var el = $('#pqTrip'), t = state.trip;
+    if (!t) { el.hidden = true; return; }
+    el.hidden = false;
+    if (t.km == null) { el.className = 'pq-trip'; el.innerHTML = '🚚 Vzdálenost se nepodařilo spočítat – cenu dopravy vám potvrdíme.'; return; }
+    el.className = 'pq-trip ' + (t.fee === 0 ? 'ok' : '');
+    el.innerHTML = '🚚 Vzdálenost od vzorkovny: <b>' + String(t.km).replace('.', ',') + ' km</b> – doprava ' +
+      (t.fee == null ? '<b>upřesníme</b>' : t.fee ? '<b>' + kc(t.fee) + '</b>' : '<b>zdarma</b>') + (t.approx ? ' <small>(podle obce)</small>' : '');
+  }
+
+  /* našeptávač adres */
+  (function () {
+    var input = form.ulice, box = $('#pqSuggest'), items = [], active = -1, timer = null, cache = {}, seq = 0;
+    function close() { box.hidden = true; active = -1; }
+    function render() {
+      if (!items.length) { close(); return; }
+      box.innerHTML = items.map(function (it, i) {
+        return '<li role="option" data-i="' + i + '"' + (i === active ? ' class="on"' : '') + '><b>' + esc(it.name) + '</b><span>' + esc(it.location || '') + '</span></li>';
+      }).join('') + '<li class="pq-sg-logo" aria-hidden="true">Adresy: <img src="https://api.mapy.com/img/api/logo-small.svg" alt="Mapy.com" width="60" height="15"></li>';
+      box.hidden = false;
+    }
+    function pick(it) {
+      var reg = it.regionalStructure || [], muni = '';
+      reg.forEach(function (r) { if (!muni && r.type === 'regional.municipality') muni = r.name; });
+      input.value = it.name;
+      if (muni) form.mesto.value = muni;
+      if (it.zip) form.psc.value = it.zip;
+      [input, form.mesto, form.psc].forEach(function (x) { x.classList.remove('bad'); });
+      state.addr = { lon: it.position.lon, lat: it.position.lat, picked: true, key: addrKey() };
+      close();
+      computeTrip().then(updateSummary);
+    }
+    input.setAttribute('autocomplete', 'off');
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = input.value.trim();
+      if (q.length < 3) { items = []; close(); return; }
+      timer = setTimeout(function () {
+        if (cache[q]) { items = cache[q]; active = -1; render(); return; }
+        var my = ++seq;
+        mapy('suggest', { query: q.slice(0, 150), lang: 'cs', limit: 5, type: 'regional.address', locality: 'cz' }).then(function (j) {
+          cache[q] = (j.items || []).filter(function (it) { return it.position; });
+          if (my !== seq) return;
+          items = cache[q]; active = -1; render();
+        }).catch(function () { items = []; close(); });
+      }, 280);
+    });
+    input.addEventListener('keydown', function (e) {
+      if (box.hidden) return;
+      if (e.key === 'ArrowDown') { active = Math.min(items.length - 1, active + 1); render(); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { active = Math.max(0, active - 1); render(); e.preventDefault(); }
+      else if (e.key === 'Enter' && active > -1) { pick(items[active]); e.preventDefault(); }
+      else if (e.key === 'Escape') close();
+    });
+    box.addEventListener('mousedown', function (e) { var li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); pick(items[+li.getAttribute('data-i')]); } });
+    input.addEventListener('blur', function () { setTimeout(close, 150); });
+    // ruční změna adresy → doprava se přepočítá při pokračování
+    ['ulice', 'mesto', 'psc'].forEach(function (n) {
+      form[n].addEventListener('input', function () { if (state.trip && state.trip.forKey !== addrKey()) { state.trip = null; showTrip(); updateSummary(); } });
+    });
+  })();
+
   /* ── události ── */
   form.addEventListener('change', function (e) {
     var t = e.target;
@@ -509,6 +641,7 @@
       markBlock('model', false);
       setTimeout(function () { $('#pqModelOptions').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
     } else if (t.type === 'radio') markBlock(t.name, false);
+    if (t.name === 'patro') { $('#pqLift').hidden = !(+t.value > 0); t.classList.remove('bad'); }
     if (t.name === 'fakturace') {
       $('#pqBillingFields').hidden = t.value === BILLING[0];
       $('#pqCompany').hidden = t.value !== BILLING[2];
@@ -519,7 +652,13 @@
   form.addEventListener('input', function (e) { if (e.target.classList.contains('bad') && e.target.value.trim()) e.target.classList.remove('bad'); });
   form.addEventListener('click', function (e) {
     var t = e.target.closest('[data-next],[data-prev],[data-goto]'); if (!t) return;
-    if (t.hasAttribute('data-next')) { if (validate(state.step)) go(state.step + 1); }
+    if (t.hasAttribute('data-next')) {
+      if (!validate(state.step)) return;
+      if (state.step === 2 && !(state.trip && state.trip.forKey === addrKey())) {
+        var lbl = t.textContent; t.disabled = true; t.textContent = 'Počítám dopravu…';
+        computeTrip().then(function () { t.disabled = false; t.textContent = lbl; updateSummary(); go(3); });
+      } else go(state.step + 1);
+    }
     else if (t.hasAttribute('data-prev')) go(state.step - 1);
     else go(+t.getAttribute('data-goto'));
   });

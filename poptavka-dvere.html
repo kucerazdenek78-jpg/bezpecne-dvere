@@ -145,6 +145,21 @@
 .pq-done-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
 .pq-done-warn{background:var(--orange-pale);color:#7c2d0c;border-radius:8px;padding:.8rem 1rem;font-size:.9rem}
 
+/* adresa + doprava */
+.pq-addr{position:relative}
+.pq-suggest{position:absolute;left:0;right:0;top:calc(100% - .7rem);z-index:30;margin:0;padding:.3rem 0;list-style:none;background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:320px;overflow:auto}
+.pq-suggest li[data-i]{padding:.55rem .9rem;cursor:pointer;display:flex;flex-direction:column;line-height:1.3}
+.pq-suggest li[data-i] b{font-size:.93rem;color:var(--text);font-weight:600}
+.pq-suggest li[data-i] span{font-size:.78rem;color:var(--text-muted)}
+.pq-suggest li.on,.pq-suggest li[data-i]:hover{background:var(--orange-pale)}
+.pq-sg-logo{display:flex;align-items:center;justify-content:flex-end;gap:.4rem;font-size:.7rem;color:var(--gray-400);padding:.35rem .9rem .2rem}
+.pq-trip{margin-top:.2rem;padding:.75rem 1rem;border-radius:var(--radius);background:var(--orange-pale);color:#7c2d0c;font-size:.9rem}
+.pq-trip.ok{background:var(--navy-light);color:var(--navy)}
+.pq-trip small{opacity:.8}
+.pq-f select{display:block;width:100%;margin-top:.35rem;padding:.8rem 1rem;border:1.5px solid var(--gray-200);border-radius:var(--radius);font:inherit;font-size:1rem;font-weight:400;color:var(--text);background:#fff;outline:none}
+.pq-f select:focus{border-color:var(--orange)}
+.pq-f select.bad{border-color:#c0392b;background:#fdf3f2}
+
 @media (max-width:980px){
   .pq-layout{grid-template-columns:1fr}
   .pq-models{grid-template-columns:repeat(2,1fr)}
@@ -317,10 +332,35 @@
 
           <fieldset class="pq-block">
             <legend>Kde budeme dveře montovat?</legend>
-            <label class="pq-f">Ulice a číslo popisné *<input name="ulice" autocomplete="address-line1" required></label>
+            <div class="pq-addr">
+              <label class="pq-f">Ulice a číslo popisné *<input name="ulice" autocomplete="off" required placeholder="Začněte psát, např. Okružní 12, Most" role="combobox" aria-autocomplete="list" aria-controls="pqSuggest"></label>
+              <ul class="pq-suggest" id="pqSuggest" role="listbox" hidden></ul>
+            </div>
             <div class="pq-grid2">
               <label class="pq-f">Město *<input name="mesto" autocomplete="address-level2" required></label>
               <label class="pq-f">PSČ<input name="psc" inputmode="numeric" autocomplete="postal-code" placeholder="434 01"></label>
+            </div>
+            <div class="pq-trip" id="pqTrip" hidden></div>
+          </fieldset>
+
+          <fieldset class="pq-block">
+            <legend>V jakém patře jsou dveře?</legend>
+            <label class="pq-f pq-f-short"><span class="sr">Patro</span>
+              <select name="patro" required>
+                <option value="">– vyberte –</option>
+                <option value="0">Přízemí</option>
+                <option value="1">1. patro</option><option value="2">2. patro</option><option value="3">3. patro</option>
+                <option value="4">4. patro</option><option value="5">5. patro</option><option value="6">6. patro</option>
+                <option value="7">7. patro</option><option value="8">8. patro</option><option value="9">9. patro</option>
+                <option value="10">10. patro</option><option value="11">11. patro</option><option value="12">12. patro</option>
+              </select>
+            </label>
+            <div id="pqLift" hidden>
+              <p class="pq-help" style="margin:0 0 .6rem">Je v domě výtah? Bez výtahu účtujeme vynesení 250 Kč za patro.</p>
+              <div class="pq-chips">
+                <label class="pq-opt pq-chip"><input type="radio" name="vytah" value="Ano">Ano, je výtah</label>
+                <label class="pq-opt pq-chip"><input type="radio" name="vytah" value="Ne">Ne, bez výtahu <em>+ 250 Kč / patro</em></label>
+              </div>
             </div>
           </fieldset>
 
@@ -425,7 +465,7 @@
             <span>Orientační cena</span>
             <strong id="sumPrice">–</strong>
           </div>
-          <p class="pq-sum-note" id="sumNote">Vč. 12 % DPH, montáže na klíč, odvozu starých dveří a dopravy do 40 km.</p>
+          <p class="pq-sum-note" id="sumNote">Vč. 12 % DPH, montáže na klíč a odvozu starých dveří. Doprava do 40 km zdarma.</p>
         </div>
       </aside>
     </div>
@@ -504,7 +544,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="poptavka-pdf/poptavka-pdf.js?v=20261011a"></script>
-<script src="poptavka-dvere.js?v=20261011b"></script>
+<script src="poptavka-pdf/poptavka-pdf.js?v=20261011c"></script>
+<script src="poptavka-dvere.js?v=20261011c"></script>
 </body>
 </html>
