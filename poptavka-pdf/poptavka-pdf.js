@@ -263,7 +263,7 @@
             while (fnt.widthOfTextAtSize(text, sz) > maxW && text.length > 3) text = text.slice(0, -2) + '…';
             page.drawText(text, { x: x, y: H - yTop, size: sz, font: fnt, color: col });
           }
-          var prov = [d.model, d.odstin, d.sire && d.sire !== 'Nevím' ? d.sire + ' cm' : '', (d.otevirani || '').replace(/ \(.*\)/, '').toLowerCase()].filter(Boolean).join(' · ');
+          var prov = [d.model, d.odstin].filter(Boolean).join(' · ');   // jen model a barva
           put(prov, 136, 216.5, 148);                    // Model a provedení
           put(d.obj_cislo, 389, 216.5, 154);             // Číslo objednávky
           put(keysText(d), 103, 267.5, 181);             // Počet klíčů
