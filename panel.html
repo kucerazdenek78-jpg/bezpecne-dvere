@@ -11,16 +11,16 @@
   :root{--bg:#f6faf7;--card:#fff;--line:#dce9e1;--fg:#0f2a1c;--muted:#4f6a5b;--green:#123d27;--accent:#c2410c;--accent-pale:#fff3eb}
   @media (prefers-color-scheme:dark){:root{--bg:#0e1712;--card:#15211a;--line:#25362c;--fg:#e6efe9;--muted:#9fb3a7;--green:#9fd3b2;--accent:#fb923c;--accent-pale:#2a1c12}}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  body{margin:0;background:var(--bg);color:var(--fg);font:19px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
   .wrap{max-width:880px;margin:0 auto;padding:24px 16px 48px}
   header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
   header img{height:40px;border-radius:6px}
-  h1{font-size:1.35rem;margin:0;color:var(--green)}
-  h2{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--fg)}
-  .tile strong{display:block;font-size:1rem;margin-bottom:2px}
-  .tile span{font-size:.85rem;color:var(--muted)}
+  h1{font-size:1.7rem;margin:0;color:var(--green)}
+  h2{font-size:1.3rem;color:var(--green);margin:34px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;text-decoration:none;color:var(--fg)}
+  .tile strong{display:block;font-size:1.15rem;margin-bottom:4px}
+  .tile span{font-size:.95rem;color:var(--muted)}
   a.tile.primary{border-color:var(--accent);background:var(--accent-pale)}
   a.tile.primary strong{color:var(--accent)}
   @media (hover:hover){a.tile:hover{border-color:var(--accent)}}
@@ -28,7 +28,7 @@
   a.tile.old strong{color:#5f6669}
   a.tile.old span{color:#80878b}
   .tile.soon{opacity:.55;pointer-events:none}
-  .note{font-size:.85rem;color:var(--muted);margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+  .note{font-size:.95rem;color:var(--muted);margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
   #gate{max-width:320px;margin:18vh auto;padding:0 16px;text-align:center}
   #gate input{width:100%;font-size:1.4rem;text-align:center;letter-spacing:.3em;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
   #gate button{margin-top:10px;width:100%;padding:10px;font-size:1rem;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
@@ -51,18 +51,20 @@
     <h1>Panel prodejce</h1>
   </header>
 
+  <p style="font-size:1.05rem;margin:0 0 6px">Nový zákazník? Použijte oranžovou dlaždici <strong>Nová objednávka</strong>, nebo níže v části Poptávky <strong>Nová poptávka</strong>. Šedé dlaždice jsou starší záloha.</p>
+
   <h2>Objednávky</h2>
   <div class="grid">
     <a class="tile primary" href="objednavka-dvere.html"><strong>Nová objednávka</strong><span>Nový formulář – výběr obrázky, výpočet ceny, PDF s právním textem, e-mail nám i zákazníkovi</span></a>
     <div class="tile"><strong>Objednávka z poptávky</strong><span>V e-mailu s poptávkou klikněte na „Vytvořit objednávku“ – údaje se načtou a jdou upravit</span></div>
-    <a class="tile old" href="https://form.jotform.com/262796120303048" target="_blank" rel="noopener"><strong>Objednávka v Jotformu</strong><span>Původní formulář – záloha, dokud neběží systém na NAS</span></a>
-    <a class="tile old" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Kartotéka objednávek (Jotform)</strong><span>Jen objednávky z Jotformu – nové objednávky jsou zatím v e-mailu obchod@</span></a>
+    <a class="tile old" href="https://form.jotform.com/262796120303048" target="_blank" rel="noopener"><strong>Objednávka v Jotformu</strong><span>STARŠÍ – běžně nepoužívat. Původní formulář – záloha, dokud neběží systém na NAS</span></a>
+    <a class="tile old" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Kartotéka objednávek (Jotform)</strong><span>STARŠÍ – běžně nepoužívat. Jen objednávky z Jotformu – nové objednávky jsou zatím v e-mailu obchod@</span></a>
     <a class="tile" href="https://eu.jotform.com/tables/262796120303048" target="_blank" rel="noopener"><strong>Uzavřené objednávky</strong><span>V kartotéce filtr „Stav“ = Namontováno / Zaplaceno</span></a>
   </div>
 
   <h2>Poptávky</h2>
   <div class="grid">
-    <a class="tile old" href="https://eu.jotform.com/tables/253084834051050" target="_blank" rel="noopener"><strong>Starší poptávky (Jotform)</strong><span>Poptávky do 11. 10. 2026 – nové chodí e-mailem s PDF</span></a>
+    <a class="tile old" href="https://eu.jotform.com/tables/253084834051050" target="_blank" rel="noopener"><strong>Starší poptávky (Jotform)</strong><span>STARŠÍ – běžně nepoužívat. Poptávky do 11. 10. 2026 – nové chodí e-mailem s PDF</span></a>
     <a class="tile" href="poptavka-dvere.html"><strong>Nová poptávka</strong><span>Zadat poptávku za zákazníka – nový formulář s výpočtem ceny</span></a>
     <a class="tile" href="https://eu.jotform.com/tables/253372752254357" target="_blank" rel="noopener"><strong>Poptávky servisu</strong><span>Servis z webu</span></a>
   </div>
