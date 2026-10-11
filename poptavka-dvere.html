@@ -142,6 +142,7 @@
 .pq-done-ico{width:64px;height:64px;margin:0 auto 1rem;border-radius:50%;background:#15803d;color:#fff;font-size:2rem;display:grid;place-items:center}
 .pq-done p{margin:.6rem 0}
 .pq-done .btn{margin-top:1rem}
+.pq-done-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
 .pq-done-warn{background:var(--orange-pale);color:#7c2d0c;border-radius:8px;padding:.8rem 1rem;font-size:.9rem}
 
 @media (max-width:980px){
@@ -436,7 +437,7 @@
       <p>Číslo poptávky: <strong id="doneRef"></strong></p>
       <p>Ozveme se vám co nejdříve, většinou ještě týž pracovní den. Spěcháte? Zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.</p>
       <p id="doneWarn" class="pq-done-warn" hidden></p>
-      <a href="index.html" class="btn btn-outline">Zpět na úvod</a>
+      <div class="pq-done-btns"><a id="donePdf" class="btn btn-primary" hidden>Stáhnout shrnutí (PDF)</a><a href="index.html" class="btn btn-outline">Zpět na úvod</a></div>
     </div>
   </div>
 </section>
@@ -503,6 +504,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="poptavka-dvere.js?v=20261011a"></script>
+<script src="poptavka-pdf/poptavka-pdf.js?v=20261011a"></script>
+<script src="poptavka-dvere.js?v=20261011b"></script>
 </body>
 </html>

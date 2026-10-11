@@ -1,6 +1,6 @@
 /* Poptávka dveří – vlastní formulář (náhrada Jotform 253084834051050)
    Ceny a volby: dvere-do-bytu.html (ceny) + Jotform poptávka (volby), stav 11. 10. 2026.
-   Odeslání: FormSubmit → kucerazd@kksystem.cz + kopie chci@bezpecne-dvere.cz.
+   Odeslání: FormSubmit (klasicky přes skrytý iframe kvůli přílohám: PDF + fotky) → kucerazd@kksystem.cz + kopie chci@bezpecne-dvere.cz.
    Pole „data_json“ nese strojově čitelná data pro pozdější import do systému na NAS. */
 (function () {
   'use strict';
@@ -340,7 +340,7 @@
     state.step = step;
     $$('.pq-step').forEach(function (s) { s.hidden = +s.getAttribute('data-step') !== step; });
     $$('[data-step-ind]').forEach(function (li) { var n = +li.getAttribute('data-step-ind'); li.classList.toggle('on', n === step); li.classList.toggle('done', n < step); });
-    if (step === 4) buildReview();
+    if (step === 4) { buildReview(); if (window.PoptavkaPDF) window.PoptavkaPDF.prepare(); }
     var top = $('.pq-steps').getBoundingClientRect().top + window.scrollY - 90;
     window.scrollTo({ top: top, behavior: 'smooth' });
   }
@@ -417,25 +417,58 @@
     var t = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
     return 'W' + t.getFullYear() + p(t.getMonth() + 1) + p(t.getDate()) + '-' + p(t.getHours()) + p(t.getMinutes()) + '-' + Math.random().toString(36).slice(2, 5).toUpperCase();
   }
-  function payload(d, withPhotos) {
-    var fd = new FormData();
-    fd.append('_subject', 'Poptávka dveří ' + d.cislo + ' – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto);
-    fd.append('_template', 'table');
-    fd.append('_captcha', 'false');
-    fd.append('_cc', CC);
-    if (d.email) fd.append('_replyto', d.email);
-    fd.append('_honey', form._honey.value);
-    reviewRows(d).forEach(function (r) { fd.append(r[0], r[1]); });
-    fd.append('Číslo poptávky', d.cislo);
-    fd.append('Odesláno', new Date().toLocaleString('cs-CZ'));
-    fd.append('data_json', JSON.stringify(d));
-    if (withPhotos) Object.keys(state.photos).forEach(function (k) { fd.append(k, state.photos[k], k + '.jpg'); });
-    return fd;
+  function fields(d) {
+    var f = [
+      ['_subject', 'Poptávka dveří ' + d.cislo + ' – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto],
+      ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC], ['_honey', form._honey.value]
+    ];
+    if (d.email) f.push(['_replyto', d.email]);
+    f.push(['Číslo poptávky', d.cislo]);
+    reviewRows(d).forEach(function (r) { f.push([r[0], r[1]]); });
+    f.push(['Odesláno', new Date(d.odeslano).toLocaleString('cs-CZ')], ['data_json', JSON.stringify(d)]);
+    return f;
   }
-  function send(fd) {
+  /* AJAX – spolehlivé, ale FormSubmit přílohy zahodí → jen záloha bez souborů */
+  function sendAjax(d) {
+    var fd = new FormData();
+    fields(d).forEach(function (x) { fd.append(x[0], x[1]); });
     return fetch('https://formsubmit.co/ajax/' + TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
       .then(function (r) { return r.json(); })
       .then(function (j) { if (!(j && (j.success === true || j.success === 'true'))) throw new Error('fail'); });
+  }
+  /* klasické odeslání (multipart) do skrytého iframe – tak FormSubmit přílohy doručí;
+     úspěch = iframe skončí na naší stránce poptavka-odeslano.html (_next) */
+  var canFiles = (function () { try { return !!new DataTransfer().items; } catch (e) { return false; } })();
+  function sendClassic(d, files) {
+    return new Promise(function (ok, ko) {
+      var name = 'pqSend' + Date.now(), done = false;
+      var ifr = document.createElement('iframe'); ifr.name = name; ifr.hidden = true; ifr.setAttribute('aria-hidden', 'true');
+      var f = document.createElement('form');
+      f.action = 'https://formsubmit.co/' + TO; f.method = 'POST'; f.enctype = 'multipart/form-data'; f.target = name; f.hidden = true;
+      var next = new URL('poptavka-odeslano.html?ref=' + encodeURIComponent(d.cislo), location.href).href;
+      fields(d).concat([['_next', next]]).forEach(function (x) {
+        var i = document.createElement('input'); i.type = 'hidden'; i.name = x[0]; i.value = x[1]; f.appendChild(i);
+      });
+      files.forEach(function (fl) {
+        var i = document.createElement('input'); i.type = 'file'; i.name = fl.name;
+        var dt = new DataTransfer(); dt.items.add(new File([fl.blob], fl.file, { type: fl.blob.type || 'application/octet-stream' })); i.files = dt.files;
+        f.appendChild(i);
+      });
+      var timer = setTimeout(function () { if (!done) { done = true; cleanup(); ko(new Error('timeout')); } }, 35000);
+      function cleanup() { setTimeout(function () { ifr.remove(); f.remove(); }, 1000); }
+      ifr.addEventListener('load', function () {
+        var href = ''; try { href = ifr.contentWindow.location.href; } catch (e) { return; }
+        if (!done && href.indexOf('poptavka-odeslano') > -1) { done = true; clearTimeout(timer); cleanup(); ok(); }
+      });
+      document.body.appendChild(ifr); document.body.appendChild(f);
+      f.submit();
+    });
+  }
+  function pdfExtra(d) {
+    var m = MODELS[state.model], sh = null;
+    m.shades.forEach(function (s) { if (s[0] === d.odstin) sh = s[1]; });
+    return { modelImg: m.img, shadeImg: sh, photos: state.photos,
+      priceNote: m.masonry ? 'Případné zednické práce podle stavu zdi nejsou v ceně.' : 'Bez příplatku za cihlu a zapuštěnou zárubeň.' };
   }
 
   form.addEventListener('submit', function (e) {
@@ -443,26 +476,29 @@
     var msg = $('#pqMsg'); msg.hidden = true;
     if (!$('#pqConsent').checked) { msg.innerHTML = 'Pro odeslání prosím potvrďte souhlas se zpracováním osobních údajů.'; msg.hidden = false; return; }
     if (form._honey.value) return;
-    var btn = $('#pqSubmit'); btn.disabled = true; btn.textContent = 'Odesílám…';
+    var btn = $('#pqSubmit'); btn.disabled = true; btn.textContent = 'Připravuji…';
     state.ref = state.ref || makeRef();
-    var d = collect(), hasPhotos = d.fotky.length > 0, photoLost = false;
-    send(payload(d, true))
-      .catch(function () {
-        if (!hasPhotos) throw new Error('fail');
-        photoLost = true; d.fotky = []; d.poznamka_system = 'Fotky se nepodařilo přiložit';
-        return send(payload(d, false));
-      })
-      .then(function () {
-        $('#doneRef').textContent = d.cislo;
-        if (photoLost) { var w = $('#doneWarn'); w.innerHTML = 'Poptávka dorazila, ale fotky se nepodařilo přiložit. Pošlete nám je prosím přes <a href="https://wa.me/420725559235">WhatsApp</a> nebo na <a href="mailto:' + CC + '">' + CC + '</a> s číslem poptávky.'; w.hidden = false; }
-        $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
-        window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
-      })
-      .catch(function () {
-        msg.innerHTML = 'Odeslání se nepodařilo. Zkuste to prosím znovu, nebo nám zavolejte na <a href="tel:+420725559235">+420 725 559 235</a> či napište na <a href="mailto:' + CC + '">' + CC + '</a>.';
-        msg.hidden = false;
-        btn.disabled = false; btn.textContent = 'Odeslat poptávku';
-      });
+    var d = collect(), pdf = null, filesLost = false;
+    var pdfP = window.PoptavkaPDF ? window.PoptavkaPDF.build(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
+    pdfP.then(function (blob) {
+      pdf = blob; btn.textContent = 'Odesílám…';
+      var files = [];
+      if (pdf) files.push({ name: 'poptavka_pdf', file: 'Poptavka-' + d.cislo + '.pdf', blob: pdf });
+      Object.keys(state.photos).forEach(function (k) { files.push({ name: k, file: k + '-' + d.cislo + '.jpg', blob: state.photos[k] }); });
+      d.pdf = !!pdf;
+      if (!canFiles) { filesLost = files.length > 0; return sendAjax(d); }
+      return sendClassic(d, files).catch(function () { filesLost = files.length > 0; d.poznamka_system = 'Přílohy se nepodařilo odeslat'; return sendAjax(d); });
+    }).then(function () {
+      $('#doneRef').textContent = d.cislo;
+      if (filesLost && d.fotky.length) { var w = $('#doneWarn'); w.innerHTML = 'Poptávka dorazila, ale fotky se nepodařilo přiložit. Pošlete nám je prosím přes <a href="https://wa.me/420725559235">WhatsApp</a> nebo na <a href="mailto:' + CC + '">' + CC + '</a> s číslem poptávky.'; w.hidden = false; }
+      if (pdf) { var a = $('#donePdf'); a.href = URL.createObjectURL(pdf); a.download = 'Poptavka-' + d.cislo + '.pdf'; a.hidden = false; }
+      $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
+      window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
+    }).catch(function () {
+      msg.innerHTML = 'Odeslání se nepodařilo. Zkuste to prosím znovu, nebo nám zavolejte na <a href="tel:+420725559235">+420 725 559 235</a> či napište na <a href="mailto:' + CC + '">' + CC + '</a>.';
+      msg.hidden = false;
+      btn.disabled = false; btn.textContent = 'Odeslat poptávku';
+    });
   });
 
   /* ── události ── */

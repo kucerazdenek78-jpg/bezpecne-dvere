@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Poptávka odeslána | Bezpečné dveře</title>
+  <link rel="stylesheet" href="style.css?v=20261007a">
+  <style>
+    body{background:var(--bg);display:grid;place-items:center;min-height:100vh;padding:1.5rem}
+    .box{max-width:560px;text-align:center;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2.5rem 1.6rem;box-shadow:var(--shadow)}
+    .ico{width:64px;height:64px;margin:0 auto 1rem;border-radius:50%;background:#15803d;color:#fff;font-size:2rem;display:grid;place-items:center}
+    .box p{margin:.6rem 0}.box .btn{margin-top:1rem}
+  </style>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#123d27">
+</head>
+<body>
+<!-- Cílová stránka FormSubmit (_next) pro poptavka-dvere.html. Formulář ji načítá ve skrytém iframe jako potvrzení odeslání. -->
+<div class="box">
+  <div class="ico" aria-hidden="true">✓</div>
+  <h1 style="font-size:1.6rem">Děkujeme, poptávka je odeslaná</h1>
+  <p id="ref"></p>
+  <p>Ozveme se vám co nejdříve. Spěcháte? Zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.</p>
+  <a href="index.html" class="btn btn-outline">Zpět na úvod</a>
+</div>
+<script>var m=location.search.match(/ref=([^&]+)/);if(m)document.getElementById('ref').textContent='Číslo poptávky: '+decodeURIComponent(m[1]);</script>
+</body>
+</html>
