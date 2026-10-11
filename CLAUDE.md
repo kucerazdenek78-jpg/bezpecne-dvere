@@ -46,6 +46,9 @@ ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
   Změněné ceny/příplatky/zálohy ručně přenést do `MODELS` a `MODELS.*.order` v `poptavka-dvere.js`.
 - **Předávací list** `prodejce/predavaci-list.pdf`: web ho vyplňuje přímo z tohoto souboru. Po změně spustit
   `python3 tools/aktualizace_predloh.py --check`; když hlásí posunutá políčka, upravit souřadnice ve funkci `buildHandover`.
+- **Voucher Doporuč a získej** `prodejce/voucher-doporuc-a-ziskej.pdf`: objednávka do něj dopíše jméno zákazníka („Doporučuje“)
+  a přiloží ho zákazníkovi i prodejcům, do `VOUCHER_PLATI_DO` (2026-12-31) v `poptavka-pdf.js`. Při změně akce/voucheru upravit
+  datum a spustit `--check` (hlídá polohu políček).
 - **Ceny a provedení na webu** (`dvere-do-bytu.html`) → stejné změny do `MODELS` v `poptavka-dvere.js` (ceny, odstíny, příplatky).
 - Opačně: změna textů/cen ve formuláři → upravit i papírové předlohy v `prodejce/` (nebo na rozdíl upozornit Zdenka).
 - Po každé změně JS zvýšit `?v=` u `poptavka-dvere.js` / `poptavka-pdf.js` v obou HTML, otestovat (Playwright, mock Mapy.com
