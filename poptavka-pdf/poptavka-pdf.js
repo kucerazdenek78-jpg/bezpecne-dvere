@@ -237,15 +237,19 @@
     return plReady;
   }
   function keysText(d) {
-    var k = d.model_kod;
-    if (k === 'premium60') return '5 + 2 instalační';
+    var k = d.model_kod, extra = 0, base = '';
+    (d.polozky || []).forEach(function (p) { if (p.co === 'Klíče navíc') extra = parseInt(p.volba, 10) || 0; });
+    var tail = extra ? ' (vč. ' + extra + ' navíc)' : '';
+    if (k === 'premium60') return extra ? (5 + extra) + ' + 2 instalační' + tail : '5 + 2 instalační';
     if (k === 'extreme54') {
-      var n = /vrtulk/i.test(JSON.stringify(d.polozky || [])) ? 5 : 3, extra = 0;
-      (d.polozky || []).forEach(function (p) { if (p.co === 'Klíče navíc') extra = parseInt(p.volba, 10) || 0; });
-      return (n + extra) + (extra ? ' (vč. ' + extra + ' navíc)' : '');
+      var n = /vrtulk/i.test(JSON.stringify(d.polozky || [])) ? 5 : 3;
+      return (n + extra) + tail;
     }
-    if (k === 'magnum56') return /dole i nahoře/.test(d.vlozky || '') ? '7 (sjednocené)' : /vrtulkou nahoře/.test(d.vlozky || '') ? '5 (sjednocené)' : '2 × 5';
-    if (k === 'securido65') return '6 + 2 montážní';
+    if (k === 'magnum56') {
+      var m = /dole i nahoře/.test(d.vlozky || '') ? '7 (sjednocené)' : /vrtulkou nahoře/.test(d.vlozky || '') ? '5 (sjednocené)' : '2 × 5';
+      return extra ? m + ' + ' + extra + ' navíc' : m;
+    }
+    if (k === 'securido65') return extra ? (6 + extra) + ' + 2 montážní' + tail : '6 + 2 montážní';
     return '';
   }
   function buildHandover(d) {

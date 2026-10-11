@@ -148,15 +148,18 @@
     }
   };
   /* údaje jen pro objednávku (podle papírových vzorů prodejce/objednavka-*.pdf, revize 10/2026) */
-  MODELS.premium60.order = { frame: ['11,5 cm'], zaloha: 10000, zalohaLabel: 'Rezervace', extras: [] };
+  MODELS.premium60.order = { frame: ['11,5 cm'], zaloha: 10000, zalohaLabel: 'Rezervace', extras: [
+    { id: 'klice', n: 'Klíče navíc', p: 400, type: 'qty' }] };
   MODELS.extreme54.order = { frame: ['15 cm', '10 cm'], zaloha: 'sklad', zalohaLabel: 'Záloha', extras: [
     { id: 'vrtulka', n: 'Vložka s vrtulkou a 5 klíči', p: 1000, type: 'check' },
-    { id: 'klice', n: 'Klíče navíc', p: 300, type: 'qty' }] };
+    { id: 'klice', n: 'Klíče navíc', p: 400, type: 'qty' }] };
   MODELS.magnum56.order = { frame: ['15 cm', '9 cm'], zaloha: null, zalohaLabel: 'Záloha', openOut: true, extras: [
+    { id: 'klice', n: 'Klíče navíc', p: 400, type: 'qty' },
     { id: 'omezovac', n: 'Omezovač otevírání (jen pro 15 cm zárubeň)', p: 800, type: 'check' },
     { id: 'venecek', n: 'Držák věnečku', p: 299, type: 'check' },
     { id: 'zednicke', n: 'Zednické práce', type: 'amount' }] };
   MODELS.securido65.order = { frame: ['10 cm', '15 cm'], zaloha: 10000, zalohaLabel: 'Rezervace', extras: [
+    { id: 'klice', n: 'Klíče navíc', p: 400, type: 'qty' },
     { id: 'zednicke', n: 'Zednické práce', type: 'choice', opts: [['Panel 11 cm pouzdro', 0], ['Zapuštěné pouzdro', 2000], ['Cihla do 16 cm', 2000], ['Cihla 17 cm a víc', 3000]] }] };
 
   var ORDER = ['premium60', 'extreme54', 'magnum56', 'securido65'];
