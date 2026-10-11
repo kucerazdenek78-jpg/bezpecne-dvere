@@ -88,7 +88,8 @@
         ['Antracit', C + 'magnum56/magnum56_antracit.png.tn.jpg', 0, 1000],
         ['Tmavý ořech', C + 'magnum56/magnum56_tmavy_orech.png.tn.jpg', 0],
         ['Venge', C + 'magnum56/magnum56_venge.png.tn.jpg', 0],
-        ['Šedá', C + 'magnum56/magnum56_seda.png.tn.jpg', 0]
+        ['Šedá', C + 'magnum56/magnum56_seda.png.tn.jpg', 0],
+        ['Dub přírodní', C + 'magnum56/magnum56_dub_prirodni.png.tn.jpg', 0]
       ],
       shadeHint: 'všechny odstíny na objednávku',
       hwLegend: 'Kování',
