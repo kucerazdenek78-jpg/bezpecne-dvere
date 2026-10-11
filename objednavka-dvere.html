@@ -443,6 +443,31 @@
           </fieldset>
 
           <fieldset class="pq-block">
+            <legend>Fotky z poptávky</legend>
+            <p class="pq-help" style="margin:0 0 .8rem">Načtou se samy z odkazu v e-mailu, pokud je zákazník poslal. Můžete je také nahrát nebo vyměnit (např. uložené z e-mailu). V PDF budou malé, na 2. straně.</p>
+            <div class="pq-photos">
+              <label class="pq-photo" data-photo="fotka_dveri">
+                <input type="file" accept="image/*">
+                <span class="pq-photo-ico" aria-hidden="true">
+                  <svg viewBox="0 0 48 48"><rect x="12" y="5" width="24" height="38" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="30" cy="25" r="2" fill="currentColor"/></svg>
+                </span>
+                <strong>Dveře zvenku</strong>
+                <small>Celé dveře včetně zárubně a zdi</small>
+                <img alt="" hidden>
+              </label>
+              <label class="pq-photo" data-photo="fotka_zarubne">
+                <input type="file" accept="image/*">
+                <span class="pq-photo-ico" aria-hidden="true">
+                  <svg viewBox="0 0 48 48"><path d="M10 44V6h28v38" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M16 44V12h16v32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
+                </span>
+                <strong>Zárubeň</strong>
+                <small>Zárubeň se zdí, ideálně s přiloženým metrem</small>
+                <img alt="" hidden>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="pq-block">
             <legend>Poznámky</legend>
             <label class="pq-f">Poznámka pro zákazníka (tiskne se)<textarea name="poznamka" rows="3"></textarea></label>
             <label class="pq-f">Interní poznámka (netiskne se, zákazník ji neuvidí)<textarea name="interni" rows="3"></textarea></label>
@@ -564,7 +589,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="poptavka-pdf/poptavka-pdf.js?v=20261011d"></script>
-<script src="poptavka-dvere.js?v=20261011d"></script>
+<script src="poptavka-pdf/poptavka-pdf.js?v=20261011e"></script>
+<script src="poptavka-dvere.js?v=20261011e"></script>
 </body>
 </html>

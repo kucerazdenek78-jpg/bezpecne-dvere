@@ -56,7 +56,7 @@
     var photos = x.photos || {};
     return prepare().then(function (fonts) {
       return Promise.all([toJpeg('logo.jpg', 600), toJpeg(x.modelImg, 700), toJpeg(shade, 300),
-        toJpeg(photos.fotka_dveri, 1400), toJpeg(photos.fotka_zarubne, 1400)]).then(function (im) {
+        toJpeg(photos.fotka_dveri, x.order ? 700 : 1400), toJpeg(photos.fotka_zarubne, x.order ? 700 : 1400)]).then(function (im) {
         var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
         doc.addFileToVFS('Inter-Regular.ttf', fonts[0]); doc.addFont('Inter-Regular.ttf', 'Inter', 'normal');
         doc.addFileToVFS('Inter-Bold.ttf', fonts[1]); doc.addFont('Inter-Bold.ttf', 'Inter', 'bold');
@@ -152,12 +152,28 @@
           y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)], ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
             ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']], M, 34, cw - 34) + 1;
           if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, M, y); y += pl.length * 4.4 + 3; }
+          /* fotky z poptávky (malé) */
+          var fit = x.fit || { photoH: 52, legal: 7.4 };
+          var phs = [[im[3], 'Stávající dveře zvenku'], [im[4], 'Stávající zárubeň']].filter(function (p) { return p[0]; });
+          if (phs.length && fit.photoH) {
+            section('Fotky z poptávky (původní stav)');
+            ensure(fit.photoH + 6);
+            var bw = (cw - 6) / 2, bh = fit.photoH;
+            phs.forEach(function (p, i) {
+              var bx = M + i * (bw + 6);
+              var r3 = Math.min(bw / p[0].w, bh / p[0].h), pw3 = p[0].w * r3, ph3 = p[0].h * r3;
+              doc.addImage(p[0].data, 'JPEG', bx, y, pw3, ph3);
+              font('normal', 7.5, MUTED); doc.text(p[1], bx, y + bh + 3.6);
+            });
+            y += bh + 9;
+          }
           /* právní ujednání */
           section('Smluvní ujednání');
-          font('normal', 7.4, [40, 60, 50]);
+          font('normal', fit.legal, [40, 60, 50]);
           LEGAL.forEach(function (par) {
             var ll = doc.splitTextToSize(par, cw);
-            ll.forEach(function (line) { ensure(3.3); doc.text(line, M, y); y += 3.15; });
+            var lh2 = fit.legal * 0.425;
+            ll.forEach(function (line) { ensure(lh2 + 0.2); doc.text(line, M, y); y += lh2; });
             y += 1.6;
           });
           /* podpisy */
@@ -169,7 +185,7 @@
           font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
           doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235, +420 471 008 994'], W - M - 75, y);
           footer();
-          return doc.output('blob');
+          return { blob: doc.output('blob'), pages: doc.getNumberOfPages() };
         }
 
         /* doplňující */
@@ -197,6 +213,15 @@
   }
   function fmt(n) { return Number(n || 0).toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; }
 
-  function buildOrder(d, x) { x = x || {}; x.order = true; x.photos = {}; return build(d, x); }
+  /* objednávka: vždy max. 2 strany – když se nevejde, zmenší fotky a písmo smluvních ujednání, nakonec fotky vynechá */
+  function buildOrder(d, x) {
+    x = x || {}; x.order = true;
+    var tries = [{ photoH: 52, legal: 7.4 }, { photoH: 38, legal: 7.0 }, { photoH: 28, legal: 6.6 }, { photoH: 0, legal: 6.6 }];
+    function attempt(i) {
+      x.fit = tries[i];
+      return build(d, x).then(function (res) { return res.pages <= 2 || i === tries.length - 1 ? res.blob : attempt(i + 1); });
+    }
+    return attempt(0);
+  }
   window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder };
 })();

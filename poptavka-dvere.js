@@ -174,7 +174,7 @@
   var OBJ = MODE === 'objednavka';
   function fv(n) { var el = form.elements[n]; return el && el.value != null ? String(el.value).trim() : ''; }
   function num(n) { var x = parseInt(fv(n).replace(/\s/g, ''), 10); return isNaN(x) ? 0 : x; }
-  var state = { model: null, step: 1, photos: {}, addr: null, trip: null };
+  var state = { model: null, step: 1, photos: {}, thumbs: {}, addr: null, trip: null };
 
   /* ── kreslené obrázky (SVG) ── */
   function svgHardware(shape, col) {
@@ -348,9 +348,21 @@
     if (d.souradnice) state.addr = { lon: d.souradnice[0], lat: d.souradnice[1], picked: true, key: addrKey() };
     if (d.doprava_km != null) { state.trip = { km: d.doprava_km, fee: d.doprava_cena == null ? null : d.doprava_cena, forKey: addrKey() }; showTrip(); }
     state.fromRef = d.cislo || '';
+    var fm = location.hash.match(/&f=([A-Za-z0-9_.~-]+)/), nPh = 0;
+    if (fm) fm[1].split('~').forEach(function (part) {
+      var i = part.indexOf('.'), name = part.slice(0, i), data = part.slice(i + 1);
+      var box = $('.pq-photo[data-photo="' + name + '"]'); if (!box || !data) return;
+      try {
+        var b = data.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+        var bin = atob(b), u = new Uint8Array(bin.length); for (var j = 0; j < bin.length; j++) u[j] = bin.charCodeAt(j);
+        var blob = new Blob([u], { type: 'image/jpeg' }); state.photos[name] = blob; showPhoto(box, blob); nPh++;
+      } catch (e) {}
+    });
+    state.photosFromLink = nPh;
     setZaloha();
     var info = $('#poLoaded'); info.hidden = false;
     info.innerHTML = '✓ Načteno z poptávky <b>' + esc(d.cislo || '') + '</b> – ' + esc((d.jmeno || '') + ' ' + (d.prijmeni || '')) + '. Vše můžete upravit.' +
+      (nPh ? ' Načteny i fotky z poptávky (' + nPh + ').' : '') +
       (state.missing.length ? '<br><small>Nenašel jsem volbu (mezitím se mohla změnit nabídka): ' + esc(state.missing.join('; ')) + ' – vyberte prosím znovu.</small>' : '');
     return true;
   }
@@ -546,13 +558,28 @@
       img.src = url;
     });
   }
+  /* malý náhled (max 200 px) do odkazu „Vytvořit objednávku“ */
+  function thumb(blob) {
+    return new Promise(function (resolve) {
+      var img = new Image(), url = URL.createObjectURL(blob);
+      img.onload = function () {
+        var sc = Math.min(1, 200 / Math.max(img.width, img.height));
+        var cv = document.createElement('canvas'); cv.width = Math.round(img.width * sc); cv.height = Math.round(img.height * sc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
+        try { resolve(cv.toDataURL('image/jpeg', 0.55).split(',')[1].replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')); } catch (e) { resolve(''); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(''); };
+      img.src = url;
+    });
+  }
+  function showPhoto(box, blob) { var pv = $('img', box); pv.src = URL.createObjectURL(blob); pv.hidden = false; box.classList.add('has'); }
   $$('.pq-photo').forEach(function (box) {
     var input = $('input', box), name = box.getAttribute('data-photo');
     input.addEventListener('change', function () {
       var f = input.files && input.files[0]; if (!f) return;
       shrink(f).then(function (b) {
-        state.photos[name] = b;
-        var pv = $('img', box); pv.src = URL.createObjectURL(b); pv.hidden = false; box.classList.add('has');
+        state.photos[name] = b; showPhoto(box, b);
+        if (!OBJ) thumb(b).then(function (t) { if (t) state.thumbs[name] = t; });
       });
     });
   });
@@ -581,7 +608,11 @@
   function unb64u(t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; var bin = atob(t), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new TextDecoder().decode(u); }
   function orderLink(d) {
     var o = {}; LINK_KEYS.forEach(function (k) { if (d[k] !== '' && d[k] != null && d[k] !== false) o[k] = d[k]; });
-    return new URL('objednavka-dvere.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
+    var url = new URL('objednavka-dvere.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
+    // náhledy fotek až za daty – kdyby e-mail dlouhý odkaz zkrátil, data poptávky zůstanou celá
+    var th = Object.keys(state.thumbs).map(function (k) { return k + '.' + state.thumbs[k]; });
+    if (th.length && (url.length + th.join('~').length) < 24000) url += '&f=' + th.join('~');
+    return url;
   }
   /* AJAX – spolehlivé, ale FormSubmit přílohy zahodí → jen záloha bez souborů */
   function sendAjax(d) {
