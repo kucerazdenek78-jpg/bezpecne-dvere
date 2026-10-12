@@ -890,5 +890,73 @@
   syncVideo();
 </script>
 <script src="cookies.js?v=1" defer></script>
+<!-- VITEJ-ANTRE:start — uvítací okno k novému webu. Samo se přestane zobrazovat 26. 10. 2026 (14 dní od spuštění domény bezpecne-dvere.cz 12. 10. 2026). Po tomto datu lze celý blok od "VITEJ-ANTRE:start" po "VITEJ-ANTRE:end" smazat. -->
+<style>
+  .vitej { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(8,32,20,.62); opacity:0; animation:vitejFade .5s ease forwards; }
+  .vitej[hidden] { display:none; }
+  .vitej-card { position:relative; width:min(520px,100%); max-height:calc(100vh - 32px); overflow:auto; background:#fff; border-radius:var(--radius-lg,16px); box-shadow:0 20px 60px rgba(0,0,0,.35); padding:2.2rem 1.8rem 1.8rem; text-align:center; transform:translateY(24px) scale(.97); animation:vitejUp .6s .1s cubic-bezier(.2,.8,.2,1) forwards; border-top:6px solid var(--navy-mid,#1f6b43); }
+  .vitej-ico { width:64px; height:64px; margin:0 auto 1rem; border-radius:50%; background:var(--navy-light,#e8f5ee); display:flex; align-items:center; justify-content:center; font-size:2rem; animation:vitejPulse 2.4s ease-in-out 1s 2; }
+  .vitej h2 { font-size:clamp(1.5rem,5vw,2rem); line-height:1.15; font-weight:800; color:var(--navy,#123d27); margin:0 0 .7rem; }
+  .vitej p { font-size:1.05rem; line-height:1.55; color:var(--text,#0f2a1c); margin:0 0 1.4rem; }
+  .vitej-btns { display:flex; flex-wrap:wrap; gap:.7rem; justify-content:center; }
+  .vitej-x { position:absolute; top:8px; right:8px; width:44px; height:44px; border:0; background:transparent; font-size:1.7rem; line-height:1; color:var(--gray-600,#3f5a4b); cursor:pointer; border-radius:50%; }
+  .vitej-x:hover { background:var(--gray-100,#eef6f1); }
+  .vitej-conf { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .vitej-conf i { position:absolute; top:-14px; width:9px; height:14px; border-radius:2px; opacity:.9; animation:vitejFall linear forwards; }
+  @keyframes vitejFade { to { opacity:1; } }
+  @keyframes vitejUp { to { transform:none; } }
+  @keyframes vitejPulse { 50% { transform:scale(1.12); box-shadow:0 0 0 14px rgba(31,107,67,.12); } }
+  @keyframes vitejFall { to { transform:translateY(105vh) rotate(540deg); opacity:.7; } }
+  @media (prefers-reduced-motion: reduce) {
+    .vitej, .vitej-card, .vitej-ico { animation:none !important; opacity:1; transform:none; }
+    .vitej-conf { display:none; }
+  }
+</style>
+<div class="vitej" id="vitej" role="dialog" aria-modal="true" aria-labelledby="vitej-t" hidden>
+  <div class="vitej-conf" id="vitej-conf" aria-hidden="true"></div>
+  <div class="vitej-card">
+    <button type="button" class="vitej-x" id="vitej-x" aria-label="Zavřít">&times;</button>
+    <div class="vitej-ico" aria-hidden="true">🚪</div>
+    <h2 id="vitej-t">Vítejte na našem novém webu</h2>
+    <p>Připravili jsme ho, aby se vám dveře vybíraly snadněji. Vyberete si model a barvu, hned uvidíte cenu s montáží na klíč a můžete nezávazně poptat.</p>
+    <div class="vitej-btns">
+      <a href="poptavka-dvere.html" class="btn btn-primary" id="vitej-go">Sestavit dveře</a>
+      <button type="button" class="btn btn-outline" id="vitej-ok">Prohlédnout web</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var KEY = 'bd-vitej-2026', END = new Date('2026-10-26T00:00:00+01:00');
+  var box = document.getElementById('vitej');
+  if (!box || new Date() >= END) return;
+  try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+  function close() {
+    box.hidden = true;
+    document.removeEventListener('keydown', onKey);
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+  }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  box.hidden = false;
+  document.getElementById('vitej-x').onclick = close;
+  document.getElementById('vitej-ok').onclick = close;
+  document.getElementById('vitej-go').addEventListener('click', function () { try { localStorage.setItem(KEY, '1'); } catch (e) {} });
+  box.addEventListener('click', function (e) { if (e.target === box) close(); });
+  document.addEventListener('keydown', onKey);
+  document.getElementById('vitej-ok').focus();
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var c = document.getElementById('vitej-conf'), col = ['#1f6b43', '#15803d', '#c2410c', '#e8f5ee', '#123d27'];
+    for (var i = 0; i < 34; i++) {
+      var s = document.createElement('i');
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.background = col[i % col.length];
+      s.style.animationDuration = (4 + Math.random() * 3.5) + 's';
+      s.style.animationDelay = (Math.random() * 1.6) + 's';
+      c.appendChild(s);
+    }
+  }
+})();
+</script>
+<!-- VITEJ-ANTRE:end -->
 </body>
 </html>

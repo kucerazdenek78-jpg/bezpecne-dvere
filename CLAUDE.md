@@ -57,3 +57,7 @@ ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
 ## Ceník pro prodejce (pokaždé, když se změní ceny/akce vchodových dveří)
 `cenik-prodejce.html` (+ PDF `prodejce/cenik-bezpecnostni-dvere.pdf`, odkazy v `panel.html`) je statický výtah z webu (`dvere-do-bytu.html`, `MODELS` v `poptavka-dvere.js`).
 Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF (Playwright `page.pdf`, A4, okraje 12 mm); datum „stav k" aktualizovat.
+
+## Uvítací antré k novému webu (dočasné)
+- Na `index.html` je dole blok mezi komentáři `VITEJ-ANTRE:start` a `VITEJ-ANTRE:end` (okno „Vítejte na našem novém webu“ s jemnou animací, zavíratelné, jednou za návštěvníka přes localStorage `bd-vitej-2026`, respektuje `prefers-reduced-motion`).
+- Samo se přestane zobrazovat **26. 10. 2026** (14 dní od spuštění domény bezpecne-dvere.cz dne 12. 10. 2026). Po tomto datu lze celý blok smazat.
