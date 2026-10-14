@@ -129,7 +129,7 @@
       <span class="section-label" style="color:var(--orange-text);">Servis dveří</span>
       <h2>Servis a reklamace nainstalovaných dveří</h2>
       <p>Formulář je pro dveře, které jsme Vám dodali a nainstalovali. Číslo objednávky potřebujeme, abychom ověřili, zda jde o záruční, nebo pozáruční opravu. Po odeslání Vás budeme kontaktovat do 48 hodin (neplatí o svátky a víkendy).</p>
-      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
+      <form method="POST" enctype="multipart/form-data" data-email-form>
         <input type="hidden" name="_subject" value="Nahlášení servisu / reklamace z webu – bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
@@ -245,7 +245,8 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="form-submit.js?v=2"></script>
+<script src="formulare-klient.js?v=1"></script>
+<script src="form-submit.js?v=3"></script>
 <script src="cookies.js?v=2" defer></script>
 </body>
 </html>

@@ -238,9 +238,8 @@
     if(!valid(form.querySelector('[data-step="2"]'))) return;
     var btn=form.querySelector('button[type="submit"]'), label=btn.textContent;
     btn.disabled=true; btn.textContent='Odesílám…';
-    fetch('https://formsubmit.co/ajax/kucerazd@kksystem.cz',{method:'POST',headers:{'Accept':'application/json'},body:new FormData(form)})
-      .then(function(r){return r.json();})
-      .then(function(d){ if(d&&(d.success===true||d.success==='true')){ form.reset(); go(3); } else throw new Error('fail'); })
+    BDForm.sendForm(form)
+      .then(function(){ form.reset(); go(3); })
       .catch(function(){ msg.hidden=false; msg.innerHTML='Odeslání se nepodařilo. Napište nám prosím na <a href="mailto:chci@bezpecne-dvere.cz">chci@bezpecne-dvere.cz</a> nebo zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.'; })
       .then(function(){ btn.disabled=false; btn.textContent=label; });
   });
@@ -337,7 +336,8 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="form-submit.js?v=2"></script>
+<script src="formulare-klient.js?v=1"></script>
+<script src="form-submit.js?v=3"></script>
 <script src="cookies.js?v=2" defer></script>
 </body>
 </html>

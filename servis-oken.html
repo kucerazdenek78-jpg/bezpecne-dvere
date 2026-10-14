@@ -188,7 +188,7 @@
     <div class="so-form-wrap so-okna-form" id="servis-oken-poptavka">
       <h3 class="so-h" style="margin-top:2.5rem;">Poptávka servisu oken</h3>
       <p>Napište nám, co potřebujete — nezávazně a bez čísla objednávky. Ozveme se Vám a domluvíme prohlídku nebo termín servisu.</p>
-      <form action="https://formsubmit.co/kucerazd@kksystem.cz" method="POST" enctype="multipart/form-data" data-email-form>
+      <form method="POST" enctype="multipart/form-data" data-email-form>
         <input type="hidden" name="_subject" value="Poptávka servisu oken z webu – bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
@@ -309,7 +309,8 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="form-submit.js?v=2"></script>
+<script src="formulare-klient.js?v=1"></script>
+<script src="form-submit.js?v=3"></script>
 <script src="cookies.js?v=2" defer></script>
 </body>
 </html>

@@ -1,6 +1,5 @@
-/* Odeslání poptávkových formulářů na e-mail kucerazd@kksystem.cz (služba FormSubmit.co, bez přesměrování) */
+/* Odeslání formulářů přes vlastní server formulare.bezpecne-dvere.cz (formulare-klient.js); adresáty určuje server */
 (function () {
-  var TO = 'kucerazd@kksystem.cz';          // kam se poptávky doručují
   var PUBLIC = 'chci@bezpecne-dvere.cz';    // adresa zobrazená zákazníkovi při chybě
   document.querySelectorAll('form[data-email-form]').forEach(function (form) {
     var btn = form.querySelector('button[type="submit"]');
@@ -19,15 +18,9 @@
       if (!form.reportValidity()) return;
       var label = btn ? btn.textContent : '';
       if (btn) { btn.disabled = true; btn.textContent = 'Odesílám…'; }
-      fetch('https://formsubmit.co/ajax/' + TO, {
-        method: 'POST',
-        headers: { 'Accept': 'application/json' },
-        body: new FormData(form)
-      }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d && (d.success === true || d.success === 'true')) {
-          form.reset();
-          show(true, '<strong>Děkujeme, poptávka byla odeslána.</strong> Ozveme se Vám co nejdříve.');
-        } else { throw new Error('fail'); }
+      BDForm.sendForm(form).then(function () {
+        form.reset();
+        show(true, '<strong>Děkujeme, poptávka byla odeslána.</strong> Ozveme se Vám co nejdříve.');
       }).catch(function () {
         show(false, 'Odeslání se nepodařilo. Napište nám prosím na <a href="mailto:' + PUBLIC + '">' + PUBLIC + '</a> nebo zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.');
       }).then(function () {
