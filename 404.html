@@ -54,7 +54,15 @@
   var p = location.pathname;
   if (base !== '/' && p.indexOf(base) === 0) p = '/' + p.slice(base.length);
   p = p.replace(/\/+$/, '').replace(/\.html$/, '') || '/';
-  if (map[p]) location.replace(base + map[p]);
+  if (map[p]) {
+    // Stará adresa se zná: nehlásíme „nenalezeno“, jen krátce informujeme o přesměrování.
+    document.title = 'Přesměrováváme… | Bezpečné dveře';
+    document.querySelector('h1').textContent = 'Přesměrováváme…';
+    document.getElementById('msg').textContent = 'Stránka se přestěhovala, za okamžik vás přesuneme na novou adresu.';
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('byt').style.display = 'none';
+    location.replace(base + map[p]);
+  }
   document.getElementById('home').href = base + 'index.html';
   document.getElementById('byt').href = base + 'dvere-do-bytu.html';
 })();
