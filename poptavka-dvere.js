@@ -503,6 +503,7 @@
     if (OBJ) {
       d.zdroj = 'web-objednavka'; d.typ = 'objednavka';
       d.z_poptavky = state.fromRef || '';
+      d.predani_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); /* tajný kód pro QR „předání díla“ na 2. straně předávacího listu */
       d.obj_cislo = fv('obj_cislo'); d.obj_datum = fv('obj_datum'); d.prodavac = val('prodavac');
       d.op = fv('op'); d.zvonek = fv('zvonek'); d.tl_zarubne = val('tl_zarubne') || (m.order.frame.length === 1 ? m.order.frame[0] : '');
       d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.termin_datum = fv('termin_datum'); d.interni = fv('interni');

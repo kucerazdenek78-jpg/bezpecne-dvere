@@ -28,5 +28,6 @@
   function png(text, px) { return canvas(text, px || 360).toDataURL('image/png'); }
   function link(cislo, a) { return SITE + 'platba.html?c=' + encodeURIComponent(cislo || '') + '&a=' + amount(a); }
   function info(cislo, a) { return { ucet: ACC + '/' + BANK, iban: iban(), vs: vs(cislo), castka: amount(a), spd: spd(a, cislo), odkaz: link(cislo, a) }; }
-  w.BDPlatba = { iban: iban, vs: vs, spd: spd, canvas: canvas, png: png, link: link, info: info, ucet: ACC + '/' + BANK };
+  function predaniUrl(t) { return 'https://kartoteka.dvere.app/predani.php?t=' + encodeURIComponent(t || ''); }
+  w.BDPlatba = { predaniUrl: predaniUrl, iban: iban, vs: vs, spd: spd, canvas: canvas, png: png, link: link, info: info, ucet: ACC + '/' + BANK };
 })(window);
