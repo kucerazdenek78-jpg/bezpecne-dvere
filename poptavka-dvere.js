@@ -503,7 +503,8 @@
     if (OBJ) {
       d.zdroj = 'web-objednavka'; d.typ = 'objednavka';
       d.z_poptavky = state.fromRef || '';
-      d.predani_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); /* tajný kód pro QR „předání díla“ na 2. straně předávacího listu */
+      d.predani_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); d.zakaznik_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); /* tajný kód pro QR „Moje dveře“ (záruka, servis) pro zákazníka */
+      /* tajný kód pro QR „předání díla“ na 2. straně předávacího listu */
       d.obj_cislo = fv('obj_cislo'); d.obj_datum = fv('obj_datum'); d.prodavac = val('prodavac');
       d.op = fv('op'); d.zvonek = fv('zvonek'); d.tl_zarubne = val('tl_zarubne') || (m.order.frame.length === 1 ? m.order.frame[0] : '');
       d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.termin_datum = fv('termin_datum'); d.interni = fv('interni');
@@ -647,6 +648,7 @@
     ];
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
     if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); }
+    if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) f.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
     reviewRows(d).forEach(function (r) { if (['Interní poznámka', 'Z poptávky', 'Číslo OP'].indexOf(r[0]) < 0 && r[2] !== 'x') f.push([r[0], r[1]]); });
     return f;
   }

@@ -283,6 +283,14 @@
           put(adr, 51, 754, 150, 8, true);               // Místo (datum doplní montážník)
           put((d.jmeno + ' ' + d.prijmeni).trim(), 392, 782, 150, 8, true);   // pod „Objednatel (podpis)“
           put('Objednávka ' + d.obj_cislo + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 490, 7, true);
+          // QR „Moje dveře“ (záruka, servis, registrace) pro zákazníka: nahradí v kartě „Zaregistrujte své dveře“ původní QR registrace
+          var pm = (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl)
+            ? pdf.embedPng(window.BDPlatba.png(window.BDPlatba.mojeUrl(d.zakaznik_token), 600)).then(function (qimg) {
+                page.drawRectangle({ x: 49, y: H - 602, width: 74, height: 74, color: L.rgb(1, 1, 1) });
+                page.drawImage(qimg, { x: 49, y: H - 602, width: 74, height: 74 });
+              })
+            : Promise.resolve();
+          return pm.then(function () {
           // 2. strana jen pro montážníka: QR kód „předání díla“ (po načtení v přihlášené kartotéce zapíše předání, začátek záruky a odepíše dveře ze skladu)
           if (d.predani_token && window.BDPlatba && window.BDPlatba.predaniUrl) {
             return pdf.embedPng(window.BDPlatba.png(window.BDPlatba.predaniUrl(d.predani_token), 600)).then(function (img) {
@@ -305,6 +313,7 @@
             });
           }
           return pdf.save();
+          });
         });
       });
     }).then(function (bytes) { return new Blob([bytes], { type: 'application/pdf' }); });

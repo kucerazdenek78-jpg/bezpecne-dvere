@@ -220,6 +220,7 @@
 <script>
 (function(){
   var form=document.getElementById('rzForm'), wrap=form.parentNode, msg=form.querySelector('.rz-msg');
+  try{var qp=new URLSearchParams(location.search), c=qp.get('c'), dd=qp.get('d'); if(c)form.elements['cislo_objednavky'].value=c; if(dd&&/^\d{4}-\d{2}-\d{2}$/.test(dd))form.elements['datum_predani'].value=dd;}catch(e){}
   function go(n){
     wrap.querySelectorAll('.rz-step').forEach(function(el){el.hidden=el.getAttribute('data-step')!=String(n);});
     wrap.querySelectorAll('[data-step-dot]').forEach(function(li){var k=+li.getAttribute('data-step-dot');li.classList.toggle('on',k<=n);});
