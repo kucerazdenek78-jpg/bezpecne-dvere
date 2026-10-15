@@ -483,6 +483,12 @@
   }
   function lines(arr) { return arr.filter(function (x) { return x[1]; }).map(function (x) { return x[0] + ': ' + x[1]; }).join('\n'); }
 
+  /* odkaz „Vytvořit objednávku“ (jako u poptávek z webu): načte model, odstín a údaje zákazníka do nového formuláře objednávky; jen pro dveře do bytu */
+  function b64u(str) { var b = new TextEncoder().encode(str), s2 = ''; for (var i = 0; i < b.length; i++) s2 += String.fromCharCode(b[i]); return btoa(s2).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function orderLink(o) {
+    var d = {}; Object.keys(o).forEach(function (k) { if (o[k] !== '' && o[k] != null && o[k] !== false) d[k] = o[k]; });
+    return new URL('../objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(d));
+  }
   /* poptávka z vizualizace */
   function openAsk() {
     var k = kontakt(), shade = shadeName(), mn = MN(), mk = vizModel, zar = frameName(), V = VIZ[vizModel], byt = V.cat === 'byt', sx = V.shades[shadeIdx], shadeFull = byt ? shade : shade + (sx[2] ? ' (' + sx[2] + ')' : '');
@@ -504,7 +510,7 @@
           predmet: 'Poptávka z aplikace ' + cislo + ' – ' + mn + ' ' + shade + ' – ' + o.prijmeni + (o.adresa ? ', ' + o.adresa : ''),
           telo: lines([['Číslo poptávky', cislo], ['Zdroj', 'Aplikace – vizualizace na fotce'], ['Dveře', mn], [byt ? 'Odstín' : 'Provedení', shadeFull],
             [byt ? 'Zárubeň na vizualizaci' : '', zar], ['Jméno', o.jmeno + ' ' + o.prijmeni], ['Telefon', o.telefon], ['E-mail', o.email],
-            ['Obec / adresa', o.adresa], ['Poznámka', o.poznamka], ['Přílohy', 'vizualizace + původní fotka dveří'], ['Odesláno', new Date().toLocaleString('cs-CZ')]]),
+            ['Obec / adresa', o.adresa], ['Poznámka', o.poznamka], [byt ? 'Vytvořit objednávku' : '', byt ? orderLink({ cislo: cislo, model_kod: mk, odstin: shade, jmeno: o.jmeno, prijmeni: o.prijmeni, telefon: o.telefon, email: o.email, mesto: o.adresa, poznamka: o.poznamka }) : ''], ['Přílohy', 'vizualizace + původní fotka dveří'], ['Odesláno', new Date().toLocaleString('cs-CZ')]]),
           files: [{ name: 'vizualizace', file: 'vizualizace-' + cislo + '.jpg', blob: b[0] }, { name: 'puvodni_foto', file: 'puvodni-dvere-' + cislo + '.jpg', blob: b[1] }] };
       });
     }, function (x) {
