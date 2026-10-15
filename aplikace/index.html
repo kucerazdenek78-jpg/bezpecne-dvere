@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Bezpečné dveře – aplikace</title>
+  <meta name="description" content="Vyzkoušejte si dveře PREMIUM 60 na fotce svých dveří. Záruka, roční prohlídka a servis vašich dveří na jednom místě.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#123d27">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="app.css?v=20261015b">
+</head>
+<body>
+<header class="top">
+  <a href="../index.html" aria-label="Web Bezpečné dveře"><img src="../logo-white.svg" alt="Bezpečné dveře" class="top-logo" width="150" height="32"></a>
+  <button class="top-install" id="install" hidden>Nainstalovat</button>
+</header>
+
+<main>
+  <!-- ═══ VIZUALIZACE ═══ -->
+  <section class="view" id="v-viz" data-view="viz">
+    <div class="pad">
+      <h1>Vyzkoušejte si nové dveře u sebe</h1>
+      <p class="lead">Vyfoťte své dveře zepředu, označte 4 rohy křídla a vyberte odstín.</p>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="gl"></canvas>
+      <div class="empty" id="empty">
+        <div class="empty-in">
+          <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect x="16" y="6" width="32" height="52" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="41" cy="34" r="2.6" fill="currentColor"/><path d="M8 58h48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <p><b>Vyfoťte své vchodové dveře</b><br>zepředu, celé i se zárubní, ideálně za denního světla</p>
+        </div>
+      </div>
+      <div class="ov" id="ov" hidden></div>
+      <div class="split" id="split" hidden><div class="split-line"></div><div class="split-knob">⇆</div><span class="split-l">Teď</span><span class="split-r">PREMIUM 60</span></div>
+      <div class="loupe" id="loupe"><canvas id="lp" width="220" height="220"></canvas></div>
+    </div>
+    <div class="pad">
+      <div class="hint" id="hint" role="status">Začněte fotkou dveří.</div>
+      <div class="btns">
+        <label class="b pri" for="fileCam">📷 Vyfotit dveře</label>
+        <label class="b" for="fileGal">🖼 Z galerie</label>
+        <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+        <input type="file" id="fileGal" accept="image/*" hidden>
+      </div>
+      <div class="btns" id="cornerBtns" hidden>
+        <button class="b sm" id="reset">↺ Označit znovu</button>
+        <button class="b sm" id="quick">▭ Rámeček k posunutí</button>
+        <label class="chk"><input type="checkbox" id="snap" checked> Přichytit k rohům</label>
+      </div>
+
+      <h2>Dveře</h2>
+      <div class="seg" id="vizModel" role="group" aria-label="Model dveří">
+        <button class="b sm" data-m="premium60" aria-pressed="true">PREMIUM 60</button>
+        <button class="b sm" data-m="extreme54" aria-pressed="false">EXTREME 54</button>
+      </div>
+      <h2>Odstín</h2>
+      <div class="shades" id="shades"></div>
+      <p class="note" id="shadeNote"></p>
+      <div id="frameBox" hidden>
+        <h2>Barva zárubně</h2>
+        <div class="frames" id="frames"></div>
+      </div>
+
+      <details class="more" id="adjust">
+        <summary>Doladit vzhled</summary>
+        <label class="chk"><input type="checkbox" id="frame" checked> <span id="frameLbl">Nová zárubeň v odstínu dveří</span></label>
+        <label class="chk"><input type="checkbox" id="autolight" checked> Přizpůsobit světlu na fotce</label>
+        <button class="b sm" id="flip" aria-pressed="false">⇄ Panty na druhé straně</button>
+        <div class="row"><label for="bri">Světlost</label><input type="range" id="bri" min="60" max="140" value="100"></div>
+        <div class="row"><label for="fwid">Šíře zárubně</label><input type="range" id="fwid" min="2" max="14" value="7"></div>
+        <div class="row"><label for="soft">Měkkost hran</label><input type="range" id="soft" min="0" max="100" value="30"></div>
+      </details>
+
+      <div class="btns result">
+        <button class="b" id="cmp" disabled>⇆ Porovnat před / po</button>
+        <button class="b" id="save" disabled>⬇ Uložit</button>
+        <button class="b" id="share" disabled hidden>📤 Poslat</button>
+      </div>
+      <button class="b pri wide" id="ask" disabled>Chci tyto dveře – nezávazná nabídka</button>
+      <p class="note">Náhled je ilustrativní – odlesky, stíny a přesné kování se na fotce neupravují. Skutečný odstín uvidíte na vzorku v prodejně. Fotka se zpracuje jen v telefonu; odešle se nám pouze, když si řeknete o nabídku.</p>
+    </div>
+  </section>
+
+  <!-- ═══ NABÍDKA ═══ -->
+  <section class="view pad" id="v-nab" data-view="nab" hidden>
+    <h1>Bezpečnostní dveře do bytu</h1>
+    <p class="lead">Všechny s novou zárubní a montáží na klíč. Ceny a provedení najdete na webu, kde si dveře i sestavíte.</p>
+    <div class="cards" id="models"></div>
+    <a class="b wide" href="../dvere-do-bytu.html#porovnani">Porovnání všech modelů na webu →</a>
+  </section>
+
+  <!-- ═══ MOJE DVEŘE ═══ -->
+  <section class="view pad" id="v-moje" data-view="moje" hidden>
+    <h1>Moje dveře</h1>
+    <div id="mojeEmpty">
+      <p class="lead">Máte od nás dveře? Uložte si je sem – aplikace vám pohlídá záruku a roční prohlídku a usnadní servis.</p>
+      <div class="card">
+        <h3>Najít podle objednávky</h3>
+        <p class="small">Číslo objednávky najdete na objednávce nebo předávacím listu.</p>
+        <form id="pairForm" class="form">
+          <label>Číslo objednávky<input name="cislo" required autocomplete="off" placeholder="např. OBJ-2026-1015-1430"></label>
+          <label>Poslední 4 číslice telefonu z objednávky<input name="tel4" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4"></label>
+          <button class="b pri wide" type="submit">Najít moje dveře</button>
+          <p class="msg" id="pairMsg" role="status"></p>
+        </form>
+      </div>
+      <button class="b wide" id="manualOpen">Zadat dveře ručně</button>
+    </div>
+    <div id="mojeDoor" hidden></div>
+  </section>
+
+  <!-- ═══ KONTAKT ═══ -->
+  <section class="view pad" id="v-kon" data-view="kon" hidden>
+    <h1>Kontakt</h1>
+    <div class="card">
+      <a class="big-link" href="tel:+420725559235">📞 +420 725 559 235</a>
+      <a class="big-link" href="https://wa.me/420725559235">💬 WhatsApp</a>
+      <a class="big-link" href="mailto:chci@bezpecne-dvere.cz">✉️ chci@bezpecne-dvere.cz</a>
+      <p class="small">Prodejna a vzorkovna: Obchodní 36, 434 01 Most · pracovní dny 8–17 hod.</p>
+      <a class="b wide" href="https://mapy.com/s?q=Obchodn%C3%AD%2036%2C%20Most">🗺 Navigovat do prodejny</a>
+    </div>
+    <div class="card">
+      <h3>Užitečné</h3>
+      <a class="lnk" href="../servis-dveri.html">Servis dveří a reklamace →</a>
+      <a class="lnk" href="../objednani-klicu.html">Objednání klíčů →</a>
+      <a class="lnk" href="../nouzove-otevirani.html">Nouzové otevírání →</a>
+      <a class="lnk" href="../doporuc-nas.html">Doporuč a získej →</a>
+      <a class="lnk" href="../index.html">Celý web bezpecne-dvere.cz →</a>
+    </div>
+    <p class="small center">Zdeněk Kučera · IČ 64682676 · <a href="../zasady-osobnich-udaju.html">Zásady osobních údajů</a></p>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Hlavní menu">
+  <a href="#viz" data-tab="viz"><span>🚪</span>Vyzkoušet</a>
+  <a href="#nab" data-tab="nab"><span>🛡</span>Nabídka</a>
+  <a href="#moje" data-tab="moje"><span>⭐</span>Moje dveře</a>
+  <a href="#kon" data-tab="kon"><span>📞</span>Kontakt</a>
+</nav>
+
+<!-- ═══ dialog s formulářem ═══ -->
+<dialog id="dlg">
+  <form method="dialog" class="dlg-close"><button aria-label="Zavřít">✕</button></form>
+  <div id="dlgBody"></div>
+</dialog>
+
+<script src="bd-form.js?v=20261015a"></script>
+<script src="app.js?v=20261015b"></script>
+</body>
+</html>
