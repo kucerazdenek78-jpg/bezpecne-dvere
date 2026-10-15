@@ -21,10 +21,21 @@
     securido65: { name: 'SECURIDO 65', spec: 'RC3 · EI 30 · 39 dB', img: 'img/securido65.jpg', base: 2, bonus: false, ext: [5, 10],
       txt: 'Široký výběr dekorů a kování.' }
   };
-  var SHADES = [
-    ['Černá perleť', 'img/premium60-cerna-perlet.jpg'], ['Dub', 'img/premium60-dub.jpg'], ['Ořech', 'img/premium60-orech.jpg'],
-    ['Světlé wenge', 'img/premium60-svetle-wenge.jpg'], ['Bílá', 'img/premium60-bila.jpg'], ['Antracit', 'img/premium60-antracit.jpg']
-  ];
+  /* vizualizace: obrázky celých křídel zepředu (panty vlevo, klika vpravo).
+     PREMIUM 60: dekory z premium60.cz; zárubeň v dekoru dveří.
+     EXTREME 54: fotky z akčního katalogu Porta (str. 10 a 32, „fotky dekorů nemusí odpovídat skutečnosti“); lakovaná zárubeň v samostatné barvě (z poptavka-dvere.js). */
+  var VIZ = {
+    premium60: { shades: [
+        ['Černá perleť', 'img/premium60-cerna-perlet.jpg'], ['Dub', 'img/premium60-dub.jpg'], ['Ořech', 'img/premium60-orech.jpg'],
+        ['Světlé wenge', 'img/premium60-svetle-wenge.jpg'], ['Bílá', 'img/premium60-bila.jpg'], ['Antracit', 'img/premium60-antracit.jpg']],
+      def: 1, note: 'Bílá wenge a Ocelově šedá (příplatkové odstíny) zatím na fotce vyzkoušet nejdou.' },
+    extreme54: { shades: [['Dub natura', 'img/extreme54-dub-natura.jpg'], ['Ořech natura', 'img/extreme54-orech-natura.jpg'], ['Antracit', 'img/extreme54-antracit.jpg']],
+      def: 0, note: 'Skladem: Dub natura a Ořech natura. Ořech bělený, Bílá, Beton tmavý a Dub Milano 4 zatím na fotce vyzkoušet nejdou.',
+      frames: [['Hnědá matná', '#5a3b26', 1], ['Béžová matná', '#d8c7a8'], ['Bílá matná', '#f4f4f1'], ['Šedá', '#8f9396'], ['Antracit', '#3b3f42'], ['Černá', '#151515']] }
+  };
+  var vizModel = 'premium60', frameIdx = 0;
+  function SH() { return VIZ[vizModel].shades; }
+  function hex2rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); }
 
   /* ═══════════════ navigace ═══════════════ */
   function route() {
@@ -32,7 +43,7 @@
     if (!$('[data-view="' + v + '"]')) v = 'viz';
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    if (v === 'viz') layout();
+    if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]] && mm[1] !== vizModel) setModel(mm[1]); layout(); }
     if (v === 'moje') renderMoje();
     window.scrollTo(0, 0);
   }
@@ -103,7 +114,7 @@
   function render() {
     if (!gl || !photo) return;
     gl.viewport(0, 0, canvas.width, canvas.height);
-    var di = doorImgs[shadeIdx], ready = pts.length === 4 && di && di.ok;
+    var di = doorImgs[SH()[shadeIdx][1]], ready = pts.length === 4 && di && di.ok;
     gl.uniform1f(loc.on, ready ? 1 : 0);
     if (ready) {
       gl.uniformMatrix3fv(loc.Hi, false, new Float32Array(inv3(squareToQuad(pts))));
@@ -114,7 +125,7 @@
       gl.uniform1f(loc.soft, +$('#soft').value / 100 * 0.012);
       gl.uniform1f(loc.split, split);
       var fu = frameUV(); gl.uniform1f(loc.fr, $('#frame').checked ? 1 : 0); gl.uniform1f(loc.fw, fu[0]); gl.uniform1f(loc.fwy, fu[1]);
-      var fc = di.mean; gl.uniform3f(loc.fcol, fc[0], fc[1], fc[2]);
+      var fr = VIZ[vizModel].frames, fc = fr ? hex2rgb(fr[frameIdx][1]) : di.mean; gl.uniform3f(loc.fcol, fc[0], fc[1], fc[2]);
     }
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texPhoto);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texDoor);
@@ -123,18 +134,21 @@
   var rq = 0; function renderSoon() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; render(); }); }
 
   function loadDoor(i, cb) {
-    if (doorImgs[i] && doorImgs[i].ok) { upload(texDoor, 1, doorImgs[i].img); return cb && cb(); }
-    var im = new Image(); doorImgs[i] = { img: im, ok: false };
+    var src = SH()[i][1], o = doorImgs[src];
+    if (o && o.ok) { upload(texDoor, 1, o.img); return cb && cb(); }
+    if (o) { o.cbs.push(cb); return; }
+    var im = new Image(); o = doorImgs[src] = { img: im, ok: false, cbs: [cb] };
     im.onload = function () {
-      // průměrná barva vnitřku křídla → barva nové zárubně
+      // průměrná barva vnitřku křídla → barva nové zárubně (PREMIUM 60)
       var c = document.createElement('canvas'); c.width = 8; c.height = 8; var x = c.getContext('2d');
       x.drawImage(im, im.width * .1, im.height * .05, im.width * .8, im.height * .9, 0, 0, 8, 8);
-      var d = x.getImageData(0, 0, 8, 8).data, s = [0, 0, 0]; for (var k = 0; k < d.length; k += 4) { s[0] += d[k]; s[1] += d[k + 1]; s[2] += d[k + 2]; }
-      doorImgs[i].mean = s.map(function (v) { return v / 64 / 255; });
-      doorImgs[i].ok = true; if (i === shadeIdx) upload(texDoor, 1, im); cb && cb();
+      var d = x.getImageData(0, 0, 8, 8).data, sm = [0, 0, 0]; for (var k = 0; k < d.length; k += 4) { sm[0] += d[k]; sm[1] += d[k + 1]; sm[2] += d[k + 2]; }
+      o.mean = sm.map(function (v) { return v / 64 / 255; }); o.ok = true;
+      if (SH()[shadeIdx] && SH()[shadeIdx][1] === src) upload(texDoor, 1, im);
+      o.cbs.forEach(function (f) { f && f(); }); o.cbs = [];
     };
     im.onerror = function () { hint.textContent = 'Obrázek odstínu se nepodařilo načíst. Zkontrolujte připojení.'; };
-    im.src = SHADES[i][1];
+    im.src = src;
   }
 
   /* ── fotka ── */
@@ -312,13 +326,33 @@
 
   /* ── ovládání ── */
   function buildShades() {
-    $('#shades').innerHTML = SHADES.map(function (s, i) { return '<button class="sh" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + s[1] + '" alt="" loading="lazy">' + s[0] + '</button>'; }).join('');
-    $('#shades').addEventListener('click', function (e) {
-      var b = e.target.closest('.sh'); if (!b) return; shadeIdx = +b.getAttribute('data-i');
-      $$('.sh').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-      loadDoor(shadeIdx, function () { upload(texDoor, 1, doorImgs[shadeIdx].img); render(); });
-    });
+    var V = VIZ[vizModel];
+    $('#shades').innerHTML = V.shades.map(function (x, i) { return '<button class="sh" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + x[1] + '" alt="" loading="lazy">' + x[0] + '</button>'; }).join('');
+    $('#shadeNote').textContent = V.note;
+    $('#frameBox').hidden = !V.frames;
+    $('#frameLbl').textContent = V.frames ? 'Nová zárubeň (barva podle výběru)' : 'Nová zárubeň v odstínu dveří';
+    if (V.frames) $('#frames').innerHTML = V.frames.map(function (f, i) {
+      return '<button class="fr" data-i="' + i + '" aria-pressed="' + (i === frameIdx) + '"><i style="background:' + f[1] + '"></i>' + f[0] + (f[2] ? ' (skladem)' : '') + '</button>'; }).join('');
   }
+  function setModel(m) {
+    if (!VIZ[m]) return; vizModel = m; shadeIdx = VIZ[m].def; frameIdx = 0;
+    $$('#vizModel .b').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === m); });
+    buildShades(); loadDoor(shadeIdx, function () { render(); });
+  }
+  $('#shades').addEventListener('click', function (e) {
+    var b = e.target.closest('.sh'); if (!b) return; shadeIdx = +b.getAttribute('data-i');
+    $$('.sh').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    loadDoor(shadeIdx, function () { render(); });
+  });
+  $('#frames').addEventListener('click', function (e) {
+    var b = e.target.closest('.fr'); if (!b) return; frameIdx = +b.getAttribute('data-i');
+    $$('.fr').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); $('#frame').checked = true; render();
+  });
+  $('#vizModel').addEventListener('click', function (e) { var b = e.target.closest('[data-m]'); if (b) setModel(b.getAttribute('data-m')); });
+  function MN() { return MODELS[vizModel].name; }
+  function shadeName() { return SH()[shadeIdx][0]; }
+  function frameName() { var f = VIZ[vizModel].frames; return !$('#frame').checked ? 'původní' : f ? 'nová, ' + f[frameIdx][0] : 'nová v dekoru dveří'; }
+
   $('#fileCam').addEventListener('change', onFile); $('#fileGal').addEventListener('change', onFile);
   $('#reset').addEventListener('click', function () { pts = []; snapped = [false, false, false, false]; setSplit(-1); afterCorners(); });
   $('#quick').addEventListener('click', function () {
@@ -353,14 +387,14 @@
   function slug(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-'); }
   $('#save').addEventListener('click', function () {
     resultBlob().then(function (b) {
-      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'premium60-' + slug(SHADES[shadeIdx][0]) + '.jpg';
+      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = vizModel + '-' + slug(shadeName()) + '.jpg';
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
     });
   });
   $('#share').addEventListener('click', function () {
     resultBlob().then(function (b) {
-      var f = new File([b], 'premium60-' + slug(SHADES[shadeIdx][0]) + '.jpg', { type: 'image/jpeg' });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: 'PREMIUM 60 – ' + SHADES[shadeIdx][0], text: 'Takhle by u nás vypadaly dveře PREMIUM 60 (' + SHADES[shadeIdx][0] + ').' }).catch(function () {});
+      var f = new File([b], vizModel + '-' + slug(shadeName()) + '.jpg', { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: MN() + ' – ' + shadeName(), text: 'Takhle by u nás vypadaly dveře ' + MN() + ' (' + shadeName() + ').' }).catch(function () {});
     });
   });
   $('#ask').addEventListener('click', openAsk);
@@ -408,24 +442,24 @@
 
   /* poptávka z vizualizace */
   function openAsk() {
-    var k = kontakt(), shade = SHADES[shadeIdx][0];
+    var k = kontakt(), shade = shadeName(), mn = MN(), mk = vizModel, zar = frameName();
     var thumbsP = Promise.all([resultBlob(900, 0.85), photoBlob(900)]);
-    openDlg('<h2>Nezávazná nabídka PREMIUM 60</h2><p class="small">Odstín <b>' + esc(shade) + '</b>. Vizualizaci i původní fotku přiložíme – podle fotky vám rovnou upřesníme cenu.</p>' +
+    openDlg('<h2>Nezávazná nabídka ' + esc(mn) + '</h2><p class="small">Odstín <b>' + esc(shade) + '</b>, zárubeň ' + esc(zar) + '. Vizualizaci i původní fotku přiložíme – podle fotky vám rovnou upřesníme cenu.</p>' +
       '<div class="thumbs" id="askThumbs"></div><form class="form" id="askForm" novalidate>' + contactFields(k, false) +
       '<label>Poznámka<textarea name="poznamka" placeholder="např. patro, výtah, kdy se vám hodí zaměření"></textarea></label>' + CONSENT +
       '<button class="b pri wide" type="submit">Odeslat poptávku</button><p class="msg" role="status"></p></form>' +
-      '<p class="small">Chcete si dveře rovnou sestavit (kování, vložky, záruka)? <a href="../poptavka-dvere.html?model=premium60">Podrobná poptávka na webu →</a></p>');
+      '<p class="small">Chcete si dveře rovnou sestavit (kování, vložky, záruka)? <a href="../poptavka-dvere.html?model=' + mk + '">Podrobná poptávka na webu →</a></p>');
     thumbsP.then(function (b) { var t = $('#askThumbs'); if (t) t.innerHTML = '<img alt="Vizualizace" src="' + URL.createObjectURL(b[0]) + '"><img alt="Původní fotka" src="' + URL.createObjectURL(b[1]) + '">'; });
     submitForm($('#askForm'), function (o) {
       return Promise.all([resultBlob(1600, 0.85), photoBlob(1600)]).then(function (b) {
         var cislo = makeRef('A');
-        var data = { verze: 1, cislo: cislo, odeslano: new Date().toISOString(), zdroj: 'aplikace-vizualizace', model: 'PREMIUM 60', model_kod: 'premium60', odstin: shade,
+        var data = { verze: 1, cislo: cislo, odeslano: new Date().toISOString(), zdroj: 'aplikace-vizualizace', model: mn, model_kod: mk, odstin: shade,
           jmeno: o.jmeno, prijmeni: o.prijmeni, telefon: o.telefon, email: o.email, mesto: o.adresa, poznamka: o.poznamka, fotky: ['vizualizace', 'puvodni_foto'],
-          vizualizace: { zarubne_v_dekoru: $('#frame').checked, zrcadleno: flip } };
-        return { cislo: cislo, data: data, hist: 'Poptávka PREMIUM 60 – ' + shade,
-          predmet: 'Poptávka z aplikace ' + cislo + ' – PREMIUM 60 ' + shade + ' – ' + o.prijmeni + (o.adresa ? ', ' + o.adresa : ''),
-          telo: lines([['Číslo poptávky', cislo], ['Zdroj', 'Aplikace – vizualizace na fotce'], ['Dveře', 'PREMIUM 60'], ['Odstín', shade],
-            ['Zárubeň na vizualizaci', $('#frame').checked ? 'nová v dekoru dveří' : 'původní'], ['Jméno', o.jmeno + ' ' + o.prijmeni], ['Telefon', o.telefon], ['E-mail', o.email],
+          vizualizace: { zarubne: zar, zrcadleno: flip } };
+        return { cislo: cislo, data: data, hist: 'Poptávka ' + mn + ' – ' + shade,
+          predmet: 'Poptávka z aplikace ' + cislo + ' – ' + mn + ' ' + shade + ' – ' + o.prijmeni + (o.adresa ? ', ' + o.adresa : ''),
+          telo: lines([['Číslo poptávky', cislo], ['Zdroj', 'Aplikace – vizualizace na fotce'], ['Dveře', mn], ['Odstín', shade],
+            ['Zárubeň na vizualizaci', zar], ['Jméno', o.jmeno + ' ' + o.prijmeni], ['Telefon', o.telefon], ['E-mail', o.email],
             ['Obec / adresa', o.adresa], ['Poznámka', o.poznamka], ['Přílohy', 'vizualizace + původní fotka dveří'], ['Odesláno', new Date().toLocaleString('cs-CZ')]]),
           files: [{ name: 'vizualizace', file: 'vizualizace-' + cislo + '.jpg', blob: b[0] }, { name: 'puvodni_foto', file: 'puvodni-dvere-' + cislo + '.jpg', blob: b[1] }] };
       });
@@ -441,7 +475,7 @@
       var m = MODELS[k];
       return '<div class="card model"><img src="' + m.img + '" alt="' + esc(m.name) + '" loading="lazy"><div><h3>' + esc(m.name) + (m.tag ? '<span class="tag">' + esc(m.tag) + '</span>' : '') + '</h3>' +
         '<p><b>' + esc(m.spec) + '</b></p><p>' + esc(m.txt) + '</p><p>Záruka ' + m.base + (m.base === 2 ? ' roky' : ' let') + (m.bonus ? ' + 1 rok za registraci' : '') + '</p>' +
-        '<div class="btns">' + (k === 'premium60' ? '<a class="b sm" href="#viz">Vyzkoušet na fotce</a>' : '') +
+        '<div class="btns">' + (VIZ[k] ? '<a class="b sm" href="#viz?m=' + k + '">Vyzkoušet na fotce</a>' : '') +
         '<a class="b sm" href="../dvere-do-bytu.html#' + k + '">Detail a cena</a><a class="b sm pri" href="../poptavka-dvere.html?model=' + k + '">Sestavit</a></div></div></div>';
     }).join('');
   }
@@ -488,7 +522,7 @@
     $('#mojeEmpty').hidden = !!dv; $('#mojeDoor').hidden = !dv;
     if (!dv) return;
     var m = MODELS[dv.model_kod] || { name: dv.model || 'Dveře', spec: '' }, w = warranty(dv), ni = nextInspection(dv), hist = store.get('bd-app-historie', []);
-    var sImg = null; if (dv.model_kod === 'premium60') SHADES.forEach(function (x) { if (x[0].toLowerCase() === String(dv.odstin || '').trim().toLowerCase()) sImg = x[1]; });
+    var sImg = null; if (VIZ[dv.model_kod]) VIZ[dv.model_kod].shades.forEach(function (x) { if (x[0].toLowerCase() === String(dv.odstin || '').trim().toLowerCase()) sImg = x[1]; });
     var h = '<div class="card"><div class="model"><img src="' + (sImg || m.img || 'img/premium60.jpg') + '" alt=""><div><h3>' + esc(m.name) + '</h3><p>' + esc(m.spec || '') + '</p>' +
       '<dl class="dl">' + (dv.odstin ? '<dt>Odstín</dt><dd>' + esc(dv.odstin) + '</dd>' : '') + (dv.cislo ? '<dt>Objednávka</dt><dd>' + esc(dv.cislo) + '</dd>' : '') +
       (dv.predano ? '<dt>Předáno</dt><dd>' + fmt(parseDate(dv.predano)) + '</dd>' : '') + '</dl></div></div>' +
@@ -657,5 +691,5 @@
   if (initGL()) { buildShades(); loadDoor(shadeIdx); state(); }
   route();
   window.__app = { setPhoto: setPhoto, setPts: function (p) { pts = p; snapped = [false, false, false, false]; afterCorners(); }, snapPoint: snapPoint, get light() { return light; }, render: render,
-    setShade: function (i, cb) { shadeIdx = i; loadDoor(i, function () { upload(texDoor, 1, doorImgs[i].img); render(); cb && cb(); }); }, setSplit: setSplit };
+    setShade: function (i, cb) { shadeIdx = i; loadDoor(i, function () { render(); cb && cb(); }); }, setModel: setModel, setSplit: setSplit };
 })();

@@ -1,7 +1,8 @@
 /* Offline pro aplikaci: shell a obrázky odstínů z mezipaměti, HTML vždy nejdřív ze sítě. Při změně souborů zvýšit VERZE. */
-var VERZE = 'bd-app-20261015a';
-var SHELL = ['./', './index.html', './app.css?v=20261015a', './app.js?v=20261015a', './bd-form.js?v=20261015a', './manifest.webmanifest',
+var VERZE = 'bd-app-20261015b';
+var SHELL = ['./', './index.html', './app.css?v=20261015b', './app.js?v=20261015b', './bd-form.js?v=20261015a', './manifest.webmanifest',
   './img/premium60-cerna-perlet.jpg', './img/premium60-dub.jpg', './img/premium60-orech.jpg', './img/premium60-svetle-wenge.jpg', './img/premium60-bila.jpg', './img/premium60-antracit.jpg',
+  './img/extreme54-dub-natura.jpg', './img/extreme54-orech-natura.jpg', './img/extreme54-antracit.jpg',
   './img/premium60.jpg', './img/extreme54.jpg', './img/magnum56.jpg', './img/securido65.jpg', '../logo-white.svg', '../icon-192.png'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(VERZE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {

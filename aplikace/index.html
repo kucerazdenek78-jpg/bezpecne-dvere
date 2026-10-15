@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=20261015a">
+  <link rel="stylesheet" href="app.css?v=20261015b">
 </head>
 <body>
 <header class="top">
@@ -22,7 +22,7 @@
   <!-- ═══ VIZUALIZACE ═══ -->
   <section class="view" id="v-viz" data-view="viz">
     <div class="pad">
-      <h1>Vyzkoušejte si PREMIUM 60 u sebe</h1>
+      <h1>Vyzkoušejte si nové dveře u sebe</h1>
       <p class="lead">Vyfoťte své dveře zepředu, označte 4 rohy křídla a vyberte odstín.</p>
     </div>
     <div class="stage" id="stage">
@@ -51,13 +51,22 @@
         <label class="chk"><input type="checkbox" id="snap" checked> Přichytit k rohům</label>
       </div>
 
+      <h2>Dveře</h2>
+      <div class="seg" id="vizModel" role="group" aria-label="Model dveří">
+        <button class="b sm" data-m="premium60" aria-pressed="true">PREMIUM 60</button>
+        <button class="b sm" data-m="extreme54" aria-pressed="false">EXTREME 54</button>
+      </div>
       <h2>Odstín</h2>
       <div class="shades" id="shades"></div>
-      <p class="note">Bílá wenge a Ocelově šedá (příplatkové odstíny) zatím na fotce vyzkoušet nejdou.</p>
+      <p class="note" id="shadeNote"></p>
+      <div id="frameBox" hidden>
+        <h2>Barva zárubně</h2>
+        <div class="frames" id="frames"></div>
+      </div>
 
       <details class="more" id="adjust">
         <summary>Doladit vzhled</summary>
-        <label class="chk"><input type="checkbox" id="frame" checked> Nová zárubeň v odstínu dveří</label>
+        <label class="chk"><input type="checkbox" id="frame" checked> <span id="frameLbl">Nová zárubeň v odstínu dveří</span></label>
         <label class="chk"><input type="checkbox" id="autolight" checked> Přizpůsobit světlu na fotce</label>
         <button class="b sm" id="flip" aria-pressed="false">⇄ Panty na druhé straně</button>
         <div class="row"><label for="bri">Světlost</label><input type="range" id="bri" min="60" max="140" value="100"></div>
@@ -139,6 +148,6 @@
 </dialog>
 
 <script src="bd-form.js?v=20261015a"></script>
-<script src="app.js?v=20261015a"></script>
+<script src="app.js?v=20261015b"></script>
 </body>
 </html>

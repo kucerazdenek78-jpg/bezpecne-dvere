@@ -121,3 +121,11 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 
 @media (hover:hover){.b:hover{filter:brightness(1.06)}}
 @media (min-width:760px){.stage{border-radius:14px;margin:.4rem 16px}}
+
+.seg{display:flex;gap:.5rem}
+.seg .b{flex:1}
+.seg .b[aria-pressed=true]{background:var(--navy);color:#fff}
+.frames{display:flex;flex-wrap:wrap;gap:.5rem}
+.fr{display:flex;align-items:center;gap:.4rem;font:inherit;font-size:.82rem;font-weight:600;border:2px solid var(--line);border-radius:999px;background:#fff;padding:.3rem .7rem .3rem .35rem;cursor:pointer;color:#334}
+.fr i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.2);display:block}
+.fr[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}
