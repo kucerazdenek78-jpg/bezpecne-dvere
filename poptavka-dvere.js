@@ -666,7 +666,7 @@
         ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'],
         ['Voucher Doporuč a získej', voucher ? 'poslán zákazníkovi s objednávkou' : '–'], ['data_json', JSON.stringify(d)]];
       // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane; voucher jde jen zákazníkovi
-      var intFiles = []; if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });
+      var intFiles = []; if (pdf) intFiles.push({ name: 'objednavka_pdf', file: 'Objednavka-' + d.obj_cislo + '.pdf', blob: pdf }); /* PDF objednávky se uloží i do kartotéky */ if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });
       var ix = d.email ? { reply_to: d.email } : {};
       if (intFiles.length) return sendFields('objednavka_interni', internal, intFiles, d.obj_cislo, ix)
         .catch(function () { return sendFields('objednavka_interni', internal, [], d.obj_cislo, ix); });
