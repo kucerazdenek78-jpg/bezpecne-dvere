@@ -138,9 +138,12 @@
   </div>
 
   <h2>Zkušební provoz – nový systém na NAS</h2>
-  <p style="margin:0 0 12px;color:var(--muted)">Zatím jen zkouška. Neslouží k běžné práci, nic z toho se nemá používat místo výše uvedených odkazů.</p>
+  <p style="margin:0 0 12px;color:var(--muted)">Nové verze formulářů a aplikace běží na firemním NAS. Záznamy se ukládají do nové kartotéky. E-maily z nových formulářů zatím neodcházejí, dokud se nenastaví odesílání pošty – běžnou práci proto dělejte přes původní odkazy výše.</p>
   <div class="grid">
     <a class="tile old" href="https://kartoteka.dvere.app/kartoteka.php" target="_blank" rel="noopener"><strong>Kartotéka poptávek a objednávek (ZKUŠEBNÍ)</strong><span>Nová kartotéka na firemním NAS. Přihlášení přes Cloudflare Access (povolen jen e-mail majitele) a pak heslem kartotéky. Zatím neobsahuje ostré záznamy.</span></a>
+    <a class="tile old" href="objednavka-nova.html"><strong>Nová objednávka – nová verze (NAS)</strong><span>Stejný formulář, ale s QR platbou zálohy, termínem montáže, QR kódy v předávacím listu a uložením do nové kartotéky. E-maily zatím neodcházejí.</span></a>
+    <a class="tile old" href="poptavka-nova.html"><strong>Nová poptávka – nová verze (NAS)</strong><span>Stejný formulář, poptávka se uloží do nové kartotéky na NAS. E-maily zatím neodcházejí.</span></a>
+    <a class="tile old" href="https://kartoteka.dvere.app/servis.php" target="_blank" rel="noopener"><strong>Servis – webová aplikace</strong><span>Skener QR z předávacího listu, hledání dveří, blížící se kontroly. V Chrome v telefonu ji přidejte na plochu (menu ⋮ → Přidat na plochu). Přihlášení stejné jako u kartotéky.</span></a>
   </div>
 
   <p class="note">Kartotéka a poptávky se otevírají v Jotformu a vyžadují přihlášení do Jotformu. PIN na této stránce jen skrývá odkazy před náhodnými návštěvníky.</p>
@@ -155,7 +158,7 @@
   function goNext() {
     var m = location.hash.match(/^#next=(.+)$/); if (!m) return false;
     var url = decodeURIComponent(m[1]);
-    if (!/^objednavka-dvere\.html(#.*)?$/.test(url)) return false;
+    if (!/^objednavka-(?:dvere|nova)\.html(#.*)?$/.test(url)) return false;
     location.replace(url); return true;
   }
   try { if (localStorage.getItem(KEY) === HASH) { goNext() || show(); } } catch (e) {}

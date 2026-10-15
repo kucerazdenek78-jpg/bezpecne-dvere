@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Platba zálohy | Bezpečné dveře</title>
+  <link rel="stylesheet" href="style.css?v=20261007a">
+  <style>
+    body{background:var(--bg);display:grid;place-items:center;min-height:100vh;padding:1.5rem}
+    .box{width:100%;max-width:520px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2rem 1.4rem;text-align:center}
+    .box h1{font-size:1.5rem;margin:0 0 .4rem}
+    #qr{display:block;margin:1rem auto;width:min(300px,80vw);height:auto;image-rendering:pixelated}
+    dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;text-align:left;max-width:360px;margin:1rem auto}
+    dt{color:var(--gray-500,#666)}dd{margin:0;font-weight:700;word-break:break-all}
+    .note{font-size:.92rem;color:var(--gray-500,#666);margin:.8rem 0 0}
+    .err{color:#b91c1c}
+  </style>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#123d27">
+</head>
+<body>
+<div class="box">
+  <h1>Platba zálohy (rezervační poplatek)</h1>
+  <p id="intro">Naskenujte QR kód v bankovní aplikaci, nebo zadejte platbu ručně.</p>
+  <img id="qr" alt="QR platba" hidden>
+  <dl id="det" hidden>
+    <dt>Částka</dt><dd id="fa"></dd>
+    <dt>Číslo účtu</dt><dd id="fu"></dd>
+    <dt>IBAN</dt><dd id="fi"></dd>
+    <dt>Variabilní symbol</dt><dd id="fv"></dd>
+    <dt>Zpráva</dt><dd id="fm"></dd>
+  </dl>
+  <p class="note" id="note" hidden>Příjemce: Zdeněk Kučera, Bezpečné dveře. Po připsání platby vám zálohu potvrdíme. Dotazy: <a href="tel:+420725559235">+420 725 559 235</a>, chci@bezpecne-dvere.cz.</p>
+  <p class="err" id="err" hidden>Odkaz na platbu není úplný. Kontaktujte nás prosím na <a href="tel:+420725559235">+420 725 559 235</a>.</p>
+  <a href="index.html" class="btn btn-outline" style="margin-top:1rem">Zpět na web</a>
+</div>
+<script src="platba/qrcode.js"></script>
+<script src="platba/platba.js?v=1"></script>
+<script>
+(function () {
+  var p = new URLSearchParams(location.search), c = (p.get('c') || '').slice(0, 40), a = parseInt(p.get('a'), 10);
+  var $ = function (id) { return document.getElementById(id); };
+  if (!c || !(a > 0 && a <= 1000000)) { $('err').hidden = false; $('intro').hidden = true; return; }
+  var i = BDPlatba.info(c, a);
+  $('qr').src = BDPlatba.png(i.spd, 360); $('qr').hidden = false;
+  $('fa').textContent = a.toLocaleString('cs-CZ') + ' Kč'; $('fu').textContent = i.ucet; $('fi').textContent = i.iban;
+  $('fv').textContent = i.vs || '–'; $('fm').textContent = 'Záloha obj. ' + c;
+  $('det').hidden = false; $('note').hidden = false;
+})();
+</script>
+</body>
+</html>
