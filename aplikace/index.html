@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=20261015b">
+  <link rel="stylesheet" href="app.css?v=20261016b">
 </head>
 <body>
 <header class="top">
@@ -51,12 +51,21 @@
         <label class="chk"><input type="checkbox" id="snap" checked> Přichytit k rohům</label>
       </div>
 
-      <h2>Dveře</h2>
+      <div id="catBox">
+        <h2>Co chcete vyzkoušet?</h2>
+        <div class="cats" id="vizCat" role="group" aria-label="Druh dveří">
+          <button class="cat" data-c="byt" aria-pressed="true"><img src="img/premium60-dub.jpg" alt="" width="120" height="160"><b>Dveře do bytu</b><span>bezpečnostní, požární</span></button>
+          <button class="cat" data-c="domu" aria-pressed="false"><img src="img/domovni/arendal.jpg" alt="" width="120" height="160"><b>Dveře do domu</b><span>ERKADO, 31 provedení</span></button>
+          <button class="cat" data-c="int" aria-pressed="false"><img src="img/interier/frezia1.jpg" alt="" width="120" height="160"><b>Interiérové dveře</b><span>34 provedení, skladem</span></button>
+        </div>
+      </div>
+      <div id="lockBar" class="lockbar" hidden><span id="lockTxt"></span> <a href="#viz" id="unlock">Vybrat jiné dveře →</a></div>
       <div class="seg" id="vizModel" role="group" aria-label="Model dveří">
         <button class="b sm" data-m="premium60" aria-pressed="true">PREMIUM 60</button>
         <button class="b sm" data-m="extreme54" aria-pressed="false">EXTREME 54</button>
       </div>
-      <h2>Odstín</h2>
+      <h2 id="shadeH">Odstín</h2>
+      <div class="pick" id="pick" hidden></div>
       <div class="shades" id="shades"></div>
       <p class="note" id="shadeNote"></p>
       <div id="frameBox" hidden>
@@ -86,10 +95,18 @@
 
   <!-- ═══ NABÍDKA ═══ -->
   <section class="view pad" id="v-nab" data-view="nab" hidden>
-    <h1>Bezpečnostní dveře do bytu</h1>
-    <p class="lead">Všechny s novou zárubní a montáží na klíč. Ceny a provedení najdete na webu, kde si dveře i sestavíte.</p>
+    <h1>Naše nabídka</h1>
+    <p class="lead">Tři druhy dveří. U každého si můžete vzhled vyzkoušet na fotce svých dveří.</p>
+    <h2>Bezpečnostní dveře do bytu</h2>
+    <p class="note">Všechny s novou zárubní a montáží na klíč. Ceny a provedení najdete na webu, kde si dveře i sestavíte.</p>
     <div class="cards" id="models"></div>
     <a class="b wide" href="../dvere-do-bytu.html#porovnani">Porovnání všech modelů na webu →</a>
+    <h2>Dveře do domu</h2>
+    <div class="card model"><img src="img/domovni/arendal.jpg" alt="ERKADO" loading="lazy"><div><h3>ERKADO</h3><p>Vchodové dveře do rodinných domů – 31 provedení, od plných po prosklené.</p>
+      <div class="btns"><a class="b sm" href="#viz?m=domovni">Vyzkoušet na fotce</a><a class="b sm" href="../dvere-do-domu.html">Katalog a ceny</a><a class="b sm pri" href="../dvere-do-domu.html#poptavka">Poptávka</a></div></div></div>
+    <h2>Interiérové dveře</h2>
+    <div class="card model"><img src="img/interier/frezia1.jpg" alt="Interiérové dveře" loading="lazy"><div><h3>Interiérové dveře</h3><p>34 provedení včetně dveří skladem. Ceny jsou komplet se zárubní.</p>
+      <div class="btns"><a class="b sm" href="#viz?m=interier">Vyzkoušet na fotce</a><a class="b sm" href="../dvere-do-interieru.html">Katalog a ceny</a><a class="b sm pri" href="../dvere-do-interieru.html#poptavka">Poptávka</a></div></div></div>
   </section>
 
   <!-- ═══ MOJE DVEŘE ═══ -->
@@ -148,6 +165,7 @@
 </dialog>
 
 <script src="bd-form.js?v=20261015a"></script>
-<script src="app.js?v=20261016a"></script>
+<script src="viz-data.js?v=20261016b"></script>
+<script src="app.js?v=20261016b"></script>
 </body>
 </html>

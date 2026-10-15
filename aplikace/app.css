@@ -129,3 +129,20 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .fr{display:flex;align-items:center;gap:.4rem;font:inherit;font-size:.82rem;font-weight:600;border:2px solid var(--line);border-radius:999px;background:#fff;padding:.3rem .7rem .3rem .35rem;cursor:pointer;color:#334}
 .fr i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.2);display:block}
 .fr[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}
+
+/* tři druhy dveří */
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.cat{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.15rem;border:2px solid var(--line);border-radius:14px;background:#fff;padding:.4rem .3rem .55rem;font:inherit;cursor:pointer;color:#223}
+.cat img{width:100%;height:110px;object-fit:contain;background:#eef1ee;border-radius:9px;margin-bottom:.25rem}
+.cat b{font-size:.85rem;line-height:1.15}
+.cat span{font-size:.7rem;color:#667;line-height:1.2}
+.cat[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}
+.lockbar{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;background:#eef3f0;border-radius:12px;padding:.55rem .8rem;margin:.6rem 0 0;font-weight:700}
+.lockbar a{font-weight:600;font-size:.85rem;color:var(--orange)}
+.sh small{display:block;font-weight:700;font-size:.7rem;color:var(--orange);margin-top:.1rem}
+.sk{display:inline-block;font-style:normal;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;background:#15803d;color:#fff;border-radius:6px;padding:.05rem .35rem;margin-top:.15rem}
+.sh{position:relative}
+.sh img{object-fit:contain;background:#eef1ee;object-position:center}
+.pick{margin-top:.8rem;background:#fff;border:2px solid var(--line);border-radius:14px;padding:.7rem .9rem;line-height:1.45;font-size:.9rem}
+.pick span{color:#556}.pick strong{font-size:1.05rem;color:var(--navy)}.pick small{color:#667}.pick a{color:var(--orange);font-weight:700}
+.shades.long{max-height:62vh;overflow-y:auto;padding:2px;-webkit-overflow-scrolling:touch}
