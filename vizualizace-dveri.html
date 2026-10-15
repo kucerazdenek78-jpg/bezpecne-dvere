@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vizualizace dveří na fotce (prodejce) | Bezpečné dveře</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="style.css?v=20261007a">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <meta name="theme-color" content="#123d27">
+  <script>
+    /* jen pro prodejce: bez odemčeného panelu (PIN) přesměrovat do panelu a pak zpět */
+    (function () { var ok = false; try { ok = localStorage.getItem('bd-panel-ok') === '1d0b7bb48b3fdfe1c03405713c48c4672463bd5004f6c8ac46de6adbb7949429'; } catch (e) {}
+      if (!ok) location.replace('panel.html#next=' + encodeURIComponent('vizualizace-dveri.html')); })();
+  </script>
+  <style>
+    body{background:var(--bg,#f4f7f5)}
+    .vz-top{background:var(--navy,#123d27);color:#fff;padding:.7rem 0}
+    .vz-top .container{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+    .vz-top a{color:#cfe9da;text-decoration:none;font-size:.9rem}
+    .vz-top b{font-size:1.05rem}
+    .vz-wrap{max-width:1100px;margin:0 auto;padding:1.2rem 1rem 4rem}
+    .vz-wrap h1{font-size:1.5rem;margin:0 0 .3rem;color:var(--navy,#123d27)}
+    .vz-lead{margin:0 0 1rem;color:var(--text-muted,#5b6b62)}
+    .vz-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.2rem;align-items:start}
+    @media(max-width:860px){.vz-grid{grid-template-columns:1fr}}
+    .vz-card{background:#fff;border:1px solid var(--gray-200,#dfe6e1);border-radius:14px;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .vz-card h2{font-size:1rem;margin:0 0 .6rem;color:var(--navy,#123d27)}
+    .vz-stage{position:relative;background:#e9eeeb;border-radius:12px;overflow:hidden;min-height:260px;touch-action:none;user-select:none;-webkit-user-select:none}
+    .vz-stage canvas#gl{display:block;width:100%;height:auto}
+    .vz-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;color:#5b6b62}
+    .vz-ov{position:absolute;inset:0;cursor:crosshair}
+    .vz-empty[hidden],.vz-ov[hidden]{display:none}
+    .vz-ov svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+    .vz-pt{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid #fff;box-shadow:0 0 0 2px #e8590c,0 1px 4px rgba(0,0,0,.5);display:grid;place-items:center;font-size:.72rem;font-weight:800;color:#fff;cursor:grab;touch-action:none;text-shadow:0 0 3px #000}
+    .vz-pt.drag{cursor:grabbing;background:rgba(232,89,12,.5)}
+    .vz-loupe{position:absolute;width:110px;height:110px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none;display:none;overflow:hidden;background:#000}
+    .vz-loupe canvas{width:100%;height:100%;display:block}
+    .vz-loupe:after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid #e8590c;border-radius:50%}
+    .vz-hint{margin:.6rem 0 0;padding:.55rem .8rem;border-radius:10px;background:#fff5e6;color:#7a4b00;font-size:.92rem}
+    .vz-hint.ok{background:#e6f6ec;color:#14653a}
+    .vz-btns{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.7rem}
+    .vz-b{font:inherit;font-weight:700;font-size:.92rem;padding:.6rem 1rem;border-radius:10px;border:1px solid var(--navy,#123d27);background:#fff;color:var(--navy,#123d27);cursor:pointer;text-decoration:none;display:inline-block}
+    .vz-b.pri{background:var(--navy,#123d27);color:#fff}
+    .vz-b{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+    .vz-b:disabled{opacity:.45;cursor:not-allowed}
+    .vz-shades{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+    .vz-sh{border:2px solid #dfe6e1;border-radius:10px;background:#fff;padding:.3rem;cursor:pointer;font:inherit;font-size:.78rem;font-weight:600;color:#334;text-align:center}
+    .vz-sh img{display:block;width:100%;height:92px;object-fit:cover;object-position:top;border-radius:6px;margin-bottom:.25rem}
+    .vz-sh[aria-pressed=true]{border-color:#e8590c;box-shadow:0 0 0 2px rgba(232,89,12,.25)}
+    .vz-row{display:flex;align-items:center;gap:.6rem;margin:.9rem 0 0;font-size:.9rem}
+    .vz-row input[type=range]{flex:1}
+    .vz-note{font-size:.8rem;color:#5b6b62;margin:.8rem 0 0;line-height:1.45}
+    .vz-steps{margin:.2rem 0 .8rem;padding-left:1.2rem;font-size:.92rem;color:#334}
+    .vz-steps li{margin:.15rem 0}
+  </style>
+</head>
+<body>
+<div class="vz-top"><div class="container"><b>Vizualizace dveří na fotce</b><a href="panel.html">← zpět do panelu prodejce</a></div></div>
+<main class="vz-wrap">
+  <h1>Jak by u zákazníka vypadaly dveře PREMIUM 60</h1>
+  <p class="vz-lead">Vyfoťte stávající dveře, označte čtyři rohy a vyberte odstín. Náhled můžete stáhnout nebo poslat zákazníkovi.</p>
+  <div class="vz-grid">
+    <section class="vz-card">
+      <div class="vz-stage" id="stage">
+        <canvas id="gl"></canvas>
+        <div class="vz-empty" id="empty"><div><div style="font-size:2.2rem">📷</div><p><b>Nejdřív vyberte fotku dveří</b><br>nejlépe zepředu, celé dveře i se zárubní</p></div></div>
+        <div class="vz-ov" id="ov" hidden></div>
+        <div class="vz-loupe" id="loupe"><canvas id="lp" width="220" height="220"></canvas></div>
+      </div>
+      <div class="vz-hint" id="hint">Vyberte fotku.</div>
+      <div class="vz-btns">
+        <label class="vz-b pri" for="fileCam">📷 Vyfotit</label>
+        <label class="vz-b" for="fileGal">🖼 Vybrat z galerie</label>
+        <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+        <input type="file" id="fileGal" accept="image/*" hidden>
+        <button class="vz-b" id="reset" disabled>↺ Označit rohy znovu</button>
+      </div>
+    </section>
+    <aside class="vz-card">
+      <h2>1) Odstín PREMIUM 60</h2>
+      <div class="vz-shades" id="shades"></div>
+      <p class="vz-note">Skladem: Černá perleť, Dub, Ořech, Světlé wenge, Bílá, Antracit. Příplatkové odstíny (Bílá wenge, Ocelově šedá) zatím nemají obrázek celých dveří.</p>
+      <h2 style="margin-top:1rem">2) Úpravy</h2>
+      <div class="vz-btns" style="margin-top:0">
+        <button class="vz-b" id="flip" aria-pressed="false">⇄ Zrcadlit (panty vpravo)</button>
+      </div>
+      <div class="vz-row"><label for="bri">Světlost</label><input type="range" id="bri" min="60" max="140" value="100"></div>
+      <div class="vz-row"><label for="soft">Hrany</label><input type="range" id="soft" min="0" max="100" value="30"></div>
+      <h2 style="margin-top:1rem">3) Výsledek</h2>
+      <div class="vz-btns" style="margin-top:0">
+        <button class="vz-b" id="cmp" disabled>👁 Podržet = původní fotka</button>
+        <button class="vz-b pri" id="save" disabled>⬇ Stáhnout obrázek</button>
+        <button class="vz-b" id="share" disabled hidden>📤 Sdílet</button>
+        <a class="vz-b" href="poptavka-dvere.html?model=premium60">Nová poptávka PREMIUM 60 →</a>
+      </div>
+      <p class="vz-note">Náhled je ilustrativní: stíny, odlesky a přesné kování se na fotce neupravují. Odstín podle vzorku v prodejně. Fotka se zpracuje jen v tomto zařízení a nikam se neodesílá.</p>
+    </aside>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var SHADES = [
+    ['Černá perleť', 'vizualizace/premium60-cerna-perlet.jpg'], ['Dub', 'vizualizace/premium60-dub.jpg'], ['Ořech', 'vizualizace/premium60-orech.jpg'],
+    ['Světlé wenge', 'vizualizace/premium60-svetle-wenge.jpg'], ['Bílá', 'vizualizace/premium60-bila.jpg'], ['Antracit', 'vizualizace/premium60-antracit.jpg']
+  ];
+  var $ = function (s) { return document.querySelector(s); };
+  var gl, prog, loc = {}, texPhoto, texDoor, photo = null, pts = [], shadeIdx = 1, flip = false, showOrig = false, doorImgs = {};
+  var canvas = $('#gl'), ov = $('#ov'), hint = $('#hint'), stage = $('#stage');
+
+  /* ── WebGL ── */
+  var VS = 'attribute vec2 p;varying vec2 t;void main(){t=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
+  var FS = 'precision highp float;varying vec2 t;uniform sampler2D ph,dr;uniform mat3 Hi;uniform float on,fl,br,soft;' +
+    'void main(){vec4 c=texture2D(ph,t);if(on>.5){vec3 q=Hi*vec3(t,1.);vec2 uv=q.xy/q.z;' +
+    'float e=min(min(uv.x,1.-uv.x),min(uv.y,1.-uv.y));float m=smoothstep(0.,max(soft,.0005),e);' +
+    'if(e>-.01){if(fl>.5)uv.x=1.-uv.x;vec3 d=texture2D(dr,clamp(uv,0.,1.)).rgb*br;c=vec4(mix(c.rgb,clamp(d,0.,1.),m),1.);}}gl_FragColor=c;}';
+  function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  function initGL() {
+    gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: false }) || canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true });
+    if (!gl) { hint.textContent = 'Tento prohlížeč nepodporuje WebGL – zkuste jiný (Chrome, Safari).'; return false; }
+    prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog); gl.useProgram(prog);
+    var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var a = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+    ['ph', 'dr', 'Hi', 'on', 'fl', 'br', 'soft'].forEach(function (n) { loc[n] = gl.getUniformLocation(prog, n); });
+    texPhoto = mkTex(); texDoor = mkTex(); gl.uniform1i(loc.ph, 0); gl.uniform1i(loc.dr, 1);
+    return true;
+  }
+  function mkTex() { var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); return t; }
+  function upload(tex, unit, src) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); }
+
+  /* homografie: jednotkový čtverec (0,0)(1,0)(1,1)(0,1) → čtyřúhelník TL,TR,BR,BL; vracíme inverzi (foto → uv dveří) */
+  function squareToQuad(q) {
+    var x0 = q[0][0], y0 = q[0][1], x1 = q[1][0], y1 = q[1][1], x2 = q[2][0], y2 = q[2][1], x3 = q[3][0], y3 = q[3][1];
+    var dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+    var det = dx1 * dy2 - dx2 * dy1, g = (dx3 * dy2 - dx2 * dy3) / det, h = (dx1 * dy3 - dx3 * dy1) / det;
+    return [x1 - x0 + g * x1, y1 - y0 + g * y1, g, x3 - x0 + h * x3, y3 - y0 + h * y3, h, x0, y0, 1]; // sloupcově: [a d g; b e h; c f 1]
+  }
+  function inv3(m) { // m je sloupcově: m0 m1 m2 | m3 m4 m5 | m6 m7 m8 (sloupce)
+    var a = m[0], b = m[3], c = m[6], d = m[1], e = m[4], f = m[7], g = m[2], h = m[5], i = m[8];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g, D = -(b * i - c * h), E = a * i - c * g, F = -(a * h - b * g), G = b * f - c * e, H = -(a * f - c * d), I = a * e - b * d;
+    var det = a * A + b * B + c * C;
+    return [A / det, B / det, C / det, D / det, E / det, F / det, G / det, H / det, I / det]; // transp. kofaktorů = inverze, uloženo sloupcově
+  }
+  function render() {
+    if (!gl || !photo) return;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    var ready = pts.length === 4 && doorImgs[shadeIdx] && doorImgs[shadeIdx].ok && !showOrig;
+    gl.uniform1f(loc.on, ready ? 1 : 0);
+    if (ready) {
+      var H = squareToQuad(pts), Hi = inv3(H);
+      gl.uniformMatrix3fv(loc.Hi, false, new Float32Array(Hi));
+      gl.uniform1f(loc.fl, flip ? 1 : 0); gl.uniform1f(loc.br, $('#bri').value / 100);
+      gl.uniform1f(loc.soft, +$('#soft').value / 100 * 0.012);
+    }
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texPhoto);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texDoor);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  function loadDoor(i, cb) {
+    if (doorImgs[i] && doorImgs[i].img) { doorImgs[i].ok && upload(texDoor, 1, doorImgs[i].img); return cb && cb(); }
+    var im = new Image(); doorImgs[i] = { img: im, ok: false };
+    im.onload = function () { doorImgs[i].ok = true; if (i === shadeIdx) { upload(texDoor, 1, im); } cb && cb(); };
+    im.onerror = function () { hint.textContent = 'Obrázek odstínu se nepodařilo načíst.'; };
+    im.src = SHADES[i][1];
+  }
+
+  /* ── fotka ── */
+  function setPhoto(bmp) {
+    var MAX = 1800, w = bmp.width, h = bmp.height, sc = Math.min(1, MAX / Math.max(w, h));
+    var c = document.createElement('canvas'); c.width = Math.round(w * sc); c.height = Math.round(h * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    photo = c; canvas.width = c.width; canvas.height = c.height;
+    upload(texPhoto, 0, c); pts = []; buildOverlay(); $('#empty').hidden = true; ov.hidden = false;
+    $('#reset').disabled = false; state(); render();
+  }
+  function onFile(e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return; e.target.value = '';
+    hint.textContent = 'Načítám fotku…';
+    var p = window.createImageBitmap ? createImageBitmap(f, { imageOrientation: 'from-image' }).catch(function () { return viaImg(f); }) : viaImg(f);
+    p.then(setPhoto).catch(function () { hint.textContent = 'Fotku se nepodařilo otevřít. Zkuste jiný formát (JPG/PNG).'; });
+  }
+  function viaImg(f) { return new Promise(function (res, rej) { var u = URL.createObjectURL(f), im = new Image(); im.onload = function () { URL.revokeObjectURL(u); res(im); }; im.onerror = rej; im.src = u; }); }
+
+  /* ── označení rohů ── */
+  var NAMES = ['levý horní', 'pravý horní', 'pravý dolní', 'levý dolní'], dragging = -1;
+  function pos(e) { var r = ov.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; }
+  function buildOverlay() {
+    ov.querySelectorAll('.vz-pt').forEach(function (n) { n.remove(); });
+    pts.forEach(function (p, i) {
+      var d = document.createElement('div'); d.className = 'vz-pt'; d.textContent = i + 1; d.dataset.i = i; d.style.left = p[0] * 100 + '%'; d.style.top = p[1] * 100 + '%'; ov.appendChild(d);
+    });
+    var s = ov.querySelector('svg'); if (s) s.remove();
+    if (pts.length > 1) {
+      var ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+      var pl = document.createElementNS(ns, pts.length === 4 ? 'polygon' : 'polyline');
+      pl.setAttribute('points', pts.map(function (p) { return p[0] * 100 + ',' + p[1] * 100; }).join(' ')); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', '#e8590c'); pl.setAttribute('stroke-width', '0.5'); pl.setAttribute('vector-effect', 'non-scaling-stroke'); pl.style.strokeWidth = '2px';
+      svg.appendChild(pl); ov.appendChild(svg);
+    }
+  }
+  function loupe(p, show) {
+    var L = $('#loupe'); if (!show || !photo) { L.style.display = 'none'; return; }
+    var lc = $('#lp'), x = lc.getContext('2d'), z = 70; // výřez 70 px fotky → 220 px
+    var sx = p[0] * photo.width - z / 2, sy = p[1] * photo.height - z / 2;
+    x.fillStyle = '#000'; x.fillRect(0, 0, 220, 220); x.drawImage(photo, sx, sy, z, z, 0, 0, 220, 220);
+    var r = stage.getBoundingClientRect(), px = p[0] * r.width, py = p[1] * r.height;
+    L.style.left = Math.min(Math.max(0, px - 55 + (px > r.width / 2 ? -80 : 80)), r.width - 110) + 'px'; L.style.top = Math.max(0, py - 150) + 'px'; L.style.display = 'block';
+  }
+  ov.addEventListener('pointerdown', function (e) {
+    var t = e.target.closest && e.target.closest('.vz-pt'); e.preventDefault();
+    if (t) { dragging = +t.dataset.i; t.classList.add('drag'); ov.setPointerCapture(e.pointerId); loupe(pts[dragging], true); return; }
+    if (pts.length < 4) { pts.push(pos(e)); buildOverlay(); state(); render(); }
+  });
+  ov.addEventListener('pointermove', function (e) {
+    if (dragging < 0) return; pts[dragging] = pos(e);
+    var n = ov.querySelector('.vz-pt[data-i="' + dragging + '"]'); n.style.left = pts[dragging][0] * 100 + '%'; n.style.top = pts[dragging][1] * 100 + '%';
+    var svgp = ov.querySelector('svg > *'); if (svgp) svgp.setAttribute('points', pts.map(function (p) { return p[0] * 100 + ',' + p[1] * 100; }).join(' '));
+    loupe(pts[dragging], true); render();
+  });
+  function endDrag() { if (dragging < 0) return; dragging = -1; ov.querySelectorAll('.vz-pt').forEach(function (n) { n.classList.remove('drag'); }); loupe(null, false); buildOverlay(); render(); }
+  ov.addEventListener('pointerup', endDrag); ov.addEventListener('pointercancel', endDrag);
+
+  function state() {
+    var n = pts.length, done = n === 4;
+    hint.className = 'vz-hint' + (done ? ' ok' : '');
+    hint.textContent = done ? 'Hotovo. Rohy můžete dál posouvat tažením, odstín změníte vpravo.' :
+      'Klepněte na ' + (n + 1) + '. roh dveří (' + NAMES[n] + ' roh křídla, ne zárubně). Pořadí: ' + NAMES.join(' → ') + '.';
+    ['save', 'cmp'].forEach(function (id) { $('#' + id).disabled = !done; });
+    var sb = $('#share'); sb.disabled = !done; sb.hidden = !(navigator.canShare && navigator.share);
+  }
+
+  /* ── ovládání ── */
+  function buildShades() {
+    $('#shades').innerHTML = SHADES.map(function (s, i) { return '<button class="vz-sh" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + s[1] + '" alt="" loading="lazy">' + s[0] + '</button>'; }).join('');
+    $('#shades').addEventListener('click', function (e) {
+      var b = e.target.closest('.vz-sh'); if (!b) return; shadeIdx = +b.dataset.i;
+      document.querySelectorAll('.vz-sh').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      loadDoor(shadeIdx, function () { upload(texDoor, 1, doorImgs[shadeIdx].img); render(); });
+    });
+  }
+  $('#fileCam').addEventListener('change', onFile); $('#fileGal').addEventListener('change', onFile);
+  $('#reset').addEventListener('click', function () { pts = []; buildOverlay(); state(); render(); });
+  $('#flip').addEventListener('click', function () { flip = !flip; this.setAttribute('aria-pressed', flip); render(); });
+  ['bri', 'soft'].forEach(function (id) { $('#' + id).addEventListener('input', render); });
+  var cmp = $('#cmp'); ['pointerdown'].forEach(function (ev) { cmp.addEventListener(ev, function () { showOrig = true; render(); }); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { cmp.addEventListener(ev, function () { if (showOrig) { showOrig = false; render(); } }); });
+  function blob() { return new Promise(function (res) { render(); canvas.toBlob(res, 'image/jpeg', 0.92); }); }
+  $('#save').addEventListener('click', function () { blob().then(function (b) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'premium60-' + SHADES[shadeIdx][0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jpg'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); }); });
+  $('#share').addEventListener('click', function () { blob().then(function (b) { var f = new File([b], 'premium60.jpg', { type: 'image/jpeg' }); if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: 'PREMIUM 60 – ' + SHADES[shadeIdx][0] }).catch(function () {}); }); });
+
+  if (initGL()) { buildShades(); loadDoor(shadeIdx); state(); hint.textContent = 'Vyberte fotku.'; }
+  window.__vz = { setPhoto: setPhoto, setPts: function (p) { pts = p; buildOverlay(); state(); render(); }, render: render, loadDoor: function (i, cb) { shadeIdx = i; loadDoor(i, function () { upload(texDoor, 1, doorImgs[i].img); render(); cb && cb(); }); } };
+})();
+</script>
+</body>
+</html>
