@@ -158,7 +158,7 @@
         <li data-step-dot="2"><span>2</span>Zpětná vazba</li>
         <li data-step-dot="3"><span>3</span>Hodnocení</li>
       </ol>
-      <form id="rzForm" novalidate>
+      <form id="rzForm" novalidate data-typ="registrace">
         <input type="hidden" name="_subject" value="Registrace záruky – z webu bezpecne-dvere">
         <input type="hidden" name="_template" value="table">
         <input type="hidden" name="_captcha" value="false">
@@ -336,7 +336,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="formulare-klient.js?v=3"></script>
+<script src="formulare-klient.js?v=4"></script>
 <script src="form-submit.js?v=3"></script>
 <script src="cookies.js?v=2" defer></script>
 </body>

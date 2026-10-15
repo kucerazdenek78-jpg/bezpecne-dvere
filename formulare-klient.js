@@ -70,18 +70,19 @@
 
   /* odeslání běžného HTML formuláře (form-submit.js, registrace záruky): pole → text, soubory → přílohy */
   function sendForm(form, typ) {
-    var lines = [], files = [], replyTo = '', subject = '', honey = '';
+    var lines = [], files = [], replyTo = '', subject = '', honey = '', data = {};
     new FormData(form).forEach(function (v, k) {
       if (k === '_subject') { subject = v; return; }
       if (k === '_honey') { honey = v; return; }
       if (k.charAt(0) === '_') return;
       if (typeof v === 'object' && v && 'size' in v) { if (v.size > 0) files.push({ name: k, file: v.name || k, blob: v }); return; }
       if (String(v).trim() === '') return;
-      lines.push(humanize(k) + ': ' + v);
+      data[k] = String(v).trim(); lines.push(humanize(k) + ': ' + v);
     });
     var em = form.querySelector('input[type="email"]'); if (em) replyTo = em.value;
     lines.push('Odesláno: ' + new Date().toLocaleString('cs-CZ'));
-    return send({ typ: typ || form.getAttribute('data-typ') || 'poptavka', predmet: subject || 'Formulář z webu', telo: lines.join('\n'), reply_to: replyTo, honey: honey, files: files });
+    var t = typ || form.getAttribute('data-typ') || 'poptavka';
+    return send({ typ: t, predmet: subject || 'Formulář z webu', telo: lines.join('\n'), reply_to: replyTo, honey: honey, files: files, data_json: t === 'registrace' ? JSON.stringify(data) : '' });
   }
 
   w.BDForm = { ENDPOINT: ENDPOINT, send: send, sendForm: sendForm, bodyFromFields: bodyFromFields };

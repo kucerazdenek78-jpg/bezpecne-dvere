@@ -271,6 +271,10 @@
             while (fnt.widthOfTextAtSize(text, sz) > maxW && text.length > 3) text = text.slice(0, -2) + '…';
             page.drawText(text, { x: x, y: H - yTop, size: sz, font: fnt, color: col });
           }
+          // nadpis „PŘEDÁVACÍ LIST“ → „PŘEDÁVACÍ A ZÁRUČNÍ LIST“ (přemaže původní nápis vpravo nahoře) + věta o záručním listu nad poli pro podpisy
+          page.drawRectangle({ x: 440, y: H - 47, width: 140, height: 14, color: L.rgb(1, 1, 1) });
+          (function () { var t = 'PŘEDÁVACÍ A ZÁRUČNÍ LIST', sz = 7.5, w = f[0].widthOfTextAtSize(t, sz); page.drawText(t, { x: 559 - w, y: H - 43.5, size: sz, font: f[0], color: L.rgb(0.07, 0.24, 0.15) }); })();
+          put('Tento list slouží zároveň jako záruční list.', 51, 719, 400, 8, false);
           var prov = [d.model, d.odstin].filter(Boolean).join(' · ');   // jen model a barva
           put(prov, 136, 216.5, 148);                    // Model a provedení
           put(d.obj_cislo, 389, 216.5, 154);             // Číslo objednávky
