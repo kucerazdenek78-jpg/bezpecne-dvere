@@ -171,6 +171,24 @@
       .secondary-card { flex-direction:column; }
       .secondary-card img { width:100%; height:130px; }
     }
+    /* Přidaná hodnota – servis online + nápady (větev pridana-hodnota) */
+    .value-section{background:var(--navy);color:#fff;padding:4rem 0}
+    .value-head{text-align:center;max-width:780px;margin:0 auto 2.5rem}
+    .value-head .section-label{color:#9be3b6}
+    .value-head h2{color:#fff;font-size:clamp(1.7rem,3.8vw,2.7rem);margin:.4rem 0 .9rem}
+    .value-head h2 span{color:#9be3b6}
+    .value-head p{color:rgba(255,255,255,.9);font-size:1.05rem;margin:0}
+    .value-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem}
+    .value-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:var(--radius-lg);padding:1.4rem 1.3rem}
+    .value-card .vc-ico{font-size:1.8rem;line-height:1;margin-bottom:.7rem}
+    .value-card h3{color:#fff;font-size:1.05rem;margin:0 0 .45rem}
+    .value-card p{color:rgba(255,255,255,.85);font-size:.92rem;margin:0}
+    .value-claim{text-align:center;margin:2.2rem auto 0;font-size:1.15rem;font-weight:800;color:#fff;max-width:760px}
+    .value-idea{margin-top:2rem;background:#fff;color:var(--navy);border-radius:var(--radius-lg);padding:1.4rem 1.6rem;display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap}
+    .value-idea strong{display:block;font-size:1.2rem;color:var(--navy)}
+    .value-idea span{font-size:.95rem;color:var(--gray-600)}
+    @media(max-width:1000px){.value-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:600px){.value-grid{grid-template-columns:1fr}.value-idea{flex-direction:column;align-items:flex-start}.value-idea .btn{width:100%;text-align:center}}
   </style>
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -351,6 +369,30 @@
       </div>
     </div>
     <div class="stock-band-delivery">🚚 Bytové dveře máme přímo skladem u nás a dodáme je včetně montáže do 14 dnů. Interiérové dveře z hlavního skladu dovezeme vždy do 14 dnů.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     PŘIDANÁ HODNOTA – SERVIS ONLINE + NÁPADY
+════════════════════════════════════════ -->
+<section class="value-section" id="pridana-hodnota">
+  <div class="container">
+    <div class="value-head">
+      <span class="section-label">Dveře s přidanou hodnotou</span>
+      <h2>Nekupujete jen dveře.<br><span>Kupujete prvotřídní servis.</span></h2>
+      <p>Spojili jsme dlouholeté zkušenosti s otvorovými výplněmi a zkušenosti z IT. K našim dveřím máte všechno na jednom místě – online.</p>
+    </div>
+    <div class="value-grid">
+      <div class="value-card"><div class="vc-ico">📋</div><h3>Servisní protokol online</h3><p>QR kód z předávacího listu ukáže předání, záruku i všechny servisní zásahy.</p></div>
+      <div class="value-card"><div class="vc-ico">🛡️</div><h3>Moje dveře</h3><p>Stav záruky, servis a možnost záruku prodloužit na jednom místě.</p></div>
+      <div class="value-card"><div class="vc-ico">🔔</div><h3>Upozornění na kontrolu</h3><p>Připomeneme Vám pravidelnou prohlídku dveří, nemusíte nic hlídat.</p></div>
+      <div class="value-card"><div class="vc-ico">📖</div><h3>Návody a péče</h3><p>Víte, jak se o dveře starat, aby sloužily dlouhé roky.</p></div>
+    </div>
+    <p class="value-claim">Nerozdáváme sliby a nelákáme na losování o výhry. Inovujeme – a&nbsp;v&nbsp;tom nepřestaneme.</p>
+    <div class="value-idea">
+      <div><strong>💡 Máte nápad na další funkci nebo vylepšení?</strong><span>Napište nám ho. Nejlepší nápad odměníme.</span></div>
+      <a href="napady.html" class="btn btn-primary">Poslat nápad →</a>
+    </div>
   </div>
 </section>
 
