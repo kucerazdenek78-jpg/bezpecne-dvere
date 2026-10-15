@@ -3,7 +3,7 @@
 // Akce „sparovat“: zákazník zadá číslo objednávky + poslední 4 číslice telefonu z objednávky → vrátí model, odstín
 // a záruku z objednávky v kartotéce (tabulka zadosti, typ objednavka_interni). Adresu, telefon ani ceny nevrací.
 // Nic nezapisuje do zadosti; pokusy se počítají v tabulce pokusy (limit na IP za hodinu).
-require __DIR__ . '/lib/start.php';
+require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php';
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $cfg['povolene_origin'], true)) {
@@ -37,7 +37,7 @@ if ($akce === 'sparovat') {
 
   // nejnovější záznam objednávky s tímto číslem (bez ohledu na velikost písmen a mezery)
   $norm = function ($s) { return strtoupper(preg_replace('/\s+/', '', (string)$s)); };
-  $st = $pdo->prepare("SELECT id, cislo, data_json FROM zadosti WHERE typ IN ('objednavka_interni','objednavka') AND REPLACE(UPPER(cislo),' ','')=? ORDER BY id DESC LIMIT 10");
+  $st = $pdo->prepare("SELECT * FROM zadosti WHERE typ IN ('objednavka_interni','objednavka') AND REPLACE(UPPER(cislo),' ','')=? ORDER BY id DESC LIMIT 10");
   $st->execute([$norm($cislo)]);
   $nalez = null;
   foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
@@ -54,7 +54,12 @@ if ($akce === 'sparovat') {
       'model_kod' => (string)($d['model_kod'] ?? ''), 'model' => (string)($d['model'] ?? ''),
       'odstin' => (string)($d['odstin'] ?? ''), 'zaruka' => (string)($d['zaruka'] ?? ''),
       'termin' => mb_substr($termin, 0, 60),
-    ], 'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
+      // skutečné údaje z kartotéky (potvrzené předání technikem) – aplikace je ukáže místo vlastního odhadu
+      'predano' => (string)($r['predano_dne'] ?? ''), 'zaruka_do' => (string)($r['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($r['zaruka_prodl_let'] ?? 0),
+    ],
+    // odkaz na zákaznickou stránku „Moje dveře“ na NAS (záruka, servis, prodloužení záruky s QR platbou) – jediný zdroj pravdy
+    'moje_url' => !empty($r['predano_dne']) ? zaruka_url($cfg, zaruka_token($pdo, $r)) : '',
+    'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
 }
 
 chyba(400, 'akce');

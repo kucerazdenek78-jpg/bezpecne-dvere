@@ -530,6 +530,7 @@
 
     // záruka
     h += '<div class="card"><h3>Záruka</h3>';
+    if (dv.moje_url) h += '<div class="btns" style="margin-bottom:10px"><a class="b sm pri" href="' + esc(dv.moje_url) + '" target="_blank" rel="noopener">Aktuální záruka, servis a prodloužení záruky</a></div><p class="small">Údaje níže jsou orientační; platný stav záruky a servisu vedeme u nás – otevřete odkaz výše.</p>';
     if (!w) h += '<p class="small">Doplňte datum předání dveří, ať můžeme spočítat záruku.</p>';
     else {
       var active = w.base >= today();
@@ -667,10 +668,10 @@
     var o = readForm(f), msg = $('#pairMsg'), btn = $('button', f); btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Hledám…';
     BDApp.api('sparovat', { cislo: o.cislo, tel4: o.tel4 }).then(function (j) {
       var d = j.dvere || {}, ext = /10 let/.test(d.zaruka || '') ? 10 : /5 let/.test(d.zaruka || '') ? 5 : 0;
-      var dv = { model_kod: d.model_kod, odstin: d.odstin, cislo: d.cislo, predano: '', prodlouzena: ext, registrace: !!d.registrace, zdroj: 'kartoteka', token: j.token || '' };
+      var dv = { model_kod: d.model_kod, odstin: d.odstin, cislo: d.cislo, predano: /^\d{4}-\d{2}-\d{2}$/.test(d.predano || '') ? d.predano : '', prodlouzena: d.prodlouzeno_let || ext, registrace: !!d.registrace, zdroj: 'kartoteka', token: j.token || '', moje_url: /^https:\/\/formulare\.dvere\.app\//.test(j.moje_url || '') ? j.moje_url : '' };
       store.set('bd-app-dvere', dv); btn.disabled = false; msg.textContent = '';
       if (j.kontakt) { var k = kontakt(); store.set('bd-app-kontakt', Object.assign({ jmeno: j.kontakt.jmeno, prijmeni: j.kontakt.prijmeni }, k)); }
-      renderMoje(); openManual(Object.assign({}, dv, { predano: /^\d{4}-\d{2}-\d{2}$/.test(d.termin || '') ? d.termin : '' }), 'Doplňte prosím skutečné datum předání (montáže) – podle něj počítáme záruku a prohlídku.');
+      renderMoje(); if (dv.predano) return; openManual(Object.assign({}, dv, { predano: /^\d{4}-\d{2}-\d{2}$/.test(d.termin || '') ? d.termin : '' }), 'Doplňte prosím skutečné datum předání (montáže) – podle něj počítáme záruku a prohlídku.');
     }).catch(function (err) {
       btn.disabled = false; msg.className = 'msg err';
       msg.innerHTML = err.code === 'nenalezeno' ? 'Objednávku jsme nenašli. Zkontrolujte číslo a telefon, nebo zadejte dveře ručně.' :
