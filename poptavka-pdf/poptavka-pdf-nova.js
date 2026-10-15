@@ -256,7 +256,9 @@
     if (k === 'securido65') return extra ? (6 + extra) + ' + 2 montážní' + tail : '6 + 2 montážní';
     return '';
   }
-  function buildHandover(d) {
+  /* o (volitelné, online předání s podpisem): { datum, zarukaDo (YYYY-MM-DD), montaznik, vyhrady, podpisZak, podpisZhot (PNG data URL) } */
+  function buildHandover(d, o) {
+    o = o || null;
     return preparePL().then(function (b) {
       var L = window.PDFLib;
       return L.PDFDocument.load(b[0]).then(function (pdf) {
@@ -281,6 +283,20 @@
           put(keysText(d), 103, 267.5, 181);             // Počet klíčů
           var adr = [d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', ');
           put(adr, 51, 754, 150, 8, true);               // Místo (datum doplní montážník)
+          var sigsDone = Promise.resolve();
+          if (o) {
+            var cz = function (v) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? (+m[3]) + '. ' + (+m[2]) + '. ' + m[1] : ''; };
+            put(cz(o.datum), 136, 242, 148);                               // Datum předání
+            put(cz(o.zarukaDo), 398, 242, 148);                            // Základní záruka do
+            put(o.montaznik, 398, 267.5, 148);                             // Předal (montážník)
+            put(o.vyhrady, 150, 731, 395, 8.5, true);                      // Výhrady
+            if (o.datum) { page.drawRectangle({ x: 49, y: H - 757.5, width: 160, height: 12, color: L.rgb(1, 1, 1) }); put([d.mesto, cz(o.datum)].filter(Boolean).join(', '), 51, 754, 150, 8, true); }
+            var sigs = [];
+            function sig(url, x, w) { if (!url) return; sigs.push(pdf.embedPng(url).then(function (im) {
+              var sc = Math.min(w / im.width, 28 / im.height); page.drawImage(im, { x: x + (w - im.width * sc) / 2, y: H - 757.5, width: im.width * sc, height: im.height * sc }); })); }
+            sig(o.podpisZhot, 222, 150); sig(o.podpisZak, 393, 150);
+            sigsDone = Promise.all(sigs);
+          }
           put((d.jmeno + ' ' + d.prijmeni).trim(), 392, 782, 150, 8, true);   // pod „Objednatel (podpis)“
           put('Objednávka ' + d.obj_cislo + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 490, 7, true);
           // QR „Moje dveře“ (záruka, servis, registrace) pro zákazníka: nahradí v kartě „Zaregistrujte své dveře“ původní QR registrace
@@ -309,10 +325,10 @@
               t2('3. Do kartotéky se zapíše datum předání a začátek záruky; dveře se odepíší ze skladu.', 11, false);
               y += 10;
               t2('Tento list zákazníkovi nepředávejte. QR kód je neveřejný a bez přihlášení do kartotéky nefunguje.', 9.5, false, L.rgb(0.55, 0.1, 0.1));
-              return pdf.save();
+              return sigsDone.then(function () { return pdf.save(); });
             });
           }
-          return pdf.save();
+          return sigsDone.then(function () { return pdf.save(); });
           });
         });
       });
