@@ -3,7 +3,7 @@
    typ: poptavka | objednavka_interni | objednavka_zakaznik (adresáti jsou pevně na serveru, ne v prohlížeči). */
 (function (w) {
   'use strict';
-  var ENDPOINT = 'https://formulare.bezpecne-dvere.cz/odeslat.php';
+  var ENDPOINT = 'https://formulare.dvere.app/odeslat.php';
   /* Záloha: když vlastní server neodpoví (výpadek NAS/internetu) nebo selže (HTTP 5xx), poptávka a interní
      objednávka se odešle přes FormSubmit na tuto adresu, ať o ni nepřijdeme (e-mail pak bude anglický). */
   var FALLBACK_TO = 'kucerazd@kksystem.cz';
