@@ -645,6 +645,7 @@
       ['_cc', [CC_OBJ, d.email].filter(Boolean).join(',')], ['_replyto', CC]
     ];
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
+    if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); }
     reviewRows(d).forEach(function (r) { if (['Interní poznámka', 'Z poptávky', 'Číslo OP'].indexOf(r[0]) < 0 && r[2] !== 'x') f.push([r[0], r[1]]); });
     return f;
   }
@@ -691,6 +692,16 @@
       }
       if (voucher) { var vl = $('#doneVoucher'); if (vl) { vl.href = URL.createObjectURL(voucher); vl.download = 'Voucher-Doporuc-a-ziskej-' + d.obj_cislo + '.pdf'; vl.hidden = false; } }
       if (plist) { var hl = $('#doneHandover'); if (hl) { hl.href = URL.createObjectURL(plist); hl.download = 'Predavaci-list-' + d.obj_cislo + '.pdf'; hl.hidden = false; } }
+      if (d.zaloha > 0 && window.BDPlatba && $('#donePay')) {
+        try {
+          var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), box = $('#donePayQr'); box.innerHTML = '';
+          var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'width:min(300px,80vw);height:auto;image-rendering:pixelated'; box.appendChild(cv);
+          var zl = (d.zaloha_label || 'zálohy').toLowerCase(); $('#donePayLabel').textContent = zl === 'záloha' ? 'zálohy' : zl;
+          $('#donePayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '');
+          $('#donePayCopy').onclick = function () { var b = this, t = pi2.odkaz; (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'Zkopírováno'; }, function () { window.prompt('Odkaz na platbu:', t); }); };
+          $('#donePay').hidden = false;
+        } catch (e) {}
+      }
       $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
       window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
     }).catch(function () {

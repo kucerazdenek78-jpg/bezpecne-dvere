@@ -149,8 +149,12 @@
         if (O) {
           /* platba a termín */
           section('Platba a termín');
-          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)], ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
-            ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']], M, 34, cw - 34) + 1;
+          var pay = (d.zaloha > 0 && window.BDPlatba) ? window.BDPlatba.info(d.obj_cislo || d.cislo, d.zaloha) : null, y0 = y;
+          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)],
+            pay ? ['Platba ' + String(d.zaloha_label || 'zálohy').toLowerCase().replace(/^záloha$/, 'zálohy').replace(/^rezervace$/, 'rezervace'), 'účet ' + pay.ucet + (pay.vs ? ', VS ' + pay.vs : '') + ' (nebo QR vpravo)'] : null,
+            ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
+            ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']].filter(Boolean), M, 34, cw - 34 - (pay ? 30 : 0)) + 1;
+          if (pay) { try { doc.addImage(window.BDPlatba.png(pay.spd, 300), 'PNG', W - M - 27, y0 - 2, 27, 27); font('normal', 6.5, MUTED); doc.text('QR platba', W - M - 13.5, y0 + 27, { align: 'center' }); } catch (e) {} y = Math.max(y, y0 + 29); }
           if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, M, y); y += pl.length * 4.4 + 3; }
           /* fotky z poptávky (malé) */
           var fit = x.fit || { photoH: 52, legal: 7.4 };

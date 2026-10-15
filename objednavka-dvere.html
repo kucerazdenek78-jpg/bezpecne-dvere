@@ -522,6 +522,12 @@
       <p>Číslo objednávky: <strong id="doneRef"></strong></p>
       <p>E-mail s PDF odešel vám a v kopii zákazníkovi. Předvyplněný předávací list přišel jen vám (prodejcům), voucher Doporuč a získej jen zákazníkovi. Dokumenty si můžete stáhnout níže.</p>
       <p id="doneWarn" class="pq-done-warn" hidden></p>
+      <div id="donePay" hidden style="margin:1.2rem auto;max-width:360px;text-align:center">
+        <h3 style="margin:0 0 .4rem">Platba <span id="donePayLabel">zálohy</span></h3>
+        <p id="donePayTxt" style="margin:.2rem 0 .6rem"></p>
+        <div id="donePayQr"></div>
+        <p style="margin:.6rem 0 0"><button type="button" id="donePayCopy" class="btn btn-outline">Kopírovat odkaz na platbu</button></p>
+      </div>
       <div class="pq-done-btns"><a id="donePdf" class="btn btn-primary" hidden>Stáhnout PDF</a><button type="button" id="donePrint" class="btn btn-outline" hidden>Otevřít k tisku</button><a id="doneHandover" class="btn btn-outline" hidden>Předávací list (PDF)</a><a id="doneVoucher" class="btn btn-outline" hidden>Voucher Doporuč a získej (PDF)</a><button type="button" id="doneShare" class="btn btn-outline" hidden>Poslat zákazníkovi ze svého e-mailu</button><a href="objednavka-dvere.html" class="btn btn-outline" onclick="location.href='objednavka-dvere.html';location.reload();return false;">Nová objednávka</a><a href="panel.html" class="btn btn-outline">Panel prodejce</a></div>
     </div>
   </div>
@@ -590,7 +596,9 @@
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
 <script src="formulare-klient.js?v=3"></script>
-<script src="poptavka-pdf/poptavka-pdf.js?v=20261011i"></script>
-<script src="poptavka-dvere.js?v=20261014a"></script>
+<script src="platba/qrcode.js"></script>
+<script src="platba/platba.js?v=1"></script>
+<script src="poptavka-pdf/poptavka-pdf.js?v=20261016a"></script>
+<script src="poptavka-dvere.js?v=20261016a"></script>
 </body>
 </html>
