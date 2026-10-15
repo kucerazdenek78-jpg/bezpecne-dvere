@@ -921,5 +921,8 @@
   }
   // předvolba modelu z odkazu: poptavka-dvere.html?model=premium60
   var pre = (location.search.match(/[?&]model=([a-z0-9]+)/) || [])[1];
-  if (pre && MODELS[pre]) { var r = form.querySelector('input[name="model"][value="' + pre + '"]'); r.checked = true; state.model = pre; buildOptions(pre); updateSummary(); }
+  if (pre && MODELS[pre]) { var r = form.querySelector('input[name="model"][value="' + pre + '"]'); r.checked = true; state.model = pre; buildOptions(pre);
+    var od = (location.search.match(/[?&]odstin=([^&]+)/) || [])[1];
+    if (od) { od = decodeURIComponent(od); var ro = $$('input[name="odstin"]').filter(function (i) { return i.value === od; })[0]; if (ro) { ro.checked = true; } }
+    updateSummary(); }
 })();

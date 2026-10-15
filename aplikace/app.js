@@ -53,6 +53,7 @@
     if (!$('[data-view="' + v + '"]')) v = 'viz';
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (/[?&]p=1/.test(location.hash)) { try { sessionStorage.setItem('bd-app-prodejce', '1'); } catch (e) {} }
     if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]]) { if (mm[1] !== vizModel) setModel(mm[1]); setLock(true); } else setLock(false); layout(); }
     if (v === 'moje') renderMoje();
     window.scrollTo(0, 0);
@@ -432,7 +433,14 @@
       if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: MN() + ' – ' + shadeName(), text: 'Takhle by u nás vypadaly dveře ' + MN() + ' (' + shadeName() + ').' }).catch(function () {});
     });
   });
-  $('#ask').addEventListener('click', openAsk);
+  /* režim prodejce (odkaz z panelu: #viz?p=1): tlačítko vede rovnou na formulář nabídky s předvyplněným modelem a odstínem */
+  var seller = false; try { seller = sessionStorage.getItem('bd-app-prodejce') === '1'; } catch (e) {}
+  if (seller) { $('#ask').textContent = 'Vytvořit nabídku pro zákazníka'; document.body.classList.add('seller'); }
+  $('#ask').addEventListener('click', function () {
+    var V = VIZ[vizModel];
+    if (seller && V.cat === 'byt') { location.href = '../poptavka-dvere.html?model=' + vizModel + '&odstin=' + encodeURIComponent(shadeName()); return; }
+    openAsk();
+  });
 
   /* ═══════════════ formuláře (dialog) ═══════════════ */
   var dlg = $('#dlg');
