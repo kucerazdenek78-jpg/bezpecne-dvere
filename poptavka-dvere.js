@@ -505,7 +505,7 @@
       d.z_poptavky = state.fromRef || '';
       d.obj_cislo = fv('obj_cislo'); d.obj_datum = fv('obj_datum'); d.prodavac = val('prodavac');
       d.op = fv('op'); d.zvonek = fv('zvonek'); d.tl_zarubne = val('tl_zarubne') || (m.order.frame.length === 1 ? m.order.frame[0] : '');
-      d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.interni = fv('interni');
+      d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.termin_datum = fv('termin_datum'); d.interni = fv('interni');
       d.zaloha_label = zalohaLabel(); d.zaloha = zaloha(); d.doplatek = Math.max(0, r.total - d.zaloha);
       d.cena_zakladni_bezna = m.regular || m.price;
     }
@@ -530,7 +530,7 @@
       rows.push(['Číslo OP', d.op, 2], ['Zvonek', d.zvonek, 2]);
       rows.push(['Číslo objednávky', d.obj_cislo, 3], ['Datum', d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : '', 3], ['Prodavač', d.prodavac, 3],
         ['Tloušťka zárubně', d.tl_zarubne, 3], ['Zeď', [d.zed, d.tl_zdi ? d.tl_zdi + ' cm' : ''].filter(Boolean).join(', '), 3],
-        ['Termín montáže', d.termin, 3], ['Poznámka pro zákazníka', d.poznamka, 3], ['Interní poznámka', d.interni, 3], ['Z poptávky', d.z_poptavky, 3]);
+        ['Termín montáže', [d.termin_datum ? new Date(d.termin_datum).toLocaleDateString('cs-CZ') : '', d.termin].filter(Boolean).join(' · '), 3], ['Poznámka pro zákazníka', d.poznamka, 3], ['Interní poznámka', d.interni, 3], ['Z poptávky', d.z_poptavky, 3]);
     } else
     rows.push(['Zeď', d.zed, 3], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : '', 3], ['Fotky', d.fotky.length ? d.fotky.length + ' ks' : '', 3], ['Poznámka', d.poznamka, 3]);
     return rows.filter(function (r) { return r[1]; });
