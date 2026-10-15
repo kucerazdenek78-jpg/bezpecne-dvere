@@ -1,4 +1,4 @@
-/* Odesílání formulářů na vlastní server (formulare.bezpecne-dvere.cz) – náhrada FormSubmit.
+/* Odesílání formulářů na vlastní server (formulare.dvere.app) – náhrada FormSubmit.
    Použití: BDForm.send({ typ, predmet, telo, reply_to, email_zakaznik, cislo, data_json, honey, files:[{name,file,blob}] }) → Promise
    typ: poptavka | objednavka_interni | objednavka_zakaznik (adresáti jsou pevně na serveru, ne v prohlížeči). */
 (function (w) {

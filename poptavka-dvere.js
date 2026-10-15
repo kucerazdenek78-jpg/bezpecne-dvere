@@ -1,6 +1,6 @@
 /* Poptávka dveří – vlastní formulář (náhrada Jotform 253084834051050)
    Ceny a volby: dvere-do-bytu.html (ceny) + Jotform poptávka (volby), stav 11. 10. 2026.
-   Odeslání: vlastní server formulare.bezpecne-dvere.cz (formulare-klient.js, přílohy PDF + fotky jako skutečné soubory); adresáty určuje server (kucerazd@kksystem.cz + kopie).
+   Odeslání: vlastní server formulare.dvere.app (formulare-klient.js, přílohy PDF + fotky jako skutečné soubory); adresáty určuje server (kucerazd@kksystem.cz + kopie).
    Pole „data_json“ nese strojově čitelná data pro pozdější import do systému na NAS. */
 (function () {
   'use strict';
@@ -618,7 +618,7 @@
     if (th.length && (url.length + th.join('~').length) < 24000) url += '&f=' + th.join('~');
     return url;
   }
-  /* odeslání na vlastní server (formulare.bezpecne-dvere.cz) – přílohy jdou jako skutečné soubory.
+  /* odeslání na vlastní server (formulare.dvere.app) – přílohy jdou jako skutečné soubory.
      typ určuje adresáty na serveru: poptavka | objednavka_interni | objednavka_zakaznik */
   var canFiles = true;
   function pickField(list, key) { var r = ''; list.forEach(function (x) { if (x[0] === key) r = x[1]; }); return r; }

@@ -1,4 +1,4 @@
-/* Odeslání formulářů přes vlastní server formulare.bezpecne-dvere.cz (formulare-klient.js); adresáty určuje server */
+/* Odeslání formulářů přes vlastní server formulare.dvere.app (formulare-klient.js); adresáty určuje server */
 (function () {
   var PUBLIC = 'chci@bezpecne-dvere.cz';    // adresa zobrazená zákazníkovi při chybě
   document.querySelectorAll('form[data-email-form]').forEach(function (form) {
