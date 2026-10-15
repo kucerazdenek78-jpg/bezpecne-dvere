@@ -4,6 +4,9 @@
 (function (w) {
   'use strict';
   var ENDPOINT = 'https://formulare.bezpecne-dvere.cz/odeslat.php';
+  /* Záloha: když vlastní server neodpoví (výpadek NAS/internetu) nebo selže (HTTP 5xx), poptávka a interní
+     objednávka se odešle přes FormSubmit na tuto adresu, ať o ni nepřijdeme (e-mail pak bude anglický). */
+  var FALLBACK_TO = 'kucerazd@kksystem.cz';
 
   function humanize(n) {
     n = String(n).replace(/_/g, ' ').trim();
@@ -29,12 +32,40 @@
     (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, f.file); });
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, 90000) : null;
+    var typ = o.typ || 'poptavka';
     return fetch(ENDPOINT, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd, signal: ctl ? ctl.signal : undefined })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-      .then(function (x) {
-        if (!(x.ok && x.j && (x.j.success === true || x.j.success === 'true'))) throw new Error((x.j && x.j.message) || 'fail');
+      .then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }, function () { return { ok: false, status: r.status, j: null }; });
       })
-      .then(function (v) { if (timer) clearTimeout(timer); return v; }, function (e) { if (timer) clearTimeout(timer); throw e; });
+      .then(function (x) {
+        if (!(x.ok && x.j && (x.j.success === true || x.j.success === 'true'))) {
+          var err = new Error((x.j && x.j.message) || 'fail');
+          err.retryable = x.status >= 500; /* 4xx (limit, neplatná data) se nezkouší znovu */
+          throw err;
+        }
+      })
+      .then(function (v) { if (timer) clearTimeout(timer); return v; }, function (e) {
+        if (timer) clearTimeout(timer);
+        var network = !('retryable' in e); /* fetch selhal: server nedostupný / timeout */
+        if ((network || e.retryable) && typ !== 'objednavka_zakaznik') return fallback(o);
+        throw e;
+      });
+  }
+
+  /* záložní odeslání přes FormSubmit (stejná data, anglický rámec e-mailu) */
+  function fallback(o) {
+    var fd = new FormData();
+    fd.append('_subject', (o.predmet || 'Formulář z webu') + ' [záložní odeslání]');
+    fd.append('_captcha', 'false');
+    fd.append('_template', 'table');
+    if (o.reply_to) fd.append('email', o.reply_to);
+    fd.append('zprava', o.telo || '');
+    if (o.cislo) fd.append('cislo', o.cislo);
+    if (o.data_json) fd.append('data_json', o.data_json);
+    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, f.file); });
+    return fetch('https://formsubmit.co/ajax/' + FALLBACK_TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (!(d && (d.success === true || d.success === 'true'))) throw new Error('fallback'); });
   }
 
   /* odeslání běžného HTML formuláře (form-submit.js, registrace záruky): pole → text, soubory → přílohy */
