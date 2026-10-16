@@ -749,3 +749,9 @@ a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shad
 
 /* Výhody u PREMIUM 60 (doprava, bez příplatků) */
 .perks-line{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin:0 0 1.25rem;font-weight:700;font-size:.95rem;color:#15803d}
+
+/* Štítek „Moje dveře – aplikace v ceně“ (vkládá bonus.js, odkazuje na moje-dvere.html) */
+.md-bonus{display:inline-flex;align-items:center;gap:.4rem;margin:.55rem 0 .15rem;padding:.28rem .7rem .28rem .5rem;border:1px solid var(--gray-200);border-radius:99px;background:var(--navy-light);color:var(--navy);font-size:.76rem;font-weight:600;line-height:1.25;text-decoration:none;max-width:100%}
+.md-bonus::before{content:"";flex:none;width:1.05rem;height:1.05rem;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231f6b43%22 stroke-width=%221.7%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%226%22 y=%222%22 width=%2212%22 height=%2220%22 rx=%222.5%22/%3E%3Crect x=%229%22 y=%226%22 width=%226%22 height=%2211%22 rx=%220.8%22/%3E%3Ccircle cx=%2213.6%22 cy=%2211.8%22 r=%220.5%22 fill=%22%231f6b43%22/%3E%3Cpath d=%22M10.5 20h3%22/%3E%3C/svg%3E") center/contain no-repeat}
+.md-bonus:hover{border-color:var(--navy-mid)}
+.md-bonus small{font-weight:500;color:var(--text-muted)}
