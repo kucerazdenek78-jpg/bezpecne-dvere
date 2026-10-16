@@ -51,7 +51,7 @@
 
   function build(d, x) {
     x = x || {};
-    var O = !!x.order, N = !!(x.order && x.nabidka);
+    var O = !!x.order;
     var shade = x.shadeImg && x.shadeImg.indexOf('color:') !== 0 ? x.shadeImg : null;
     var photos = x.photos || {};
     return prepare().then(function (fonts) {
@@ -66,10 +66,10 @@
         /* hlavička */
         doc.setFillColor.apply(doc, GREEN); doc.rect(0, 0, W, 30, 'F');
         if (im[0]) { var lh = 16, lw = lh * im[0].w / im[0].h; doc.addImage(im[0].data, 'JPEG', M, 7, lw, lh); }
-        font('bold', 15, [255, 255, 255]); doc.text(N ? 'Cenová nabídka – bezpečnostní dveře' : O ? 'Objednávka bezpečnostních dveří' : 'Poptávka bezpečnostních dveří', W - M, 13, { align: 'right' });
+        font('bold', 15, [255, 255, 255]); doc.text(O ? 'Objednávka bezpečnostních dveří' : 'Poptávka bezpečnostních dveří', W - M, 13, { align: 'right' });
         if (O) {
           font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.obj_cislo + '  ·  ' + (d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : new Date(d.odeslano).toLocaleDateString('cs-CZ')), W - M, 19.5, { align: 'right' });
-          doc.text('Prodavač: ' + (d.prodavac || '–') + (N && d.nabidka_do ? '  ·  platí do ' + new Date(d.nabidka_do).toLocaleDateString('cs-CZ') : '') + (d.z_poptavky ? '  ·  z poptávky ' + d.z_poptavky : ''), W - M, 24.5, { align: 'right' });
+          doc.text('Prodavač: ' + (d.prodavac || '–') + (d.z_poptavky ? '  ·  z poptávky ' + d.z_poptavky : ''), W - M, 24.5, { align: 'right' });
         } else {
           font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.cislo + '  ·  ' + new Date(d.odeslano).toLocaleString('cs-CZ'), W - M, 19.5, { align: 'right' });
           doc.text('Odesláno z webu bezpecne-dvere', W - M, 24.5, { align: 'right' });
@@ -81,8 +81,7 @@
         }
         function footer() {
           font('normal', 7.5, MUTED);
-          if (N) { doc.text('Nabídka č. ' + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: chci@bezpecne-dvere.cz · +420 725 559 235', W - M, 289, { align: 'right' }); }
-          else if (O) { doc.text('Revize 10/2026 · Objednávka č. ' + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: chci@bezpecne-dvere.cz · +420 725 559 235', W - M, 289, { align: 'right' }); }
+          if (O) { doc.text('Revize 10/2026 · Objednávka č. ' + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: chci@bezpecne-dvere.cz · +420 725 559 235', W - M, 289, { align: 'right' }); }
           else doc.text('Bezpečné dveře · Zdeněk Kučera, IČ 64682676 · vzorkovna Obchodní 36, Most · +420 725 559 235 · chci@bezpecne-dvere.cz', W / 2, 289, { align: 'center' });
         }
         function ensure(h) { if (y + h > 280) { footer(); doc.addPage(); page++; y = 18; } }
@@ -165,9 +164,9 @@
 
         if (O) {
           /* platba a termín */
-          section(N ? 'Platnost a platba' : 'Platba a termín');
-          var pay = (!N && d.zaloha > 0 && window.BDPlatba) ? window.BDPlatba.info(d.obj_cislo || d.cislo, d.zaloha) : null, y0 = y;
-          y = pairs([N && d.nabidka_do ? ['Nabídka platí do', new Date(d.nabidka_do).toLocaleDateString('cs-CZ')] : null, [N ? (d.zaloha_label || 'Záloha') + ' při objednání' : (d.zaloha_label || 'Záloha'), fmt(d.zaloha)],
+          section('Platba a termín');
+          var pay = (d.zaloha > 0 && window.BDPlatba) ? window.BDPlatba.info(d.obj_cislo || d.cislo, d.zaloha) : null, y0 = y;
+          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)],
             pay ? ['Platba ' + String(d.zaloha_label || 'zálohy').toLowerCase().replace(/^záloha$/, 'zálohy').replace(/^rezervace$/, 'rezervace'), 'účet ' + pay.ucet + (pay.vs ? ', VS ' + pay.vs : '') + ' (nebo QR vpravo)'] : null,
             ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
             ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']].filter(Boolean), M, 34, cw - 34 - (pay ? 30 : 0)) + 1;
@@ -188,7 +187,6 @@
             });
             y += bh + 9;
           }
-          if (N) { footer(); return { blob: doc.output('blob'), pages: doc.getNumberOfPages() }; }
           /* právní ujednání */
           section('Smluvní ujednání');
           font('normal', fit.legal, [40, 60, 50]);

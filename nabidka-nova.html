@@ -243,298 +243,70 @@
   </div>
 </nav>
 
-<!-- ═══ NOVÁ POPTÁVKA DVEŘÍ (náhrada Jotform 253084834051050) ═══ -->
 <header class="pq-hero">
   <div class="container">
     <span class="section-label">Pro prodejce · nabídka</span>
-    <h1>Cenová nabídka – bezpečnostní dveře</h1>
-    <p>Vyplňte dveře a ceny, nabídku odešlete zákazníkovi jako konečnou. Z odeslané nabídky pak v kartotéce jedním klikem vytvoříte objednávku.</p>
-    <div class="pq-note" id="poLoaded" hidden></div>
+    <h1>Cenová nabídka</h1>
+    <p>Jedna nabídka = jedna kategorie dveří (do bytu, do domu, nebo interiérové), v ní libovolně položek. Zákazník, který chce víc kategorií, dostane víc nabídek.</p>
+    <div class="pq-note" id="nbLoaded" hidden></div>
   </div>
 </header>
+<section class="pq-wrap"><div class="container">
+<form id="nb" novalidate>
+  <fieldset class="pq-block"><legend>Kategorie dveří</legend>
+    <div class="pq-chips" id="nbKat"></div>
+    <p class="pq-help" id="nbKatHint" style="margin:.6rem 0 0"></p>
+  </fieldset>
 
-<section class="pq-wrap">
-  <div class="container">
-    <ol class="pq-steps" aria-label="Postup">
-      <li class="on" data-step-ind="1"><span>1</span>Dveře</li>
-      <li data-step-ind="2"><span>2</span>Zákazník</li>
-      <li data-step-ind="3"><span>3</span>Objednávka</li>
-      <li data-step-ind="4"><span>4</span>Odeslat</li>
-    </ol>
-
-    <div class="pq-layout">
-      <form id="pq" novalidate data-mode="nabidka">
-        <input type="text" name="_honey" class="pq-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
-
-        <!-- ── KROK 1: DVEŘE ── -->
-        <div class="pq-step" data-step="1">
-          <fieldset class="pq-block">
-            <legend>Který model se vám líbí?</legend>
-            <div class="pq-models" id="pqModels"></div>
-          </fieldset>
-
-          <div id="pqModelOptions" hidden>
-            <fieldset class="pq-block">
-              <legend>Barva dveří <small id="pqShadeHint"></small></legend>
-              <div class="pq-swatches" id="pqShades"></div>
-            </fieldset>
-
-            <fieldset class="pq-block" id="pqFrameBlock" hidden>
-              <legend>Barva lakované zárubně</legend>
-              <div class="pq-chips" id="pqFrames"></div>
-            </fieldset>
-
-            <fieldset class="pq-block">
-              <legend id="pqHwLegend">Kování a kukátko</legend>
-              <div class="pq-tiles" id="pqHardware"></div>
-            </fieldset>
-
-            <fieldset class="pq-block" id="pqPeepBlock" hidden>
-              <legend>Kukátko</legend>
-              <div class="pq-tiles" id="pqPeep"></div>
-            </fieldset>
-
-            <fieldset class="pq-block" id="pqLockBlock" hidden>
-              <legend>Vložky (zámky)</legend>
-              <div class="pq-tiles pq-tiles-wide" id="pqLocks"></div>
-            </fieldset>
-
-            <fieldset class="pq-block">
-              <legend>Kam se mají dveře otevírat?</legend>
-              <p class="pq-help">Díváte se na dveře z chodby (zvenku).</p>
-              <div class="pq-tiles" id="pqOpening"></div>
-            </fieldset>
-
-            <fieldset class="pq-block">
-              <legend>Šířka dveří</legend>
-              <div class="pq-chips" id="pqWidth"></div>
-              <p class="pq-help" id="pqWidthHint"></p>
-            </fieldset>
-
-            <fieldset class="pq-block">
-              <legend>Prodloužená záruka</legend>
-              <div class="pq-chips" id="pqWarranty"></div>
-            </fieldset>
-          </div>
-
-          <div class="pq-nav">
-            <span></span>
-            <button type="button" class="btn btn-primary" data-next>Pokračovat na zákazníka →</button>
-          </div>
-        </div>
-
-        <!-- ── KROK 2: KONTAKT ── -->
-        <div class="pq-step" data-step="2" hidden>
-          <fieldset class="pq-block">
-            <legend>Objednatel</legend>
-            <div class="pq-grid2">
-              <label class="pq-f">Jméno *<input name="jmeno" autocomplete="given-name" required></label>
-              <label class="pq-f">Příjmení *<input name="prijmeni" autocomplete="family-name" required></label>
-              <label class="pq-f">Telefon *<input name="telefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="777 123 456" required pattern="[+0-9 ]{9,17}"></label>
-              <label class="pq-f">E-mail (pošleme mu objednávku)<input name="email" type="email" autocomplete="email" placeholder="zakaznik@email.cz"></label>
-              <label class="pq-f">Číslo OP (pro likvidaci odpadu)<input name="op" autocomplete="off"></label>
-              <label class="pq-f">Zvonek<input name="zvonek" autocomplete="off"></label>
-            </div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Kde budeme dveře montovat?</legend>
-            <div class="pq-addr">
-              <label class="pq-f">Ulice a číslo popisné *<input name="ulice" autocomplete="off" required placeholder="Začněte psát, např. Okružní 12, Most" role="combobox" aria-autocomplete="list" aria-controls="pqSuggest"></label>
-              <ul class="pq-suggest" id="pqSuggest" role="listbox" hidden></ul>
-            </div>
-            <div class="pq-grid2">
-              <label class="pq-f">Město *<input name="mesto" autocomplete="address-level2" required></label>
-              <label class="pq-f">PSČ<input name="psc" inputmode="numeric" autocomplete="postal-code" placeholder="434 01"></label>
-            </div>
-            <div class="pq-trip" id="pqTrip" hidden></div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>V jakém patře jsou dveře?</legend>
-            <label class="pq-f pq-f-short"><span class="sr">Patro</span>
-              <select name="patro" required>
-                <option value="">– vyberte –</option>
-                <option value="0">Přízemí</option>
-                <option value="1">1. patro</option><option value="2">2. patro</option><option value="3">3. patro</option>
-                <option value="4">4. patro</option><option value="5">5. patro</option><option value="6">6. patro</option>
-                <option value="7">7. patro</option><option value="8">8. patro</option><option value="9">9. patro</option>
-                <option value="10">10. patro</option><option value="11">11. patro</option><option value="12">12. patro</option>
-              </select>
-            </label>
-            <div id="pqLift" hidden>
-              <p class="pq-help" style="margin:0 0 .6rem">Je v domě výtah? Bez výtahu účtujeme vynesení 250 Kč za patro.</p>
-              <div class="pq-chips">
-                <label class="pq-opt pq-chip"><input type="radio" name="vytah" value="Ano">Ano, je výtah</label>
-                <label class="pq-opt pq-chip"><input type="radio" name="vytah" value="Ne">Ne, bez výtahu <em>+ 250 Kč / patro</em></label>
-              </div>
-            </div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Fakturační údaje</legend>
-            <div class="pq-chips" id="pqBilling"></div>
-            <div id="pqBillingFields" hidden>
-              <div class="pq-grid2">
-                <label class="pq-f">Jméno a příjmení objednatele / název firmy *<input name="fak_jmeno" data-req></label>
-                <label class="pq-f">Fakturační adresa (ulice, č. p., město, PSČ) *<input name="fak_adresa" data-req></label>
-              </div>
-              <div class="pq-grid2" id="pqCompany" hidden>
-                <label class="pq-f">IČ *<input name="ic" inputmode="numeric" data-req-firma></label>
-                <label class="pq-check"><input type="checkbox" name="platce_dph" value="Ano"> Jsem plátce DPH</label>
-              </div>
-            </div>
-          </fieldset>
-
-          <div class="pq-nav">
-            <button type="button" class="btn btn-outline" data-prev>← Zpět</button>
-            <button type="button" class="btn btn-primary" data-next>Pokračovat →</button>
-          </div>
-        </div>
-
-        <!-- ── KROK 3: ÚDAJE OBJEDNÁVKY ── -->
-        <div class="pq-step" data-step="3" hidden>
-          <fieldset class="pq-block">
-            <legend>Nabídka</legend>
-            <div class="pq-grid2">
-              <label class="pq-f">Číslo nabídky *<input name="obj_cislo" required></label>
-              <label class="pq-f">Datum<input name="obj_datum" type="date"></label>
-              <label class="pq-f">Nabídka platí do<input name="nabidka_do" type="date"></label>
-            </div>
-            <p class="pq-help" style="margin:0 0 .6rem">Prodavač *</p>
-            <div class="pq-chips" id="poSeller"></div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Zárubeň a zeď</legend>
-            <p class="pq-help" style="margin:0 0 .6rem">Tloušťka zárubně</p>
-            <div class="pq-chips" id="poFrame"></div>
-            <p class="pq-help" style="margin:1rem 0 .6rem">Materiál zdi</p>
-            <div class="pq-tiles" id="pqWall"></div>
-            <label class="pq-f pq-f-short" style="margin-top:1rem">Tloušťka zdi (cm)<input name="tl_zdi" inputmode="numeric"></label>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Příplatková výbava</legend>
-            <div id="poExtras"></div>
-            <div class="pq-grid2" style="margin-top:.8rem">
-              <label class="pq-f">Jiná příplatková výbava – popis<input name="vybava_text"></label>
-              <label class="pq-f">Cena (Kč)<input name="vybava_kc" inputmode="numeric" placeholder="0"></label>
-            </div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Doprava a sleva</legend>
-            <div class="pq-trip" id="poTripInfo" hidden></div>
-            <div class="pq-grid2">
-              <label class="pq-f">Doprava – ruční cena (Kč)<input name="doprava_kc" inputmode="numeric" placeholder="nechte prázdné = podle výpočtu"></label>
-              <span></span>
-              <label class="pq-f">Sleva (Kč)<input name="sleva_kc" inputmode="numeric" placeholder="0"></label>
-              <label class="pq-f">Důvod slevy<input name="sleva_text" placeholder="např. Doporuč a získej"></label>
-            </div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Platba a termín</legend>
-            <div class="pq-grid2">
-              <label class="pq-f">Záloha / rezervace (Kč)<input name="zaloha_kc" inputmode="numeric"></label>
-              <label class="pq-f">Slíbený termín montáže (datum)<input name="termin_datum" type="date"></label>
-              <label class="pq-f">Termín montáže – odhad<input name="termin" placeholder="např. 45. týden, do 14 dnů"></label>
-            </div>
-            <p class="pq-help" style="margin:0">Doplatek se dopočítá sám (cena celkem − záloha) a platí se hotově po montáži.</p>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Fotky z poptávky</legend>
-            <p class="pq-help" style="margin:0 0 .8rem">Načtou se samy z odkazu v e-mailu, pokud je zákazník poslal. Můžete je také nahrát nebo vyměnit (např. uložené z e-mailu). V PDF budou malé, na 2. straně.</p>
-            <div class="pq-photos">
-              <label class="pq-photo" data-photo="fotka_dveri">
-                <input type="file" accept="image/*">
-                <span class="pq-photo-ico" aria-hidden="true">
-                  <svg viewBox="0 0 48 48"><rect x="12" y="5" width="24" height="38" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="30" cy="25" r="2" fill="currentColor"/></svg>
-                </span>
-                <strong>Dveře zvenku</strong>
-                <small>Celé dveře včetně zárubně a zdi</small>
-                <img alt="" hidden>
-              </label>
-              <label class="pq-photo" data-photo="fotka_zarubne">
-                <input type="file" accept="image/*">
-                <span class="pq-photo-ico" aria-hidden="true">
-                  <svg viewBox="0 0 48 48"><path d="M10 44V6h28v38" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M16 44V12h16v32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/></svg>
-                </span>
-                <strong>Zárubeň</strong>
-                <small>Zárubeň se zdí, ideálně s přiloženým metrem</small>
-                <img alt="" hidden>
-              </label>
-            </div>
-          </fieldset>
-
-          <fieldset class="pq-block">
-            <legend>Poznámky</legend>
-            <label class="pq-f">Poznámka pro zákazníka (tiskne se)<textarea name="poznamka" rows="3"></textarea></label>
-            <label class="pq-f">Interní poznámka (netiskne se, zákazník ji neuvidí)<textarea name="interni" rows="3"></textarea></label>
-          </fieldset>
-
-          <div class="pq-nav">
-            <button type="button" class="btn btn-outline" data-prev>← Zpět</button>
-            <button type="button" class="btn btn-primary" data-next>Zkontrolovat →</button>
-          </div>
-        </div>
-
-        <!-- ── KROK 4: SHRNUTÍ A ODESLÁNÍ ── -->
-        <div class="pq-step" data-step="4" hidden>
-          <fieldset class="pq-block">
-            <legend>Kontrola objednávky</legend>
-            <dl class="pq-review" id="pqReview"></dl>
-          </fieldset>
-
-          <div class="pq-gdpr">
-            <p>Po odeslání přijde objednávka s PDF vám oběma (kucerazd@, kucerovadn@), na obchod@bezpecne-dvere.cz a v kopii zákazníkovi. Předvyplněný předávací list dostanete jen vy prodejci. Voucher Doporuč a získej (se jménem zákazníka) dostane jen zákazník, pokud má vyplněný e-mail. PDF si můžete také stáhnout a vytisknout k podpisu.</p>
-            <label class="pq-check"><input type="checkbox" id="pqConsent"> Nabídku jsem zkontroloval(a). *</label>
-          </div>
-
-          <div class="pq-nav">
-            <button type="button" class="btn btn-outline" data-prev>← Zpět</button>
-            <button type="submit" class="btn btn-primary" id="pqSubmit">Odeslat nabídku zákazníkovi</button>
-          </div>
-          <div class="pq-msg" id="pqMsg" role="status" hidden></div>
-        </div>
-      </form>
-
-      <!-- ── SOUHRN (vpravo / dole na mobilu) ── -->
-      <aside class="pq-summary" id="pqSummary" aria-live="polite">
-        <img id="sumImg" alt="" hidden>
-        <div class="pq-sum-body">
-          <div class="pq-sum-model" id="sumModel">Zatím nevybráno</div>
-          <ul class="pq-sum-lines" id="sumLines"></ul>
-          <div class="pq-sum-price">
-            <span>Cena celkem</span>
-            <strong id="sumPrice">–</strong>
-          </div>
-          <p class="pq-sum-pay" id="sumPay"></p>
-          <p class="pq-sum-note" id="sumNote">Vč. 12 % DPH, montáže na klíč a odvozu starých dveří. Doprava do 40 km zdarma.</p>
-        </div>
-      </aside>
+  <fieldset class="pq-block"><legend>Položky</legend>
+    <div id="nbRows"></div>
+    <p style="margin:1rem 0 0"><button type="button" class="btn btn-outline" id="nbAdd">+ Přidat položku</button></p>
+    <div class="pq-grid2" style="margin-top:1.2rem">
+      <label class="pq-f">Celková sleva na nabídku (Kč)<input name="sleva_kc" inputmode="numeric" placeholder="0"></label>
+      <label class="pq-f">Popis slevy (volitelné)<input name="sleva_text" placeholder="např. množstevní sleva"></label>
     </div>
+    <p id="nbSum" style="margin:1rem 0 0;font-size:1.05rem"></p>
+  </fieldset>
 
-    <!-- ── PODĚKOVÁNÍ ── -->
-    <div class="pq-done" id="pqDone" hidden>
-      <div class="pq-done-ico" aria-hidden="true">✓</div>
-      <h2>Nabídka je odeslaná</h2>
-      <p>Číslo nabídky: <strong id="doneRef"></strong></p>
-      <p>Nabídka s PDF odešla zákazníkovi a v kopii vám. V kartotéce (typ Nabídka) ji najdete a jedním klikem z ní vytvoříte objednávku.</p>
-      <p id="doneWarn" class="pq-done-warn" hidden></p>
-      <div id="donePay" hidden style="margin:1.2rem auto;max-width:360px;text-align:center">
-        <h3 style="margin:0 0 .4rem">Platba <span id="donePayLabel">zálohy</span></h3>
-        <p id="donePayTxt" style="margin:.2rem 0 .6rem"></p>
-        <div id="donePayQr"></div>
-        <p style="margin:.6rem 0 0"><button type="button" id="donePayCopy" class="btn btn-outline">Kopírovat odkaz na platbu</button></p>
-      </div>
-      <div class="pq-done-btns"><a id="donePdf" class="btn btn-primary" hidden>Stáhnout PDF</a><button type="button" id="donePrint" class="btn btn-outline" hidden>Otevřít k tisku</button><button type="button" id="doneShare" class="btn btn-outline" hidden>Poslat zákazníkovi ze svého e-mailu</button><a href="nabidka-nova.html" class="btn btn-outline" onclick="location.href='nabidka-nova.html';location.reload();return false;">Nová nabídka</a><a href="panel.html" class="btn btn-outline">Panel prodejce</a></div>
+  <fieldset class="pq-block"><legend>Zákazník</legend>
+    <div class="pq-grid2">
+      <label class="pq-f">Jméno *<input name="jmeno" required autocomplete="off"></label>
+      <label class="pq-f">Příjmení *<input name="prijmeni" required autocomplete="off"></label>
+      <label class="pq-f">Telefon<input name="telefon" type="tel"></label>
+      <label class="pq-f">E-mail (pošleme mu nabídku)<input name="email" type="email" placeholder="zakaznik@email.cz"></label>
+      <label class="pq-f">Ulice a č. p.<input name="ulice"></label>
+      <label class="pq-f">Město<input name="mesto"></label>
+      <label class="pq-f">PSČ<input name="psc" inputmode="numeric"></label>
     </div>
-  </div>
-</section>
+  </fieldset>
 
+  <fieldset class="pq-block"><legend>Nabídka</legend>
+    <div class="pq-grid2">
+      <label class="pq-f">Číslo nabídky *<input name="obj_cislo" required></label>
+      <label class="pq-f">Datum<input name="obj_datum" type="date"></label>
+      <label class="pq-f">Nabídka platí do<input name="nabidka_do" type="date"></label>
+    </div>
+    <p class="pq-help" style="margin:.4rem 0 .6rem">Prodavač *</p>
+    <div class="pq-chips" id="nbSeller"></div>
+    <label class="pq-f" style="margin-top:1rem">Poznámka pro zákazníka (je v PDF)<textarea name="poznamka" rows="3"></textarea></label>
+    <label class="pq-f">Interní poznámka (jen pro nás)<textarea name="interni" rows="2"></textarea></label>
+  </fieldset>
+
+  <div style="display:none"><input name="_honey" tabindex="-1" autocomplete="off"></div>
+  <label class="pq-check"><input type="checkbox" id="nbConsent"> Nabídku jsem zkontroloval(a). *</label>
+  <p class="pq-msg" id="nbMsg" hidden style="color:#c0392b;font-weight:600"></p>
+  <p style="margin-top:1rem"><button type="submit" class="btn btn-primary" id="nbSubmit">Odeslat nabídku zákazníkovi</button></p>
+</form>
+
+<div class="pq-done" id="nbDone" hidden>
+  <div class="pq-done-ico" aria-hidden="true">✓</div>
+  <h2>Nabídka je odeslaná</h2>
+  <p>Číslo nabídky: <strong id="nbRef"></strong></p>
+  <p>Nabídka s PDF odešla zákazníkovi (pokud má e-mail) a v kopii vám. Najdete ji v kartotéce, záložka Nabídky; z ní pak vytvoříte objednávku.</p>
+  <p id="nbWarn" class="pq-done-warn" hidden></p>
+  <div class="pq-done-btns"><a id="nbPdf" class="btn btn-primary" hidden>Stáhnout PDF</a><button type="button" id="nbPrint" class="btn btn-outline" hidden>Otevřít k tisku</button><a href="nabidka-nova.html" class="btn btn-outline" onclick="location.href='nabidka-nova.html';location.reload();return false;">Nová nabídka</a><a href="panel.html" class="btn btn-outline">Panel prodejce</a></div>
+</div>
+</div></section>
 
 <footer>
   <div class="container">
@@ -598,10 +370,9 @@
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
 <script src="formulare-klient.js?v=3"></script>
-<script src="platba/qrcode.js"></script>
-<script src="platba/platba.js?v=2"></script>
 <script src="poptavka-pdf/poptavka-pdf-nova.js?v=20261016l"></script>
-<script src="poptavka-dvere-nova.js?v=20261016f"></script>
+<script>window.NB_KATALOG=[{"k": "premium60", "name": "PREMIUM 60", "price": 38890, "regular": 42500, "shades": [{"n": "Černá perleť", "sklad": true, "pl": 0}, {"n": "Dub", "sklad": true, "pl": 0}, {"n": "Ořech", "sklad": true, "pl": 0}, {"n": "Světlé wenge", "sklad": true, "pl": 0}, {"n": "Bílá", "sklad": true, "pl": 0}, {"n": "Antracit", "sklad": true, "pl": 0}, {"n": "Bílá wenge", "sklad": false, "pl": 4000}, {"n": "Ocelově šedá", "sklad": false, "pl": 4000}]}, {"k": "extreme54", "name": "EXTREME 54", "price": 31890, "regular": 32890, "shades": [{"n": "Ořech natura", "sklad": true, "pl": 0}, {"n": "Dub natura", "sklad": true, "pl": 0}, {"n": "Ořech bělený", "sklad": false, "pl": 0}, {"n": "Bílá", "sklad": false, "pl": 0}, {"n": "Antracit", "sklad": false, "pl": 0}, {"n": "Beton tmavý", "sklad": false, "pl": 5000}, {"n": "Dub Milano 4", "sklad": false, "pl": 5000}]}, {"k": "magnum56", "name": "MAGNUM 56", "price": 36990, "regular": null, "shades": [{"n": "Dub sonoma", "sklad": false, "pl": 0}, {"n": "Bílá", "sklad": false, "pl": 0}, {"n": "Světlý ořech", "sklad": false, "pl": 0}, {"n": "Zlatý dub", "sklad": false, "pl": 0}, {"n": "Antracit", "sklad": false, "pl": 1000}, {"n": "Tmavý ořech", "sklad": false, "pl": 0}, {"n": "Venge", "sklad": false, "pl": 0}, {"n": "Dub přírodní", "sklad": false, "pl": 0}, {"n": "Beton", "sklad": false, "pl": 1000}]}, {"k": "securido65", "name": "SECURIDO 65", "price": 35890, "regular": 37890, "shades": [{"n": "Kombi (bílá, černá zárubeň a kování)", "sklad": false, "pl": 2000}, {"n": "Bílá", "sklad": false, "pl": 0}, {"n": "Šedá", "sklad": false, "pl": 0}, {"n": "Mocca", "sklad": false, "pl": 0}, {"n": "Antracit", "sklad": false, "pl": 0}, {"n": "Dub Artisan hladký", "sklad": false, "pl": 0}, {"n": "Dub Artisan elegant", "sklad": false, "pl": 0}, {"n": "Ořech hladký", "sklad": false, "pl": 0}, {"n": "Ořech elegant", "sklad": false, "pl": 0}, {"n": "Mahagon hladký", "sklad": false, "pl": 0}, {"n": "Mahagon elegant", "sklad": false, "pl": 0}]}];</script>
+<script src="nabidka.js?v=1"></script>
 <script src="bonus.js?v=20261016c" defer></script>
 </body>
 </html>
