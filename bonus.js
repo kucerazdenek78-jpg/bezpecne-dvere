@@ -11,7 +11,7 @@
   function badge(long) {
     var a = document.createElement('a');
     a.className = 'md-bonus'; a.href = 'moje-dvere.html';
-    a.title = 'Aplikace Moje dveře: přehled dveří a záruky, servis a hlášení závady, připomínka roční kontroly';
+    a.title = 'Aplikace Moje dveře: přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady, připomínka roční kontroly';
     a.textContent = 'Aplikace Moje dveře v ceně';
     if (long) { var s = document.createElement('small'); s.textContent = '· záruka, servis, připomínka kontroly'; a.appendChild(document.createTextNode(' ')); a.appendChild(s); }
     return a;
