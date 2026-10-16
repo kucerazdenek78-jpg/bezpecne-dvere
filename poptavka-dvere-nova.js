@@ -174,8 +174,9 @@
   var kc = function (n) { return n.toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var form = $('#pq');
-  var MODE = form.getAttribute('data-mode') === 'objednavka' ? 'objednavka' : 'poptavka';
-  var OBJ = MODE === 'objednavka';
+  var MODE = form.getAttribute('data-mode') === 'vyber' ? 'vyber' : form.getAttribute('data-mode') === 'objednavka' ? 'objednavka' : 'poptavka';
+  var VYBER = MODE === 'vyber';   // výběr dveří pro nabídku (nabidka-vyber.html v okně): kroky 1 a 3, výsledek jde zpět stránce nabídky přes postMessage
+  var OBJ = MODE !== 'poptavka';
   function fv(n) { var el = form.elements[n]; return el && el.value != null ? String(el.value).trim() : ''; }
   function num(n) { var x = parseInt(fv(n).replace(/\s/g, ''), 10); return isNaN(x) ? 0 : x; }
   var state = { model: null, step: 1, photos: {}, thumbs: {}, addr: null, trip: null };
@@ -466,13 +467,23 @@
     }
     if (step === 3 && OBJ) {
       ['obj_cislo'].forEach(function (n) { var i = form.elements[n]; var bad = !i.value.trim(); i.classList.toggle('bad', bad); if (bad && !first) first = i; });
-      var bp = !val('prodavac'); markBlock('prodavac', bp); if (bp && !first) first = $('#poSeller');
+      var bp = !VYBER && !val('prodavac'); markBlock('prodavac', bp); if (bp && !first) first = $('#poSeller');
       var m3 = MODELS[state.model];
       if (m3.order.frame.length > 1) { var bf = !val('tl_zarubne'); markBlock('tl_zarubne', bf); if (bf && !first) first = $('#poFrame'); }
       (m3.order.extras || []).forEach(function (x) { if (x.type === 'choice') { var bc = !val('x_' + x.id); markBlock('x_' + x.id, bc); if (bc && !first) first = $('#poExtras'); } });
     }
     if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (first.focus && first.tagName === 'INPUT') setTimeout(function () { first.focus({ preventScroll: true }); }, 350); }
     return !first;
+  }
+  /* výběr dveří pro nabídku: pošle zvolenou konfiguraci (název, popis s příplatky, cenu) stránce nabídky */
+  function pickToParent() {
+    var d = collect(), r = calc();
+    var popis = r.lines.filter(function (l) { return l[0] !== 'Barva'; }).map(function (l) { return l[0] + ': ' + l[1] + (l[2] ? ' (+' + kc(l[2]) + ')' : (l[3] ? ' (' + l[3] + ')' : '')); });
+    popis = popis.filter(function (x) { return !/^Záruka: Ne/.test(x); });
+    if (d.otevirani) popis.push('Otevírání: ' + d.otevirani);
+    if (d.tl_zarubne) popis.push('Tloušťka zárubně: ' + d.tl_zarubne);
+    var cfg = {}; ['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'].forEach(function (k) { if (d[k]) cfg[k] = d[k]; });
+    (window.parent || window).postMessage({ bdPick: { model_kod: d.model_kod, odstin: d.odstin, nazev: d.model + (d.odstin ? ' – ' + d.odstin : ''), popis: popis.join('; '), cena: r.total, cfg: cfg } }, location.origin);
   }
   function go(step) {
     state.step = step;
@@ -890,12 +901,14 @@
     var t = e.target.closest('[data-next],[data-prev],[data-goto]'); if (!t) return;
     if (t.hasAttribute('data-next')) {
       if (!validate(state.step)) return;
+      if (VYBER && state.step === 3) { pickToParent(); return; }
+      if (VYBER && state.step === 1) { go(3); return; }
       if (state.step === 2 && !(state.trip && state.trip.forKey === addrKey())) {
         var lbl = t.textContent; t.disabled = true; t.textContent = 'Počítám dopravu…';
         computeTrip().then(function () { t.disabled = false; t.textContent = lbl; updateSummary(); go(3); });
       } else go(state.step + 1);
     }
-    else if (t.hasAttribute('data-prev')) go(state.step - 1);
+    else if (t.hasAttribute('data-prev')) go(VYBER && state.step === 3 ? 1 : state.step - 1);
     else go(+t.getAttribute('data-goto'));
   });
 
