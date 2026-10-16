@@ -146,6 +146,22 @@
         var noteL = O ? doc.splitTextToSize('DPH bude vyčísleno na konečné faktuře. Cena zahrnuje dodávku, montáž na klíč, demontáž a odvoz starých dveří a hrubý úklid.' + (d.doprava_km != null ? ' Vzdálenost od vzorkovny Obchodní 36, Most: ' + String(d.doprava_km).replace('.', ',') + ' km.' : ''), cw) : doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
         y += noteL.length * 3.4 + 5;
 
+        /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */
+        var bonusOn = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+        try { if (localStorage.getItem('bd-bonus') === '1') bonusOn = true; } catch (e) {}
+        if (bonusOn) {
+          var regB = (d.model_kod === 'premium60' || d.model_kod === 'extreme54') && !/Ano,\s*na/.test(String(d.zaruka || '')), bh0 = regB ? 15 : 11;
+          ensure(bh0 + 4);
+          doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(M, y - 3.5, W - 2 * M, bh0, 2, 2, 'FD');
+          var ix = M + 4, iy = y - 1.2;
+          doc.setDrawColor.apply(doc, GREEN); doc.setLineWidth(0.4); doc.roundedRect(ix, iy, 6, 9.5, 1, 1, 'S'); doc.roundedRect(ix + 1.6, iy + 1.6, 2.8, 5.2, 0.3, 0.3, 'S');
+          doc.setFillColor.apply(doc, GREEN); doc.circle(ix + 3.9, iy + 4.3, 0.3, 'F'); doc.setLineWidth(0.2);
+          font('bold', 9.5, GREEN); doc.text('V ceně: aplikace Moje dveře', M + 14, y + 0.6);
+          font('normal', 8, MUTED); doc.text('Přehled dveří a záruky, servis a hlášení závady, připomínka roční kontroly.', M + 14, y + 4.9);
+          if (regB) doc.text('Registrací dveří do 30 dnů od předání získáte navíc +12 měsíců záruky.', M + 14, y + 8.8);
+          y += bh0 + 2;
+        }
+
         if (O) {
           /* platba a termín */
           section('Platba a termín');
