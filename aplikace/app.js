@@ -511,7 +511,9 @@
     var thumbsP = Promise.all([resultBlob(900, 0.85), photoBlob(900)]);
     openDlg('<h2>Nezávazná nabídka ' + esc(mn) + '</h2><p class="small">' + (byt ? 'Odstín' : 'Provedení') + ' <b>' + esc(shade) + '</b>' + (byt ? ', zárubeň ' + esc(zar) : '') + '. Vizualizaci i původní fotku přiložíme – podle fotky vám rovnou upřesníme cenu.</p>' +
       '<div class="thumbs" id="askThumbs"></div><form class="form" id="askForm" novalidate>' + contactFields(k, false) +
-      (byt ? '' : '<label>Počet kusů *<input name="pocet_ks" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" required></label>') +
+      (byt ? '' : '<label>Počet kusů *<input name="pocet_ks" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" required></label>' +
+        '<fieldset class="opt"><legend>Chcete i montáž? *</legend><label class="chk"><input type="radio" name="montaz" value="ano" required> Ano, s montáží</label><label class="chk"><input type="radio" name="montaz" value="ne"> Ne, jen dodání</label></fieldset>' +
+        (isInt ? '<fieldset class="opt"><legend>Chcete i zárubeň? *</legend><label class="chk"><input type="radio" name="zarubne" value="ano" required> Ano, dveře i se zárubní</label><label class="chk"><input type="radio" name="zarubne" value="ne"> Ne, jen dveřní křídlo</label></fieldset>' : '')) +
       '<label>Poznámka<textarea name="poznamka" placeholder="' + (isInt ? 'např. šířky dveří (60/70/80/90), levé/pravé, tloušťka zdi, patro' : 'např. patro, výtah, kdy se vám hodí zaměření') + '"></textarea></label>' + CONSENT +
       '<button class="b pri wide" type="submit">Odeslat poptávku</button><p class="msg" role="status"></p></form>' +
       '<p class="small">' + (byt ? 'Chcete si dveře rovnou sestavit (kování, vložky, záruka)? <a href="' + webUrl + '">Podrobná poptávka na webu →</a>' : 'Ceny a další provedení najdete na <a href="' + V.web + '">webu →</a>') + '</p>');
@@ -520,13 +522,15 @@
       return Promise.all([resultBlob(1600, 0.85), photoBlob(1600)]).then(function (b) {
         var cislo = makeRef('A');
         var ks = byt ? '' : String(Math.max(1, Math.min(99, parseInt(o.pocet_ks, 10) || 1))) + ' ks';
+        var mont = byt ? '' : (o.montaz === 'ano' ? 'ANO, s montáží' : o.montaz === 'ne' ? 'NE, jen dodání' : '');
+        var zrb = isInt ? (o.zarubne === 'ano' ? 'ANO, dveře i se zárubní' : o.zarubne === 'ne' ? 'NE, jen dveřní křídlo' : '') : '';
         var data = { verze: 1, cislo: cislo, odeslano: new Date().toISOString(), zdroj: 'aplikace-vizualizace', model: byt ? mn : mn + ' – ' + typ, model_kod: mk, odstin: byt ? shadeFull : (barva || 'podle fotky z katalogu'),
-          typ_dveri: typ, provedeni: byt ? '' : sx[2], pocet_ks: byt ? 1 : parseInt(ks, 10),
+          typ_dveri: typ, provedeni: byt ? '' : sx[2], pocet_ks: byt ? 1 : parseInt(ks, 10), montaz: byt ? '' : o.montaz, zarubne: isInt ? o.zarubne : '',
           jmeno: o.jmeno, prijmeni: o.prijmeni, telefon: o.telefon, email: o.email, mesto: o.adresa, poznamka: o.poznamka, fotky: ['vizualizace', 'puvodni_foto'],
           vizualizace: { zarubne: zar, zrcadleno: flip } };
         return { cislo: cislo, data: data, hist: 'Poptávka ' + mn + ' – ' + shadeFull + (ks ? ', ' + ks : ''),
-          predmet: 'Poptávka z aplikace ' + cislo + ' – ' + mn + ' ' + shade + (ks ? ', ' + ks : '') + ' – ' + o.prijmeni + (o.adresa ? ', ' + o.adresa : ''),
-          telo: lines([['Číslo poptávky', cislo], ['Zdroj', 'Aplikace – vizualizace na fotce'], ['Dveře', mn], [byt ? 'Odstín' : 'Typ', byt ? shadeFull : typ], [byt ? '' : 'Barva / odstín', barva], [byt ? '' : 'Provedení', byt ? '' : sx[2]], [byt ? '' : 'Počet kusů', ks],
+          predmet: 'Poptávka z aplikace ' + cislo + ' – ' + mn + ' ' + shade + (ks ? ', ' + ks : '') + (o.montaz === 'ano' ? ', s montáží' : o.montaz === 'ne' ? ', bez montáže' : '') + (isInt && o.zarubne === 'ne' ? ', jen křídlo' : '') + ' – ' + o.prijmeni + (o.adresa ? ', ' + o.adresa : ''),
+          telo: lines([['Číslo poptávky', cislo], ['Zdroj', 'Aplikace – vizualizace na fotce'], ['Dveře', mn], [byt ? 'Odstín' : 'Typ', byt ? shadeFull : typ], [byt ? '' : 'Barva / odstín', barva], [byt ? '' : 'Provedení', byt ? '' : sx[2]], [byt ? '' : 'Počet kusů', ks], ['Montáž', mont], ['Zárubeň', zrb],
             [byt ? 'Zárubeň na vizualizaci' : '', zar], ['Jméno', o.jmeno + ' ' + o.prijmeni], ['Telefon', o.telefon], ['E-mail', o.email],
             ['Obec / adresa', o.adresa], ['Poznámka', o.poznamka], [byt ? 'Vytvořit objednávku' : '', byt ? orderLink({ cislo: cislo, model_kod: mk, odstin: shade, jmeno: o.jmeno, prijmeni: o.prijmeni, telefon: o.telefon, email: o.email, mesto: o.adresa, poznamka: o.poznamka }) : ''], ['Přílohy', 'vizualizace + původní fotka dveří'], ['Odesláno', new Date().toLocaleString('cs-CZ')]]),
           files: [{ name: 'vizualizace', file: 'vizualizace-' + cislo + '.jpg', blob: b[0] }, { name: 'puvodni_foto', file: 'puvodni-dvere-' + cislo + '.jpg', blob: b[1] }] };

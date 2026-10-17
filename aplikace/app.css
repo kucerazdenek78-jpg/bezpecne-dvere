@@ -156,3 +156,8 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .dec[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}
 .decn{display:block;font-size:.72rem;color:#667;margin-top:.2rem}
 .sh .ndec{display:block;font-style:normal;font-size:.66rem;font-weight:700;color:#15803d;margin-top:.1rem}
+/* poptávka: montáž / zárubeň */
+.form fieldset.opt{border:1.5px solid var(--line);border-radius:10px;padding:.35rem .7rem .45rem;margin:.6rem 0 0}
+.form fieldset.opt legend{font-size:.88rem;font-weight:600;padding:0 .3rem;color:var(--text)}
+.form fieldset.opt .chk{display:flex;margin:.3rem 0}
+.form fieldset.opt input{display:inline-block;width:20px;height:20px;margin:0;padding:0;accent-color:var(--navy-mid)}
