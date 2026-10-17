@@ -114,7 +114,7 @@
   <section class="view pad" id="v-moje" data-view="moje" hidden>
     <h1>Moje dveře</h1>
     <div id="mojeEmpty">
-      <p class="lead">Máte od nás dveře? Uložte si je sem – aplikace vám pohlídá záruku a roční prohlídku a usnadní servis.</p>
+      <p class="lead">Máte od nás dveře? Najděte je podle objednávky – aplikace vám pohlídá záruku a roční prohlídku a usnadní servis.</p>
       <div class="card">
         <h3>Najít podle objednávky</h3>
         <p class="small">Číslo objednávky najdete na objednávce nebo předávacím listu.</p>
@@ -125,7 +125,7 @@
           <p class="msg" id="pairMsg" role="status"></p>
         </form>
       </div>
-      <button class="b wide" id="manualOpen">Zadat dveře ručně</button>
+      <p class="small note-old">Aplikace Moje dveře je pro dveře zakoupené u nás <b>od 1. 11. 2026</b> – najdete je podle čísla objednávky. Koupili jste dveře dřív? Servis, reklamaci i kontrolu vyřídíte přes <a href="../servis.html">formuláře na webu</a> nebo na tel. <a href="tel:+420725559235">725 559 235</a>.</p>
     </div>
     <div id="mojeDoor" hidden></div>
   </section>
@@ -155,6 +155,7 @@
 <nav class="tabs" aria-label="Hlavní menu">
   <a href="#viz" data-tab="viz"><span>🚪</span>Vyzkoušet</a>
   <a href="#nab" data-tab="nab"><span>🛡</span>Nabídka</a>
+  <a href="#moje" data-tab="moje" id="tabMoje" hidden><span>⭐</span>Moje dveře</a>
   <a href="#kon" data-tab="kon"><span>📞</span>Kontakt</a>
 </nav>
 
@@ -166,6 +167,6 @@
 
 <script src="bd-form.js?v=20261015a"></script>
 <script src="viz-data.js?v=20261017a"></script>
-<script src="app.js?v=20261017e"></script>
+<script src="app.js?v=20261017f"></script>
 </body>
 </html>

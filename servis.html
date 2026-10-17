@@ -127,6 +127,19 @@
 
 <section>
   <div class="container">
+    <!-- Moje dveře: zobrazí se samo od 1. 11. 2026 (náhled ?bonus=1, stejný přepínač jako bonus.js) -->
+    <div id="mojeServis" hidden style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:0 0 2rem">
+      <div style="background:#e8f5ee;border:2px solid #15803d;border-radius:var(--radius-lg);padding:1.2rem 1.4rem">
+        <strong style="display:block;color:var(--navy);font-size:1.1rem;margin-bottom:.35rem">⭐ Dveře koupené od 1. 11. 2026</strong>
+        <p style="margin:0 0 .8rem;font-size:.95rem">Servis, nahlášení závady s fotkou, přehled záruky i připomínku roční kontroly máte v aplikaci <b>Moje dveře</b>. Dveře v ní najdete podle čísla objednávky.</p>
+        <a href="aplikace/#moje" class="btn btn-primary">Otevřít Moje dveře →</a>
+      </div>
+      <div style="background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.2rem 1.4rem">
+        <strong style="display:block;color:var(--navy);font-size:1.1rem;margin-bottom:.35rem">Koupili jste dveře dřív?</strong>
+        <p style="margin:0;font-size:.95rem">Nic se pro vás nemění – servis, reklamaci, klíče i nouzové otevírání vyřídíte přes formuláře níže nebo na tel. <a href="tel:+420725559235">725 559 235</a>.</p>
+      </div>
+    </div>
+    <script>(function(){var on=Date.now()>=new Date('2026-11-01T00:00:00+01:00').getTime();try{var q=location.search.match(/[?&]bonus=([01])/);if(q){if(q[1]==='1')localStorage.setItem('bd-bonus','1');else localStorage.removeItem('bd-bonus');}if(localStorage.getItem('bd-bonus')==='1')on=true;}catch(e){}var el=document.getElementById('mojeServis');if(on){el.hidden=false;if(innerWidth<760)el.style.gridTemplateColumns='1fr';}else el.style.display='none';})();</script>
     <div class="servis-grid">
       <div class="servis-card">
         <div class="servis-card-image"><img src="userFiles/montaz-dvere/servis-oken.png" alt="Servis oken" loading="lazy"></div>

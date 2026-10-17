@@ -73,10 +73,24 @@
   }
 
   /* ═══════════════ navigace ═══════════════ */
+  /* Moje dveře: zapne se samo od 1. 11. 2026 (jen dveře z kartotéky, tj. koupené od tohoto data).
+     Náhled dřív: #moje?test=1 (platí jen v tomto prohlížeči, vypnutí #moje?test=0) nebo stejný přepínač bd-bonus jako na webu (?bonus=1). */
+  function mojeOn() {
+    var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+    try {
+      var t = /[?&]test=([01])/.exec(location.hash);
+      if (t && /^#moje/.test(location.hash)) { if (t[1] === '1') localStorage.setItem('bd-bonus', '1'); else localStorage.removeItem('bd-bonus'); }
+      if (localStorage.getItem('bd-bonus') === '1') on = true;
+    } catch (e) {}
+    var tab = document.getElementById('tabMoje'); if (tab) tab.hidden = !on;
+    document.querySelector('.tabs').style.gridTemplateColumns = 'repeat(' + (on ? 4 : 3) + ',1fr)';
+    return on;
+  }
   function route() {
+    mojeOn();
     var v = (location.hash || '#viz').slice(1).split('?')[0];
     if (!$('[data-view="' + v + '"]')) v = 'viz';
-    if (v === 'moje' && !/[?&]test=1/.test(location.hash)) v = 'viz'; // Moje dveře zatím skryté (spustí se s aplikací Moje dveře); náhled #moje?test=1
+    if (v === 'moje' && !mojeOn()) v = 'viz';
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (/[?&]p=1/.test(location.hash)) { try { sessionStorage.setItem('bd-app-prodejce', '1'); } catch (e) {} }
@@ -599,7 +613,7 @@
   }
 
   /* ═══════════════ MOJE DVEŘE ═══════════════ */
-  function door() { return store.get('bd-app-dvere', null); }
+  function door() { var d = store.get('bd-app-dvere', null); return d && d.zdroj === 'kartoteka' ? d : null; } // jen dveře z kartotéky (koupené od 1. 11. 2026)
   function parseDate(s) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
   function addYears(d, y) { var r = new Date(d); r.setFullYear(r.getFullYear() + y); return r; }
   function fmt(d) { return d ? d.toLocaleDateString('cs-CZ') : ''; }
@@ -778,7 +792,7 @@
       closeDlg(); renderMoje();
     });
   }
-  $('#manualOpen').addEventListener('click', function () { openManual(null); });
+  /* ruční zadání dveří bez objednávky zrušeno (rozhodnutí 17. 10. 2026): Moje dveře jen pro dveře z kartotéky */
 
   /* spárování s objednávkou v kartotéce (API na NAS) */
   $('#pairForm').addEventListener('submit', function (e) {
@@ -792,10 +806,10 @@
       renderMoje(); if (dv.predano) return; openManual(Object.assign({}, dv, { predano: /^\d{4}-\d{2}-\d{2}$/.test(d.termin || '') ? d.termin : '' }), 'Doplňte prosím skutečné datum předání (montáže) – podle něj počítáme záruku a prohlídku.');
     }).catch(function (err) {
       btn.disabled = false; msg.className = 'msg err';
-      msg.innerHTML = err.code === 'nenalezeno' ? 'Objednávku jsme nenašli. Zkontrolujte číslo a telefon, nebo zadejte dveře ručně.' :
+      msg.innerHTML = err.code === 'nenalezeno' ? 'Objednávku jsme nenašli. Zkontrolujte číslo objednávky a telefon. Dveře koupené před 1. 11. 2026 v aplikaci nejsou – servis vyřídíte přes <a href="../servis.html">web</a> nebo na tel. 725 559 235.' :
         err.code === 'limit' ? 'Příliš mnoho pokusů. Zkuste to za hodinu.' :
-        err.code === 'nedostupne' ? 'Hledání v kartotéce zatím spouštíme. Zadejte prosím dveře ručně – funguje všechno stejně.' :
-        'Spojení se nepovedlo. Zkuste to znovu, nebo zadejte dveře ručně.';
+        err.code === 'nedostupne' ? 'Hledání objednávek je dočasně nedostupné. Zkuste to prosím později.' :
+        'Spojení se nepovedlo. Zkuste to prosím znovu.';
     });
   });
 
