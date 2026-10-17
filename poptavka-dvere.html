@@ -185,7 +185,30 @@
   .pq-review{grid-template-columns:1fr;gap:.1rem}
   .pq-review dd{margin-bottom:.5rem}
 }
-  </style>
+  
+/* ── rozcestník na začátku: druh dveří + aplikace ── */
+.pq-choose{padding:2rem 0 4rem;background:var(--bg)}
+.pq-choose[hidden]{display:none}
+.pq-choose h2{color:var(--navy);font-size:1.35rem;margin:0 0 1rem}
+.pq-ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.pq-ch{display:flex;flex-direction:column;background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;color:var(--text);cursor:pointer;font:inherit;text-align:left;padding:0;transition:border-color var(--transition),box-shadow var(--transition)}
+.pq-ch img{width:100%;height:210px;object-fit:contain;background:#f1f5f2;padding:.8rem}
+.pq-ch b{display:block;font-size:1.1rem;color:var(--navy);padding:.9rem 1.1rem .2rem}
+.pq-ch span{display:block;font-size:.9rem;color:var(--text-muted);padding:0 1.1rem 1.1rem}
+.pq-ch em{font-style:normal;font-weight:700;color:var(--orange-text);margin-top:auto;padding:0 1.1rem 1.1rem}
+@media(hover:hover){.pq-ch:hover{border-color:var(--navy-mid);box-shadow:var(--shadow)}}
+.pq-app{display:flex;gap:1.1rem;align-items:center;margin-top:1.4rem;background:linear-gradient(135deg,#0f3a24,#1f6b43);color:#fff;border-radius:var(--radius-lg);padding:1.2rem 1.4rem;text-decoration:none}
+.pq-app .ic{flex:0 0 58px;height:58px;border-radius:16px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:1.9rem}
+.pq-app b{display:block;font-size:1.08rem}.pq-app span{display:block;font-size:.9rem;color:rgba(255,255,255,.82);margin-top:.15rem}
+.pq-app .go{margin-left:auto;flex-shrink:0;background:var(--orange);color:#fff;font-weight:700;padding:.6rem 1rem;border-radius:var(--radius);white-space:nowrap}
+.pq-applink{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:0 0 1.2rem;padding:.75rem 1rem;border:1px dashed var(--navy-mid);border-radius:var(--radius);background:#f6fcf8;font-size:.92rem}
+.pq-applink a{font-weight:700;color:var(--navy-mid)}
+.pq-back{display:inline-block;margin:0 0 1rem;font-size:.9rem;font-weight:600;color:var(--navy-mid);background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
+@media(max-width:760px){.pq-ch-grid{grid-template-columns:1fr}.pq-ch{display:grid;grid-template-columns:104px 1fr;align-items:start}
+  .pq-ch img{grid-row:1/4;width:104px;height:100%;min-height:130px;padding:.5rem}
+  .pq-ch b{padding:.7rem .9rem .15rem;font-size:1rem}.pq-ch span{padding:0 .9rem .3rem;font-size:.85rem}.pq-ch em{padding:0 .9rem .7rem}
+  .pq-app{flex-wrap:wrap}.pq-app .go{margin-left:0;width:100%;text-align:center}}
+</style>
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -257,8 +280,22 @@
   </div>
 </header>
 
-<section class="pq-wrap">
+<!-- ROZCESTNÍK: druh dveří + aplikace (u odkazu s ?model= nebo #d= se přeskočí) -->
+<section class="pq-choose" id="pqChoose" hidden>
   <div class="container">
+    <h2>Jaké dveře hledáte?</h2>
+    <div class="pq-ch-grid">
+      <button type="button" class="pq-ch" id="pqChByt"><img src="poptavka-imgs/premium60.jpg" alt="" loading="lazy"><b>Bezpečnostní dveře do bytu</b><span>PREMIUM 60, EXTREME 54, MAGNUM 56, SECURIDO 65. Sestavíte si je zde s cenou.</span><em>Sestavit dveře →</em></button>
+      <a class="pq-ch" href="dvere-do-domu.html#poptavka"><img src="aplikace/img/domovni/arendal.jpg" alt="" loading="lazy"><b>Vchodové dveře do domu</b><span>Ocelové ERKADO a hliníkové OPTIMAL.</span><em>Vybrat a poptat →</em></a>
+      <a class="pq-ch" href="dvere-do-interieru.html#poptavka"><img src="aplikace/img/interier/altamura1.jpg" alt="" loading="lazy"><b>Interiérové dveře</b><span>Skladové modely i dveře na objednávku.</span><em>Vybrat a poptat →</em></a>
+    </div>
+    <a class="pq-app" href="aplikace/#viz"><div class="ic">📷</div><div><b>Nejdřív si je vyzkoušejte na fotce</b><span>Vyfoťte své dveře a uvidíte, jak by u vás vypadaly nové – do bytu, do domu i interiérové. Z aplikace pak rovnou pošlete poptávku.</span></div><span class="go">Otevřít aplikaci</span></a>
+  </div>
+</section>
+
+<section class="pq-wrap" id="pqWrap">
+  <div class="container">
+    <button type="button" class="pq-back" id="pqBack" hidden>← Jiný druh dveří</button>
     <ol class="pq-steps" aria-label="Postup">
       <li class="on" data-step-ind="1"><span>1</span>Dveře</li>
       <li data-step-ind="2"><span>2</span>Kontakt</li>
@@ -272,6 +309,7 @@
 
         <!-- ── KROK 1: DVEŘE ── -->
         <div class="pq-step" data-step="1">
+          <div class="pq-applink">📷 Nevíte, jak by vypadaly u vás? <a href="aplikace/#viz?m=premium60" id="pqAppLink">Vyzkoušejte je na fotce svých dveří →</a></div>
           <fieldset class="pq-block">
             <legend>Který model se vám líbí?</legend>
             <div class="pq-models" id="pqModels"></div>
@@ -558,5 +596,17 @@
 <script src="poptavka-dvere.js?v=20261016f"></script>
 <script src="cookies.js?v=2" defer></script>
 <script src="bonus.js?v=20261016c" defer></script>
+<script>
+/* rozcestník „Chci dveře“: bez předvolby (?model=, #d=) nejdřív výběr druhu dveří a odkaz na aplikaci */
+(function () {
+  var ch = document.getElementById('pqChoose'), wrap = document.getElementById('pqWrap'), back = document.getElementById('pqBack');
+  if (!ch || !wrap) return;
+  var direct = /[?&]model=/.test(location.search) || /[#&]d=/.test(location.hash) || /[#&]byt\b/.test(location.hash);
+  function show(form) { ch.hidden = form; wrap.hidden = !form; back.hidden = !form || direct; window.scrollTo(0, 0); }
+  document.getElementById('pqChByt').addEventListener('click', function () { history.replaceState(null, '', '#byt'); show(true); });
+  back.addEventListener('click', function () { history.replaceState(null, '', location.pathname + location.search); show(false); });
+  show(direct);
+})();
+</script>
 </body>
 </html>
