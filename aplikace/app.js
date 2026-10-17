@@ -76,11 +76,13 @@
   function route() {
     var v = (location.hash || '#viz').slice(1).split('?')[0];
     if (!$('[data-view="' + v + '"]')) v = 'viz';
+    if (v === 'moje' && !/[?&]test=1/.test(location.hash)) v = 'viz'; // Moje dveře zatím skryté (spustí se s aplikací Moje dveře); náhled #moje?test=1
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (/[?&]p=1/.test(location.hash)) { try { sessionStorage.setItem('bd-app-prodejce', '1'); } catch (e) {} }
     if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]]) { if (mm[1] !== vizModel) setModel(mm[1]); setLock(true); } else setLock(false); layout(); }
     if (v === 'moje') renderMoje();
+    if (v === 'viz' && /[?&]navod=1/.test(location.hash)) setTimeout(openHowto, 50);
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', route);
@@ -476,6 +478,28 @@
     if (seller && V.cat === 'byt') { location.href = '../poptavka-dvere.html?model=' + vizModel + '&odstin=' + encodeURIComponent(shadeName()); return; }
     openAsk();
   });
+
+  /* ═══════════════ návod: focení a označení rohů ═══════════════ */
+  function openHowto() {
+    var C = ['#c2410c', '#c2410c', '#c2410c', '#c2410c'];
+    var svg = '<svg viewBox="0 0 220 250" width="200" height="228" role="img" aria-label="Pořadí rohů: 1 levý horní, 2 pravý horní, 3 pravý dolní, 4 levý dolní">' +
+      '<rect x="40" y="14" width="140" height="226" fill="#8a6b4e"/><rect x="54" y="26" width="112" height="214" fill="#d9c7b0" stroke="#6b4f36" stroke-width="2"/>' +
+      '<rect x="146" y="128" width="12" height="5" rx="2" fill="#555"/><path d="M8 240h204" stroke="#999" stroke-width="3"/>' +
+      '<text x="110" y="10" font-size="11" fill="#666" text-anchor="middle">zárubeň</text><text x="80" y="140" font-size="12" fill="#5a4330">křídlo</text>' +
+      [[54, 26, 1], [166, 26, 2], [166, 240, 3], [54, 240, 4]].map(function (p) {
+        return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="11" fill="' + C[p[2] - 1] + '" stroke="#fff" stroke-width="3"/><text x="' + p[0] + '" y="' + (p[1] + 4) + '" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">' + p[2] + '</text>'; }).join('') + '</svg>';
+    openDlg('<h2>Jak na to</h2><div class="howto-fig">' + svg + '</div>' +
+      '<ol class="howto-list">' +
+      '<li><b>Vyfoťte dveře zepředu a kolmo.</b> Postavte se doprostřed před dveře, celé dveře i se zárubní musí být na fotce. Ideálně za denního světla, bez blesku.</li>' +
+      '<li><b>Klepněte postupně na 4 rohy křídla</b> – v tomto pořadí: <b>1</b> levý horní, <b>2</b> pravý horní, <b>3</b> pravý dolní, <b>4</b> levý dolní. Klepejte na roh samotných dveří (křídla), <b>ne na zárubeň</b> kolem nich.</li>' +
+      '<li><b>Doladění:</b> bod chyťte prstem a posuňte – ukáže se lupa, ať trefíte roh přesně. „Přichytit k rohům“ bod sám dotáhne na hranu.</li>' +
+      '<li><b>Nedaří se?</b> Klepněte na „▭ Rámeček k posunutí“ – objeví se 4 body, které jen přetáhnete na rohy. „↺ Označit znovu“ začne od začátku.</li>' +
+      '<li><b>Panty máte vpravo?</b> V části „Doladit vzhled“ zapněte „⇄ Panty na druhé straně“.</li>' +
+      '<li>Pak už jen vyberte dveře a odstín. Tlačítkem „⇆ Porovnat před / po“ uvidíte rozdíl.</li></ol>' +
+      '<p class="small">Fotka se zpracuje jen ve vašem telefonu. Nejde to? Zavolejte <a href="tel:+420725559235">725 559 235</a>, rádi poradíme.</p>' +
+      '<button class="b pri wide" type="button" onclick="this.closest(\'dialog\').close()">Rozumím</button>');
+  }
+  $('#howto').addEventListener('click', openHowto);
 
   /* ═══════════════ formuláře (dialog) ═══════════════ */
   var dlg = $('#dlg');
