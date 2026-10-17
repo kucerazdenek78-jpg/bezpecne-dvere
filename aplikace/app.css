@@ -147,3 +147,12 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .pick span{color:#556}.pick strong{font-size:1.05rem;color:var(--navy)}.pick small{color:#667}.pick a{color:var(--orange);font-weight:700}
 .shades.long{max-height:62vh;overflow-y:auto;padding:2px;-webkit-overflow-scrolling:touch}
 [hidden]{display:none!important}
+/* odstíny interiérových dveří (výběr pod zvoleným provedením) */
+.decs{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0 .2rem}
+.decs .dech{flex-basis:100%;font-size:.9rem;color:var(--navy)}
+.dec{display:flex;flex-direction:column;align-items:center;gap:.2rem;width:72px;padding:.25rem;border:2px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font:inherit}
+.dec img{width:100%;height:84px;object-fit:contain;background:#eef1ee;border-radius:6px}
+.dec span{font-size:.68rem;font-weight:700;line-height:1.15;color:#334;text-align:center}
+.dec[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}
+.decn{display:block;font-size:.72rem;color:#667;margin-top:.2rem}
+.sh .ndec{display:block;font-style:normal;font-size:.66rem;font-weight:700;color:#15803d;margin-top:.1rem}

@@ -39,12 +39,15 @@
     shades: DD.domovni.map(function (x) { return [x[0], x[1], x[2], x[3], false]; }), web: '../dvere-do-domu.html', ask: '../dvere-do-domu.html#poptavka', priceNote: 'Orientační cena z katalogu ERKADO; přesnou podle rozměru a provedení vám spočítáme.',
     note: 'Vyberte provedení a uvidíte ho na fotce svých dveří. Barevné varianty a rozměry upřesníme v nabídce.' };
   if (DD.interier) VIZ.interier = { cat: 'int', name: 'Interiérové dveře', label: 'Provedení', noFrame: true, def: 0,
-    shades: DD.interier.slice().sort(function (a, b) { return (b[4] ? 1 : 0) - (a[4] ? 1 : 0); }).map(function (x) { return [x[0], x[1], x[2], x[3], x[4]]; }),
+    shades: DD.interier.slice().sort(function (a, b) { return (b[4] ? 1 : 0) - (a[4] ? 1 : 0); }).map(function (x) { return [x[0], x[1], x[2], x[3], x[4], x[5]]; }),
     web: '../dvere-do-interieru.html', ask: '../dvere-do-interieru.html#poptavka', priceNote: 'Cena komplet se zárubní, bez kování a bez DPH.',
-    note: 'Nejdřív jsou dveře skladem. Na fotce nahradíte křídlo; zárubeň zůstává vaše.' };
+    note: 'Nejdřív jsou dveře skladem – u nich si vyberete i odstín. Na fotce nahradíte křídlo; zárubeň zůstává vaše.' };
   VIZ.premium60.cat = VIZ.extreme54.cat = 'byt';
   var vizModel = 'premium60', frameIdx = 0, locked = false;
   function SH() { return VIZ[vizModel].shades; }
+  /* odstíny interiérových dveří (6. pole provedení): [[název, obrázek], …] */
+  function DEC(i) { var x = SH()[i == null ? shadeIdx : i]; return x && x[5] && x[5].length ? x[5] : null; }
+  function srcOf(i) { var d = DEC(i); return d ? d[Math.min(decIdx, d.length - 1)][1] : SH()[i][1]; }
   function hex2rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); }
 
   /* ═══════════════ navigace ═══════════════ */
@@ -63,7 +66,7 @@
   /* ═══════════════ VIZUALIZACE ═══════════════ */
   var canvas = $('#gl'), ov = $('#ov'), hint = $('#hint'), stage = $('#stage'), splitEl = $('#split');
   var gl, loc = {}, texPhoto, texDoor, photo = null, gray = null, small = null, pts = [], snapped = [false, false, false, false];
-  var shadeIdx = 1, flip = false, split = -1, doorImgs = {}, light = { gain: [1, 1, 1], grad: [0, 0] };
+  var shadeIdx = 1, decIdx = 0, flip = false, split = -1, doorImgs = {}, light = { gain: [1, 1, 1], grad: [0, 0] };
 
   var VS = 'attribute vec2 p;varying vec2 t;void main(){t=vec2(p.x*.5+.5,.5-p.y*.5);gl_Position=vec4(p,0.,1.);}';
   var FS = [
@@ -125,7 +128,7 @@
   function render() {
     if (!gl || !photo) return;
     gl.viewport(0, 0, canvas.width, canvas.height);
-    var di = doorImgs[SH()[shadeIdx][1]], ready = pts.length === 4 && di && di.ok;
+    var di = doorImgs[srcOf(shadeIdx)], ready = pts.length === 4 && di && di.ok;
     gl.uniform1f(loc.on, ready ? 1 : 0);
     if (ready) {
       gl.uniformMatrix3fv(loc.Hi, false, new Float32Array(inv3(squareToQuad(pts))));
@@ -145,7 +148,7 @@
   var rq = 0; function renderSoon() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; render(); }); }
 
   function loadDoor(i, cb) {
-    var src = SH()[i][1], o = doorImgs[src];
+    var src = srcOf(i), o = doorImgs[src];
     if (o && o.ok) { upload(texDoor, 1, o.img); return cb && cb(); }
     if (o) { o.cbs.push(cb); return; }
     var im = new Image(); o = doorImgs[src] = { img: im, ok: false, cbs: [cb] };
@@ -155,7 +158,7 @@
       x.drawImage(im, im.width * .1, im.height * .05, im.width * .8, im.height * .9, 0, 0, 8, 8);
       var d = x.getImageData(0, 0, 8, 8).data, sm = [0, 0, 0]; for (var k = 0; k < d.length; k += 4) { sm[0] += d[k]; sm[1] += d[k + 1]; sm[2] += d[k + 2]; }
       o.mean = sm.map(function (v) { return v / 64 / 255; }); o.ok = true;
-      if (SH()[shadeIdx] && SH()[shadeIdx][1] === src) upload(texDoor, 1, im);
+      if (SH()[shadeIdx] && srcOf(shadeIdx) === src) upload(texDoor, 1, im);
       o.cbs.forEach(function (f) { f && f(); }); o.cbs = [];
     };
     im.onerror = function () { hint.textContent = 'Obrázek odstínu se nepodařilo načíst. Zkontrolujte připojení.'; };
@@ -340,7 +343,7 @@
     var V = VIZ[vizModel];
     $('#shades').innerHTML = V.shades.map(function (x, i) {
       return '<button class="sh" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + x[1] + '" alt="" loading="lazy">' + esc(x[0]) +
-        (x[3] ? '<small>' + esc(x[3]) + '</small>' : '') + (x[4] ? '<em class="sk">skladem</em>' : '') + '</button>'; }).join('');
+        (x[3] ? '<small>' + esc(x[3]) + '</small>' : '') + (x[4] ? '<em class="sk">skladem</em>' : '') + (x[5] && x[5].length > 1 ? '<i class="ndec">' + x[5].length + (x[5].length > 4 ? ' odstínů' : ' odstíny') + '</i>' : '') + '</button>'; }).join('');
     $('#shadeNote').textContent = V.note;
     $('#shadeH').textContent = V.label || 'Odstín';
     $('#frameBox').hidden = !V.frames;
@@ -356,7 +359,13 @@
     if (V.cat === 'byt' || !x) { el.hidden = true; return; }
     el.hidden = false;
     el.style.marginBottom = '.6rem'; el.innerHTML = '<b>' + esc(x[0]) + '</b>' + (x[4] ? ' <em class="sk">skladem</em>' : '') + '<br><span>' + esc(x[2]) + '</span>' +
-      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + '<br><a href="' + V.web + '">Katalog a ceny na webu →</a>';
+      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + '<br><a href="' + V.web + '">Katalog a ceny na webu →</a>';
+  }
+  function decHtml() {
+    var d = DEC(); if (!d || d.length < 2) return '';
+    return '<div class="decs" role="group" aria-label="Odstín"><b class="dech">Odstín: ' + esc(d[decIdx][0]) + '</b>' + d.map(function (o, i) {
+      return '<button type="button" class="dec" data-d="' + i + '" aria-pressed="' + (i === decIdx) + '" title="' + esc(o[0]) + '"><img src="' + o[1] + '" alt="" loading="lazy"><span>' + esc(o[0]) + '</span></button>'; }).join('') +
+      '</div><span class="decn">Fotky odstínů z katalogu výrobce – skutečný odstín uvidíte na vzorku v prodejně.</span>';
   }
   /* zamčený režim: z webu (nebo z Nabídky) vedeme na konkrétní dveře, ostatní nenabízíme */
   function setLock(on) {
@@ -367,12 +376,16 @@
     $$('#vizCat .cat').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-c') === V.cat); });
   }
   function setModel(m) {
-    if (!VIZ[m]) return; vizModel = m; shadeIdx = VIZ[m].def; frameIdx = 0;
+    if (!VIZ[m]) return; vizModel = m; shadeIdx = VIZ[m].def; decIdx = 0; frameIdx = 0;
     $$('#vizModel .b').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === m); });
     buildShades(); setLock(locked); loadDoor(shadeIdx, function () { render(); });
   }
+  $('#pick').addEventListener('click', function (e) {
+    var b = e.target.closest('.dec'); if (!b) return; decIdx = +b.getAttribute('data-d');
+    showPick(); loadDoor(shadeIdx, function () { render(); });
+  });
   $('#shades').addEventListener('click', function (e) {
-    var b = e.target.closest('.sh'); if (!b) return; shadeIdx = +b.getAttribute('data-i');
+    var b = e.target.closest('.sh'); if (!b) return; shadeIdx = +b.getAttribute('data-i'); decIdx = 0;
     $$('.sh').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     showPick(); loadDoor(shadeIdx, function () { render(); });
   });
@@ -386,7 +399,7 @@
     setModel(c === 'byt' ? (VIZ[vizModel].cat === 'byt' ? vizModel : 'premium60') : c === 'domu' ? 'domovni' : 'interier');
   });
   function MN() { return (MODELS[vizModel] || VIZ[vizModel]).name; }
-  function shadeName() { return SH()[shadeIdx][0]; }
+  function shadeName() { var d = DEC(); return SH()[shadeIdx][0] + (d ? ' – ' + d[Math.min(decIdx, d.length - 1)][0] : ''); }
   function frameName() { var f = VIZ[vizModel].frames; return !$('#frame').checked ? 'původní' : f ? 'nová, ' + f[frameIdx][0] : 'nová v dekoru dveří'; }
 
   $('#fileCam').addEventListener('change', onFile); $('#fileGal').addEventListener('change', onFile);
@@ -742,5 +755,5 @@
   if (initGL()) { buildShades(); loadDoor(shadeIdx); state(); }
   route();
   window.__app = { setPhoto: setPhoto, setPts: function (p) { pts = p; snapped = [false, false, false, false]; afterCorners(); }, snapPoint: snapPoint, get light() { return light; }, render: render,
-    setShade: function (i, cb) { shadeIdx = i; loadDoor(i, function () { render(); cb && cb(); }); }, setModel: setModel, setSplit: setSplit };
+    setShade: function (i, cb, di) { shadeIdx = i; decIdx = di || 0; showPick(); loadDoor(i, function () { render(); cb && cb(); }); }, setModel: setModel, setSplit: setSplit };
 })();
