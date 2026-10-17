@@ -43,6 +43,19 @@
     .so-cities{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}
     .so-cities span{background:#e8f5ee;color:var(--navy);font-weight:700;font-size:.85rem;padding:.35rem .9rem;border-radius:99px}
     .so-form-wrap{max-width:760px;margin:0 auto}
+    /* náhled aplikace v telefonu */
+    .md-hero::after{display:none}
+    .md-hero .container{display:grid;grid-template-columns:1fr auto;gap:2.5rem;align-items:center}
+    .md-phone{width:230px;border-radius:34px;background:#0c1f15;padding:9px;box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.12);transform:rotate(2deg)}
+    .md-phone img{display:block;width:100%;height:auto;border-radius:26px}
+    .md-shots{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin:.4rem 0 1rem}
+    .md-shot{margin:0;text-align:center}
+    .md-shot .md-phone{width:100%;max-width:230px;margin:0 auto;transform:none;box-shadow:0 10px 30px rgba(18,61,39,.18)}
+    .md-shot figcaption{margin-top:.7rem;font-weight:700;color:var(--navy);font-size:.95rem}
+    .md-shot figcaption small{display:block;font-weight:400;color:var(--text-muted);font-size:.85rem}
+    .md-note{font-size:.8rem;color:var(--text-muted);margin:0 0 1rem}
+    @media(max-width:860px){.md-hero .container{grid-template-columns:1fr}.md-hero .md-phone{width:190px;margin:1.4rem auto 0;transform:none}
+      .md-shots{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:62%;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:.6rem}.md-shot{scroll-snap-align:center}}
     .so-form-wrap h2{color:var(--navy);margin-bottom:.5rem}
     .so-form-wrap>p{margin-bottom:1.3rem}
     .so-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
@@ -127,19 +140,29 @@
 </nav>
 
 <!-- PAGE HEADER -->
-<div class="page-header hero-modern">
+<div class="page-header hero-modern md-hero">
   <div class="container">
+    <div>
     <span class="section-label">Bonus ke každým dveřím</span>
     <h1>Aplikace Moje dveře je v ceně</h1>
     <p>K dveřím od nás dostanete aplikaci, ve které máte své dveře, záruku a servis na jednom místě. Bez doplatku.</p>
     <div class="hero-chips"><span class="on">V ceně dveří</span><span>Stačí telefon</span><span>Bez instalace z obchodu</span></div>
     <div class="breadcrumb"><a href="index.html">Úvod</a><span>›</span><span>Moje dveře</span></div>
+    </div>
+    <div class="md-phone"><img src="userFiles/moje-dvere/moje-dvere-prehled.webp" width="540" height="1080" alt="Aplikace Moje dveře v telefonu: přehled dveří PREMIUM 60 a záruky" fetchpriority="high"></div>
   </div>
 </div>
 
 <section>
   <div class="container">
-    <h2 class="so-h" style="margin-top:0;">Co v aplikaci najdete</h2>
+    <h2 class="so-h" style="margin-top:0;">Takhle aplikace vypadá</h2>
+    <div class="md-shots">
+      <figure class="md-shot"><div class="md-phone"><img src="userFiles/moje-dvere/moje-dvere-prehled.webp" width="540" height="1080" alt="Přehled dveří a záruky v aplikaci" loading="lazy"></div><figcaption>Vaše dveře a záruka<small>model, odstín, datum předání, do kdy platí záruka</small></figcaption></figure>
+      <figure class="md-shot"><div class="md-phone"><img src="userFiles/moje-dvere/moje-dvere-prohlidka.webp" width="540" height="1080" alt="Roční prohlídka a hlášení závady v aplikaci" loading="lazy"></div><figcaption>Roční prohlídka a servis<small>připomínka do kalendáře, závada s fotkou</small></figcaption></figure>
+      <figure class="md-shot"><div class="md-phone"><img src="userFiles/moje-dvere/moje-dvere-vizualizace.webp" width="540" height="1080" alt="Vyzkoušení nových dveří na fotce v aplikaci" loading="lazy"></div><figcaption>Dveře na vaší fotce<small>vyzkoušejte si odstín ještě před nákupem</small></figcaption></figure>
+    </div>
+    <p class="md-note">Ukázka s vymyšlenými údaji. Skutečný vzhled se může drobně lišit.</p>
+    <h2 class="so-h">Co v aplikaci najdete</h2>
     <div class="so-grid so-grid-2">
       <div class="so-box"><h4>Přehled dveří a záruky</h4><p>Model a odstín vašich dveří a datum, do kdy platí záruka. Dveře si v aplikaci spárujete číslem objednávky a čtyřmi číslicemi z telefonu.</p></div>
       <div class="so-box"><h4>Návod na údržbu a vlastní servis</h4><p>Jak o dveře pravidelně pečovat a jaké jednoduché úkony zvládnete sami, aniž byste museli volat servis.</p></div>
