@@ -3,6 +3,7 @@
 // Akce „sparovat“: zákazník zadá číslo objednávky + poslední 4 číslice telefonu z objednávky → vrátí model, odstín
 // a záruku z objednávky v kartotéce (tabulka zadosti, typ objednavka_interni). Adresu, telefon ani ceny nevrací.
 // Nic nezapisuje do zadosti; pokusy se počítají v tabulce pokusy (limit na IP za hodinu).
+// Akce „udalost“: anonymní denní součty využití aplikace (viz níže a statistika-aplikace.php).
 require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php';
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -60,6 +61,41 @@ if ($akce === 'sparovat') {
     // odkaz na zákaznickou stránku „Moje dveře“ na NAS (záruka, servis, prodloužení záruky s QR platbou) – jediný zdroj pravdy
     'moje_url' => !empty($r['predano_dne']) ? zaruka_url($cfg, zaruka_token($pdo, $r)) : '',
     'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
+}
+
+// Akce „udalost“: anonymní počítadlo využití aplikace (otevření, fotka, vizualizace, výběr modelu, odeslání).
+// Ukládá jen denní součty do tabulky app_statistika (den, udalost, kat, model, prodejce, pocet) – žádná IP ani ID zařízení.
+// Přehled: statistika-aplikace.php (jen přes kartoteka.dvere.app / Cloudflare Access nebo z místní sítě).
+if ($akce === 'udalost') {
+  $UDALOSTI = ['navsteva', 'navsteva_nova', 'foto', 'vizualizace', 'vyber', 'odeslano'];
+  $u = (string)($_POST['udalost'] ?? '');
+  if (!in_array($u, $UDALOSTI, true)) chyba(400, 'udalost');
+  $kat = preg_replace('/[^a-z0-9_-]/', '', mb_substr((string)($_POST['kat'] ?? ''), 0, 30));
+  $model = trim(preg_replace('/[\x00-\x1F<>]/u', '', mb_substr((string)($_POST['model'] ?? ''), 0, 60)));
+  $prodejce = ($_POST['prodejce'] ?? '') === '1' ? 1 : 0;
+  $pdo = db(); $drv = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+  stat_tabulky($pdo, $drv);
+  // ochrana proti zahlcení: max. 300 událostí z jedné IP za hodinu (IP se ukládá jen jako hash a jen pro tuto hodinu)
+  $hod = gmdate('YmdH'); $ipk = substr(hash('sha256', klient_ip() . '|' . $hod), 0, 32);
+  if ($drv === 'mysql') $pdo->prepare("INSERT INTO app_stat_limit (k, hod, n) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE n = n + 1")->execute([$ipk, $hod]);
+  else $pdo->prepare("INSERT INTO app_stat_limit (k, hod, n) VALUES (?, ?, 1) ON CONFLICT(k) DO UPDATE SET n = n + 1")->execute([$ipk, $hod]);
+  $st = $pdo->prepare("SELECT n FROM app_stat_limit WHERE k=?"); $st->execute([$ipk]);
+  if ((int)$st->fetchColumn() > 300) chyba(429, 'limit');
+  if (mt_rand(1, 200) === 1) $pdo->prepare("DELETE FROM app_stat_limit WHERE hod < ?")->execute([gmdate('YmdH', time() - 7200)]);
+  $den = date('Y-m-d');
+  if ($drv === 'mysql') $sql = "INSERT INTO app_statistika (den, udalost, kat, model, prodejce, pocet) VALUES (?, ?, ?, ?, ?, 1) ON DUPLICATE KEY UPDATE pocet = pocet + 1";
+  else $sql = "INSERT INTO app_statistika (den, udalost, kat, model, prodejce, pocet) VALUES (?, ?, ?, ?, ?, 1) ON CONFLICT(den, udalost, kat, model, prodejce) DO UPDATE SET pocet = pocet + 1";
+  $pdo->prepare($sql)->execute([$den, $u, $kat, $model, $prodejce]);
+  vystup(200, ['ok' => true]);
+}
+function stat_tabulky($pdo, $drv) {
+  if ($drv === 'mysql') {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS app_statistika (den DATE NOT NULL, udalost VARCHAR(20) NOT NULL, kat VARCHAR(30) NOT NULL DEFAULT '', model VARCHAR(60) NOT NULL DEFAULT '', prodejce TINYINT NOT NULL DEFAULT 0, pocet INT NOT NULL DEFAULT 0, PRIMARY KEY (den, udalost, kat, model, prodejce)) DEFAULT CHARSET=utf8mb4");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS app_stat_limit (k CHAR(32) NOT NULL PRIMARY KEY, hod CHAR(10) NOT NULL, n INT NOT NULL DEFAULT 0)");
+  } else {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS app_statistika (den TEXT NOT NULL, udalost TEXT NOT NULL, kat TEXT NOT NULL DEFAULT '', model TEXT NOT NULL DEFAULT '', prodejce INTEGER NOT NULL DEFAULT 0, pocet INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (den, udalost, kat, model, prodejce))");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS app_stat_limit (k TEXT NOT NULL PRIMARY KEY, hod TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0)");
+  }
 }
 
 chyba(400, 'akce');

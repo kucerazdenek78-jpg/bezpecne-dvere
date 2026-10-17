@@ -50,6 +50,28 @@
   function srcOf(i) { var d = DEC(i); return d ? d[Math.min(decIdx, d.length - 1)][1] : SH()[i][1]; }
   function hex2rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); }
 
+  /* ═══════════════ anonymní počítadlo využití (NAS: aplikace-api.php, akce „udalost“) ═══════════════
+     Posílají se jen počty: druh události, druh dveří, model/odstín a zda jde o prodejce. Žádné jméno, fotka ani ID zařízení. */
+  var statN = 0;
+  function stat(udalost, kat, model) {
+    try {
+      if (statN++ > 60 || !window.BDApp || !BDApp.BASE || !navigator.sendBeacon || /^(localhost|127\.)/.test(location.hostname)) return;
+      var fd = new FormData(); fd.append('akce', 'udalost'); fd.append('udalost', udalost); fd.append('kat', kat || '');
+      fd.append('model', String(model || '').slice(0, 60)); fd.append('prodejce', sessionStorage.getItem('bd-app-prodejce') === '1' ? '1' : '0');
+      navigator.sendBeacon(BDApp.BASE + 'aplikace-api.php', fd);
+    } catch (e) {}
+  }
+  function statDen() { // jednou za den na zařízení = „návštěva“ (datum se drží jen v tomto telefonu)
+    var d = new Date().toISOString().slice(0, 10), was = store.get('bd-stat-den', '');
+    if (was !== d) { store.set('bd-stat-den', d); stat(was ? 'navsteva' : 'navsteva_nova'); }
+  }
+  var vizDone = false; // jedna vizualizace = první nasazené dveře na nové fotce
+  function statViz() {
+    if (pts.length !== 4) return; var V = VIZ[vizModel];
+    var m = V.cat === 'byt' ? MN() + ' – ' + shadeName() : shadeName();
+    if (!vizDone) { vizDone = true; stat('vizualizace', V.cat, m); } else stat('vyber', V.cat, m);
+  }
+
   /* ═══════════════ navigace ═══════════════ */
   function route() {
     var v = (location.hash || '#viz').slice(1).split('?')[0];
@@ -187,7 +209,7 @@
     var f = e.target.files && e.target.files[0]; if (!f) return; e.target.value = '';
     hint.className = 'hint'; hint.textContent = 'Načítám fotku…';
     var p = window.createImageBitmap ? createImageBitmap(f, { imageOrientation: 'from-image' }).catch(function () { return viaImg(f); }) : viaImg(f);
-    p.then(setPhoto).catch(function () { hint.textContent = 'Fotku se nepodařilo otevřít. Zkuste jinou (JPG nebo PNG).'; });
+    p.then(function (b) { vizDone = false; stat('foto', VIZ[vizModel].cat); return setPhoto(b); }).catch(function () { hint.textContent = 'Fotku se nepodařilo otevřít. Zkuste jinou (JPG nebo PNG).'; });
   }
   function viaImg(f) { return new Promise(function (res, rej) { var u = URL.createObjectURL(f), im = new Image(); im.onload = function () { URL.revokeObjectURL(u); res(im); }; im.onerror = rej; im.src = u; }); }
 
@@ -281,7 +303,7 @@
     var r = ov.getBoundingClientRect(), sr = stage.getBoundingClientRect(), px = r.left - sr.left + p[0] * r.width, py = p[1] * r.height;
     L.style.left = Math.min(Math.max(0, px - 60 + (px > sr.width / 2 ? -90 : 90)), sr.width - 120) + 'px'; L.style.top = Math.max(0, py - 160) + 'px'; L.style.display = 'block';
   }
-  function afterCorners() { if (pts.length === 4) estimateLight(); buildOverlay(); state(); render(); }
+  function afterCorners() { if (pts.length === 4) { estimateLight(); if (!vizDone) statViz(); } buildOverlay(); state(); render(); }
   ov.addEventListener('pointerdown', function (e) {
     if (split >= 0) return;
     var t = e.target.closest && e.target.closest('.pt'); e.preventDefault();
@@ -382,12 +404,12 @@
   }
   $('#pick').addEventListener('click', function (e) {
     var b = e.target.closest('.dec'); if (!b) return; decIdx = +b.getAttribute('data-d');
-    showPick(); loadDoor(shadeIdx, function () { render(); });
+    showPick(); loadDoor(shadeIdx, function () { render(); }); statViz();
   });
   $('#shades').addEventListener('click', function (e) {
     var b = e.target.closest('.sh'); if (!b) return; shadeIdx = +b.getAttribute('data-i'); decIdx = 0;
     $$('.sh').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-    showPick(); loadDoor(shadeIdx, function () { render(); });
+    showPick(); loadDoor(shadeIdx, function () { render(); }); statViz();
   });
   $('#frames').addEventListener('click', function (e) {
     var b = e.target.closest('.fr'); if (!b) return; frameIdx = +b.getAttribute('data-i');
@@ -487,7 +509,7 @@
       saveKontakt(o);
       Promise.resolve(build(o)).then(function (x) {
         return BDApp.send({ typ: 'poptavka', predmet: x.predmet, telo: x.telo, reply_to: o.email, cislo: x.cislo, data_json: JSON.stringify(x.data), honey: o._honey, files: x.files || [] })
-          .then(function (r) { addHist(x.hist, x.cislo); $('#dlgBody').innerHTML = okHtml(x, r); });
+          .then(function (r) { addHist(x.hist, x.cislo); stat('odeslano', (x.data && x.data.zdroj) || '', x.data && x.data.model); $('#dlgBody').innerHTML = okHtml(x, r); });
       }).catch(function () {
         btn.disabled = false; btn.textContent = 'Zkusit znovu';
         msg.className = 'msg err'; msg.innerHTML = 'Odeslání se nepovedlo. Zkontrolujte připojení, nebo nám zavolejte na <a href="tel:+420725559235">725 559 235</a>.';
@@ -760,7 +782,7 @@
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
 
   /* start */
-  buildModels();
+  buildModels(); statDen();
   if (initGL()) { buildShades(); loadDoor(shadeIdx); state(); }
   route();
   window.__app = { setPhoto: setPhoto, setPts: function (p) { pts = p; snapped = [false, false, false, false]; afterCorners(); }, snapPoint: snapPoint, get light() { return light; }, render: render,
