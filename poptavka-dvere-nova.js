@@ -751,6 +751,7 @@
       return sendClassic(d, files).catch(function () { filesLost = files.length > 0; d.poznamka_system = 'Přílohy se nepodařilo odeslat'; return sendAjax(d); });
     }).then(function () {
       $('#doneRef').textContent = d.cislo;
+      if (window.bdTrack) window.bdTrack('Lead', { content_name: 'Poptávka ' + d.model, value: d.cena_celkem || 0, currency: 'CZK' });
       if (filesLost && d.fotky.length) { var w = $('#doneWarn'); w.innerHTML = 'Poptávka dorazila, ale fotky se nepodařilo přiložit. Pošlete nám je prosím přes <a href="https://wa.me/420725559235">WhatsApp</a> nebo na <a href="mailto:' + CC + '">' + CC + '</a> s číslem poptávky.'; w.hidden = false; }
       if (pdf) { var a = $('#donePdf'); a.href = URL.createObjectURL(pdf); a.download = 'Poptavka-' + d.cislo + '.pdf'; a.hidden = false; }
       $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;

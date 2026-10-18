@@ -166,3 +166,10 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .howto span{flex-shrink:0;color:var(--orange);font-weight:700}
 .howto-fig{display:flex;justify-content:center;margin:.3rem 0 .6rem}
 .howto-list{padding-left:1.2rem;margin:0 0 .8rem;display:flex;flex-direction:column;gap:.55rem;font-size:.93rem;line-height:1.45}
+
+/* cookie lišta (cookies.js z webu) – souhlas s Meta Pixelem */
+.cookie-bar{position:fixed;left:0;right:0;bottom:0;z-index:999;display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;justify-content:space-between;
+  background:var(--navy);border-top:2px solid var(--orange);color:rgba(255,255,255,.85);font-size:.84rem;padding:.9rem 16px calc(.9rem + env(safe-area-inset-bottom))}
+.cookie-bar.hidden{display:none}
+.cookie-bar .btn{font:inherit;font-weight:700;border:2px solid transparent;border-radius:10px;cursor:pointer}
+.cookie-bar .btn-primary{background:var(--orange);border-color:var(--orange);color:#fff}

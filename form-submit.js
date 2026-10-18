@@ -25,7 +25,9 @@
         body: new FormData(form)
       }).then(function (r) { return r.json(); }).then(function (d) {
         if (d && (d.success === true || d.success === 'true')) {
+          var sub = (form.querySelector('[name=_subject]') || {}).value || 'Formulář z webu';
           form.reset();
+          if (window.bdTrack) window.bdTrack('Lead', { content_name: sub });
           show(true, '<strong>Děkujeme, poptávka byla odeslána.</strong> Ozveme se Vám co nejdříve.');
         } else { throw new Error('fail'); }
       }).catch(function () {

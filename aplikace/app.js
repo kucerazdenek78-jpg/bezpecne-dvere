@@ -547,7 +547,7 @@
       saveKontakt(o);
       Promise.resolve(build(o)).then(function (x) {
         return BDApp.send({ typ: 'poptavka', predmet: x.predmet, telo: x.telo, reply_to: o.email, cislo: x.cislo, data_json: JSON.stringify(x.data), honey: o._honey, files: x.files || [] })
-          .then(function (r) { addHist(x.hist, x.cislo); stat('odeslano', (x.data && x.data.zdroj) || '', x.data && x.data.model); $('#dlgBody').innerHTML = okHtml(x, r); });
+          .then(function (r) { if (window.bdTrack) window.bdTrack('Lead', { content_name: x.hist || 'Aplikace' }); addHist(x.hist, x.cislo); stat('odeslano', (x.data && x.data.zdroj) || '', x.data && x.data.model); $('#dlgBody').innerHTML = okHtml(x, r); });
       }).catch(function () {
         btn.disabled = false; btn.textContent = 'Zkusit znovu';
         msg.className = 'msg err'; msg.innerHTML = 'Odeslání se nepovedlo. Zkontrolujte připojení, nebo nám zavolejte na <a href="tel:+420725559235">725 559 235</a>.';
