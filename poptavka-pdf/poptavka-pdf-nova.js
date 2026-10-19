@@ -331,24 +331,13 @@
               })
             : Promise.resolve();
           return pm.then(function () {
-          // 2. strana jen pro montážníka: QR kód „předání díla“ (po načtení v přihlášené kartotéce zapíše předání, začátek záruky a odepíše dveře ze skladu)
+          // QR „předání díla“ pro montážníka: malý, v pravém dolním rohu 1. strany (po načtení v přihlášené kartotéce zapíše předání, začátek záruky a odepíše dveře ze skladu). Zákazník se přes něj bez přihlášení nedostane. List se tiskne jen na 1 stranu.
           if (d.predani_token && window.BDPlatba && window.BDPlatba.predaniUrl) {
             return pdf.embedPng(window.BDPlatba.png(window.BDPlatba.predaniUrl(d.predani_token), 600)).then(function (img) {
-              var p2 = pdf.addPage([page.getWidth(), H]), W = page.getWidth(), ink = L.rgb(0.1, 0.1, 0.1), y = 70;
-              function t2(text, size, bold, color) { if (!text) return; p2.drawText(text, { x: 56, y: H - y, size: size, font: bold ? f[0] : f[1], color: color || ink }); y += size + 8; }
-              t2('PŘEDÁNÍ DÍLA – POUZE PRO MONTÁŽNÍKA', 11, true, col); y += 6;
-              t2('Objednávka ' + d.obj_cislo, 22, true); y += 4;
-              t2(((d.jmeno || '') + ' ' + (d.prijmeni || '')).trim(), 13, false);
-              t2([d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', '), 11, false);
-              t2([d.model, d.odstin, d.kovani, d.otevirani].filter(Boolean).join(' · '), 10, false);
-              y += 18;
-              p2.drawImage(img, { x: (W - 250) / 2, y: H - y - 250, width: 250, height: 250 }); y += 270;
-              t2('Po dokončení montáže a předání dveří zákazníkovi:', 12, true); y += 2;
-              t2('1. Naskenujte QR kód telefonem (jste-li přihlášen do kartotéky).', 11, false);
-              t2('2. Zkontrolujte datum předání a potvrďte tlačítkem „Potvrdit předání“.', 11, false);
-              t2('3. Do kartotéky se zapíše datum předání a začátek záruky; dveře se odepíší ze skladu.', 11, false);
-              y += 10;
-              t2('Tento list zákazníkovi nepředávejte. QR kód je neveřejný a bez přihlášení do kartotéky nefunguje.', 9.5, false, L.rgb(0.55, 0.1, 0.1));
+              var Q = 56, qx = 516, qTop = 770;
+              page.drawRectangle({ x: qx - 5, y: H - (qTop + Q + 6), width: Q + 10, height: Q + 18, color: L.rgb(1, 1, 1) });
+              page.drawText('PŘEDÁVACÍ QR', { x: qx + (Q - f[0].widthOfTextAtSize('PŘEDÁVACÍ QR', 5.5)) / 2, y: H - (qTop - 3), size: 5.5, font: f[0], color: L.rgb(0.45, 0.45, 0.45) });
+              page.drawImage(img, { x: qx, y: H - (qTop + Q), width: Q, height: Q });
               return sigsDone.then(function () { return pdf.save(); });
             });
           }
