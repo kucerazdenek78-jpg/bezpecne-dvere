@@ -740,7 +740,11 @@
     if (!$('#pqConsent').checked) { msg.innerHTML = 'Pro odeslání prosím potvrďte souhlas se zpracováním osobních údajů.'; msg.hidden = false; return; }
     if (form._honey.value) return;
     var btn = $('#pqSubmit'); btn.disabled = true; btn.textContent = 'Připravuji…';
-    state.ref = state.ref || makeRef();
+    var refP = state.ref ? Promise.resolve(state.ref) : (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber('poptavka') : Promise.resolve('')).then(function (c) { return c || makeRef(); });
+    refP.then(function (r) { state.ref = r; sendInquiry(btn); });
+  });
+  function sendInquiry(btn) {
+    var msg = $('#pqMsg');
     var d = collect(), pdf = null, filesLost = false;
     var pdfP = window.PoptavkaPDF ? window.PoptavkaPDF.build(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
     pdfP.then(function (blob) {
@@ -763,7 +767,7 @@
       msg.hidden = false;
       btn.disabled = false; btn.textContent = 'Odeslat poptávku';
     });
-  });
+  }
 
   /* ── doprava (Mapy.com) a schody ── */
   function stairs() {
@@ -918,7 +922,12 @@
   buildModels(); buildStatic();
   if (OBJ) {
     $('#poSeller').innerHTML = PRODAVACI.map(function (p) { return radio('prodavac', p, esc(p), 'pq-chip'); }).join('');
-    form.obj_cislo.value = orderNumber();
+    form.obj_cislo.value = '';
+    form.obj_cislo.placeholder = 'načítám další číslo…';
+    (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber('objednavka') : Promise.resolve('')).then(function (c) {
+      if (!form.obj_cislo.value) form.obj_cislo.value = c;
+      form.obj_cislo.placeholder = c ? '' : 'např. 83/2026 (podle papírové objednávky)';
+    });
     form.obj_datum.value = new Date().toISOString().slice(0, 10);
     if (prefill()) updateSummary();
   }

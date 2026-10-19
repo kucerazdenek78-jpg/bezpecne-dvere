@@ -29,7 +29,7 @@
     if (o.cislo) fd.append('cislo', o.cislo);
     if (o.data_json) fd.append('data_json', o.data_json);
     fd.append('_honey', o.honey || '');
-    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/]+/g, "-")); });
+    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/\s]+/g, "-")); });
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, 90000) : null;
     var typ = o.typ || 'poptavka';
@@ -62,7 +62,7 @@
     fd.append('zprava', o.telo || '');
     if (o.cislo) fd.append('cislo', o.cislo);
     if (o.data_json) fd.append('data_json', o.data_json);
-    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/]+/g, "-")); });
+    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/\s]+/g, "-")); });
     return fetch('https://formsubmit.co/ajax/' + FALLBACK_TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
       .then(function (r) { return r.json(); })
       .then(function (d) { if (!(d && (d.success === true || d.success === 'true'))) throw new Error('fallback'); });
@@ -85,5 +85,12 @@
     return send({ typ: t, predmet: subject || 'Formulář z webu', telo: lines.join('\n'), reply_to: replyTo, honey: honey, files: files, data_json: t === 'registrace' ? JSON.stringify(data) : '' });
   }
 
-  w.BDForm = { ENDPOINT: ENDPOINT, send: send, sendForm: sendForm, bodyFromFields: bodyFromFields };
+  // navržené další číslo z kartotéky (objednavka -> 83/2026, nabidka -> N 12/2026, poptavka -> P 25/2026); při chybě vrátí ''
+  function nextNumber(typ) {
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null, t = ctl ? setTimeout(function () { ctl.abort(); }, 6000) : 0;
+    return fetch(ENDPOINT.replace('odeslat.php', 'cislo.php') + '?typ=' + encodeURIComponent(typ), { headers: { 'Accept': 'application/json' }, signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); }).then(function (j) { return (j && j.cislo) || ''; }).catch(function () { return ''; })
+      .then(function (c) { if (t) clearTimeout(t); return c; });
+  }
+  w.BDForm = { ENDPOINT: ENDPOINT, nextNumber: nextNumber, send: send, sendForm: sendForm, bodyFromFields: bodyFromFields };
 })(window);

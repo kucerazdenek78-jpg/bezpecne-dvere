@@ -406,7 +406,7 @@
           <fieldset class="pq-block">
             <legend>Objednávka</legend>
             <div class="pq-grid2">
-              <label class="pq-f">Číslo objednávky * <small>(rok a pořadové číslo, např. 2026-001; slouží i jako variabilní symbol)</small><input name="obj_cislo" required placeholder="2026-001" inputmode="numeric"></label>
+              <label class="pq-f">Číslo objednávky * <small>(pořadové číslo/rok, např. 83/2026; navrhne se další v řadě, při souběhu s papírem přepište číslem z papírové objednávky; číslice slouží jako variabilní symbol)</small><input name="obj_cislo" required placeholder="83/2026"></label>
               <label class="pq-f">Datum<input name="obj_datum" type="date"></label>
             </div>
             <p class="pq-help" style="margin:0 0 .6rem">Prodavač *</p>
@@ -605,11 +605,11 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="formulare-klient.js?v=4"></script>
+<script src="formulare-klient.js?v=5"></script>
 <script src="platba/qrcode.js"></script>
 <script src="platba/platba.js?v=2"></script>
 <script src="poptavka-pdf/poptavka-pdf-nova.js?v=20261019b"></script>
-<script src="poptavka-dvere-nova.js?v=20261019a"></script>
+<script src="poptavka-dvere-nova.js?v=20261019c"></script>
 <script src="bonus.js?v=20261016c" defer></script>
 <script src="systembar.js?v=1"></script>
 </body>

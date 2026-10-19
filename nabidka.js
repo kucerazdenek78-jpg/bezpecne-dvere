@@ -249,7 +249,8 @@
 
   /* ── start ── */
   $('#nbSeller').innerHTML = PRODAVACI.map(function (p) { return '<label class="pq-opt pq-chip"><input type="radio" name="prodavac" value="' + esc(p) + '">' + esc(p) + '</label>'; }).join('');
-  form.obj_cislo.value = nextNumber();
+  form.obj_cislo.placeholder = 'načítám další číslo…';
+  (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber('nabidka') : Promise.resolve('')).then(function (c) { if (!form.obj_cislo.value) form.obj_cislo.value = c; form.obj_cislo.placeholder = c ? '' : 'např. N 12/2026'; });
   form.obj_datum.value = new Date().toISOString().slice(0, 10);
   var nd = new Date(); nd.setDate(nd.getDate() + 14); form.nabidka_do.value = nd.toISOString().slice(0, 10);   // výchozí platnost 14 dní – lze změnit
   /* z poptávky: odkaz #d=<base64url JSON> (stejný jako pro objednávku) */
