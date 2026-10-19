@@ -660,6 +660,8 @@
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
     if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); }
     if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) f.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
+    /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */
+    (function () { var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} if (on) f.push(['Aplikace Moje dveře v ceně', 'K Vašim dveřím patří zdarma aplikace Moje dveře: přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady a připomínka roční kontroly. Podrobnosti: ' + new URL('moje-dvere.html', location.href).href]); })();
     reviewRows(d).forEach(function (r) { if (['Interní poznámka', 'Z poptávky', 'Číslo OP'].indexOf(r[0]) < 0 && r[2] !== 'x') f.push([r[0], r[1]]); });
     return f;
   }
