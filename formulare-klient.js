@@ -29,7 +29,7 @@
     if (o.cislo) fd.append('cislo', o.cislo);
     if (o.data_json) fd.append('data_json', o.data_json);
     fd.append('_honey', o.honey || '');
-    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, f.file); });
+    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/]+/g, "-")); });
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = ctl ? setTimeout(function () { ctl.abort(); }, 90000) : null;
     var typ = o.typ || 'poptavka';
@@ -62,7 +62,7 @@
     fd.append('zprava', o.telo || '');
     if (o.cislo) fd.append('cislo', o.cislo);
     if (o.data_json) fd.append('data_json', o.data_json);
-    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, f.file); });
+    (o.files || []).forEach(function (f) { fd.append(f.name, f.blob, String(f.file || f.name).replace(/[\\/]+/g, "-")); });
     return fetch('https://formsubmit.co/ajax/' + FALLBACK_TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
       .then(function (r) { return r.json(); })
       .then(function (d) { if (!(d && (d.success === true || d.success === 'true'))) throw new Error('fallback'); });
