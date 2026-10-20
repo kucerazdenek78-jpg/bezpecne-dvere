@@ -150,7 +150,7 @@
         var bonusOn = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
         try { if (localStorage.getItem('bd-bonus') === '1') bonusOn = true; } catch (e) {}
         if (bonusOn) {
-          var regB = (d.model_kod === 'premium60' || d.model_kod === 'extreme54') && !/Ano,\s*na/.test(String(d.zaruka || '')), bh0 = regB ? 15 : 11;
+          var regB = (d.model_kod === 'premium60' || d.model_kod === 'extreme54' || d.model_kod === 'magnum56') && !/Ano,\s*na/.test(String(d.zaruka || '')), bh0 = regB ? 15 : 11;
           ensure(bh0 + 4);
           doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(M, y - 3.5, W - 2 * M, bh0, 2, 2, 'FD');
           var ix = M + 4, iy = y - 1.2;

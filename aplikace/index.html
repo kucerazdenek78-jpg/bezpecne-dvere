@@ -10,13 +10,18 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=20261020a">
+  <link rel="stylesheet" href="app.css?v=20261020b">
 </head>
 <body>
 <header class="top">
   <a href="../index.html" aria-label="Web Bezpečné dveře"><img src="../logo-white.svg" alt="Bezpečné dveře" class="top-logo" width="150" height="32"></a>
   <button class="top-install" id="install" hidden>Nainstalovat</button>
 </header>
+
+<aside class="promo" id="promo" aria-label="Naše nabídka" hidden>
+  <div class="promo-track" id="promoTrack"></div>
+  <div class="promo-dots" id="promoDots" aria-hidden="true"></div>
+</aside>
 
 <main>
   <!-- ═══ VIZUALIZACE ═══ -->
@@ -165,9 +170,9 @@
   <div id="dlgBody"></div>
 </dialog>
 
-<script src="bd-form.js?v=20261020a"></script>
+<script src="bd-form.js?v=20261020b"></script>
 <script src="viz-data.js?v=20261017a"></script>
-<script src="app.js?v=20261020a"></script>
+<script src="app.js?v=20261020b"></script>
 <script src="../cookies.js?v=3" defer></script>
 </body>
 </html>

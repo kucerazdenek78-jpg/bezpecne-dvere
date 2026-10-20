@@ -50,7 +50,7 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
   $pozadavky = poz_pro_zakaznika($pdo, (int)$z['id']); $rodny = poz_rodny_list($pdo, $z); $telM = poz_maska_tel((string)($d['telefon'] ?? ''));
   $reg = null; $klic = ltrim(preg_replace('/\D+/', '', $cislo), '0');
   if ($klic !== '') foreach ($pdo->query("SELECT * FROM zadosti WHERE typ='registrace' ORDER BY id DESC") as $r) { $x = json_decode((string)$r['data_json'], true) ?: []; if (ltrim(preg_replace('/\D+/', '', (string)($x['cislo_objednavky'] ?? '')), '0') === $klic) { $reg = $r; break; } }
-  $model = in_array($d['model_kod'] ?? '', ['premium60', 'extreme54'], true); $zakladni = !preg_match('/Ano,\s*na/u', (string)($d['zaruka'] ?? ''));
+  $model = in_array($d['model_kod'] ?? '', ['premium60', 'extreme54', 'magnum56'], true); $zakladni = !preg_match('/Ano,\s*na/u', (string)($d['zaruka'] ?? ''));
   $lhuta = $predano ? date('Y-m-d', strtotime($z['predano_dne'] . ' +30 days')) : '';
   $regUrl = 'https://bezpecne-dvere.cz/registrace-zaruky.html?c=' . rawurlencode($cislo) . ($predano ? '&d=' . $z['predano_dne'] : ''); ?>
   <div class="box"><h1>Moje dveře</h1><div class="mut">Objednávka <?= $e($cislo) ?></div>
