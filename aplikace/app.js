@@ -733,13 +733,14 @@
     var b = j.bonus || {}, p = j.prodlouzeni || {}, h = '';
     if (svMsg) h += '<div class="status ok"><span>✓</span><div>' + esc(svMsg) + '</div></div>';
     if (b.mozne || b.reg || b.rec) {
-      h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce.</p>';
+      h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce. Obojí do 30 dnů od předání.</p>';
       if (b.reg) h += '<p class="bn-ok">✅ Registrace – záruka prodloužena o 6 měsíců</p>';
       else if (b.lze_reg) h += '<p>📝 Registrace (do ' + fmt(parseDate(b.reg_lhuta)) + ')</p><button class="b pri wide" data-act="bonus-reg">Zaregistrovat dveře (+6 měsíců)</button>';
       else if (b.reg_prosla) h += '<p class="small">Lhůta 30 dnů od předání pro registraci už uplynula.</p>';
       if (b.rec_schvaleno) h += '<p class="bn-ok">✅ Recenze – záruka prodloužena o dalších 6 měsíců</p>';
       else if (b.rec) h += '<p>⏳ Recenze – čeká na ověření, pak záruku prodloužíme o 6 měsíců.</p>';
-      else if (b.lze_rec) h += '<p>⭐ Napište nám recenzi na Google a získejte dalších 6 měsíců.</p><div class="btns"><a class="b sm" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>' +
+      else if (b.rec_prosla) h += '<p class="small">Lhůta 30 dnů od předání pro recenzi už uplynula.</p>';
+      else if (b.lze_rec) h += '<p>⭐ Napište nám recenzi na Google (do ' + fmt(parseDate(b.reg_lhuta)) + ') a získejte dalších 6 měsíců.</p><div class="btns"><a class="b sm" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>' +
         '<button class="b sm pri" data-act="bonus-rec">Recenzi jsem napsal/a</button></div>';
       h += '</div>';
     }

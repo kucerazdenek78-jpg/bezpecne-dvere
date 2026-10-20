@@ -17,7 +17,7 @@ function bonus_stav(array $z, array $d): array {
   $lhuta = $predano ? date('Y-m-d', strtotime($z['predano_dne'] . ' +' . BONUS_LHUTA_REG_DNI . ' days')) : '';
   $reg = (string)($z['bonus_reg_dne'] ?? ''); $rec = (string)($z['bonus_rec_dne'] ?? ''); $schv = (string)($z['bonus_rec_schv_dne'] ?? '');
   return ['mozne' => $mozne, 'reg' => $reg, 'reg_lhuta' => $lhuta, 'lze_reg' => $mozne && $reg === '' && $dnes <= $lhuta,
-    'rec' => $rec, 'rec_schvaleno' => $schv, 'lze_rec' => $mozne && $rec === '' && $z['zaruka_do'] >= $dnes, 'mesicu' => BONUS_MESICU,
+    'rec' => $rec, 'rec_schvaleno' => $schv, 'lze_rec' => $mozne && $rec === '' && $dnes <= $lhuta, 'rec_prosla' => $mozne && $rec === '' && $dnes > $lhuta, 'mesicu' => BONUS_MESICU,
     'reg_prosla' => $mozne && $reg === '' && $dnes > $lhuta];
 }
 function bonus_pridej_mesice(PDO $pdo, array $z): string { $nove = date('Y-m-d', strtotime($z['zaruka_do'] . ' +' . BONUS_MESICU . ' months')); $pdo->prepare('UPDATE zadosti SET zaruka_do=? WHERE id=?')->execute([$nove, $z['id']]); return $nove; }
@@ -31,7 +31,7 @@ function bonus_akce(PDO $pdo, array $cfg, string $DATA, array $z, string $druh):
     return [true, 'Děkujeme, dveře jsou zaregistrované. Záruka je prodloužena o ' . BONUS_MESICU . ' měsíců, nově do ' . date('j. n. Y', strtotime($nove)) . '.'];
   }
   if ($druh === 'recenze') {
-    if (!$s['lze_rec']) return [false, $s['rec'] !== '' ? 'Recenzi už evidujeme.' : 'Bonus za recenzi už není možný.'];
+    if (!$s['lze_rec']) return [false, $s['rec'] !== '' ? 'Recenzi už evidujeme.' : 'Lhůta 30 dnů od předání pro recenzi už uplynula.'];
     $pdo->prepare('UPDATE zadosti SET bonus_rec_dne=? WHERE id=?')->execute([$dnes, $z['id']]);
     $cislo = (string)($d['obj_cislo'] ?? $z['cislo']);
     $komu = (array)($cfg['prijemci']['poptavka']['to'] ?? [$cfg['from'] ?? '']);

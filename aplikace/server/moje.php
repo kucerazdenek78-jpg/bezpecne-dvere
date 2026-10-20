@@ -79,7 +79,8 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
       <?php elseif ($bs['reg_prosla']): ?><p class="mut">Lhůta 30 dnů od předání pro registraci už uplynula.</p><?php endif; ?>
       <?php if ($bs['rec_schvaleno'] !== ''): ?><p>✅ <b>Recenze</b> – děkujeme, záruka prodloužena o dalších 6 měsíců.</p>
       <?php elseif ($bs['rec'] !== ''): ?><p>⏳ <b>Recenze</b> – čeká na ověření, pak prodloužíme záruku o 6 měsíců.</p>
-      <?php elseif ($bs['lze_rec']): ?><p>⭐ <b>Recenze na Google</b> – napište nám hodnocení a získejte dalších 6 měsíců.</p><a class="btn sec" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>
+      <?php elseif ($bs['rec_prosla']): ?><p class="mut">Lhůta 30 dnů od předání pro recenzi už uplynula.</p>
+      <?php elseif ($bs['lze_rec']): ?><p>⭐ <b>Recenze na Google</b> (do <?= $e($dn($bs['reg_lhuta'])) ?>) – napište nám hodnocení a získejte dalších 6 měsíců.</p><a class="btn sec" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>
         <form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="recenze"><button class="btn" style="width:100%;border:0;cursor:pointer;font:inherit">Recenzi jsem napsal/a</button></form><?php endif; ?></div><?php endif; ?>
     <?php $nab = zaruka_nabidka($d); $lhZ = zaruka_lhuta($z);
     if (!empty($z['zaruka_prodl_let'])): ?><div class="box"><h2>Prodloužená záruka</h2>Záruka byla prodloužena na <b><?= (int)$z['zaruka_prodl_let'] ?> let</b>. Děkujeme!</div>
