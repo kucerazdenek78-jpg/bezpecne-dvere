@@ -632,7 +632,6 @@
     { t: 'PREMIUM 60', s: 'Bezpečnostní dveře do bytu', img: 'img/premium60-dub.jpg', href: '../dvere-do-bytu.html', c1: '#123d27', c2: '#1f8a55' },
     { t: 'ERKADO – dveře do domu', s: 'Vchodové dveře, 31 provedení', img: 'img/domovni/arendal.jpg', href: '../dvere-do-domu.html', c1: '#0f3a4d', c2: '#2a8aa8' },
     { t: 'Interiérové dveře', s: '33 provedení, skladové ihned', img: 'img/interier/frezia1.jpg', href: '../dvere-do-interieru.html', c1: '#6b3410', c2: '#d9822b' },
-    { t: 'MAGNUM 56', s: 'Nejtišší dveře · 44 dB', img: 'img/magnum56.jpg', href: '../dvere-do-bytu.html#porovnani', c1: '#2d2a5e', c2: '#5b57c9' },
     { t: 'Doporuč a získej 1 500 Kč', s: 'Odměna za každé doporučení', img: 'img/premium60.jpg', href: '#moje', c1: '#8a4b00', c2: '#e8a317', moje: true },
     { t: 'Servis a roční prohlídka', s: 'Nahlaste závadu přímo z aplikace', img: 'img/premium60.jpg', href: '#moje', c1: '#7a1d3b', c2: '#d6456f', moje: true }
   ];
