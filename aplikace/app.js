@@ -15,7 +15,7 @@
     premium60: { name: 'PREMIUM 60', spec: 'RC3 · EI 60 · 42 dB', tag: 'TOP', img: 'img/premium60.jpg', base: 2, bonus: true, ext: [5, 10],
       txt: 'Naše nejlepší dveře do bytu. Nejvyšší požární odolnost, připravené pro chytrý zámek tedee.' },
     extreme54: { name: 'EXTREME 54', spec: 'RC3 · EI 30 · 40 dB', tag: 'Výhodná cena', img: 'img/extreme54.jpg', base: 2, bonus: true, ext: [10],
-      txt: 'Bezpečnostní třída RC3 za výhodnou cenu, 5 let záruky v ceně.' },
+      txt: 'Bezpečnostní třída RC3 za výhodnou cenu, základní záruka 2 roky.' },
     magnum56: { name: 'MAGNUM 56', spec: 'RC3 · EI 30 · 44 dB', img: 'img/magnum56.jpg', base: 2, bonus: true, ext: [5, 10],
       txt: 'Nejtišší z nabídky – zvuková izolace 44 dB.' },
     securido65: { name: 'SECURIDO 65', spec: 'RC3 · EI 30 · 39 dB', img: 'img/securido65.jpg', base: 2, bonus: true, ext: [5, 10],
@@ -970,7 +970,7 @@
       '<label>Číslo objednávky<input name="cislo" value="' + esc(dv.cislo) + '"></label>' +
       '<label>Datum předání (montáže) *<input type="date" name="predano" required value="' + esc(dv.predano) + '"></label>' +
       '<label>Prodloužená záruka<select name="prodlouzena" id="mnExt"></select></label>' +
-      '<label class="chk"><input type="checkbox" name="registrace" value="1"' + (dv.registrace ? ' checked' : '') + '> <span>Registraci záruky (+1 rok) už jsem odeslal/a</span></label>' +
+      '<label class="chk"><input type="checkbox" name="registrace" value="1"' + (dv.registrace ? ' checked' : '') + '> <span>Dveře už mám zaregistrované (bonus +6 měsíců)</span></label>' +
       '<button class="b pri wide" type="submit">Uložit</button><p class="msg"></p></form><p class="note">Údaje se uloží jen v tomto telefonu.</p>');
     if (info) $('#mnForm').insertAdjacentHTML('beforebegin', '<div class="status info"><span>✓</span><div><b>Dveře jsme našli v kartotéce.</b>' + esc(info) + '</div></div>');
     var f = $('#mnForm');
