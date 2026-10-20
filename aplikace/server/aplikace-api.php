@@ -4,7 +4,7 @@
 // a záruku z objednávky v kartotéce (tabulka zadosti, typ objednavka_interni). Adresu, telefon ani ceny nevrací.
 // Nic nezapisuje do zadosti; pokusy se počítají v tabulce pokusy (limit na IP za hodinu).
 // Akce „udalost“: anonymní denní součty využití aplikace (viz níže a statistika-aplikace.php).
-require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php';
+require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php'; require_once __DIR__ . '/lib/pozadavky.php';
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $cfg['povolene_origin'], true)) {
@@ -60,7 +60,33 @@ if ($akce === 'sparovat') {
     ],
     // odkaz na zákaznickou stránku „Moje dveře“ na NAS (záruka, servis, prodloužení záruky s QR platbou) – jediný zdroj pravdy
     'moje_url' => !empty($r['predano_dne']) ? zaruka_url($cfg, zaruka_token($pdo, $r)) : '',
+    'token' => !empty($r['predano_dne']) ? zaruka_token($pdo, $r) : '',
     'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
+}
+
+// Servis v aplikaci. Dveře se poznají podle tajného zákaznického kódu (stejný jako v odkazu „Moje dveře“, aplikace si ho uloží při spárování).
+// „servis_stav“: stav požadavků + rodný list dveří (objednávka, předání, záruka, servisy, domluvené návštěvy). „servis_nahlasit“: nový požadavek (závada / roční prohlídka) i s fotkami.
+if ($akce === 'servis_stav' || $akce === 'servis_nahlasit') {
+  $pdo = db(); poz_tabulky($pdo); $ip = klient_ip(); $ted = time();
+  $zz = poz_zadost_podle_tokenu($pdo, (string)($_POST['t'] ?? ''));
+  $typ = $akce === 'servis_stav' ? 'app_servis_stav' : 'app_servis';
+  $lim = $akce === 'servis_stav' ? 120 : 6;
+  $st = $pdo->prepare("SELECT COUNT(*) FROM pokusy WHERE ip=? AND typ=? AND cas>?"); $st->execute([$ip, $typ, $ted - 3600]);
+  if ((int)$st->fetchColumn() >= $lim) chyba(429, 'limit', 'Příliš mnoho požadavků, zkuste to za hodinu.');
+  $pdo->prepare("INSERT INTO pokusy (ip, typ, cas) VALUES (?, ?, ?)")->execute([$ip, $typ, $ted]);
+  if (!$zz) chyba(404, 'nenalezeno', 'Dveře jsme nenašli. Spárujte je prosím znovu.');
+  if ($akce === 'servis_nahlasit') {
+    if (!empty($_POST['_honey'])) vystup(200, ['ok' => true, 'cislo' => 'S-0']);
+    $soubory = [];
+    foreach ((array)($_FILES['fotky']['tmp_name'] ?? []) as $i => $tmp) if ($tmp !== '' && ($_FILES['fotky']['error'][$i] ?? 1) === UPLOAD_ERR_OK) $soubory[] = [$tmp, (string)$_FILES['fotky']['name'][$i]];
+    if (!$soubory) foreach (['foto1', 'foto2', 'foto3'] as $k) if (!empty($_FILES[$k]['tmp_name']) && ($_FILES[$k]['error'] ?? 1) === UPLOAD_ERR_OK) $soubory[] = [$_FILES[$k]['tmp_name'], (string)$_FILES[$k]['name']];
+    try {
+      [$pid, $cislo] = poz_vytvor($pdo, $cfg, $DATA, $zz, ['druh' => $_POST['druh'] ?? 'zavada', 'popis' => $_POST['popis'] ?? '', 'preferovany' => $_POST['preferovany'] ?? '',
+        'telefon' => $_POST['telefon'] ?? '', 'email' => $_POST['email'] ?? ''], $soubory, 'aplikace Moje dveře');
+    } catch (InvalidArgumentException $x) { chyba(400, 'data', 'Popište prosím závadu alespoň několika slovy.'); }
+  }
+  vystup(200, ['ok' => true, 'cislo' => $cislo ?? '', 'pozadavky' => poz_pro_zakaznika($pdo, (int)$zz['id']), 'rodny_list' => poz_rodny_list($pdo, $zz),
+    'predano' => (string)($zz['predano_dne'] ?? ''), 'zaruka_do' => (string)($zz['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)]);
 }
 
 // Akce „udalost“: anonymní počítadlo využití aplikace (otevření, fotka, vizualizace, výběr modelu, odeslání).

@@ -51,9 +51,10 @@
   }
 
   /* dotaz na API aplikace (spárování dveří s objednávkou v kartotéce) */
-  function api(akce, data) {
+  function api(akce, data, files) {
     var fd = new FormData(); fd.append('akce', akce);
     Object.keys(data || {}).forEach(function (k) { fd.append(k, data[k]); });
+    (files || []).forEach(function (f) { fd.append(f.name, f.blob, f.file); });
     return fetch(BASE + 'aplikace-api.php', { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
       .then(function (r) {
         return r.json().catch(function () { return null; }).then(function (j) {

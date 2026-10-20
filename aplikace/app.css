@@ -173,3 +173,7 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .cookie-bar.hidden{display:none}
 .cookie-bar .btn{font:inherit;font-weight:700;border:2px solid transparent;border-radius:10px;cursor:pointer}
 .cookie-bar .btn-primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.rl{margin:.9rem 0 .3rem;font-size:.95rem}
+.tl{list-style:none;margin:.3rem 0 0;padding:0}.tl li{position:relative;padding:0 0 .7rem 1.2rem;margin-left:.4rem;border-left:2px solid var(--line,#d5dbe5);font-size:.9rem}
+.tl li:last-child{border-left-color:transparent;padding-bottom:0}.tl li:before{content:"";position:absolute;left:-7px;top:.35rem;width:12px;height:12px;border-radius:50%;background:var(--navy,#1f3f72)}
+.tl li.bud:before{background:var(--bg,#fff);border:2px solid var(--ok,#14653a);left:-8px;top:.3rem}.tl li.bud b{color:var(--ok,#14653a)}

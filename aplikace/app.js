@@ -649,6 +649,34 @@
       '&details=' + encodeURIComponent('Objednejte roční prohlídku: +420 725 559 235 nebo v aplikaci Bezpečné dveře.');
   }
 
+  /* servis v aplikaci: tajný kód dveří (z odkazu Moje dveře) → stav požadavků a „rodný list“ ze serveru; poslední stav se pamatuje pro offline */
+  function doorToken(dv) { if (!dv) return ''; if (/^[a-f0-9]{24}$/.test(dv.token || '')) return dv.token; var m = /[?&]t=([a-f0-9]{24})/.exec(dv.moje_url || ''); return m ? m[1] : ''; }
+  function svHtml(j) {
+    var h = '', open = (j.pozadavky || []).filter(function (r) { return r.stav !== 'hotovo'; }), tl = j.rodny_list || [];
+    open.forEach(function (r) {
+      var plan = r.stav === 'naplanovano';
+      h += '<div class="status ' + (plan ? 'ok' : 'info') + '"><span>' + (plan ? '📅' : '🛠') + '</span><div><b>' + esc(r.druh_text) + ' ' + esc(r.cislo) + ' – ' + esc(r.stav_text) + '</b>' + esc(r.popis) +
+        (plan ? '<br>Návštěva: <b style="display:inline">' + fmt(parseDate(r.termin_datum)) + '</b>' + (r.termin_cas ? ' · ' + esc(r.termin_cas) : '') + (r.zprava ? '<br>' + esc(r.zprava) : '') : '') + '</div></div>';
+    });
+    if (tl.length) h += '<h4 class="rl">Rodný list dveří</h4><ul class="tl">' + tl.map(function (ev) {
+      return '<li class="' + (ev.budouci ? 'bud' : '') + '"><b>' + fmt(parseDate(ev.datum)) + '</b> · ' + esc(ev.text) + '</li>'; }).join('') + '</ul>';
+    return h;
+  }
+  function svLoad(dv) {
+    var t = doorToken(dv), box = $('#svBox'); if (!t || !box) return;
+    var cache = store.get('bd-app-servis', {}); if (cache[t]) box.innerHTML = svHtml(cache[t]); else box.innerHTML = '<p class="small">Načítám stav…</p>';
+    BDApp.api('servis_stav', { t: t }).then(function (j) {
+      cache = store.get('bd-app-servis', {}); cache[t] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list }; store.set('bd-app-servis', cache);
+      var cur = store.get('bd-app-dvere', null), ch = false;
+      if (cur && cur.zdroj === 'kartoteka') { // skutečné údaje z kartotéky mají přednost před ručně zadanými
+        if (/^\d{4}-\d{2}-\d{2}$/.test(j.predano || '') && cur.predano !== j.predano) { cur.predano = j.predano; ch = true; }
+        if (j.prodlouzeno_let && cur.prodlouzena !== j.prodlouzeno_let) { cur.prodlouzena = j.prodlouzeno_let; ch = true; }
+        if (!cur.token) { cur.token = t; ch = true; }
+        if (ch) store.set('bd-app-dvere', cur);
+      }
+      var b2 = $('#svBox'); if (b2) b2.innerHTML = svHtml(cache[t]);
+    }).catch(function (err) { var b2 = $('#svBox'); if (b2 && !cache[t]) b2.innerHTML = err.code === 'nenalezeno' ? '<p class="small">Dveře se nepodařilo najít v kartotéce. Spárujte je prosím znovu.</p>' : '<p class="small">Stav servisu se teď nepodařilo načíst.</p>'; });
+  }
   function renderMoje() {
     var dv = door();
     $('#mojeEmpty').hidden = !!dv; $('#mojeDoor').hidden = !dv;
@@ -689,7 +717,8 @@
       'Prohlídka se hodí i kvůli seřízení a promazání.</p></div>';
 
     // servis
-    h += '<div class="card"><h3>Servis a reklamace</h3><p class="small">Něco nefunguje? Popište závadu a přiložte fotku, ozveme se a domluvíme termín.</p>' +
+    h += '<div class="card"><h3>Servis a reklamace</h3><p class="small">Něco nefunguje? Popište závadu a přiložte fotku. Údaje o vašich dveřích už máme, ozveme se a domluvíme termín.</p>' +
+      (doorToken(dv) ? '<div id="svBox"></div>' : '') +
       '<button class="b pri wide" data-act="servis">Nahlásit závadu</button><a class="b wide" href="../objednani-klicu.html">Objednat klíče</a></div>';
 
     // péče (z předávacího listu)
@@ -702,7 +731,7 @@
     if (hist.length) h += '<div class="card"><h3>Odeslané z aplikace</h3><ul class="hist">' + hist.slice(0, 10).map(function (x) {
       return '<li>' + fmt(new Date(x.d)) + ' – ' + esc(x.co) + (x.ref ? ' (' + esc(x.ref) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
     h += '<div class="btns"><button class="b sm" data-act="edit">Upravit údaje</button><button class="b sm" data-act="remove">Odebrat dveře z telefonu</button></div>';
-    $('#mojeDoor').innerHTML = h;
+    $('#mojeDoor').innerHTML = h; svLoad(dv);
   }
   $('#mojeDoor').addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]'); if (!b) return; var dv = door(), a = b.getAttribute('data-act');
@@ -720,7 +749,45 @@
   }
   function doorData(dv) { return { model_kod: dv.model_kod, model: (MODELS[dv.model_kod] || {}).name || dv.model || '', odstin: dv.odstin || '', cislo_objednavky: dv.cislo || '', predano: dv.predano || '' }; }
 
+  /* odeslání požadavku přes API: dveře se poznají podle kódu, zákazník nepřepisuje nic kromě popisu */
+  function submitApi(f, token, druh, popisFn, okHtml) {
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); if (!f.reportValidity()) return;
+      var o = readForm(f), btn = $('button[type=submit]', f), msg = $('.msg', f);
+      btn.disabled = true; btn.textContent = 'Odesílám…'; msg.className = 'msg'; msg.textContent = '';
+      var k = kontakt(); store.set('bd-app-kontakt', Object.assign({}, k, { telefon: o.telefon || k.telefon, email: o.email || k.email }));
+      var files = f.fotky ? Array.prototype.slice.call(f.fotky.files || [], 0, 3) : [];
+      Promise.all(files.map(shrinkFile)).then(function (bl) {
+        return BDApp.api('servis_nahlasit', { t: token, druh: druh, popis: popisFn(o), preferovany: o.termin || '', telefon: o.telefon || '', email: o.email || '', _honey: o._honey || '' },
+          bl.map(function (b, i) { return { name: 'foto' + (i + 1), file: 'zavada-' + (i + 1) + '.jpg', blob: b }; }));
+      }).then(function (j) {
+        if (window.bdTrack) window.bdTrack('Lead', { content_name: druh === 'prohlidka' ? 'Objednávka roční prohlídky' : 'Hlášení závady' });
+        addHist(druh === 'prohlidka' ? 'Objednávka roční prohlídky' : 'Hlášení závady', j.cislo); stat('odeslano', 'aplikace-servis', '');
+        var c = store.get('bd-app-servis', {}); c[token] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list }; store.set('bd-app-servis', c);
+        $('#dlgBody').innerHTML = okHtml(j); renderMoje();
+      }).catch(function (err) {
+        btn.disabled = false; btn.textContent = 'Zkusit znovu'; msg.className = 'msg err';
+        msg.innerHTML = err.code === 'data' ? esc(err.message) : err.code === 'limit' ? 'Příliš mnoho odeslání. Zkuste to za hodinu, nebo nám zavolejte na <a href="tel:+420725559235">725 559 235</a>.' :
+          'Odeslání se nepovedlo. Zkontrolujte připojení, nebo nám zavolejte na <a href="tel:+420725559235">725 559 235</a>.';
+      });
+    });
+  }
+  function svOk(j) { return '<h2>Odesláno ✓</h2><p>Číslo požadavku <b>' + esc(j.cislo) + '</b>. Stav uvidíte přímo v aplikaci u svých dveří – jakmile požadavek přijmeme a domluvíme termín návštěvy, zobrazí se tam.</p><button class="b wide" onclick="this.closest(\'dialog\').close()">Zavřít</button>'; }
+  function contactLite(k) {
+    k = k || {};
+    return '<label>Telefon (nepovinné – jinak zavoláme na číslo z objednávky)<input name="telefon" type="tel" autocomplete="tel" value="' + esc(k.telefon) + '"></label>' +
+      '<label>E-mail (pro potvrzení termínu)<input name="email" type="email" autocomplete="email" value="' + esc(k.email) + '"></label>';
+  }
   function openService(dv) {
+    var tok = doorToken(dv);
+    if (tok) {
+      openDlg('<h2>Nahlásit závadu</h2><p class="small">Údaje o objednávce a adresu už máme z kartotéky – stačí popsat, co se děje.</p><form class="form" id="svForm" novalidate>' +
+        '<label>Co se děje? *<textarea name="popis" required minlength="5" placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
+        '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactLite(kontakt()) +
+        '<label>Kdy se vám hodí návštěva<input name="termin" placeholder="např. odpoledne po 15. hod."></label>' + CONSENT +
+        '<button class="b pri wide" type="submit">Odeslat</button><p class="msg" role="status"></p></form>');
+      return submitApi($('#svForm'), tok, 'zavada', function (o) { return o.popis; }, svOk);
+    }
     openDlg('<h2>Nahlásit závadu</h2><form class="form" id="svForm" novalidate>' +
       '<label>Co se děje? *<textarea name="popis" required placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
       '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactFields(kontakt(), true) +
@@ -741,6 +808,14 @@
     }, function (x) { return '<h2>Odesláno ✓</h2><p>Číslo požadavku <b>' + esc(x.cislo) + '</b>. Ozveme se a domluvíme termín.</p><button class="b wide" onclick="this.closest(\'dialog\').close()">Zavřít</button>'; });
   }
   function openInspection(dv) {
+    var tok = doorToken(dv);
+    if (tok) {
+      openDlg('<h2>Objednat roční prohlídku</h2><p class="small">Zkontrolujeme funkčnost dveří, seřídíme je a promažeme. Cenu vám sdělíme při domluvě termínu.</p><form class="form" id="inForm" novalidate>' +
+        contactLite(kontakt()) + '<label>Kdy se vám hodí<input name="termin" placeholder="např. příští týden dopoledne"></label>' +
+        '<label class="chk"><input type="checkbox" name="protokol" value="ano"> <span>Potřebuji doklad o kontrole (např. pro SVJ)</span></label>' +
+        '<label>Poznámka<textarea name="poznamka"></textarea></label>' + CONSENT + '<button class="b pri wide" type="submit">Objednat</button><p class="msg" role="status"></p></form>');
+      return submitApi($('#inForm'), tok, 'prohlidka', function (o) { return 'Roční prohlídka dveří.' + (o.protokol === 'ano' ? ' Zákazník potřebuje doklad o kontrole (např. pro SVJ).' : '') + (o.poznamka ? ' ' + o.poznamka : ''); }, svOk);
+    }
     openDlg('<h2>Objednat roční prohlídku</h2><p class="small">Zkontrolujeme funkčnost dveří, seřídíme je a promažeme. Cenu vám sdělíme při domluvě termínu.</p><form class="form" id="inForm" novalidate>' +
       contactFields(kontakt(), true) + '<label>Kdy se vám hodí<input name="termin" placeholder="např. příští týden dopoledne"></label>' +
       '<label class="chk"><input type="checkbox" name="protokol" value="ano"> <span>Potřebuji doklad o kontrole (např. pro SVJ)</span></label>' +
@@ -800,7 +875,7 @@
     var o = readForm(f), msg = $('#pairMsg'), btn = $('button', f); btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Hledám…';
     BDApp.api('sparovat', { cislo: o.cislo, tel4: o.tel4 }).then(function (j) {
       var d = j.dvere || {}, ext = /10 let/.test(d.zaruka || '') ? 10 : /5 let/.test(d.zaruka || '') ? 5 : 0;
-      var dv = { model_kod: d.model_kod, odstin: d.odstin, cislo: d.cislo, predano: /^\d{4}-\d{2}-\d{2}$/.test(d.predano || '') ? d.predano : '', prodlouzena: d.prodlouzeno_let || ext, registrace: !!d.registrace, zdroj: 'kartoteka', token: j.token || '', moje_url: /^https:\/\/formulare\.dvere\.app\//.test(j.moje_url || '') ? j.moje_url : '' };
+      var dv = { model_kod: d.model_kod, odstin: d.odstin, cislo: d.cislo, predano: /^\d{4}-\d{2}-\d{2}$/.test(d.predano || '') ? d.predano : '', prodlouzena: d.prodlouzeno_let || ext, registrace: !!d.registrace, zdroj: 'kartoteka', token: j.token || (/[?&]t=([a-f0-9]{24})/.exec(j.moje_url || '') || [])[1] || '', moje_url: /^https:\/\/formulare\.dvere\.app\//.test(j.moje_url || '') ? j.moje_url : '' };
       store.set('bd-app-dvere', dv); btn.disabled = false; msg.textContent = '';
       if (j.kontakt) { var k = kontakt(); store.set('bd-app-kontakt', Object.assign({ jmeno: j.kontakt.jmeno, prijmeni: j.kontakt.prijmeni }, k)); }
       renderMoje(); if (dv.predano) return; openManual(Object.assign({}, dv, { predano: /^\d{4}-\d{2}-\d{2}$/.test(d.termin || '') ? d.termin : '' }), 'Doplňte prosím skutečné datum předání (montáže) – podle něj počítáme záruku a prohlídku.');

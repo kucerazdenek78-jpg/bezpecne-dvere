@@ -1,6 +1,6 @@
 /* Offline pro aplikaci: shell a obrázky odstínů z mezipaměti, HTML vždy nejdřív ze sítě. Při změně souborů zvýšit VERZE. */
-var VERZE = 'bd-app-20261018p';
-var SHELL = ['./', './index.html', './app.css?v=20261018p', './app.js?v=20261018p', './viz-data.js?v=20261017a', './bd-form.js?v=20261015a', './manifest.webmanifest',
+var VERZE = 'bd-app-20261020a';
+var SHELL = ['./', './index.html', './app.css?v=20261020a', './app.js?v=20261020a', './viz-data.js?v=20261017a', './bd-form.js?v=20261020a', './manifest.webmanifest',
   './img/premium60-cerna-perlet.jpg', './img/premium60-dub.jpg', './img/premium60-orech.jpg', './img/premium60-svetle-wenge.jpg', './img/premium60-bila.jpg', './img/premium60-antracit.jpg',
   './img/extreme54-dub-natura.jpg', './img/extreme54-orech-natura.jpg', './img/extreme54-antracit.jpg',
   './img/premium60.jpg', './img/extreme54.jpg', './img/magnum56.jpg', './img/securido65.jpg', '../logo-white.svg', '../icon-192.png'];
