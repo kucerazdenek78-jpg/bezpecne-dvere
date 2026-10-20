@@ -1,7 +1,7 @@
 <?php
 // Veřejná stránka „Moje dveře“ pro zákazníka: po načtení QR kódu z předávacího listu ukáže záruku, servisní historii (jen datum a druh)
 // a odkazy na registraci záruky a servis. Přístup jen se tajným kódem z QR; žádné osobní údaje ani ceny se nezobrazují.
-require __DIR__ . '/lib/start.php'; require __DIR__ . '/lib/zaruka.php'; require_once __DIR__ . '/lib/pozadavky.php';
+require __DIR__ . '/lib/start.php'; require __DIR__ . '/lib/zaruka.php'; require_once __DIR__ . '/lib/pozadavky.php'; require_once __DIR__ . '/lib/bonus.php';
 header('X-Robots-Tag: noindex'); header('Cache-Control: no-store'); header('Referrer-Policy: no-referrer');
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $t = (string)($_GET['t'] ?? ''); $z = null;
@@ -25,6 +25,15 @@ if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['akce'] ?? ''
       poz_vytvor($pdo, $cfg, $DATA, $z, ['druh' => $_POST['druh'] ?? 'zavada', 'popis' => $_POST['popis'] ?? '', 'preferovany' => $_POST['preferovany'] ?? '', 'telefon' => $_POST['telefon'] ?? '', 'email' => $_POST['email'] ?? ''], $soubory, 'web Moje dveře');
       header('Location: ?t=' . $t . '&ok=1#servis'); exit;
     } catch (InvalidArgumentException $x) { $chyba = 'Popište prosím závadu alespoň několika slovy.'; }
+  }
+}
+if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['akce'] ?? '') === 'bonus') {
+  $ip = klient_ip(); $ted = time();
+  $st = $pdo->prepare("SELECT COUNT(*) FROM pokusy WHERE ip=? AND typ='moje_bonus' AND cas>?"); $st->execute([$ip, $ted - 3600]);
+  if ((int)$st->fetchColumn() < 20) {
+    $pdo->prepare("INSERT INTO pokusy (ip, typ, cas) VALUES (?, 'moje_bonus', ?)")->execute([$ip, $ted]);
+    [$bok, $bzpr] = bonus_akce($pdo, $cfg, $DATA, $z, (string)($_POST['druh'] ?? ''));
+    header('Location: ?t=' . $t . '&b=' . ($bok ? '1' : '0') . '&bz=' . rawurlencode($bzpr) . '#bonus'); exit;
   }
 }
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Moje dveře – Bezpečné dveře</title><style>
@@ -53,7 +62,7 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
   $model = in_array($d['model_kod'] ?? '', ['premium60', 'extreme54', 'magnum56'], true); $zakladni = !preg_match('/Ano,\s*na/u', (string)($d['zaruka'] ?? ''));
   $lhuta = $predano ? date('Y-m-d', strtotime($z['predano_dne'] . ' +30 days')) : '';
   $regUrl = 'https://bezpecne-dvere.cz/registrace-zaruky.html?c=' . rawurlencode($cislo) . ($predano ? '&d=' . $z['predano_dne'] : ''); ?>
-  <div class="box"><h1>Moje dveře</h1><div class="mut">Objednávka <?= $e($cislo) ?></div>
+  <div class="box"><h1>Moje dveře</h1><div class="mut">Objednávka <?= $e($cislo) ?></div><a class="btn" href="https://bezpecne-dvere.cz/aplikace/#moje?t=<?= $e($t) ?>" style="margin-bottom:6px">📱 Otevřít v aplikaci Moje dveře</a>
     <dl><dt>Model</dt><dd><?= $e($d['model'] ?? '') ?></dd><?php foreach (['Barva' => 'odstin', 'Kování' => 'kovani', 'Otevírání' => 'otevirani'] as $lab => $k) if (!empty($d[$k])): ?><dt><?= $lab ?></dt><dd><?= $e($d[$k]) ?></dd><?php endif; ?></dl></div>
   <?php if (!$predano): ?><div class="stav nic">Dveře zatím nebyly předány</div><p class="mut" style="margin:-6px 4px 14px">Záruka začíná dnem předání dveří.</p>
   <?php else:
@@ -61,10 +70,17 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
     elseif ($z['zaruka_do'] >= $dnes) { $cls = 'ok'; $txt = 'V záruce do ' . $dn($z['zaruka_do']); }
     else { $cls = 'po'; $txt = 'Záruka skončila ' . $dn($z['zaruka_do']); } ?>
     <div class="stav <?= $cls ?>"><?= $e($txt) ?><div style="font-size:14px;font-weight:400">Dveře předány <?= $e($dn($z['predano_dne'])) ?><?= !empty($z['zaruka_prodlouzeno']) ? ' · včetně prodloužení o 12 měsíců' : '' ?></div></div>
-    <?php if ($model && $zakladni): ?><div class="box"><h2>Bonus: záruka o 1 rok navíc za registraci</h2>
-      <?php if ($reg): ?><?= !empty($z['zaruka_prodlouzeno']) ? 'Registrace byla přijata a záruka je prodloužena o 12 měsíců.' : 'Registraci jsme přijali, prodloužení záruky potvrdíme e-mailem.' ?>
-      <?php elseif ($dnes <= $lhuta): ?>Vyplňte krátký dotazník o montáži do <b><?= $e($dn($lhuta)) ?></b> a prodloužíme Vám základní záruku o 1 rok.<a class="btn" href="<?= $e($regUrl) ?>">Zaregistrovat dveře</a>
-      <?php else: ?>Lhůta 30 dnů od předání pro registraci již uplynula.<?php endif; ?></div><?php endif; ?>
+    <?php bonus_tabulky($pdo); $z = bonus_zadost($pdo, (int)$z['id']) ?: $z; $bs = bonus_stav($z, $d); ?>
+    <?php if (isset($_GET['bz'])): ?><div class="<?= ($_GET['b'] ?? '') === '1' ? 'okb' : 'erb' ?>"><?= $e(mb_substr((string)$_GET['bz'], 0, 200)) ?></div><?php endif; ?>
+    <?php if ($bs['mozne'] || $bs['reg'] !== '' || $bs['rec'] !== ''): ?><div class="box" id="bonus"><h2>Bonus k záruce: až +12 měsíců</h2>
+      <p class="mut" style="margin-top:0">K základní záruce můžete získat <b>6 měsíců za registraci</b> dveří a <b>dalších 6 měsíců za recenzi</b>. Platí jen pro základní záruku.</p>
+      <?php if ($bs['reg'] !== ''): ?><p>✅ <b>Registrace</b> – hotovo, záruka prodloužena o 6 měsíců.</p>
+      <?php elseif ($bs['lze_reg']): ?><form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="reg"><p>📝 <b>Registrace dveří</b> (do <?= $e($dn($bs['reg_lhuta'])) ?>) – jedním klepnutím +6 měsíců záruky.</p><button class="btn" style="width:100%;border:0;cursor:pointer;font:inherit">Zaregistrovat dveře (+6 měsíců)</button></form>
+      <?php elseif ($bs['reg_prosla']): ?><p class="mut">Lhůta 30 dnů od předání pro registraci už uplynula.</p><?php endif; ?>
+      <?php if ($bs['rec_schvaleno'] !== ''): ?><p>✅ <b>Recenze</b> – děkujeme, záruka prodloužena o dalších 6 měsíců.</p>
+      <?php elseif ($bs['rec'] !== ''): ?><p>⏳ <b>Recenze</b> – čeká na ověření, pak prodloužíme záruku o 6 měsíců.</p>
+      <?php elseif ($bs['lze_rec']): ?><p>⭐ <b>Recenze na Google</b> – napište nám hodnocení a získejte dalších 6 měsíců.</p><a class="btn sec" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>
+        <form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="recenze"><button class="btn" style="width:100%;border:0;cursor:pointer;font:inherit">Recenzi jsem napsal/a</button></form><?php endif; ?></div><?php endif; ?>
     <?php $nab = zaruka_nabidka($d); $lhZ = zaruka_lhuta($z);
     if (!empty($z['zaruka_prodl_let'])): ?><div class="box"><h2>Prodloužená záruka</h2>Záruka byla prodloužena na <b><?= (int)$z['zaruka_prodl_let'] ?> let</b>. Děkujeme!</div>
     <?php elseif ($nab && $dnes <= $lhZ):

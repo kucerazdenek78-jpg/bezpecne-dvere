@@ -1,7 +1,7 @@
 <?php
 // Servisní požadavky zákazníků (z aplikace Moje dveře a ze stránky moje.php): přijmout, domluvit termín návštěvy, vyřídit. Vyřízený požadavek se zapíše do „rodného listu dveří“ (tabulka servis).
 // Stejná ochrana jako kartoteka.php / servis.php.
-require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/pozadavky.php';
+require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/pozadavky.php'; require_once __DIR__ . '/lib/bonus.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
   $povolenyHost = strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app'));
@@ -25,7 +25,14 @@ if (isset($_GET['foto'])) {
 }
 
 function poz_zadost(PDO $pdo, int $id): ?array { $st = $pdo->prepare('SELECT * FROM zadosti WHERE id=?'); $st->execute([$id]); $z = $st->fetch(PDO::FETCH_ASSOC); return $z ?: null; }
-$zprava = '';
+$zprava = ''; bonus_tabulky($pdo); dop_tabulka($pdo);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['akce'] ?? '', ['rec_schvalit', 'rec_zamitnout', 'dop_stav'], true)) {
+  $akce = (string)$_POST['akce']; $id = (int)($_POST['id'] ?? 0);
+  if ($akce === 'rec_schvalit') $zprava = bonus_schval_recenzi($pdo, $id);
+  elseif ($akce === 'rec_zamitnout') { bonus_zamitni_recenzi($pdo, $id); $zprava = 'Recenze zamítnuta, zákazník může potvrzení poslat znovu.'; }
+  else { $stv = (string)($_POST['stav'] ?? ''); if (isset(DOP_STAVY[$stv])) { $pdo->prepare('UPDATE doporuceni SET stav=?, upraveno=? WHERE id=?')->execute([$stv, date('Y-m-d H:i:s'), $id]); $zprava = 'Doporučení aktualizováno.'; } }
+  header('Location: servis-pozadavky.php?z=' . rawurlencode($zprava)); exit;
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $id = (int)($_POST['id'] ?? 0); $akce = (string)($_POST['akce'] ?? '');
   $st = $pdo->prepare('SELECT * FROM servis_pozadavky WHERE id=?'); $st->execute([$id]); $r = $st->fetch(PDO::FETCH_ASSOC);
@@ -107,4 +114,16 @@ input,select{font:inherit;padding:7px 8px;border:1px solid #c9d1dc;border-radius
 <h2>Nové (<?= count($nove) ?>)</h2><?php foreach ($nove as $r) karta($r, $e, ['prijmout', 'naplanovat', 'hotovo', 'zrusit']); if (!$nove) echo '<p class="mut">Žádné nové požadavky.</p>'; ?>
 <h2>V řešení (<?= count($vrizeni) ?>)</h2><?php foreach ($vrizeni as $r) karta($r, $e, ['naplanovat', 'hotovo', 'zrusit']); if (!$vrizeni) echo '<p class="mut">Nic se nevyřizuje.</p>'; ?>
 <h2>Naposledy vyřízené</h2><?php foreach ($hotove as $r) karta($r, $e, []); if (!$hotove) echo '<p class="mut">Zatím nic.</p>'; ?>
+<?php
+$rec = $pdo->query("SELECT * FROM zadosti WHERE typ='objednavka_interni' AND bonus_rec_dne IS NOT NULL AND bonus_rec_dne<>'' AND (bonus_rec_schv_dne IS NULL OR bonus_rec_schv_dne='') ORDER BY bonus_rec_dne")->fetchAll(PDO::FETCH_ASSOC);
+$dops = $pdo->query("SELECT d.*, z.data_json, z.cislo AS zc FROM doporuceni d LEFT JOIN zadosti z ON z.id=d.zadost_id WHERE d.stav NOT IN ('vyplaceno','zruseno') ORDER BY d.id DESC")->fetchAll(PDO::FETCH_ASSOC); ?>
+<h2>Recenze ke schválení (<?= count($rec) ?>)</h2>
+<?php foreach ($rec as $q): $qd = json_decode((string)$q['data_json'], true) ?: []; ?><div class="box"><b>Obj. <?= $e($qd['obj_cislo'] ?? $q['cislo']) ?></b> · <?= $e(trim(($qd['jmeno'] ?? '') . ' ' . ($qd['prijmeni'] ?? ''))) ?> · <?= $e($qd['model'] ?? '') ?><div class="mut">Zákazník potvrdil recenzi <?= $e(poz_datum($q['bonus_rec_dne'])) ?>. Najděte ji na Google, pak schvalte (+6 měsíců záruky).</div>
+  <form method="post" class="ln"><input type="hidden" name="id" value="<?= (int)$q['id'] ?>"><button name="akce" value="rec_schvalit">Schválit +6 měsíců</button> <button class="sec" name="akce" value="rec_zamitnout">Zamítnout (recenze nenalezena)</button></form></div>
+<?php endforeach; if (!$rec) echo '<p class="mut">Žádné recenze ke schválení.</p>'; ?>
+<h2>Doporučení z aplikace (<?= count($dops) ?>)</h2>
+<?php foreach ($dops as $q): $qd = json_decode((string)$q['data_json'], true) ?: []; ?><div class="box"><b><?= $e($q['jmeno']) ?></b> · <a href="tel:<?= $e(preg_replace('/\s+/', '', $q['telefon'])) ?>"><?= $e($q['telefon']) ?></a> <span class="st"><?= $e(DOP_STAVY[$q['stav']] ?? $q['stav']) ?></span>
+  <div class="mut">Doporučuje <?= $e(trim(($qd['jmeno'] ?? '') . ' ' . ($qd['prijmeni'] ?? ''))) ?>, obj. <?= $e($qd['obj_cislo'] ?? $q['zc']) ?> (<?= $e($qd['model'] ?? '') ?>) · <?= $e(poz_datum(substr($q['vytvoreno'], 0, 10))) ?></div>
+  <form method="post" class="ln"><input type="hidden" name="akce" value="dop_stav"><input type="hidden" name="id" value="<?= (int)$q['id'] ?>"><label>Stav <select name="stav"><?php foreach (DOP_STAVY as $k => $v): ?><option value="<?= $e($k) ?>"<?= $k === $q['stav'] ? ' selected' : '' ?>><?= $e($v) ?></option><?php endforeach; ?></select></label><button>Uložit</button></form></div>
+<?php endforeach; if (!$dops) echo '<p class="mut">Žádná otevřená doporučení.</p>'; ?>
 </main></body></html>

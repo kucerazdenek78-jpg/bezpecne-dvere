@@ -14,11 +14,11 @@
   var MODELS = {
     premium60: { name: 'PREMIUM 60', spec: 'RC3 · EI 60 · 42 dB', tag: 'TOP', img: 'img/premium60.jpg', base: 2, bonus: true, ext: [5, 10],
       txt: 'Naše nejlepší dveře do bytu. Nejvyšší požární odolnost, připravené pro chytrý zámek tedee.' },
-    extreme54: { name: 'EXTREME 54', spec: 'RC3 · EI 30 · 40 dB', tag: 'Výhodná cena', img: 'img/extreme54.jpg', base: 5, bonus: true, ext: [10],
+    extreme54: { name: 'EXTREME 54', spec: 'RC3 · EI 30 · 40 dB', tag: 'Výhodná cena', img: 'img/extreme54.jpg', base: 2, bonus: true, ext: [10],
       txt: 'Bezpečnostní třída RC3 za výhodnou cenu, 5 let záruky v ceně.' },
     magnum56: { name: 'MAGNUM 56', spec: 'RC3 · EI 30 · 44 dB', img: 'img/magnum56.jpg', base: 2, bonus: true, ext: [5, 10],
       txt: 'Nejtišší z nabídky – zvuková izolace 44 dB.' },
-    securido65: { name: 'SECURIDO 65', spec: 'RC3 · EI 30 · 39 dB', img: 'img/securido65.jpg', base: 2, bonus: false, ext: [5, 10],
+    securido65: { name: 'SECURIDO 65', spec: 'RC3 · EI 30 · 39 dB', img: 'img/securido65.jpg', base: 2, bonus: true, ext: [5, 10],
       txt: 'Široký výběr dekorů a kování.' }
   };
   /* vizualizace: obrázky celých křídel zepředu (panty vlevo, klika vpravo).
@@ -86,16 +86,31 @@
     document.querySelector('.tabs').style.gridTemplateColumns = 'repeat(' + (on ? 4 : 3) + ',1fr)';
     return on;
   }
+  /* QR z předání: #moje?t=<kód dveří> aplikaci otevře a dveře rovnou spáruje (zapne i Moje dveře, protože zákazník dveře od nás opravdu má) */
+  function pairByCode(t) {
+    $('#mojeEmpty').hidden = false; $('#mojeDoor').hidden = true; var m = $('#pairMsg'); if (m) { m.className = 'msg'; m.textContent = 'Spárovávám vaše dveře…'; }
+    BDApp.api('sparovat_kod', { t: t }).then(function (j) {
+      var d = j.dvere || {};
+      store.set('bd-app-dvere', { model_kod: d.model_kod, odstin: d.odstin, cislo: d.cislo, model: d.model || '', zaruka_do: /^\d{4}-\d{2}-\d{2}$/.test(d.zaruka_do || '') ? d.zaruka_do : '',
+        predano: /^\d{4}-\d{2}-\d{2}$/.test(d.predano || '') ? d.predano : '', prodlouzena: d.prodlouzeno_let || 0, registrace: false, zdroj: 'kartoteka', token: t, moje_url: j.moje_url || '' });
+      if (j.kontakt) store.set('bd-app-kontakt', Object.assign({ jmeno: j.kontakt.jmeno, prijmeni: j.kontakt.prijmeni }, kontakt()));
+      try { localStorage.setItem('bd-bonus', '1'); } catch (e) {}
+      mojeOn(); try { history.replaceState(null, '', '#moje'); } catch (e) {} renderMoje();
+    }).catch(function (e) { if (m) { m.className = 'msg err'; m.textContent = e.code === 'nenalezeno' ? 'Kód dveří není platný. Zadejte číslo objednávky níže, nebo nám zavolejte: 725 559 235.' : 'Spárování se nepovedlo. Zkuste to prosím znovu.'; } });
+  }
   function route() {
     mojeOn();
     var v = (location.hash || '#viz').slice(1).split('?')[0];
     if (!$('[data-view="' + v + '"]')) v = 'viz';
-    if (v === 'moje' && !mojeOn()) v = 'viz';
+    if (v === 'moje' && !mojeOn() && !/[?&]t=[a-f0-9]{24}/.test(location.hash)) v = 'viz';
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (/[?&]p=1/.test(location.hash)) { try { sessionStorage.setItem('bd-app-prodejce', '1'); } catch (e) {} }
     if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]]) { if (mm[1] !== vizModel) setModel(mm[1]); setLock(true); } else setLock(false); layout(); }
-    if (v === 'moje') renderMoje();
+    if (v === 'moje') {
+      var tm = /[?&]t=([a-f0-9]{24})/.exec(location.hash), cd = door();
+      if (tm && !(cd && doorToken(cd) === tm[1])) pairByCode(tm[1]); else renderMoje();
+    }
     if (v === 'viz' && /[?&]navod=1/.test(location.hash)) setTimeout(openHowto, 50);
     window.scrollTo(0, 0);
   }
@@ -606,7 +621,7 @@
     $('#models').innerHTML = Object.keys(MODELS).map(function (k) {
       var m = MODELS[k];
       return '<div class="card model"><img src="' + m.img + '" alt="' + esc(m.name) + '" loading="lazy"><div><h3>' + esc(m.name) + (m.tag ? '<span class="tag">' + esc(m.tag) + '</span>' : '') + '</h3>' +
-        '<p><b>' + esc(m.spec) + '</b></p><p>' + esc(m.txt) + '</p><p>Záruka ' + m.base + (m.base === 2 ? ' roky' : ' let') + (m.bonus ? ' + 1 rok za registraci' : '') + '</p>' +
+        '<p><b>' + esc(m.spec) + '</b></p><p>' + esc(m.txt) + '</p><p>Záruka ' + m.base + (m.base === 2 ? ' roky' : ' let') + (m.bonus ? ' + až 12 měsíců bonus (registrace a recenze v aplikaci)' : '') + '</p>' +
         '<div class="btns">' + (VIZ[k] ? '<a class="b sm" href="#viz?m=' + k + '">Vyzkoušet na fotce</a>' : '') +
         '<a class="b sm" href="../dvere-do-bytu.html#' + k + '">Detail a cena</a><a class="b sm pri" href="../poptavka-dvere.html?model=' + k + '">Sestavit</a></div></div></div>';
     }).join('');
@@ -618,6 +633,7 @@
     { t: 'ERKADO – dveře do domu', s: 'Vchodové dveře, 31 provedení', img: 'img/domovni/arendal.jpg', href: '../dvere-do-domu.html', c1: '#0f3a4d', c2: '#2a8aa8' },
     { t: 'Interiérové dveře', s: '33 provedení, skladové ihned', img: 'img/interier/frezia1.jpg', href: '../dvere-do-interieru.html', c1: '#6b3410', c2: '#d9822b' },
     { t: 'MAGNUM 56', s: 'Nejtišší dveře · 44 dB', img: 'img/magnum56.jpg', href: '../dvere-do-bytu.html#porovnani', c1: '#2d2a5e', c2: '#5b57c9' },
+    { t: 'Doporuč a získej 1 500 Kč', s: 'Odměna za každé doporučení', img: 'img/premium60.jpg', href: '#moje', c1: '#8a4b00', c2: '#e8a317', moje: true },
     { t: 'Servis a roční prohlídka', s: 'Nahlaste závadu přímo z aplikace', img: 'img/premium60.jpg', href: '#moje', c1: '#7a1d3b', c2: '#d6456f', moje: true }
   ];
   (function promo() {
@@ -647,15 +663,12 @@
   function today() { var t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
   function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
 
+  /* záruka: platný konec záruky vede kartotéka (zaruka_do; počítá s bonusem i prodloužením), bez něj odhad = základní 2 roky od předání */
   function warranty(dv) {
-    var m = MODELS[dv.model_kod], pred = parseDate(dv.predano); if (!pred) return null;
-    if (!m) { // dveře do domu, interiérové a ostatní: záruku počítá kartotéka (datum zaruka_do), bonus za registraci se tu neřeší
-      var zd = parseDate(dv.zaruka_do); if (!zd) return null;
-      return { base: zd, baseY: Math.max(1, Math.round(daysBetween(pred, zd) / 365.25)), reg: false, ext: dv.prodlouzena ? addYears(pred, +dv.prodlouzena) : null, regOpen: false, regDeadline: null };
-    }
-    var reg = !!(m.bonus && dv.registrace), baseY = m.base + (reg ? 1 : 0);
-    return { base: addYears(pred, baseY), baseY: baseY, reg: reg, ext: dv.prodlouzena ? addYears(pred, +dv.prodlouzena) : null,
-      regOpen: m.bonus && !dv.registrace && daysBetween(pred, today()) <= 30, regDeadline: new Date(pred.getTime() + 30 * 86400000) };
+    var pred = parseDate(dv.predano); if (!pred) return null;
+    var zd = parseDate(dv.zaruka_do);
+    if (!zd) { if (!MODELS[dv.model_kod]) return null; zd = addYears(pred, 2); zd.setDate(zd.getDate() - 1); }
+    return { base: zd, ext: dv.prodlouzena ? +dv.prodlouzena : 0 };
   }
   function nextInspection(dv) {
     var pred = parseDate(dv.predano); if (!pred) return null;
@@ -704,11 +717,66 @@
       return '<li class="' + (ev.budouci ? 'bud' : '') + '"><b>' + fmt(parseDate(ev.datum)) + '</b> · ' + esc(ev.text) + '</li>'; }).join('') + '</ul>';
     return h;
   }
+  /* bonus k záruce, prodloužení s QR platbou a doporučení – vše přes API (kód dveří) */
+  var svData = null, svMsg = '';
+  function qrDraw(canvas, text) {
+    function go() {
+      try { var q = qrcode(0, 'M'); q.addData(text); q.make(); var n = q.getModuleCount(), qt = 4, cell = Math.max(2, Math.floor(240 / (n + 2 * qt))), s = cell * (n + 2 * qt), g = canvas.getContext('2d');
+        canvas.width = canvas.height = s; g.fillStyle = '#fff'; g.fillRect(0, 0, s, s); g.fillStyle = '#000';
+        for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect((k + qt) * cell, (r + qt) * cell, cell, cell); } catch (e) {}
+    }
+    if (window.qrcode) return go();
+    var s = document.createElement('script'); s.src = '../platba/qrcode.js'; s.onload = go; document.head.appendChild(s);
+  }
+  function kc(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' Kč'; }
+  function bnHtml(j) {
+    var b = j.bonus || {}, p = j.prodlouzeni || {}, h = '';
+    if (svMsg) h += '<div class="status ok"><span>✓</span><div>' + esc(svMsg) + '</div></div>';
+    if (b.mozne || b.reg || b.rec) {
+      h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce.</p>';
+      if (b.reg) h += '<p class="bn-ok">✅ Registrace – záruka prodloužena o 6 měsíců</p>';
+      else if (b.lze_reg) h += '<p>📝 Registrace (do ' + fmt(parseDate(b.reg_lhuta)) + ')</p><button class="b pri wide" data-act="bonus-reg">Zaregistrovat dveře (+6 měsíců)</button>';
+      else if (b.reg_prosla) h += '<p class="small">Lhůta 30 dnů od předání pro registraci už uplynula.</p>';
+      if (b.rec_schvaleno) h += '<p class="bn-ok">✅ Recenze – záruka prodloužena o dalších 6 měsíců</p>';
+      else if (b.rec) h += '<p>⏳ Recenze – čeká na ověření, pak záruku prodloužíme o 6 měsíců.</p>';
+      else if (b.lze_rec) h += '<p>⭐ Napište nám recenzi na Google a získejte dalších 6 měsíců.</p><div class="btns"><a class="b sm" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>' +
+        '<button class="b sm pri" data-act="bonus-rec">Recenzi jsem napsal/a</button></div>';
+      h += '</div>';
+    }
+    if ((p.moznosti || []).length) {
+      h += '<div class="bn"><h4>➕ Prodloužit záruku</h4><p class="small">Do ' + fmt(parseDate(p.lhuta)) + ' (6 měsíců od předání). Zaplatíte QR kódem a záruka se po připsání platby prodlouží automaticky.</p><div class="btns">' +
+        p.moznosti.map(function (o) { return '<button class="b sm" data-act="prodl" data-let="' + o.let + '">Na ' + o.let + ' let · ' + kc(o.kc) + '</button>'; }).join('') + '</div><div id="qrBox"></div></div>';
+    }
+    return h;
+  }
+  function dpHtml(j) {
+    var l = j.doporuceni || [], k = kontakt();
+    return '<p class="small">Za každé doporučení dveří <b>PREMIUM 60</b> s montáží získáte <b>1 500 Kč</b> (nejvýše za 3), váš kamarád <b>slevu 1 000 Kč</b>. <a href="../doporuc-nas.html" target="_blank">Pravidla akce</a></p>' +
+      '<div class="btns"><button class="b sm pri" data-act="dop-share">📤 Poslat doporučení kamarádovi</button><a class="b sm" href="../prodejce/voucher-doporuc-a-ziskej.pdf" target="_blank" rel="noopener">Voucher (PDF)</a></div>' +
+      '<form class="form" id="dpForm"><h4 class="rl">Nebo nám dejte kontakt na kamaráda</h4><label>Jméno a příjmení<input name="jmeno" required autocomplete="off"></label><label>Telefon<input name="telefon" type="tel" required autocomplete="off"></label>' +
+      '<label class="chk"><input type="checkbox" name="souhlas" value="1" required> <span>Kamarád souhlasí s předáním kontaktu.</span></label><button class="b pri wide" type="submit">Odeslat doporučení</button><p class="msg" id="dpMsg" role="status"></p></form>' +
+      (l.length ? '<h4 class="rl">Vaše doporučení</h4><ul class="hist">' + l.map(function (x) { return '<li>' + fmt(parseDate(x.datum)) + ' – ' + esc(x.jmeno) + ' · <b>' + esc(x.stav_text) + '</b></li>'; }).join('') + '</ul>' : '');
+  }
+  function extraBoxes(dv, j) {
+    svData = j; var b = $('#bnBox'), d = $('#dpBox');
+    if (b) b.innerHTML = bnHtml(j);
+    if (d && !$('#dpForm', d)) d.innerHTML = dpHtml(j); else if (d) { var u = $('.hist', d); }
+  }
+  function bonusAkce(druh) {
+    var dv = door(), t = doorToken(dv); if (!t) return;
+    BDApp.api('bonus_akce', { t: t, druh: druh }).then(function (j) { svMsg = j.zprava || ''; try { var c = store.get('bd-app-servis', {}); delete c[t]; store.set('bd-app-servis', c); } catch (e) {} renderMoje(); })
+      .catch(function (e) { svMsg = ''; var bx = $('#bnBox'); if (bx) bx.insertAdjacentHTML('afterbegin', '<div class="status warn"><span>!</span><div>' + esc(e.message || 'Nepodařilo se, zkuste to prosím později.') + '</div></div>'); });
+  }
+  function sdilet() {
+    var k = kontakt(), kdo = (k.jmeno ? (k.jmeno + ' ' + (k.prijmeni || '')).trim() : ''), dv = door();
+    var txt = 'Doporučuji Bezpečné dveře – bezpečnostní dveře PREMIUM 60 včetně montáže. Při objednávce uveď, že tě doporučuje ' + (kdo || 'zákazník s objednávkou č. ' + (dv && dv.cislo || '')) + ' – dostaneš slevu 1 000 Kč. Tel. 725 559 235, https://bezpecne-dvere.cz/doporuc-nas.html';
+    if (navigator.share) navigator.share({ title: 'Bezpečné dveře', text: txt }).catch(function () {}); else window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+  }
   function svLoad(dv) {
     var t = doorToken(dv), box = $('#svBox'); if (!t || !box) return;
-    var cache = store.get('bd-app-servis', {}); if (cache[t]) box.innerHTML = svHtml(cache[t]); else box.innerHTML = '<p class="small">Načítám stav…</p>';
+    var cache = store.get('bd-app-servis', {}); if (cache[t]) { box.innerHTML = svHtml(cache[t]); extraBoxes(dv, cache[t]); } else box.innerHTML = '<p class="small">Načítám stav…</p>';
     BDApp.api('servis_stav', { t: t }).then(function (j) {
-      cache = store.get('bd-app-servis', {}); cache[t] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list }; store.set('bd-app-servis', cache);
+      cache = store.get('bd-app-servis', {}); cache[t] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list, bonus: j.bonus, prodlouzeni: j.prodlouzeni, doporuceni: j.doporuceni }; store.set('bd-app-servis', cache);
       var cur = store.get('bd-app-dvere', null), ch = false;
       if (cur && cur.zdroj === 'kartoteka') { // skutečné údaje z kartotéky mají přednost před ručně zadanými
         if (/^\d{4}-\d{2}-\d{2}$/.test(j.predano || '') && cur.predano !== j.predano) { cur.predano = j.predano; ch = true; }
@@ -717,7 +785,7 @@
         if (!cur.token) { cur.token = t; ch = true; }
         if (ch) store.set('bd-app-dvere', cur);
       }
-      var b2 = $('#svBox'); if (b2) b2.innerHTML = svHtml(cache[t]);
+      var b2 = $('#svBox'); if (b2) b2.innerHTML = svHtml(cache[t]); extraBoxes(cur || dv, cache[t]);
     }).catch(function (err) { var b2 = $('#svBox'); if (b2 && !cache[t]) b2.innerHTML = err.code === 'nenalezeno' ? '<p class="small">Dveře se nepodařilo najít v kartotéce. Spárujte je prosím znovu.</p>' : '<p class="small">Stav servisu se teď nepodařilo načíst.</p>'; });
   }
   function renderMoje() {
@@ -733,19 +801,14 @@
 
     // záruka
     h += '<div class="card c-z"><h3>🛡 Záruka</h3>';
-    if (dv.moje_url) h += '<div class="btns" style="margin-bottom:10px"><a class="b sm pri" href="' + esc(dv.moje_url) + '" target="_blank" rel="noopener">Aktuální záruka, servis a prodloužení záruky</a></div><p class="small">Údaje níže jsou orientační; platný stav záruky a servisu vedeme u nás – otevřete odkaz výše.</p>';
-    if (!w) h += '<p class="small">Doplňte datum předání dveří, ať můžeme spočítat záruku.</p>';
+    if (!w) h += '<p class="small">Záruka se zobrazí po předání dveří.</p>';
     else {
       var active = w.base >= today();
-      h += '<div class="status ' + (active ? 'ok' : 'info') + '"><span>🛡</span><div><b>Základní záruka do ' + fmt(w.base) + '</b>' + w.baseY + (w.baseY < 5 ? ' roky' : ' let') +
-        (w.reg ? ' (včetně +1 roku za registraci)' : '') + (active ? '' : ' – už skončila') + '</div></div>';
-      if (w.ext) h += '<div class="status ' + (w.ext >= today() ? 'ok' : 'info') + '"><span>➕</span><div><b>Prodloužená záruka do ' + fmt(w.ext) + '</b>' + dv.prodlouzena + ' let od předání</div></div>';
-      if (w.regOpen) h += '<div class="status warn"><span>⏳</span><div><b>Zaregistrujte dveře do ' + fmt(w.regDeadline) + '</b>a prodloužíme vám základní záruku o 1 rok.' +
-        '<div class="btns"><a class="b sm pri" href="../registrace-zaruky.html" target="_blank">Registrovat</a><button class="b sm" data-act="regdone">Už je zaregistrováno</button></div></div></div>';
-      else if (MODELS[dv.model_kod] && MODELS[dv.model_kod].bonus && !dv.registrace && dv.predano) h += '<p class="small">Lhůta 30 dnů na registraci za +1 rok už uplynula. <button class="b sm" data-act="regdone">Registraci jsem odeslal/a</button></p>';
-      h += '<p class="small"><a href="../podminky-prodlouzeni-zaruky.html" target="_blank">Podmínky prodloužení záruky</a></p>';
+      h += '<div class="status ' + (active ? 'ok' : 'info') + '"><span>🛡</span><div><b>' + (active ? 'Záruka platí do ' : 'Záruka skončila ') + fmt(w.base) + '</b>' +
+        (w.ext ? 'prodloužená záruka na ' + w.ext + ' let od předání' : 'základní záruka 2 roky' + (dv.zaruka_do ? ' (včetně případného bonusu)' : '')) + '</div></div>';
     }
-    h += '</div>';
+    h += (doorToken(dv) ? '<div id="bnBox"></div>' : '<p class="small">Bonus za registraci a prodloužení záruky najdete po spárování dveří s objednávkou.</p>') +
+      '<p class="small"><a href="../podminky-prodlouzeni-zaruky.html" target="_blank">Podmínky bonusu a prodloužení záruky</a></p></div>';
 
     // roční prohlídka
     h += '<div class="card c-p"><h3>🗓 Roční prohlídka</h3>';
@@ -764,6 +827,9 @@
       (doorToken(dv) ? '<div id="svBox"></div>' : '') +
       '<button class="b pri wide" data-act="servis">Nahlásit závadu</button><a class="b wide" href="../objednani-klicu.html">Objednat klíče</a></div>';
 
+    // doporuč a získej
+    h += '<div class="card c-d"><h3>🤝 Doporuč a získej 1 500 Kč</h3>' + (doorToken(dv) ? '<div id="dpBox"></div>' : '<p class="small">Za každé doporučení dveří PREMIUM 60 s montáží 1 500 Kč. <a href="../doporuc-nas.html" target="_blank">Pravidla a formulář</a></p>') + '</div>';
+
     // péče (z předávacího listu)
     h += '<div class="card c-c"><h3>🧽 Péče o dveře</h3><ul class="care">' +
       '<li>Povrch čistěte vlhkým hadříkem, bez agresivních a brusných prostředků.</li>' +
@@ -780,7 +846,12 @@
   }
   $('#mojeDoor').addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]'); if (!b) return; var dv = door(), a = b.getAttribute('data-act');
-    if (a === 'regdone') { dv.registrace = true; store.set('bd-app-dvere', dv); renderMoje(); }
+    if (a === 'bonus-reg') bonusAkce('reg');
+    else if (a === 'bonus-rec') bonusAkce('recenze');
+    else if (a === 'dop-share') sdilet();
+    else if (a === 'prodl') { var o = ((svData || {}).prodlouzeni || {}).moznosti || [], pick = null; o.forEach(function (x) { if (String(x.let) === b.getAttribute('data-let')) pick = x; });
+      if (pick) { $('#qrBox').innerHTML = '<p style="margin:10px 0 4px"><b>Platba ' + kc(pick.kc) + '</b> – naskenujte QR kód v bankovní aplikaci:</p><div class="qr"><canvas id="qrC" width="240" height="240"></canvas></div><dl class="dl"><dt>Účet</dt><dd>' + esc(pick.ucet) + '</dd><dt>Částka</dt><dd>' + kc(pick.kc) + '</dd><dt>Var. symbol</dt><dd>' + esc(pick.vs) + '</dd></dl><p class="small">Variabilní symbol neměňte. Po připsání platby se záruka prodlouží sama a pošleme potvrzení.</p>'; qrDraw($('#qrC'), pick.spd); } }
+    else if (a === 'regdone') { dv.registrace = true; store.set('bd-app-dvere', dv); renderMoje(); }
     else if (a === 'remove') { openDlg('<h2>Odebrat dveře?</h2><p>Údaje se smažou jen z tohoto telefonu. U nás v kartotéce zůstávají.</p><div class="btns"><button class="b pri" id="rmYes">Odebrat</button><button class="b" onclick="this.closest(\'dialog\').close()">Zpět</button></div>');
       $('#rmYes').onclick = function () { try { localStorage.removeItem('bd-app-dvere'); } catch (er) {} closeDlg(); renderMoje(); }; }
     else if (a === 'edit') openManual(dv);
@@ -912,6 +983,15 @@
       closeDlg(); renderMoje();
     });
   }
+  $('#mojeDoor').addEventListener('submit', function (e) {
+    if (e.target.id !== 'dpForm') return; e.preventDefault();
+    var f = e.target, t = doorToken(door()), msg = $('#dpMsg'), btn = $('button[type=submit]', f); if (!t || !f.reportValidity()) return; btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Odesílám…';
+    BDApp.api('doporucit', { t: t, jmeno: f.jmeno.value, telefon: f.telefon.value, souhlas: f.souhlas.checked ? '1' : '' }).then(function (j) {
+      svMsg = ''; var c = store.get('bd-app-servis', {}); delete c[t]; store.set('bd-app-servis', c);
+      var d = $('#dpBox'); d.innerHTML = '<div class="status ok"><span>✓</span><div>Děkujeme! Doporučenému se ozveme a po namontování dveří vyplatíme odměnu podle pravidel akce.</div></div>' + dpHtml(j);
+    }).catch(function (er) { btn.disabled = false; msg.className = 'msg err'; msg.textContent = er.message || 'Odeslání se nepodařilo, zkuste to prosím později.'; });
+  });
+
   /* ruční zadání dveří bez objednávky zrušeno (rozhodnutí 17. 10. 2026): Moje dveře jen pro dveře z kartotéky */
 
   /* spárování s objednávkou v kartotéce (API na NAS) */

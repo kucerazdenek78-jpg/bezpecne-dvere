@@ -231,3 +231,13 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .tile b{font-size:.92rem;line-height:1.2}
 .tile span{font-size:.76rem;opacity:.9;line-height:1.25}
 @media (prefers-reduced-motion:reduce){.promo-track{scroll-behavior:auto}}
+
+/* bonus, prodloužení záruky a doporučení v Moje dveře */
+.bn{background:linear-gradient(135deg,#fff8e8,#fff);border:1px solid #f1dcae;border-radius:14px;padding:.8rem .9rem;margin:.7rem 0}
+.bn h4{margin:0 0 .3rem;font-size:1rem;color:#7a4b00}
+.bn p{margin:.35rem 0}
+.bn-ok{color:var(--ok);font-weight:700}
+.qr{text-align:center;margin:.4rem 0}.qr canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px}
+#v-moje .card.c-d{border-left-color:#e8a317}
+#dpForm{margin-top:.6rem}
+.form .chk{justify-content:flex-start;text-align:left}.form .chk input{display:inline-block;width:20px;margin:0}
