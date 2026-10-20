@@ -24,7 +24,7 @@
     premium60: {
       name: 'PREMIUM 60', spec: 'RC3 · EI 60 · 42 dB', tag: 'TOP',
       img: 'poptavka-imgs/premium60.jpg', price: 38890, regular: 42500,
-      baseWarranty: '2 roky + 1 rok za registraci',
+      baseWarranty: '2 roky + až 12 měsíců bonus (registrace a recenze v aplikaci Moje dveře)',
       shades: [
         ['Černá perleť', C + 'premium60/ctverce/premium-60-cerna-perlet.png', 1],
         ['Dub', C + 'premium60/ctverce/premium-60-dub.png', 1],
@@ -44,13 +44,13 @@
       ],
       widths: [['80'], ['90'], ['Nevím']],
       widthHint: 'Standardní šířka je 80 cm. Šířku 90 cm s vámi ověříme.',
-      warranty: [['Ne, stačí základní 2 roky', 0], ['Ano, na 5 let', 1000], ['Ano, na 10 let', 2000]],
+      warranty: [['Základní záruka 2 roky', 0]],
       included: 'Nová zárubeň a práh v dekoru dveří, kování, 5 klíčů s kartou, kukátko, montáž na klíč, odvoz starých dveří a hrubý úklid.'
     },
     extreme54: {
       name: 'EXTREME 54', spec: 'RC3 · EI 30 · 40 dB', tag: 'Výhodná cena',
       img: 'poptavka-imgs/extreme54.jpg', price: 31890, regular: 32890,
-      baseWarranty: '5 let + 1 rok za registraci',
+      baseWarranty: '2 roky + až 12 měsíců bonus (registrace a recenze v aplikaci Moje dveře)',
       shades: [
         ['Ořech natura', C + 'extreme50/extreme-rc3-orech-naturalny.png.tn.jpg', 1],
         ['Dub natura', C + 'extreme50/extreme-rc3-dub-naturalny.png.tn.jpg', 1],
@@ -73,13 +73,13 @@
       ],
       widths: [['80'], ['90'], ['Nevím']],
       widthHint: 'Standardní šířka je 80 cm. Šířku 90 cm s vámi ověříme.',
-      warranty: [['Ne, stačí 5 let', 0], ['Ano, na 10 let', 2000]],
+      warranty: [['Základní záruka 2 roky', 0]],
       included: 'Nová lakovaná zárubeň, nerezový práh, kování, 3 klíče s kartou, kukátko, montáž na klíč, odvoz starých dveří a hrubý úklid.'
     },
     magnum56: {
       name: 'MAGNUM 56', spec: 'RC3 · EI 30 · 44 dB',
       img: 'poptavka-imgs/magnum56.jpg', price: 36990,
-      baseWarranty: '2 roky',
+      baseWarranty: '2 roky + až 12 měsíců bonus (registrace a recenze v aplikaci Moje dveře)',
       shades: [
         ['Dub sonoma', C + 'magnum56/magnum56_dub_sonoma.png.tn.jpg', 0],
         ['Bílá', C + 'magnum56/magnum56_bila.png.tn.jpg', 0],
@@ -112,14 +112,14 @@
       ],
       widths: [['80'], ['90'], ['Nevím']],
       widthHint: 'Šířku 90 cm s vámi ověříme.',
-      warranty: [['Ne, stačí základní 2 roky', 0], ['Ano, na 5 let', 1000], ['Ano, na 10 let', 2000]],
+      warranty: [['Základní záruka 2 roky', 0]],
       masonry: true,
       included: 'Nová zárubeň v dekoru dveří, integrovaný nerezový práh, kování, 2× 5 klíčů, kukátko, montáž na klíč, odvoz starých dveří a hrubý úklid.'
     },
     securido65: {
       name: 'SECURIDO 65', spec: 'RC3 · EI 30 · 39 dB',
       img: 'poptavka-imgs/securido65.jpg', price: 35890, regular: 37890,
-      baseWarranty: '2 roky',
+      baseWarranty: '2 roky + až 12 měsíců bonus (registrace a recenze v aplikaci Moje dveře)',
       shades: [
         ['Kombi (bílá, černá zárubeň a kování)', C + 'securido/kombi.jpg', 0, 2000],
         ['Bílá', C + 'securido/bile-hladke.png.tn.jpg', 0],
@@ -143,7 +143,7 @@
       ],
       widths: [['80'], ['90', 1500], ['Nevím']],
       widthHint: '',
-      warranty: [['Ne, stačí základní 2 roky', 0], ['Ano, na 5 let', 1000], ['Ano, na 10 let', 2000]],
+      warranty: [['Základní záruka 2 roky', 0]],
       masonry: true,
       included: 'Nová zárubeň v dekoru dveří, integrovaný nerezový práh, bezpečnostní kování, 6 klíčů + 2 montážní, kukátko, montáž na klíč, odvoz starých dveří a hrubý úklid.'
     }
