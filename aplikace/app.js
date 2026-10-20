@@ -842,7 +842,7 @@
 
     if (hist.length) h += '<div class="card"><h3>Odeslané z aplikace</h3><ul class="hist">' + hist.slice(0, 10).map(function (x) {
       return '<li>' + fmt(new Date(x.d)) + ' – ' + esc(x.co) + (x.ref ? ' (' + esc(x.ref) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
-    h += '<h2 class="ph">Mohlo by vás zajímat</h2><div class="strip">' + PROMOS.filter(function (p) { return !p.moje; }).map(function (p) {
+    h += '<h2 class="ph">Mohlo by vás zajímat</h2><div class="strip">' + PROMOS.filter(function (p) { return !p.moje && !p.pred; }).map(function (p) {
       return '<a class="tile" href="' + p.href + '" style="--g1:' + p.c1 + ';--g2:' + p.c2 + '"><img src="' + p.img + '" alt="" loading="lazy"><b>' + esc(p.t) + '</b><span>' + esc(p.s) + '</span></a>'; }).join('') + '</div>';
     h += '<div class="btns"><button class="b sm" data-act="edit">Upravit údaje</button><button class="b sm" data-act="remove">Odebrat dveře z telefonu</button></div>';
     $('#mojeDoor').innerHTML = h; svLoad(dv);
