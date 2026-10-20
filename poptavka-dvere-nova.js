@@ -483,7 +483,12 @@
     if (d.otevirani) popis.push('Otevírání: ' + d.otevirani);
     if (d.tl_zarubne) popis.push('Tloušťka zárubně: ' + d.tl_zarubne);
     var cfg = {}; ['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'].forEach(function (k) { if (d[k]) cfg[k] = d[k]; });
-    (window.parent || window).postMessage({ bdPick: { model_kod: d.model_kod, odstin: d.odstin, nazev: d.model + (d.odstin ? ' – ' + d.odstin : ''), popis: popis.join('; '), cena: r.total, cfg: cfg } }, location.origin);
+    var mm = MODELS[state.model], shi = '';
+    mm.shades.forEach(function (s0) { if (s0[0] === d.odstin) shi = s0[1]; });
+    var spec = r.lines.map(function (l) { return [l[0], l[1], l[2] || 0, l[3] || '']; });
+    if (d.otevirani) spec.push(['Otevírání', d.otevirani, 0, '']);
+    if (d.tl_zarubne) spec.push(['Tloušťka zárubně', d.tl_zarubne, 0, '']);
+    (window.parent || window).postMessage({ bdPick: { model_kod: d.model_kod, odstin: d.odstin, nazev: d.model + (d.odstin ? ' – ' + d.odstin : ''), popis: popis.join('; '), cena: r.total, cfg: cfg, img: mm.img, shadeImg: shi, spec: spec } }, location.origin);
   }
   function go(step) {
     state.step = step;

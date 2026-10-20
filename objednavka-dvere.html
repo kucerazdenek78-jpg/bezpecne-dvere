@@ -193,7 +193,7 @@
   <meta name="theme-color" content="#123d27">
   <script>
     /* jen pro prodejce: bez odemčeného panelu (PIN) přesměrovat do panelu a pak zpět */
-    (function () { var ok = false; try { ok = localStorage.getItem('bd-panel-ok') === '1d0b7bb48b3fdfe1c03405713c48c4672463bd5004f6c8ac46de6adbb7949429'; } catch (e) {}
+    (function () { var ok = false; try { ok = localStorage.getItem('bd-panel-ok') === '1d0b7bb48b3fdfe1c03405713c48c4672463bd5004f6c8ac46de6adbb7949429'; if (!ok && /^https:\/\/kartoteka\.dvere\.app\//.test(document.referrer)) { localStorage.setItem('bd-panel-ok', '1d0b7bb48b3fdfe1c03405713c48c4672463bd5004f6c8ac46de6adbb7949429'); ok = true; } } catch (e) {}
       if (!ok) location.replace('panel.html#next=' + encodeURIComponent('objednavka-dvere.html' + location.hash)); })();
   </script>
 </head>

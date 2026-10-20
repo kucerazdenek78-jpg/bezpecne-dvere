@@ -179,7 +179,7 @@
   function goNext() {
     var m = location.hash.match(/^#next=(.+)$/); if (!m) return false;
     var url = decodeURIComponent(m[1]);
-    if (!/^objednavka-(?:dvere|nova)\.html(#.*)?$/.test(url)) return false;
+    if (!/^(?:objednavka-(?:dvere|nova)|nabidka-nova)\.html(#.*)?$/.test(url)) return false;
     location.replace(url); return true;
   }
   // krátké video návody: sem doplňte odkaz na soubor (např. 'navody/objednavka.mp4') nebo na video; prázdné = nezobrazí se nic
@@ -189,6 +189,7 @@
     if (/\.(mp4|webm)(\?|$)/i.test(u)) { var v = document.createElement('video'); v.controls = true; v.preload = 'metadata'; v.src = u; el.appendChild(v); }
     else { var a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '▶ Video návod'; el.appendChild(a); }
   });
+  try { if (localStorage.getItem(KEY) !== HASH && /^https:\/\/kartoteka\.dvere\.app\//.test(document.referrer)) localStorage.setItem(KEY, HASH); } catch (e) {}
   try { if (localStorage.getItem(KEY) === HASH) { goNext() || show(); } } catch (e) {}
   async function sha(s) {
     var b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
