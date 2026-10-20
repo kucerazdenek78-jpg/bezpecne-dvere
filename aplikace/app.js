@@ -632,14 +632,16 @@
     { t: 'PREMIUM 60', s: 'Bezpečnostní dveře do bytu', img: 'img/premium60-dub.jpg', href: '../dvere-do-bytu.html', c1: '#123d27', c2: '#1f8a55' },
     { t: 'ERKADO – dveře do domu', s: 'Vchodové dveře, 31 provedení', img: 'img/domovni/arendal.jpg', href: '../dvere-do-domu.html', c1: '#0f3a4d', c2: '#2a8aa8' },
     { t: 'Interiérové dveře', s: '33 provedení, skladové ihned', img: 'img/interier/frezia1.jpg', href: '../dvere-do-interieru.html', c1: '#6b3410', c2: '#d9822b' },
+    { t: 'Něco se chystá.', s: '1. listopadu 2026', tz: true, pred: true },
     { t: 'Moje dveře – online rodokmen', s: 'Rodný list dveří, záruka a servis na jednom místě', img: 'img/premium60.jpg', href: '#moje', c1: '#14532d', c2: '#0e7490', moje: true },
     { t: 'Doporuč a získej 1 500 Kč', s: 'Odměna za každé doporučení', img: 'img/premium60.jpg', href: '#moje', c1: '#8a4b00', c2: '#e8a317', moje: true },
     { t: 'Servis a roční prohlídka', s: 'Nahlaste závadu přímo z aplikace', img: 'img/premium60.jpg', href: '#moje', c1: '#7a1d3b', c2: '#d6456f', moje: true }
   ];
   (function promo() {
     var box = $('#promo'), tr = $('#promoTrack'), dots = $('#promoDots'); if (!box) return;
-    var list = PROMOS.filter(function (p) { return !p.moje || mojeOn(); }), cur = 0, timer = null;
+    var on = mojeOn(), list = PROMOS.filter(function (p) { return p.pred ? !on : (!p.moje || on); }), cur = 0, timer = null;
     tr.innerHTML = list.map(function (p) {
+      if (p.tz) return '<div class="ps tz"><span class="pt2"><b>' + esc(p.t) + '</b><small>' + esc(p.s) + '</small></span></div>';
       return '<a class="ps" href="' + p.href + '" style="--g1:' + p.c1 + ';--g2:' + p.c2 + '"><img src="' + p.img + '" alt="" width="56" height="56"><span class="pt2"><b>' + esc(p.t) + '</b><small>' + esc(p.s) + '</small></span><i aria-hidden="true">›</i></a>'; }).join('');
     dots.innerHTML = list.map(function (p, i) { return '<u' + (i ? '' : ' class="on"') + '></u>'; }).join('');
     box.hidden = false;

@@ -241,3 +241,12 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 #v-moje .card.c-d{border-left-color:#e8a317}
 #dpForm{margin-top:.6rem}
 .form .chk{justify-content:flex-start;text-align:left}.form .chk input{display:inline-block;width:20px;margin:0}
+
+/* upoutávka „Něco se chystá“ (styl minimalistické reklamy) – zobrazuje se jen do 1. 11. 2026 */
+.ps.tz{background:radial-gradient(120% 160% at 85% 0%,#1d3b2c 0%,#050806 60%);justify-content:center;text-align:center}
+.ps.tz::before{display:none}
+.ps.tz .pt2{align-items:center}
+.ps.tz b{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#fff 0%,#9be7bd 50%,#fff 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tzs 4s linear infinite}
+.ps.tz small{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+@keyframes tzs{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.ps.tz b{animation:none}}
