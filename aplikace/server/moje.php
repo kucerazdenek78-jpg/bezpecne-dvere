@@ -48,7 +48,7 @@ dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}dt{co
 .pst{display:inline-block;font-size:12px;border-radius:999px;padding:2px 10px;background:#fff0cc;color:#7a5200;margin-left:6px}.pst.ok{background:#d9f2e0;color:#14653a}
 form.sv label{display:block;margin-top:10px;font-size:14px;color:#556}form.sv input,form.sv textarea{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #c9d1dc;border-radius:10px;margin-top:3px}form.sv textarea{min-height:96px}
 form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:#fff;border:0;border-radius:10px;padding:13px;cursor:pointer}.okb{background:#d9f2e0;color:#14653a;border-radius:12px;padding:12px 14px;margin-bottom:14px}.erb{background:#fde2e2;color:#9b1c1c;border-radius:12px;padding:12px 14px;margin-bottom:14px}.hp{position:absolute;left:-9999px}
-</style></head><body><main>
+</style><link rel="stylesheet" href="https://bezpecne-dvere.cz/aplikace/moje-stranka.css?v=20261020a"></head><body class="bd"><header class="tp"><img src="https://bezpecne-dvere.cz/logo-white.svg" alt="Bezpečné dveře" width="150" height="32"><a href="tel:+420725559235">☎ Zavolat</a></header><main>
 <?php if (!$z): ?><div class="box"><h1>Dveře nenalezeny</h1><p>Odkaz není platný. Zkuste prosím znovu načíst QR kód z předávacího listu, nebo nás kontaktujte: <a href="tel:+420725559235">+420 725 559 235</a>.</p></div>
 <?php else:
   $d = json_decode((string)$z['data_json'], true) ?: [];
@@ -62,8 +62,23 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
   $model = in_array($d['model_kod'] ?? '', ['premium60', 'extreme54', 'magnum56'], true); $zakladni = !preg_match('/Ano,\s*na/u', (string)($d['zaruka'] ?? ''));
   $lhuta = $predano ? date('Y-m-d', strtotime($z['predano_dne'] . ' +30 days')) : '';
   $regUrl = 'https://bezpecne-dvere.cz/registrace-zaruky.html?c=' . rawurlencode($cislo) . ($predano ? '&d=' . $z['predano_dne'] : ''); ?>
-  <div class="box"><h1>Moje dveře</h1><div class="mut">Objednávka <?= $e($cislo) ?></div><a class="btn" href="https://bezpecne-dvere.cz/aplikace/#moje?t=<?= $e($t) ?>" style="margin-bottom:6px">📱 Otevřít v aplikaci Moje dveře</a>
-    <dl><dt>Model</dt><dd><?= $e($d['model'] ?? '') ?></dd><?php foreach (['Barva' => 'odstin', 'Kování' => 'kovani', 'Otevírání' => 'otevirani'] as $lab => $k) if (!empty($d[$k])): ?><dt><?= $lab ?></dt><dd><?= $e($d[$k]) ?></dd><?php endif; ?></dl></div>
+  <?php
+    $kod = (string)($d['model_kod'] ?? ''); $mt = (string)($d['model'] ?? ''); $od = (string)($d['odstin'] ?? '');
+    $byt = in_array($kod, ['premium60', 'extreme54', 'magnum56', 'securido65'], true);
+    $kind = $byt ? 'byt' : (preg_match('/interi|vnit[rř]n/iu', $kod . ' ' . $mt) ? 'interier' : (preg_match('/erkado|dom|vchod|rodinn/iu', $kod . ' ' . $mt) ? 'domovni' : 'jine'));
+    $popis = ['byt' => 'Bezpečnostní dveře do bytu', 'domovni' => 'Vchodové dveře do domu', 'interier' => 'Interiérové dveře', 'jine' => 'Dveře od Bezpečné dveře'][$kind];
+    $spec = ['premium60' => 'RC3 · EI 60 · 42 dB', 'extreme54' => 'RC3 · EI 30 · 40 dB', 'magnum56' => 'RC3 · EI 30 · 44 dB', 'securido65' => 'RC3 · EI 30 · 39 dB'][$kod] ?? '';
+    $odm = ['premium60' => ['černá perleť' => 'premium60-cerna-perlet', 'dub' => 'premium60-dub', 'ořech' => 'premium60-orech', 'světlé wenge' => 'premium60-svetle-wenge', 'bílá' => 'premium60-bila', 'antracit' => 'premium60-antracit'],
+      'extreme54' => ['dub natura' => 'extreme54-dub-natura', 'ořech natura' => 'extreme54-orech-natura', 'antracit' => 'extreme54-antracit']];
+    $obr = $odm[$kod][mb_strtolower(trim($od))] ?? ($byt ? $kod : ($kind === 'interier' ? 'interier/frezia1' : ($kind === 'domovni' ? 'domovni/arendal' : 'premium60')));
+    $obrUrl = 'https://bezpecne-dvere.cz/aplikace/img/' . $obr . '.jpg'; ?>
+  <div class="promo" id="promo" data-t="<?= $e($t) ?>" hidden><div class="promo-track" id="promoTrack"></div><div class="promo-dots" id="promoDots"></div></div>
+  <div class="hero k-<?= $e($kind) ?>" id="hero" data-kod="<?= $e($kod) ?>" data-model="<?= $e($mt) ?>" data-odstin="<?= $e($od) ?>">
+    <div class="hero-t"><span class="hero-k">Moje dveře · obj. <?= $e($cislo) ?></span><h1><?= $e($mt !== '' ? $mt : 'Vaše dveře') ?></h1><p class="hero-s"><?= $e($popis . ($spec !== '' ? ' · ' . $spec : '')) ?></p>
+      <div class="chips"><?php if ($od !== ''): ?><span class="chip">🎨 <?= $e($od) ?></span><?php endif; ?><?php if ($predano): ?><span class="chip">📅 předáno <?= $e($dn($z['predano_dne'])) ?></span><?php endif; ?></div>
+      <a class="hero-app" href="https://bezpecne-dvere.cz/aplikace/#moje?t=<?= $e($t) ?>">📱 Otevřít v aplikaci</a></div>
+    <img class="hero-i" src="<?= $e($obrUrl) ?>" alt="<?= $e($mt) ?>" width="132"></div>
+  <?php if (!empty($d['kovani']) || !empty($d['otevirani'])): ?><div class="box"><h2>Provedení dveří</h2><dl><?php foreach (['Kování' => 'kovani', 'Otevírání' => 'otevirani'] as $lab => $k) if (!empty($d[$k])): ?><dt><?= $lab ?></dt><dd><?= $e($d[$k]) ?></dd><?php endif; ?></dl></div><?php endif; ?>
   <?php if (!$predano): ?><div class="stav nic">Dveře zatím nebyly předány</div><p class="mut" style="margin:-6px 4px 14px">Záruka začíná dnem předání dveří.</p>
   <?php else:
     if (empty($z['zaruka_do'])) { $cls = 'nic'; $txt = 'Záruka od ' . $dn($z['zaruka_od']); }
@@ -72,16 +87,16 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
     <div class="stav <?= $cls ?>"><?= $e($txt) ?><div style="font-size:14px;font-weight:400">Dveře předány <?= $e($dn($z['predano_dne'])) ?><?= !empty($z['zaruka_prodlouzeno']) ? ' · včetně prodloužení o 12 měsíců' : '' ?></div></div>
     <?php bonus_tabulky($pdo); $z = bonus_zadost($pdo, (int)$z['id']) ?: $z; $bs = bonus_stav($z, $d); ?>
     <?php if (isset($_GET['bz'])): ?><div class="<?= ($_GET['b'] ?? '') === '1' ? 'okb' : 'erb' ?>"><?= $e(mb_substr((string)$_GET['bz'], 0, 200)) ?></div><?php endif; ?>
-    <?php if ($bs['mozne'] || $bs['reg'] !== '' || $bs['rec'] !== ''): ?><div class="box" id="bonus"><h2>Bonus k záruce: až +12 měsíců</h2>
-      <p class="mut" style="margin-top:0">K základní záruce můžete získat <b>6 měsíců za registraci</b> dveří a <b>dalších 6 měsíců za recenzi</b>. Platí jen pro základní záruku.</p>
-      <?php if ($bs['reg'] !== ''): ?><p>✅ <b>Registrace</b> – hotovo, záruka prodloužena o 6 měsíců.</p>
-      <?php elseif ($bs['lze_reg']): ?><form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="reg"><p>📝 <b>Registrace dveří</b> (do <?= $e($dn($bs['reg_lhuta'])) ?>) – jedním klepnutím +6 měsíců záruky.</p><button class="btn" style="width:100%;border:0;cursor:pointer;font:inherit">Zaregistrovat dveře (+6 měsíců)</button></form>
-      <?php elseif ($bs['reg_prosla']): ?><p class="mut">Lhůta 30 dnů od předání pro registraci už uplynula.</p><?php endif; ?>
-      <?php if ($bs['rec_schvaleno'] !== ''): ?><p>✅ <b>Recenze</b> – děkujeme, záruka prodloužena o dalších 6 měsíců.</p>
-      <?php elseif ($bs['rec'] !== ''): ?><p>⏳ <b>Recenze</b> – čeká na ověření, pak prodloužíme záruku o 6 měsíců.</p>
-      <?php elseif ($bs['rec_prosla']): ?><p class="mut">Lhůta 30 dnů od předání pro recenzi už uplynula.</p>
-      <?php elseif ($bs['lze_rec']): ?><p>⭐ <b>Recenze na Google</b> (do <?= $e($dn($bs['reg_lhuta'])) ?>) – napište nám hodnocení a získejte dalších 6 měsíců.</p><a class="btn sec" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>
-        <form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="recenze"><button class="btn" style="width:100%;border:0;cursor:pointer;font:inherit">Recenzi jsem napsal/a</button></form><?php endif; ?></div><?php endif; ?>
+    <?php if ($bs['mozne'] || $bs['reg'] !== '' || $bs['rec'] !== ''): ?><div class="box bnx" id="bonus">
+      <div class="bnx-h"><span>🎁</span><div><h2>Bonus k záruce: až +12 měsíců</h2><p>6 měsíců za registraci dveří a dalších 6 za recenzi. Platí jen pro základní záruku.</p></div></div>
+      <?php if ($bs['reg'] !== ''): ?><div class="bnx-row done"><i>✓</i><div><b>Registrace dveří</b><small>Hotovo – záruka prodloužena o 6 měsíců.</small></div></div>
+      <?php elseif ($bs['lze_reg']): ?><div class="bnx-row"><i>1</i><div><b>Registrace dveří · +6 měsíců</b><small>Jedním klepnutím, do <?= $e($dn($bs['reg_lhuta'])) ?></small></div><form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="reg"><button class="btn">Zaregistrovat dveře</button></form></div>
+      <?php elseif ($bs['reg_prosla']): ?><div class="bnx-row"><i>1</i><div><b>Registrace dveří</b><small>Lhůta 30 dnů od předání už uplynula.</small></div></div><?php endif; ?>
+      <?php if ($bs['rec_schvaleno'] !== ''): ?><div class="bnx-row done"><i>✓</i><div><b>Recenze</b><small>Děkujeme – záruka prodloužena o dalších 6 měsíců.</small></div></div>
+      <?php elseif ($bs['rec'] !== ''): ?><div class="bnx-row wait"><i>⏳</i><div><b>Recenze</b><small>Čeká na ověření, pak prodloužíme záruku o 6 měsíců.</small></div></div>
+      <?php elseif ($bs['rec_prosla']): ?><div class="bnx-row"><i>2</i><div><b>Recenze na Google</b><small>Lhůta 30 dnů od předání už uplynula.</small></div></div>
+      <?php elseif ($bs['lze_rec']): ?><div class="bnx-row"><i>2</i><div><b>Recenze na Google · +6 měsíců</b><small>Napište nám hodnocení do <?= $e($dn($bs['reg_lhuta'])) ?></small></div><div class="acts"><a class="btn sec" href="https://search.google.com/local/writereview?placeid=ChIJESw78t4hCkcRR1ygmiDY8ac" target="_blank" rel="noopener">Napsat recenzi na Google</a>
+        <form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="recenze"><button class="btn">Recenzi jsem napsal/a</button></form></div></div><?php endif; ?></div><?php endif; ?>
     <?php $nab = zaruka_nabidka($d); $lhZ = zaruka_lhuta($z);
     if (!empty($z['zaruka_prodl_let'])): ?><div class="box"><h2>Prodloužená záruka</h2>Záruka byla prodloužena na <b><?= (int)$z['zaruka_prodl_let'] ?> let</b>. Děkujeme!</div>
     <?php elseif ($nab && $dnes <= $lhZ):
@@ -120,4 +135,4 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
       <button type="submit">Odeslat požadavek</button></form>
     <a class="btn sec" href="tel:+420725559235">Zavolat +420 725 559 235</a><a class="btn sec" href="https://wa.me/420725559235">WhatsApp</a>
     <p class="mut" style="margin-bottom:0">chci@bezpecne-dvere.cz · Obchodní 36, Most</p></div>
-<?php endif; ?></main></body></html>
+<?php endif; ?></main><script src="https://bezpecne-dvere.cz/aplikace/viz-data.js?v=20261020a"></script><script src="https://bezpecne-dvere.cz/aplikace/moje-stranka.js?v=20261020a" defer></script></body></html>
