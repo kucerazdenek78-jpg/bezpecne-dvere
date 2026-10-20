@@ -7,6 +7,9 @@
   var CC = 'chci@bezpecne-dvere.cz';
   var KATALOG = window.NB_KATALOG || [];          // dveře do bytu: modely a odstíny z formuláře poptávky
   var form = document.getElementById('nb');
+  var OBJ = form.getAttribute('data-mode') === 'objednavka';   // objednávka (interiér / dům) × cenová nabídka
+  var KATS = OBJ ? ['dum', 'interier'] : ['byt', 'dum', 'interier'];
+  var ZALOHA_PROC = 70;   // záloha u dveří na míru a interiérových dveří: 70 % z ceny zakázky
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var kc = function (n) { return Math.round(n).toLocaleString('cs-CZ').replace(/\s/g, ' ') + ' Kč'; };
@@ -14,6 +17,8 @@
   var st = { kat: '', rows: [] };   // rows: {model, odstin, nazev, popis, ks, cena, sleva}
   var fv = function (n) { return form.elements[n] ? String(form.elements[n].value).trim() : ''; };
 
+  /* dveře do bytu i do domu: jedny dveře na adresu (víc kusů jen u interiérových) */
+  function limited() { return st.kat === 'byt' || st.kat === 'dum'; }
   function katMod(k) { var r = null; KATALOG.forEach(function (m) { if (m.k === k) r = m; }); return r; }
   function nextNumber() { var t = new Date(), p = function (n) { return String(n).padStart(2, '0'); }; return 'NAB-' + t.getFullYear() + '-' + p(t.getMonth() + 1) + p(t.getDate()) + '-' + p(t.getHours()) + p(t.getMinutes()); }
 
@@ -31,13 +36,13 @@
     lastDef.zahrnuje = nz; lastDef.platba = np;
   }
   function renderKat() {
-    $('#nbKat').innerHTML = Object.keys(KAT).map(function (k) {
+    $('#nbKat').innerHTML = KATS.map(function (k) {
       return '<label class="pq-opt pq-chip"><input type="radio" name="kat" value="' + k + '"' + (st.kat === k ? ' checked' : '') + (st.rows.length && st.kat !== k ? ' disabled' : '') + '>' + KAT[k] + '</label>';
     }).join('');
-    $('#nbKatHint').textContent = st.rows.length ? 'Kategorii nelze změnit, dokud jsou v nabídce položky. Pro jinou kategorii vytvořte samostatnou nabídku.' :
+    $('#nbKatHint').textContent = (limited() ? 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře patří do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '. ' : '') + (st.rows.length ? 'Kategorii nelze změnit, dokud jsou v nabídce položky. Pro jinou kategorii vytvořte samostatnou ' + (OBJ ? 'objednávku' : 'nabídku') + '.' :
       (st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
-        st.kat ? 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.' : 'Nejdřív vyberte kategorii.');
-    $('#nbAdd').disabled = !st.kat;
+        st.kat ? 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.' : 'Nejdřív vyberte kategorii.'));
+    $('#nbAdd').disabled = !st.kat || (limited() && st.rows.length >= 1);
   }
 
   /* ── položky ── */
@@ -87,7 +92,7 @@
         '<button type="button" class="btn btn-outline" data-del="' + i + '" style="float:right;padding:.3rem .8rem">Odebrat</button>' + sel +
         '<label class="pq-f">Název *<input data-i="' + i + '" data-f="nazev" value="' + esc(r.nazev) + '" placeholder="' + (byt ? 'doplní se z modelu a odstínu' : 'např. název dveří / modelu') + '"></label>' +
         '<label class="pq-f">Doplňující popis (volitelné, jde do PDF)<input data-i="' + i + '" data-f="popis" value="' + esc(r.popis) + '"></label>' +
-        '<div class="pq-grid2"><label class="pq-f">Počet kusů<input data-i="' + i + '" data-f="ks" inputmode="numeric" value="' + r.ks + '"></label>' +
+        '<div class="pq-grid2"><label class="pq-f">Počet kusů<input data-i="' + i + '" data-f="ks" inputmode="numeric" value="' + r.ks + '"' + (limited() ? ' readonly' : '') + '></label>' +
         '<label class="pq-f">Cena za kus vč. DPH (Kč)<input data-i="' + i + '" data-f="cena" inputmode="numeric" value="' + (r.cena || '') + '"></label>' +
         '<label class="pq-f">Sleva na položku (Kč)<input data-i="' + i + '" data-f="sleva" inputmode="numeric" value="' + (r.sleva || '') + '"></label></div>' +
         '<p style="margin:.4rem 0 0" data-tot="' + i + '">Za položku: <b>' + kc(tot) + '</b></p></div>';
@@ -137,7 +142,7 @@
   });
   document.addEventListener('click', function (e) {
     var t = e.target;
-    if (t.id === 'nbAdd') { st.rows.push(newRow()); renderKat(); renderRows(); if (st.kat === 'byt') openPick(st.rows.length - 1); }
+    if (t.id === 'nbAdd') { if (limited() && st.rows.length >= 1) return; st.rows.push(newRow()); renderKat(); renderRows(); if (st.kat === 'byt') openPick(st.rows.length - 1); }
     if (t.dataset && t.dataset.pick != null && t.dataset.pick !== '') openPick(+t.dataset.pick);
     if (t.dataset && t.dataset.del != null && t.dataset.del !== '') { st.rows.splice(+t.dataset.del, 1); renderKat(); renderRows(); }
   });
@@ -164,7 +169,7 @@
   /* ── data ── */
   function collect() {
     var t = totals(), d = {
-      verze: 3, zdroj: 'web-nabidka', typ: 'nabidka', kategorie: st.kat, kategorie_nazev: KAT[st.kat],
+      verze: 3, zdroj: OBJ ? 'web-objednavka-vice' : 'web-nabidka', typ: OBJ ? 'objednavka' : 'nabidka', kategorie: st.kat, kategorie_nazev: KAT[st.kat],
       obj_cislo: fv('obj_cislo'), cislo: fv('obj_cislo'), obj_datum: fv('obj_datum'), nabidka_do: fv('nabidka_do'),
       prodavac: (document.querySelector('input[name="prodavac"]:checked') || {}).value || '',
       jmeno: fv('jmeno'), prijmeni: fv('prijmeni'), telefon: fv('telefon'), email: fv('email'), ulice: fv('ulice'), mesto: fv('mesto'), psc: fv('psc'),
@@ -180,18 +185,40 @@
       return { co: r.nazev + (r.ks > 1 ? ' (' + r.ks + ' ks × ' + kc(r.cena) + ')' : ''), volba: [specTxt(sp), r.popis, r.sleva ? 'sleva ' + kc(r.sleva) : ''].filter(Boolean).join(' · '), priplatek: r.ks * r.cena - r.sleva,
         model_kod: r.model, odstin: r.odstin, cfg: r.cfg || null, popis: r.popis, nazev: r.nazev, ks: r.ks, cena_ks: r.cena, sleva: r.sleva, spec: sp, obrazek: r.img || '' };
     });
+    if (OBJ) {
+      var pr = fv('zaloha_proc') === '' ? ZALOHA_PROC : int(fv('zaloha_proc'));
+      d.zaloha_proc = pr; d.zaloha_label = 'Záloha'; d.zaloha = Math.round(t.total * pr / 100); d.doplatek = Math.max(0, t.total - d.zaloha);
+      d.termin = fv('termin_text'); d.z_nabidky = st.fromRef || '';
+      var hex = function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); };
+      d.predani_token = hex(); d.zakaznik_token = hex();
+    }
     if (t.sleva) d.polozky.push({ co: 'Celková sleva' + (d.sleva_text ? ': ' + d.sleva_text : ''), volba: '', priplatek: -t.sleva });
+    if (!OBJ) d.objednavka_odkaz = orderLink(d);
     return d;
+  }
+  /* odkaz „Vytvořit objednávku“: byt → objednavka-nova.html (jedny dveře, plná konfigurace), dům a interiér → objednavka-vice.html (víc položek) */
+  function orderLink(d) {
+    var o;
+    if (d.kategorie === 'byt' && d.polozky[0] && d.polozky[0].cfg) {
+      var c = d.polozky[0].cfg; o = { cislo: d.obj_cislo, jmeno: d.jmeno, prijmeni: d.prijmeni, telefon: d.telefon, email: d.email, ulice: d.ulice, mesto: d.mesto, psc: d.psc, poznamka: d.poznamka };
+      ['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'].forEach(function (k) { if (c[k]) o[k] = c[k]; });
+      return new URL('objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
+    }
+    o = JSON.parse(JSON.stringify(d)); delete o.objednavka_odkaz;
+    return new URL('objednavka-vice.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
   }
   function validate(d) {
     if (!st.kat) return 'Vyberte kategorii dveří.';
     if (!st.rows.length) return 'Přidejte aspoň jednu položku.';
     for (var i = 0; i < st.rows.length; i++) { var r = st.rows[i]; if (!r.nazev.trim()) return 'Položka ' + (i + 1) + ': doplňte název.'; if (r.ks < 1) return 'Položka ' + (i + 1) + ': počet kusů musí být aspoň 1.'; if (r.cena <= 0) return 'Položka ' + (i + 1) + ': doplňte cenu za kus.'; }
+    if (limited() && (st.rows.length > 1 || st.rows[0].ks !== 1)) return 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jen jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře dejte do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '.';
     if (!d.jmeno || !d.prijmeni) return 'Doplňte jméno a příjmení zákazníka.';
+    if (OBJ && (!d.ulice || !d.mesto)) return 'Doplňte adresu montáže (ulice a město).';
+    if (OBJ && !(int(fv('zaloha_proc')) >= 0 && int(fv('zaloha_proc')) <= 100)) return 'Záloha v procentech musí být 0 až 100.';
     if (d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return 'E-mail zákazníka nevypadá správně.';
-    if (!d.obj_cislo) return 'Doplňte číslo nabídky.';
+    if (!d.obj_cislo) return 'Doplňte číslo ' + (OBJ ? 'objednávky' : 'nabídky') + '.';
     if (!d.prodavac) return 'Vyberte prodavače.';
-    if (!$('#nbConsent').checked) return 'Potvrďte, že je nabídka zkontrolovaná.';
+    if (!$('#nbConsent').checked) return 'Potvrďte, že je ' + (OBJ ? 'objednávka' : 'nabídka') + ' zkontrolovaná.';
     return '';
   }
 
@@ -214,7 +241,7 @@
       var money = function (n) { return Math.round(n).toLocaleString('cs-CZ').replace(/\s/g, ' ') + ' Kč'; };
       var dt = function (v) { return v ? new Date(v).toLocaleDateString('cs-CZ') : ''; };
       var hexc = function (c) { c = c.replace('#', ''); return [parseInt(c.substr(0, 2), 16), parseInt(c.substr(2, 2), 16), parseInt(c.substr(4, 2), 16)]; };
-      function footer() { font('normal', 7.5, MUTED); doc.text('Nabídka č. ' + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: ' + CC + ' · +420 725 559 235 · www.bezpecne-dvere.cz', W - M, 289, { align: 'right' }); }
+      function footer() { font('normal', 7.5, MUTED); doc.text((OBJ ? 'Objednávka č. ' : 'Nabídka č. ') + d.obj_cislo + ' · strana ' + page, M, 289); doc.text('Dotazy: ' + CC + ' · +420 725 559 235 · www.bezpecne-dvere.cz', W - M, 289, { align: 'right' }); }
       function ensure(h) { if (y + h > 280) { footer(); doc.addPage(); page++; y = 18; } }
       function section(t) { y += 2.5; ensure(16); font('bold', 9, ORANGE); doc.text(t.toUpperCase(), M, y); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.2); doc.line(M, y + 1.6, W - M, y + 1.6); y += 6.2; }
       function para(text, size, color, lh) { font('normal', size, color); var ls = doc.splitTextToSize(text, CW); ls.forEach(function (l) { ensure(lh + .2); doc.text(l, M, y); y += lh; }); y += 1.2; }
@@ -222,7 +249,7 @@
       /* hlavička */
       doc.setFillColor.apply(doc, GREEN); doc.rect(0, 0, W, 30, 'F');
       if (lg) { var lh = 16; doc.addImage(lg.data, 'JPEG', M, 7, lh * lg.w / lg.h, lh); }
-      font('bold', 16, [255, 255, 255]); doc.text('Cenová nabídka', W - M, 13, { align: 'right' });
+      font('bold', 16, [255, 255, 255]); doc.text(OBJ ? 'Objednávka' : 'Cenová nabídka', W - M, 13, { align: 'right' });
       font('normal', 9.5, [210, 230, 218]); doc.text(KAT[d.kategorie] + '  ·  č. ' + d.obj_cislo + '  ·  ' + dt(d.obj_datum || d.odeslano), W - M, 19.5, { align: 'right' });
       doc.text('Prodavač: ' + d.prodavac, W - M, 24.5, { align: 'right' });
       font('normal', 7.5, MUTED);
@@ -235,13 +262,13 @@
       font('bold', 10.5); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y); y += 4.8;
       font('normal', 9.5); [[d.ulice, d.psc, d.mesto].filter(Boolean).join(', '), [d.telefon, d.email].filter(Boolean).join(' · ')].filter(Boolean).forEach(function (l) { doc.text(l, M, y); y += 4.4; });
       doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(W - M - 62, top0 - 4, 62, 19, 2, 2, 'FD');
-      font('bold', 7.5, MUTED); doc.text('PLATNOST NABÍDKY', W - M - 58, top0 + 0.5);
-      font('bold', 13, ORANGE); doc.text(d.nabidka_do ? 'do ' + dt(d.nabidka_do) : 'do odvolání', W - M - 58, top0 + 7);
-      font('normal', 7.5, MUTED); doc.text('vystaveno ' + dt(d.obj_datum || d.odeslano), W - M - 58, top0 + 11.8);
+      font('bold', 7.5, MUTED); doc.text(OBJ ? 'ZÁLOHA ' + d.zaloha_proc + ' %' : 'PLATNOST NABÍDKY', W - M - 58, top0 + 0.5);
+      font('bold', 13, ORANGE); doc.text(OBJ ? money(d.zaloha) : (d.nabidka_do ? 'do ' + dt(d.nabidka_do) : 'do odvolání'), W - M - 58, top0 + 7);
+      font('normal', 7.5, MUTED); doc.text(OBJ ? 'doplatek po montáži ' + money(d.doplatek) : 'vystaveno ' + dt(d.obj_datum || d.odeslano), W - M - 58, top0 + 11.8);
       y = Math.max(y, top0 + 17) + 4;
 
       /* karty položek */
-      section('Nabízené dveře');
+      section(OBJ ? 'Objednané dveře' : 'Nabízené dveře');
       d.polozky.forEach(function (p, i) {
         if (p.ks == null) return;
         var r = st.rows[i], im = ims[i] || [null, null];
@@ -290,8 +317,8 @@
       font('bold', 11, [255, 255, 255]); doc.text('CENA CELKEM vč. DPH', M + 4, y + 1.6); doc.text(money(d.cena_celkem), W - M - 4, y + 1.6, { align: 'right' }); y += 14;
 
       /* co cena zahrnuje, platba, termín */
-      if (d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
-      if (d.platba || d.termin_text) {
+      if (!OBJ && d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
+      if (!OBJ && (d.platba || d.termin_text)) {
         section('Platba a termín');
         if (d.platba) para(d.platba, 9.2, [15, 42, 28], 4.2);
         if (d.termin_text) para('Termín dodání / montáže: ' + d.termin_text, 9.2, [15, 42, 28], 4.2);
@@ -304,6 +331,33 @@
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(M, y - 3.5, CW, 11, 2, 2, 'FD');
         font('bold', 9.5, GREEN); doc.text('V ceně: aplikace Moje dveře', M + 4, y + 0.6);
         font('normal', 8, MUTED); doc.text('Přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady, roční kontrola.', M + 4, y + 4.9); y += 13;
+      }
+
+      /* objednávka: platba, smluvní ujednání, podpisy (text vychází z ujednání objednávek bezpečnostních dveří, upravený pro dveře do domu a interiérové) */
+      if (OBJ) {
+        var LG = P.LEGAL || [];
+        var cutTo = function (t, m) { var i = t.indexOf(m); return i < 0 ? t : t.slice(0, i); };
+        var legal = [];
+        if (LG[0]) legal.push(LG[0].replace('dodávku a montáž bezpečnostních bytových dveří dle výše uvedených parametrů', 'dodávku a montáž dveří dle výše uvedených položek'));
+        if (LG[1]) legal.push(d.kategorie === 'interier' ? LG[1].replace(/; podmínky bonusu a prodloužení záruky na 5 nebo 10 let jsou na [^ ]+\./, '.') : LG[1]);
+        if (LG[2]) legal.push(LG[2]);
+        if (LG[3]) legal.push(LG[3]);
+        if (LG[4]) { var gd = LG[4].indexOf('Osobní údaje objednatele'), gz = LG[4].indexOf(' číslo občanského průkazu'); legal.push(cutTo(LG[4], ' Objednatel bere na vědomí, že čistý průchod') + (gd >= 0 ? ' ' + LG[4].slice(gd, gz > gd ? gz : undefined).replace(/;\s*$/, '.') : '')); }
+        section('Platba');
+        var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
+        para('Záloha ' + d.zaloha_proc + ' % z ceny zakázky: ' + money(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') : '') + '. Doplatek ' + money(d.doplatek) + ' hotově po montáži.', 9.2, [15, 42, 28], 4.2);
+        if (d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
+        if (d.termin_text) para('Termín dodání / montáže: ' + d.termin_text, 9.2, [15, 42, 28], 4.2);
+        section('Smluvní ujednání');
+        legal.forEach(function (par) { font('normal', 7.2, [40, 60, 50]); doc.splitTextToSize(par, CW).forEach(function (line) { ensure(3.2); doc.text(line, M, y); y += 3.0; }); y += 1.3; });
+        ensure(30); y += 3;
+        font('normal', 9, MUTED); doc.text('Dne ' + dt(d.obj_datum || d.odeslano), M, y); y += 12;
+        doc.setDrawColor(120, 140, 130); doc.setLineWidth(0.3); doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
+        font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
+        font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
+        doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235'], W - M - 75, y);
+        footer();
+        return { blob: doc.output('blob'), pages: doc.getNumberOfPages() };
       }
 
       /* podmínky */
@@ -329,14 +383,22 @@
   function fieldsTelo(list) { return window.BDForm.bodyFromFields(list); }
   function dec(b) { return String(b); }
   function customerList(d) {
+    if (OBJ) {
+      var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
+      var lo = [['_subject', 'Objednávka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
+        ['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.'],
+        ['Objednávka', d.obj_cislo], ['Celkem vč. DPH', kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
+        ['Doplatek po montáži', kc(d.doplatek) + ' hotově']];
+      return lo.concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
+    }
     return [['_subject', 'Cenová nabídka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
       ['Dobrý den', 'děkujeme za zájem. V příloze posíláme cenovou nabídku v PDF' + (d.nabidka_do ? ' (platí do ' + new Date(d.nabidka_do).toLocaleDateString('cs-CZ') + ')' : '') + '. Pokud Vám vyhovuje, ozvěte se nám a převedeme ji na objednávku. Dotazy: ' + CC + ' nebo +420 725 559 235.'],
       ['Nabídka', d.obj_cislo], ['Celkem vč. DPH', kc(d.cena_celkem)]].concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
   }
   function internalList(d) {
-    return [['_subject', 'Nabídka ' + d.obj_cislo + ' (interní) – ' + KAT[d.kategorie] + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')],
-      ['Číslo nabídky', d.obj_cislo], ['Kategorie', KAT[d.kategorie]], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Interní poznámka', d.interni || '–'],
-      ['Cena celkem', kc(d.cena_celkem)], ['data_json', JSON.stringify(d)]].concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
+    return [['_subject', (OBJ ? 'Objednávka ' : 'Nabídka ') + d.obj_cislo + ' (interní) – ' + KAT[d.kategorie] + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')],
+      [OBJ ? 'Číslo objednávky' : 'Číslo nabídky', d.obj_cislo], ['Kategorie', KAT[d.kategorie]], ['Prodavač', d.prodavac], [OBJ ? 'Z nabídky / poptávky' : 'Z poptávky', (OBJ ? d.z_nabidky : d.z_poptavky) || '–'], ['Interní poznámka', d.interni || '–'],
+      ['Cena celkem', kc(d.cena_celkem)]].concat(OBJ ? [['Záloha / doplatek', kc(d.zaloha) + ' (' + d.zaloha_proc + ' %) / ' + kc(d.doplatek)]] : [['Vytvořit objednávku', d.objednavka_odkaz]]).concat([['data_json', JSON.stringify(d)]]).concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
   }
   function pick(list, k) { var r = ''; list.forEach(function (x) { if (x[0] === k) r = x[1]; }); return r; }
   function send(typ, list, files, ref, extra) {
@@ -351,12 +413,13 @@
     if (err) { msg.textContent = err; msg.hidden = false; return; }
     if (form._honey.value) return;
     var btn = $('#nbSubmit'); btn.disabled = true; btn.textContent = 'Připravuji PDF…';
-    var pdf = null, custOk = true, fn = 'Nabidka-' + d.obj_cislo + '.pdf';
+    var pdf = null, custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
+    var TYP = OBJ ? 'objednavka_interni' : 'nabidka';
     buildPdf(d).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
       pdf = b ? b.blob : null; window.__nbPages = b ? b.pages : 0; btn.textContent = 'Odesílám…';
       var files = pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : [];
       var ix = d.email ? { reply_to: d.email } : {};
-      return send('nabidka', internalList(d), files, d.obj_cislo, ix).catch(function () { return send('nabidka', internalList(d), [], d.obj_cislo, ix); });
+      return send(TYP, internalList(d), files, d.obj_cislo, ix).catch(function () { return send(TYP, internalList(d), [], d.obj_cislo, ix); });
     }).then(function () {
       if (!d.email) return;
       var files = pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : [];
@@ -364,6 +427,13 @@
         .catch(function () { custOk = false; return send('objednavka_zakaznik', customerList(d), [], d.obj_cislo, { email_zakaznik: d.email }); });
     }).then(function () {
       $('#nbRef').textContent = d.obj_cislo; var w = $('#nbWarn');
+      var to = $('#nbToOrder'); if (to && !OBJ && d.objednavka_odkaz) { to.href = d.objednavka_odkaz; to.hidden = false; }
+      if (OBJ && d.zaloha > 0 && window.BDPlatba && $('#nbPay')) {
+        try {
+          var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), bx = $('#nbPayQr'); bx.innerHTML = ''; var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'width:min(300px,80vw);height:auto;image-rendering:pixelated'; bx.appendChild(cv);
+          $('#nbPayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> (' + d.zaloha_proc + ' %) · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : ''); $('#nbPay').hidden = false;
+        } catch (e) {}
+      }
       if (!d.email) { w.textContent = 'Zákazník nemá vyplněný e-mail – nabídka odešla jen vám. PDF si vytiskněte a předejte mu ho.'; w.hidden = false; }
       else if (!custOk) { w.textContent = 'E-mail zákazníkovi odešel bez přiloženého PDF. Stáhněte si PDF a pošlete mu ho ručně.'; w.hidden = false; }
       if (pdf) { var u = URL.createObjectURL(pdf), a = $('#nbPdf'); a.href = u; a.download = fn; a.hidden = false; var pr = $('#nbPrint'); pr.hidden = false; pr.onclick = function () { var wn = window.open(u, '_blank'); if (wn) wn.focus(); }; }
@@ -376,9 +446,9 @@
   /* ── start ── */
   $('#nbSeller').innerHTML = PRODAVACI.map(function (p) { return '<label class="pq-opt pq-chip"><input type="radio" name="prodavac" value="' + esc(p) + '">' + esc(p) + '</label>'; }).join('');
   form.obj_cislo.placeholder = 'načítám další číslo…';
-  (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber('nabidka') : Promise.resolve('')).then(function (c) { if (!form.obj_cislo.value) form.obj_cislo.value = c; form.obj_cislo.placeholder = c ? '' : 'např. N 12/2026'; });
+  (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber(OBJ ? 'objednavka' : 'nabidka') : Promise.resolve('')).then(function (c) { if (!form.obj_cislo.value) form.obj_cislo.value = c; form.obj_cislo.placeholder = c ? '' : 'např. N 12/2026'; });
   form.obj_datum.value = new Date().toISOString().slice(0, 10);
-  var nd = new Date(); nd.setDate(nd.getDate() + 14); form.nabidka_do.value = nd.toISOString().slice(0, 10);   // výchozí platnost 14 dní – lze změnit
+  var nd = new Date(); nd.setDate(nd.getDate() + 14); if (form.nabidka_do) form.nabidka_do.value = nd.toISOString().slice(0, 10);   // výchozí platnost 14 dní – lze změnit
   /* z poptávky: odkaz #d=<base64url JSON> (stejný jako pro objednávku) */
   (function () {
     var h = (location.hash.match(/[#&]d=([A-Za-z0-9_-]+)/) || [])[1]; if (!h) return;
@@ -389,7 +459,19 @@
       ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka'].forEach(function (n) { if (o[n] && form.elements[n]) form.elements[n].value = o[n]; });
       st.fromRef = o.cislo || '';
       var m = katMod(o.model_kod);
-      if (m) {
+      if (o.typ === 'nabidka' && Array.isArray(o.polozky) && KATS.indexOf(o.kategorie) >= 0) {
+        st.kat = o.kategorie;
+        o.polozky.filter(function (p0) { return p0 && p0.ks != null; }).forEach(function (p0) {
+          var r0 = newRow(); r0.nazev = p0.nazev || ''; r0.ks = int(p0.ks) || 1; r0.cena = int(p0.cena_ks); r0.sleva = int(p0.sleva); r0.popis = p0.popis || ''; r0.img = p0.obrazek || ''; r0.model = p0.model_kod || ''; r0.odstin = p0.odstin || ''; r0.cfg = p0.cfg || null;
+          (p0.spec || []).forEach(function (x) { var v = String(x[1] || ''); if (x[0] === 'Provedení') r0.prov = v; else if (x[0] === 'Odstín / dekor') r0.odstin = v; else if (x[0] === 'Šířka křídla') r0.sirka = v.replace(/\s*cm$/i, ''); else if (x[0] === 'Otevírání') r0.otev = v; else if (x[0] === 'Zárubeň') r0.zarub = v; else if (x[0] === 'Kování') r0.kov = v; });
+          var hit = ''; catList().forEach(function (c) { if (!hit && r0.nazev.toUpperCase().indexOf(String(c[0]).toUpperCase()) >= 0) hit = c[0]; }); r0.cat = hit || '__jiny';
+          st.rows.push(r0);
+        });
+        if (o.sleva_celkem) { form.sleva_kc.value = o.sleva_celkem; form.sleva_text.value = o.sleva_text || ''; }
+        if (o.zahrnuje && form.zahrnuje) form.zahrnuje.value = o.zahrnuje;
+        if (o.termin_text && form.termin_text) form.termin_text.value = o.termin_text;
+        if (o.prodavac) { var pr0 = document.querySelector('input[name="prodavac"][value="' + o.prodavac + '"]'); if (pr0) pr0.checked = true; }
+      } else if (m) {
         st.kat = 'byt'; var r = newRow(); r.model = m.k; r.odstin = o.odstin || ''; r.nazev = m.name + (r.odstin ? ' – ' + r.odstin : '');
         r.cena = int(o.cena_celkem) || modelPrice(r) || m.price; r.img = m.img || '';
         m.shades.forEach(function (s0) { if (s0.n === r.odstin) r.shadeImg = s0.img || ''; });
@@ -409,7 +491,7 @@
         r2.ks = int(o.pocet_ks) || 1; st.rows.push(r2);
       }
       setDefaults();
-      var info = $('#nbLoaded'); info.hidden = false; info.innerHTML = '✓ Načteno z poptávky <b>' + esc(o.cislo || '') + '</b>. Parametry a cena jsou přenesené z poptávky; zkontrolujte je a doplňte, co chybí.';
+      var info = $('#nbLoaded'); info.hidden = false; info.innerHTML = '✓ Načteno z ' + (o.typ === 'nabidka' ? 'nabídky' : 'poptávky') + ' <b>' + esc(o.cislo || '') + '</b>. Položky a ceny jsou přenesené; zkontrolujte je a doplňte, co chybí.';
     } catch (e) {}
   })();
   renderKat(); renderRows();

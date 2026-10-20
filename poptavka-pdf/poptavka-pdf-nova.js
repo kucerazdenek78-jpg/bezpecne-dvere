@@ -372,5 +372,5 @@
     }).then(function (bytes) { return bytes ? new Blob([bytes], { type: 'application/pdf' }) : null; });
   }
 
-  window.PoptavkaPDF = { prepare: prepare, build: build, buildOrder: buildOrder, buildHandover: buildHandover, buildVoucher: buildVoucher, voucherActive: voucherActive, preparePL: preparePL };
+  window.PoptavkaPDF = { LEGAL: LEGAL, prepare: prepare, build: build, buildOrder: buildOrder, buildHandover: buildHandover, buildVoucher: buildVoucher, voucherActive: voucherActive, preparePL: preparePL };
 })();

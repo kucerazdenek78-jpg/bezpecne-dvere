@@ -9,7 +9,7 @@
   } catch (e) { on = /[?&]sys=1/.test(location.search); }
   if (!on) return;
   var S = 'https://kartoteka.dvere.app/';
-  var L = [[S, '🏠 Úvod systému', 'u'], [S + 'kartoteka.php', '📋 Kartotéka'], ['panel.html', 'Panel prodejce'], ['poptavka-nova.html', '➕ Nová poptávka'], ['nabidka-nova.html', '➕ Nová nabídka'], ['objednavka-nova.html', '➕ Nová objednávka'], [S + 'sklad.php', '📦 Sklad'], [S + 'montaze.php', '📅 Montáže'], [S + 'servis.php', '🔧 Servis']];
+  var L = [[S, '🏠 Úvod systému', 'u'], [S + 'kartoteka.php', '📋 Kartotéka'], ['panel.html', 'Panel prodejce'], ['poptavka-nova.html', '➕ Nová poptávka'], ['nabidka-nova.html', '➕ Nová nabídka'], ['objednavka-vice.html', '➕ Objednávka interiér/dům'], ['objednavka-nova.html', '➕ Nová objednávka'], [S + 'sklad.php', '📦 Sklad'], [S + 'montaze.php', '📅 Montáže'], [S + 'servis.php', '🔧 Servis']];
   var st = document.createElement('style');
   st.textContent = '.bdsys{position:sticky;top:0;z-index:2147483000;display:flex;gap:4px;align-items:center;overflow-x:auto;white-space:nowrap;background:#0f2747;padding:8px max(12px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch;margin:0}' +
     '.bdsys a{color:#dbe6f7;text-decoration:none;font:600 14px/1 system-ui,Arial,sans-serif;padding:9px 12px;border-radius:8px}.bdsys a:hover{background:#1d3f6e}.bdsys a.u{background:#16a34a;color:#fff;margin-right:6px}';

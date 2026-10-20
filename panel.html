@@ -145,6 +145,7 @@
   <h2>Nabídky</h2>
   <div class="grid">
     <a class="tile primary" href="nabidka-nova.html"><strong>Nová nabídka</strong><span>Jedna kategorie dveří, víc položek, sleva na položku i celková, PDF pro zákazníka</span></a>
+    <a class="tile primary" href="objednavka-vice.html"><strong>Objednávka – interiér / dům</strong><span>Víc položek, kusů, rozměrů a barev; záloha 70 %, PDF k podpisu</span></a>
   </div>
 
   <h2>Ke stažení</h2>
@@ -179,7 +180,7 @@
   function goNext() {
     var m = location.hash.match(/^#next=(.+)$/); if (!m) return false;
     var url = decodeURIComponent(m[1]);
-    if (!/^(?:objednavka-(?:dvere|nova)|nabidka-nova)\.html(#.*)?$/.test(url)) return false;
+    if (!/^(?:objednavka-(?:dvere|nova|vice)|nabidka-nova)\.html(#.*)?$/.test(url)) return false;
     location.replace(url); return true;
   }
   // krátké video návody: sem doplňte odkaz na soubor (např. 'navody/objednavka.mp4') nebo na video; prázdné = nezobrazí se nic
@@ -203,6 +204,6 @@
   });
 })();
 </script>
-<script src="systembar.js?v=1"></script>
+<script src="systembar.js?v=2"></script>
 </body>
 </html>
