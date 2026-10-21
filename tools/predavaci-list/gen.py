@@ -2,7 +2,7 @@ import html
 NAVY='#0d1b3e'; MUT='#4a5775'; TXT='#374151'; OR='#e8650a'
 els=[]
 def box(x,y,w,h,style): els.append(f'<div style="position:absolute;left:{x}pt;top:{y}pt;width:{w}pt;height:{h}pt;{style}"></div>')
-DY={21:0.75,10.125:0,9:0.75,11.25:0,9.75:0.75,8.6:0.5,8.25:0.75,7.5:0.5,7:0.5,10.9:1.0,7.13:0.25,9.375:0}
+DY={8.25:3.0,21:0.75,10.125:0,9:0.75,11.25:0,9.75:0.75,8.6:0.5,8.2:0.6,7.5:0.5,7.13:0.25,9.375:0}
 def t(x,y,h,text,size,wt=400,col=TXT,ls=0,right=None,center=None,extra=''):
     y=y+DY.get(size,0)
     # y,h = bbox top/height of the line (pdftotext); line-height = h
@@ -56,6 +56,11 @@ for y,s in [(355.8,'Naskenujte kód, uveďte číslo'),(367.8,'objednávky a př
 t(308.2,408.3,10.9,'<b style="color:%s">+420 725 559 235</b> · také WhatsApp · chci@bezpecne-'%NAVY,9,400,MUT)
 t(308.2,421.8,10.9,'dvere.cz',9,400,MUT)
 t(308.2,436.8,10.9,'Prodejna: Obchodní 36, Most · pracovní dny 8–17 hod.',9,400,MUT)
+# bez QR kódu: ruční vstup do aplikace
+box(308.2,451,251.2,38.5,'background:#e8f0fb;border-radius:6pt')
+t(315,455.2,10,'<b style="color:%s">Bez QR kódu:</b> otevřete bezpecne-dvere.cz/aplikace,'%NAVY,8.2,400,MUT)
+t(315,465.8,10,'záložka Moje dveře – zadejte číslo objednávky a',8.2,400,MUT)
+t(315,476.4,10,'poslední 4 číslice telefonu z objednávky.',8.2,400,MUT)
 # karty
 box(36,491.8,255.6,148.2,'border:0.75pt solid #e2e8f2;border-radius:10pt;box-sizing:border-box')
 box(303.8,491.8,255.6,148.2,'border:0.75pt solid #e2e8f2;border-radius:10pt;box-sizing:border-box')
