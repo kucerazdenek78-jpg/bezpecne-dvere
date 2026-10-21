@@ -71,8 +71,7 @@ function udrzba_mail_text(array $z, array $d, string $termin): string {
   $cislo = (string)($d['obj_cislo'] ?? $z['cislo']); $model = trim((string)($d['model'] ?? 'vaše dveře'));
   return "Dobrý den,\n\nje čas na pravidelnou údržbu dveří $model (objednávka č. $cislo). Děláme ji každých " . UDRZBA_MESICU . " měsíců, zabere pár minut:\n\n"
     . "• těsnění dveří a zárubně ošetřete silikonovým mazivem,\n"
-    . "• kluznou lištu samozavírače (pokud ho dveře mají) promažte plastickým tukem ŁT34 nebo podobným,\n"
-    . "• jednou ročně promažte zamykací čepy a krycí misku vložky olejem nebo WD-40 (do samotné vložky jen teflonový nebo grafitový sprej),\n"
+    . "• promažte zamykací čepy a krycí misku vložky olejem nebo WD-40 (do samotné vložky jen teflonový nebo grafitový sprej),\n"
     . "• povrch umyjte teplou vodou s trochou saponátu a měkkou houbou – bez drhnutí, rozpouštědel a abrazivních prostředků,\n"
     . "• vyzkoušejte, že dveře samy dovřou a zámek jde lehce.\n\n"
     . "Celý návod: " . UDRZBA_NAVOD_URL . "\n\n"

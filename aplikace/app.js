@@ -857,8 +857,7 @@
     h += '<div class="card c-c"><h3>🧽 Péče a údržba dveří</h3>' + (doorToken(dv) ? '<div id="udBox"></div>' : '') + '<ul class="care">' +
       '<li>Povrch myjte teplou vodou s trochou saponátu a měkkou houbou nebo hadříkem. Nedrhněte, nepoužívejte rozpouštědla ani brusné prostředky.</li>' +
       '<li>Každých 6 měsíců ošetřete těsnění dveří a zárubně (pokud je) silikonovým mazivem.</li>' +
-      '<li>Každých 6 měsíců promažte kluznou lištu samozavírače (pokud ho dveře mají) plastickým tukem ŁT34 nebo podobným.</li>' +
-      '<li>1× ročně promažte zamykací čepy a krycí misku vložky (pokud je) olejem nebo WD-40.</li>' +
+      '<li>Každých 6 měsíců promažte zamykací čepy a krycí misku vložky (pokud je) olejem nebo WD-40.</li>' +
       '<li><b>Pozor – samotná vložka (cylindr):</b> když jdou klíče špatně zasouvat, použijte pouze teflonový nebo grafitový sprej. Nic jiného do vložky nepatří, ani olej, ani WD-40.</li></ul>' +
       '<p class="small"><a href="../udrzba-dveri.html" target="_blank">Celý návod k užívání a údržbě</a> · <a href="../udrzba-dveri.html#certifikaty" target="_blank">Certifikáty dveří</a></p></div>';
 
