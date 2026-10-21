@@ -57,6 +57,49 @@
     .so-wide{max-width:760px;margin:0 auto}
     .so-partner{line-height:1.7}
     section[id]{scroll-margin-top:90px}
+
+    .td-hero{background:linear-gradient(135deg,#0b2a1b 0%,#123d27 55%,#15803d 130%);color:#fff;padding:8rem 0 4.2rem;position:relative;overflow:hidden}
+    .td-hero:before{content:"";position:absolute;right:-120px;top:-120px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(74,222,128,.28),transparent 65%)}
+    .td-hero .container{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:2.5rem;align-items:center}
+    .td-hero h1{color:#fff;font-size:clamp(1.8rem,4.2vw,2.8rem);line-height:1.12;margin:.4rem 0 1rem}
+    .td-hero p{color:#d5eadd;font-size:1.08rem;max-width:36rem}
+    .td-hero .section-label{color:#86efac}
+    .td-hero .breadcrumb,.td-hero .breadcrumb a{color:#a7d9b9}
+    .td-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 1.4rem}
+    .td-chips span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:.38rem .85rem;border-radius:99px;font-size:.85rem;font-weight:600}
+    .td-product{position:relative;display:flex;justify-content:center}
+    .td-product .ring{position:absolute;inset:8% 8%;border-radius:50%;border:2px dashed rgba(134,239,172,.45);animation:tdspin 40s linear infinite}
+    .td-product img{position:relative;width:min(340px,80%);aspect-ratio:1;object-fit:cover;border-radius:50%;box-shadow:0 20px 60px rgba(0,0,0,.45);border:6px solid rgba(255,255,255,.9);background:#fff}
+    .td-badge{position:absolute;right:4%;bottom:6%;background:#fff;color:#123d27;font-weight:800;font-size:.8rem;padding:.5rem .9rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    @keyframes tdspin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){.td-product .ring{animation:none}}
+    .td-wrap{max-width:1000px;margin:0 auto}
+    .td-why{display:grid;grid-template-columns:auto 1fr;gap:1.4rem;align-items:center;background:linear-gradient(135deg,#f0fbf4,#fff);border:2px solid #15803d;border-radius:var(--radius-lg);padding:1.6rem;margin-top:-2.6rem;position:relative;box-shadow:0 14px 40px rgba(18,61,39,.14)}
+    .td-why svg{width:92px;height:92px}
+    .td-why h2{margin:0 0 .4rem;color:var(--navy);font-size:1.35rem}
+    .td-why p{margin:0}
+    .td-h{color:var(--navy);margin:2.6rem 0 1.2rem;font-size:1.5rem}
+    .td-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;counter-reset:s}
+    .td-step{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.4rem 1.2rem;position:relative}
+    .td-step:before{counter-increment:s;content:counter(s);position:absolute;top:-16px;left:1.2rem;width:34px;height:34px;border-radius:50%;background:#15803d;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(21,128,61,.4)}
+    .td-step svg{width:64px;height:64px;margin-bottom:.6rem}
+    .td-step p{margin:0;font-size:.95rem}
+    .td-note{text-align:center;margin-top:1rem;font-weight:700;color:#123d27}
+    .td-feat{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+    .td-f{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.3rem;transition:transform .2s,box-shadow .2s,border-color .2s}
+    .td-f:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(18,61,39,.12);border-color:#15803d}
+    .td-ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#15803d,#4ade80);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:.8rem;box-shadow:0 6px 16px rgba(21,128,61,.3)}
+    .td-f h4{margin:0 0 .35rem;color:var(--navy);font-size:1.05rem}
+    .td-f p{margin:0;font-size:.92rem;color:var(--gray-600)}
+    .td-sec{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;background:#123d27;color:#fff;border-radius:var(--radius-lg);padding:1.2rem 1.5rem;margin-top:1.6rem}
+    .td-sec strong{color:#86efac}
+    .td-sec a{color:#86efac}
+    .td-cta{background:linear-gradient(135deg,#15803d,#123d27);color:#fff;border-radius:var(--radius-lg);padding:2rem;text-align:center;margin-top:2.6rem}
+    .td-cta h2{color:#fff;margin:0 0 .5rem}
+    .td-cta p{color:#d5eadd;margin:0 0 1.1rem}
+    .td-cta .so-actions{justify-content:center}
+    .td-cta .btn-outline{color:#fff;border-color:#fff}
+    @media(max-width:820px){.td-hero .container,.td-steps,.td-feat,.td-why{grid-template-columns:1fr}.td-why svg{margin:0 auto}.td-hero{padding-bottom:4rem}}
     @media(max-width:820px){.so-intro,.so-grid,.so-grid-2,.so-row{grid-template-columns:1fr}}
   </style>
 </head>
@@ -116,50 +159,50 @@
 </nav>
 
 <!-- PAGE HEADER -->
-<div class="page-header hero-modern">
+<div class="td-hero">
   <div class="container">
-    <span class="section-label">PREMIUM 60 · chytrý zámek</span>
-    <h1>Dveře PREMIUM 60 připravené pro chytrý zámek tedee PRO</h1>
-    <p>Odemykejte a zamykejte dveře mobilem. Dveře jsou z výroby přizpůsobené pro elektrické ovládání zámkem tedee PRO od výrobce dveří GERDA.</p>
-    <div class="breadcrumb"><a href="index.html">Úvod</a><span>›</span><a href="dvere-do-bytu.html#premium60">PREMIUM 60</a><span>›</span><span>Chytrý zámek tedee</span></div>
+    <div>
+      <span class="section-label">PREMIUM 60 · chytrý zámek</span>
+      <h1>Dveře otevřete mobilem. PREMIUM 60 jsou na to připravené.</h1>
+      <p>Z výroby přizpůsobené pro chytrý zámek <strong>tedee PRO</strong> od výrobce dveří GERDA. Bez výměny vložky a bez zásahu do dveří.</p>
+      <div class="td-chips"><span>📱 iOS a Android</span><span>🌐 Ovládání na dálku</span><span>🔑 Virtuální klíče</span><span>🔋 Baterie na měsíce</span></div>
+      <div class="so-actions"><a href="poptavka.html" class="btn btn-primary">Poptat PREMIUM 60 se zámkem</a><a href="tel:+420725559235" class="btn btn-outline" style="color:#fff;border-color:#fff">+420 725 559 235</a></div>
+      <div class="breadcrumb" style="margin-top:1.4rem"><a href="index.html">Úvod</a><span>›</span><a href="dvere-do-bytu.html#premium60">PREMIUM 60</a><span>›</span><span>Chytrý zámek tedee</span></div>
+    </div>
+    <div class="td-product"><div class="ring"></div><img src="https://gerda.pl/wp-content/uploads/2021/10/tedee-lock-packshot-3-1170@2x.jpeg" alt="Chytrý zámek tedee PRO" width="340" height="340" loading="eager" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' fill='%23e8f5ee'/%3E%3Crect x='30' y='10' width='36' height='76' rx='10' fill='%2315803d'/%3E%3Ccircle cx='48' cy='38' r='12' fill='%23fff'/%3E%3Crect x='43' y='58' width='10' height='16' rx='3' fill='%23fff'/%3E%3C/svg%3E'"><span class="td-badge">tedee PRO</span></div>
   </div>
 </div>
 
 <section>
-  <div class="container so-wide">
-    <div class="so-box so-box-svj">
-      <h2 class="so-h" style="margin-top:0;">Proč má PREMIUM 60 jen jeden zámek</h2>
-      <p>Dveře PREMIUM 60 mají jeden centrální zámek, který ovládá zamykání dveří. Proto se dají snadno ovládat jedním chytrým zámkem. U dveří se dvěma samostatnými zámky by chytrý zámek ovládal vždy jen jeden z nich a druhý by zůstal na klíč.</p>
+  <div class="container td-wrap">
+    <div class="td-why">
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="22" y="6" width="52" height="84" rx="8" fill="#e8f5ee" stroke="#15803d" stroke-width="3"/><circle cx="48" cy="40" r="15" fill="#15803d"/><circle cx="48" cy="40" r="6" fill="#fff"/><rect x="42" y="62" width="12" height="18" rx="3" fill="#123d27"/></svg>
+      <div><h2>Proč má PREMIUM 60 jen jeden zámek</h2><p>Dveře PREMIUM 60 mají jeden centrální zámek, který ovládá zamykání dveří. Proto se dají snadno ovládat jedním chytrým zámkem. U dveří se dvěma samostatnými zámky by chytrý zámek ovládal vždy jen jeden z nich a druhý by zůstal na klíč.</p></div>
     </div>
 
-    <h2 class="so-h">Montáž je jednoduchá, dveře se nijak neupravují</h2>
-    <div class="so-box">
-      <p>Dveře PREMIUM 60 jsou na zámek tedee připravené už z výroby. <strong>Nemění se vložka</strong> a do dveří se nezasahuje. Zámek musí být ve verzi <strong>tedee PRO</strong>.</p>
-      <ol style="padding-left:1.2rem;margin:.6rem 0 0;display:flex;flex-direction:column;gap:.4rem;">
-        <li style="list-style:decimal">Zevnitř dveří povolíte imbusovým klíčem olivu na zámku.</li>
-        <li style="list-style:decimal">Nasadíte zámek tedee PRO.</li>
-        <li style="list-style:decimal">Imbusem ho dotáhnete. Nic dalšího se nemění.</li>
-      </ol>
+    <h2 class="td-h">Montáž jsou tři kroky</h2>
+    <div class="td-steps">
+      <div class="td-step"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#e8f5ee"/><path d="M20 44l16-16m-4-6l10 10-6 2-6-6z" stroke="#15803d" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Zevnitř dveří povolíte imbusovým klíčem olivu na zámku.</p></div>
+      <div class="td-step"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#e8f5ee"/><rect x="22" y="14" width="20" height="36" rx="6" fill="#15803d"/><circle cx="32" cy="29" r="6" fill="#fff"/></svg><p>Nasadíte zámek <strong>tedee PRO</strong>.</p></div>
+      <div class="td-step"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#e8f5ee"/><path d="M20 33l8 8 16-18" stroke="#15803d" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Imbusem ho dotáhnete. Nic dalšího se nemění.</p></div>
     </div>
+    <p class="td-note">Nemění se vložka a do dveří se nezasahuje. Zámek musí být ve verzi tedee PRO.</p>
 
-    <h2 class="so-h">Co zámek tedee umí</h2>
-    <div class="so-grid so-grid-2">
-      <div class="so-box"><h4>📱 Ovládání mobilem</h4><p>Aplikace pro iOS a Android. Dveře otevřete a zamknete z telefonu.</p></div>
-      <div class="so-box"><h4>🌐 Ovládání na dálku</h4><p>Zámek se přes zařízení Bridge připojí k Wi-Fi, takže dveře ovládáte i na dálku.</p></div>
-      <div class="so-box"><h4>🔑 Virtuální klíče</h4><p>Dočasné sdílení klíčů s rodinou, hosty nebo řemeslníky. Bez předávání klíčů.</p></div>
-      <div class="so-box"><h4>🧾 Protokol činnosti</h4><p>Přehled, kdo do domu vstoupil a kdy.</p></div>
-      <div class="so-box"><h4>🔓 Automatické odemykání</h4><p>Zámek se umí odemknout automaticky, když se blížíte ke dveřím.</p></div>
-      <div class="so-box"><h4>🔋 Baterie na měsíce</h4><p>Podle výrobce se nabíjí zhruba jednou za šest měsíců přes USB.</p></div>
+    <h2 class="td-h">Co zámek tedee umí</h2>
+    <div class="td-feat">
+      <div class="td-f"><div class="td-ic">📱</div><h4>Ovládání mobilem</h4><p>Aplikace pro iOS a Android. Dveře otevřete a zamknete z telefonu.</p></div>
+      <div class="td-f"><div class="td-ic">🌐</div><h4>Ovládání na dálku</h4><p>Zámek se přes zařízení Bridge připojí k Wi-Fi, takže dveře ovládáte i na dálku.</p></div>
+      <div class="td-f"><div class="td-ic">🔑</div><h4>Virtuální klíče</h4><p>Dočasné sdílení klíčů s rodinou, hosty nebo řemeslníky. Bez předávání klíčů.</p></div>
+      <div class="td-f"><div class="td-ic">🧾</div><h4>Protokol činnosti</h4><p>Přehled, kdo do domu vstoupil a kdy.</p></div>
+      <div class="td-f"><div class="td-ic">🔓</div><h4>Automatické odemykání</h4><p>Zámek se umí odemknout automaticky, když se blížíte ke dveřím.</p></div>
+      <div class="td-f"><div class="td-ic">🔋</div><h4>Baterie na měsíce</h4><p>Podle výrobce se nabíjí zhruba jednou za šest měsíců přes USB.</p></div>
     </div>
-    <p class="so-note" style="margin-top:1rem;color:var(--gray-600);">Zabezpečení komunikace: protokol TLS 1.3 s 256bitovým bezpečnostním klíčem. Údaje o zámku jsou od výrobce, podrobnosti najdete na <a href="https://gerda.pl/cs/tedee/" target="_blank" rel="noopener">gerda.pl/cs/tedee</a>.</p>
+    <div class="td-sec"><span>🔒 Zabezpečení komunikace: <strong>TLS 1.3, 256bitový klíč</strong></span><span style="font-size:.88rem">Údaje o zámku jsou od výrobce: <a href="https://gerda.pl/cs/tedee/" target="_blank" rel="noopener">gerda.pl/cs/tedee</a></span></div>
 
-    <h2 class="so-h">Máte zájem?</h2>
-    <div class="so-box">
+    <div class="td-cta">
+      <h2>Máte zájem?</h2>
       <p>Napište nám nebo zavolejte. Poradíme, jak zámek tedee PRO k dveřím PREMIUM 60 pořídit.</p>
-      <div class="so-actions">
-        <a href="poptavka.html" class="btn btn-primary">Poptat PREMIUM 60 se zámkem tedee</a>
-        <a href="tel:+420725559235" class="btn btn-outline">+420 725 559 235</a>
-      </div>
+      <div class="so-actions"><a href="poptavka.html" class="btn btn-primary">Poptat PREMIUM 60 se zámkem tedee</a><a href="tel:+420725559235" class="btn btn-outline">+420 725 559 235</a></div>
     </div>
   </div>
 </section>
