@@ -33,3 +33,7 @@ a podle `zdroj` v data_json (`aplikace-vizualizace`, `aplikace-servis`, `aplikac
 - Plánovač (jednou denně, např. 8:00): `docker exec formulare-web-1 php /var/www/html/udrzba-pripominky.php`
   Zkouška bez odeslání: `... udrzba-pripominky.php --suchy` (případně `--suchy --dnes=2027-05-10`). Do 1. 11. 2026 skript nic nedělá.
 - Návod pro zákazníky: https://bezpecne-dvere.cz/udrzba-dveri.html
+
+## Reklamní materiály (21. 10. 2026)
+- `reklama.php` → `/docker/formulare/app/`. Přehled složek se soubory ke stažení: https://kartoteka.dvere.app/reklama.php (Cloudflare Access) nebo z místní sítě.
+- Soubory leží mimo web v `/docker/formulare/data/reklama/<složka>/`. Popis složky: `_popis.txt` (1. řádek název, další poznámka); popisy souborů: `_soubory.txt` (řádky `soubor | popis`). Nové složky/soubory stačí nahrát přes File Station.
