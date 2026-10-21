@@ -22,3 +22,14 @@ a podle `zdroj` v data_json (`aplikace-vizualizace`, `aplikace-servis`, `aplikac
   nebo z místní sítě. Přes formulare.dvere.app vrací 404. `?prodejce` = předvádění prodejcem (režim `#viz?p=1`) zvlášť.
 - Nasazení: zálohovat původní `aplikace-api.php` (např. `aplikace-api.php.bak-pred-statistikou`) a nahrát oba soubory do `/docker/formulare/app/`.
   Dokud nejsou na NAS, aplikace události posílá naprázdno (server vrátí „akce“) a nic se nerozbije.
+
+## Pravidelná údržba dveří – připomínky po 6 měsících (21. 10. 2026, platí od 1. 11. 2026)
+- Soubory: `udrzba.php` → `/docker/formulare/app/lib/udrzba.php`; `udrzba-pripominky.php` → `/docker/formulare/app/`;
+  upravené `aplikace-api.php` (→ app/) a `pozadavky.php` (→ app/lib/). Před nahráním zálohovat s příponou `.bak-pred-udrzbou`.
+- Tabulky se vytvoří samy: sloupce `zadosti.udrzba_vypnuto_dne`, `zadosti.udrzba_mail_pro`, tabulka `udrzba_zaznamy` (provedeno / vypnuto / zapnuto / připomínka).
+- Aplikace (akce `udrzba_akce`, `co` = hotovo | vypnout | zapnout): zákazník potvrdí provedení údržby, vypne/zapne e-mailové připomínky.
+  Vše se zapíše s datem do servisní knížky (rodný list) – v kartotéce je tak doklad, kdy zákazník údržbu potvrdil nebo připomínky vypnul.
+- Termín: 6 měsíců od předání, po potvrzení údržby 6 měsíců od potvrzení. Interiérové dveře se nepočítají.
+- Plánovač (jednou denně, např. 8:00): `docker exec formulare-web-1 php /var/www/html/udrzba-pripominky.php`
+  Zkouška bez odeslání: `... udrzba-pripominky.php --suchy` (případně `--suchy --dnes=2027-05-10`). Do 1. 11. 2026 skript nic nedělá.
+- Návod pro zákazníky: https://bezpecne-dvere.cz/udrzba-dveri.html

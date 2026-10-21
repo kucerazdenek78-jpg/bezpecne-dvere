@@ -4,7 +4,7 @@
 // a záruku z objednávky v kartotéce (tabulka zadosti, typ objednavka_interni). Adresu, telefon ani ceny nevrací.
 // Nic nezapisuje do zadosti; pokusy se počítají v tabulce pokusy (limit na IP za hodinu).
 // Akce „udalost“: anonymní denní součty využití aplikace (viz níže a statistika-aplikace.php).
-require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php'; require_once __DIR__ . '/lib/pozadavky.php'; require_once __DIR__ . '/lib/bonus.php';
+require __DIR__ . '/lib/start.php'; require_once __DIR__ . '/lib/zaruka.php'; require_once __DIR__ . '/lib/pozadavky.php'; require_once __DIR__ . '/lib/bonus.php'; require_once __DIR__ . '/lib/udrzba.php';
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $cfg['povolene_origin'], true)) {
@@ -66,11 +66,11 @@ if ($akce === 'sparovat') {
 
 // Servis v aplikaci. Dveře se poznají podle tajného zákaznického kódu (stejný jako v odkazu „Moje dveře“, aplikace si ho uloží při spárování).
 // „servis_stav“: stav požadavků + rodný list dveří (objednávka, předání, záruka, servisy, domluvené návštěvy). „servis_nahlasit“: nový požadavek (závada / roční prohlídka) i s fotkami.
-if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_akce' || $akce === 'doporucit' || $akce === 'sparovat_kod') {
+if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_akce' || $akce === 'doporucit' || $akce === 'sparovat_kod' || $akce === 'udrzba_akce') {
   $pdo = db(); poz_tabulky($pdo); $ip = klient_ip(); $ted = time();
   $zz = poz_zadost_podle_tokenu($pdo, (string)($_POST['t'] ?? ''));
-  $typ = ($akce === 'servis_stav' || $akce === 'sparovat_kod') ? 'app_servis_stav' : ($akce === 'bonus_akce' ? 'app_bonus' : ($akce === 'doporucit' ? 'app_dop' : 'app_servis'));
-  $lim = ($akce === 'servis_stav' || $akce === 'sparovat_kod') ? 120 : ($akce === 'bonus_akce' ? 20 : ($akce === 'doporucit' ? 10 : 6));
+  $typ = ($akce === 'servis_stav' || $akce === 'sparovat_kod') ? 'app_servis_stav' : ($akce === 'bonus_akce' || $akce === 'udrzba_akce' ? 'app_bonus' : ($akce === 'doporucit' ? 'app_dop' : 'app_servis'));
+  $lim = ($akce === 'servis_stav' || $akce === 'sparovat_kod') ? 120 : ($akce === 'bonus_akce' || $akce === 'udrzba_akce' ? 20 : ($akce === 'doporucit' ? 10 : 6));
   $st = $pdo->prepare("SELECT COUNT(*) FROM pokusy WHERE ip=? AND typ=? AND cas>?"); $st->execute([$ip, $typ, $ted - 3600]);
   if ((int)$st->fetchColumn() >= $lim) chyba(429, 'limit', 'Příliš mnoho požadavků, zkuste to za hodinu.');
   $pdo->prepare("INSERT INTO pokusy (ip, typ, cas) VALUES (?, ?, ?)")->execute([$ip, $typ, $ted]);
@@ -98,12 +98,17 @@ if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_a
     if (!$bok) chyba(409, 'bonus', $bonusZpr);
     $zz = poz_zadost_podle_tokenu($pdo, (string)($_POST['t'] ?? '')) ?: $zz;
   }
+  if ($akce === 'udrzba_akce') {   // pravidelná údržba: hotovo / vypnout / zapnout připomínky (lib/udrzba.php)
+    [$uok, $bonusZpr] = udrzba_akce($pdo, $zz, (string)($_POST['co'] ?? ''), 'aplikace');
+    if (!$uok) chyba(409, 'udrzba', $bonusZpr);
+    $zz = poz_zadost_podle_tokenu($pdo, (string)($_POST['t'] ?? '')) ?: $zz;
+  }
   if ($akce === 'doporucit') {
     [$dok, $bonusZpr] = dop_vytvor($pdo, $cfg, $DATA, $zz, (string)($_POST['jmeno'] ?? ''), (string)($_POST['telefon'] ?? ''), !empty($_POST['souhlas']));
     if (!$dok) chyba(400, 'data', $bonusZpr);
   }
   bonus_tabulky($pdo); $zz = bonus_zadost($pdo, (int)$zz['id']) ?: $zz; $dd = json_decode((string)$zz['data_json'], true) ?: [];
-  vystup(200, ['ok' => true, 'zprava' => $bonusZpr, 'bonus' => bonus_stav($zz, $dd), 'doporuceni' => dop_seznam($pdo, (int)$zz['id']), 'prodlouzeni' => bonus_nabidka_platba($cfg, $zz, $dd), 'cislo' => $cislo ?? '', 'pozadavky' => poz_pro_zakaznika($pdo, (int)$zz['id']), 'rodny_list' => poz_rodny_list($pdo, $zz),
+  vystup(200, ['ok' => true, 'zprava' => $bonusZpr, 'bonus' => bonus_stav($zz, $dd), 'doporuceni' => dop_seznam($pdo, (int)$zz['id']), 'prodlouzeni' => bonus_nabidka_platba($cfg, $zz, $dd), 'cislo' => $cislo ?? '', 'pozadavky' => poz_pro_zakaznika($pdo, (int)$zz['id']), 'rodny_list' => poz_rodny_list($pdo, $zz), 'udrzba' => udrzba_stav($pdo, $zz),
     'predano' => (string)($zz['predano_dne'] ?? ''), 'zaruka_do' => (string)($zz['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)]);
 }
 

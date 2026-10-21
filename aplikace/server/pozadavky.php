@@ -96,6 +96,7 @@ function poz_rodny_list(PDO $pdo, array $z): array {
   foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $q) $e[] = ['datum' => (string)$q['datum'], 'typ' => 'servis', 'text' => ($druhy[$q['druh']] ?? $q['druh']) . (!empty($q['verejne']) ? ': ' . $q['verejne'] : '')];
   $st = $pdo->prepare("SELECT * FROM servis_pozadavky WHERE zadost_id=? AND stav='naplanovano' ORDER BY termin_datum"); $st->execute([$z['id']]);
   foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) $e[] = ['datum' => (string)$r['termin_datum'], 'typ' => 'termin', 'text' => 'Naplánovaná návštěva' . ($r['termin_cas'] ? ' (' . $r['termin_cas'] . ')' : ''), 'budouci' => true];
+  if (function_exists('udrzba_rodny_list')) $e = array_merge($e, udrzba_rodny_list($pdo, (int)$z['id'])); // pravidelná údržba (lib/udrzba.php)
   usort($e, fn($a, $b) => strcmp((string)$a['datum'], (string)$b['datum']));
   return $e;
 }

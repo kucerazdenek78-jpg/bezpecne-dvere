@@ -763,12 +763,32 @@
   function extraBoxes(dv, j) {
     svData = j; var b = $('#bnBox'), d = $('#dpBox');
     if (b) b.innerHTML = bnHtml(j);
+    var ub = $('#udBox'); if (ub) ub.innerHTML = udHtml(j);
     if (d && !$('#dpForm', d)) d.innerHTML = dpHtml(j); else if (d) { var u = $('.hist', d); }
   }
   function bonusAkce(druh) {
     var dv = door(), t = doorToken(dv); if (!t) return;
     BDApp.api('bonus_akce', { t: t, druh: druh }).then(function (j) { svMsg = j.zprava || ''; try { var c = store.get('bd-app-servis', {}); delete c[t]; store.set('bd-app-servis', c); } catch (e) {} renderMoje(); })
       .catch(function (e) { svMsg = ''; var bx = $('#bnBox'); if (bx) bx.insertAdjacentHTML('afterbegin', '<div class="status warn"><span>!</span><div>' + esc(e.message || 'Nepodařilo se, zkuste to prosím později.') + '</div></div>'); });
+  }
+  /* pravidelná údržba každých 6 měsíců: potvrzení provedení a zapnutí/vypnutí e-mailových připomínek (server: lib/udrzba.php) */
+  var udMsg = '';
+  function udHtml(j) {
+    var u = j && j.udrzba, h = ''; if (!u || !u.plati) return '';
+    if (udMsg) h += '<div class="status ok"><span>✓</span><div>' + esc(udMsg) + '</div></div>';
+    var p = parseDate(u.pristi), dd = p ? daysBetween(today(), p) : null;
+    h += '<div class="status ' + (dd !== null && dd <= 14 ? 'warn' : 'info') + '"><span>🔧</span><div><b>' + (dd !== null && dd < 0 ? 'Údržba je na řadě (od ' + fmt(p) + ')' : 'Příští údržba ' + fmt(p)) + '</b>' +
+      (u.posledni ? 'naposledy provedena ' + fmt(parseDate(u.posledni)) : 'každých ' + (u.mesicu || 6) + ' měsíců') + '</div></div>' +
+      '<div class="btns"><button class="b sm pri" data-act="ud-hotovo">Údržbu jsem provedl/a</button><a class="b sm" href="../udrzba-dveri.html" target="_blank">Návod k údržbě</a></div>' +
+      '<label class="chk"><input type="checkbox" data-act="ud-toggle"' + (u.pripominky ? ' checked' : '') + '> <span>Připomínat údržbu e-mailem každých ' + (u.mesicu || 6) + ' měsíců</span></label>';
+    if (!u.pripominky) h += '<p class="note">Připomínky máte vypnuté' + (u.vypnuto_dne ? ' od ' + fmt(parseDate(u.vypnuto_dne)) : '') + '. Údržbu podle návodu je potřeba dělat i tak – na vady způsobené zanedbanou údržbou se záruka nevztahuje.</p>';
+    else if (!u.email) h += '<p class="note">U objednávky nemáme váš e-mail, připomínka proto nepřijde. Napište nám ho na chci@bezpecne-dvere.cz nebo zavolejte 725 559 235.</p>';
+    return h;
+  }
+  function udAkce(co) {
+    var dv = door(), t = doorToken(dv); if (!t) return;
+    BDApp.api('udrzba_akce', { t: t, co: co }).then(function (j) { udMsg = j.zprava || ''; try { var c = store.get('bd-app-servis', {}); delete c[t]; store.set('bd-app-servis', c); } catch (e) {} renderMoje(); })
+      .catch(function (e) { var bx = $('#udBox'); if (bx) bx.insertAdjacentHTML('afterbegin', '<div class="status warn"><span>!</span><div>' + esc(e.message || 'Nepodařilo se, zkuste to prosím později.') + '</div></div>'); });
   }
   function sdilet() {
     var k = kontakt(), kdo = (k.jmeno ? (k.jmeno + ' ' + (k.prijmeni || '')).trim() : ''), dv = door();
@@ -779,7 +799,7 @@
     var t = doorToken(dv), box = $('#svBox'); if (!t || !box) return;
     var cache = store.get('bd-app-servis', {}); if (cache[t]) { box.innerHTML = svHtml(cache[t]); extraBoxes(dv, cache[t]); } else box.innerHTML = '<p class="small">Načítám stav…</p>';
     BDApp.api('servis_stav', { t: t }).then(function (j) {
-      cache = store.get('bd-app-servis', {}); cache[t] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list, bonus: j.bonus, prodlouzeni: j.prodlouzeni, doporuceni: j.doporuceni }; store.set('bd-app-servis', cache);
+      cache = store.get('bd-app-servis', {}); cache[t] = { pozadavky: j.pozadavky, rodny_list: j.rodny_list, bonus: j.bonus, prodlouzeni: j.prodlouzeni, doporuceni: j.doporuceni, udrzba: j.udrzba }; store.set('bd-app-servis', cache);
       var cur = store.get('bd-app-dvere', null), ch = false;
       if (cur && cur.zdroj === 'kartoteka') { // skutečné údaje z kartotéky mají přednost před ručně zadanými
         if (/^\d{4}-\d{2}-\d{2}$/.test(j.predano || '') && cur.predano !== j.predano) { cur.predano = j.predano; ch = true; }
@@ -833,12 +853,14 @@
     // doporuč a získej
     h += '<div class="card c-d"><h3>🤝 Doporuč a získej 1 500 Kč</h3>' + (doorToken(dv) ? '<div id="dpBox"></div>' : '<p class="small">Za každé doporučení dveří PREMIUM 60 s montáží 1 500 Kč. <a href="../doporuc-nas.html" target="_blank">Pravidla a formulář</a></p>') + '</div>';
 
-    // péče (z předávacího listu)
-    h += '<div class="card c-c"><h3>🧽 Péče o dveře</h3><ul class="care">' +
-      '<li>Povrch čistěte vlhkým hadříkem, bez agresivních a brusných prostředků.</li>' +
-      '<li>2× ročně ošetřete těsnění dveří a zárubně (pokud je) silikonovým mazivem.</li>' +
+    // péče a pravidelná údržba (předávací list + výrobce; celý návod udrzba-dveri.html)
+    h += '<div class="card c-c"><h3>🧽 Péče a údržba dveří</h3>' + (doorToken(dv) ? '<div id="udBox"></div>' : '') + '<ul class="care">' +
+      '<li>Povrch myjte teplou vodou s trochou saponátu a měkkou houbou nebo hadříkem. Nedrhněte, nepoužívejte rozpouštědla ani brusné prostředky.</li>' +
+      '<li>Každých 6 měsíců ošetřete těsnění dveří a zárubně (pokud je) silikonovým mazivem.</li>' +
+      '<li>Každých 6 měsíců promažte kluznou lištu samozavírače (pokud ho dveře mají) plastickým tukem ŁT34 nebo podobným.</li>' +
       '<li>1× ročně promažte zamykací čepy a krycí misku vložky (pokud je) olejem nebo WD-40.</li>' +
-      '<li><b>Pozor – samotná vložka (cylindr):</b> když jdou klíče špatně zasouvat, použijte pouze teflonový nebo grafitový sprej. Nic jiného do vložky nepatří, ani olej, ani WD-40.</li></ul></div>';
+      '<li><b>Pozor – samotná vložka (cylindr):</b> když jdou klíče špatně zasouvat, použijte pouze teflonový nebo grafitový sprej. Nic jiného do vložky nepatří, ani olej, ani WD-40.</li></ul>' +
+      '<p class="small"><a href="../udrzba-dveri.html" target="_blank">Celý návod k užívání a údržbě</a> · <a href="../udrzba-dveri.html#certifikaty" target="_blank">Certifikáty dveří</a></p></div>';
 
     if (hist.length) h += '<div class="card"><h3>Odeslané z aplikace</h3><ul class="hist">' + hist.slice(0, 10).map(function (x) {
       return '<li>' + fmt(new Date(x.d)) + ' – ' + esc(x.co) + (x.ref ? ' (' + esc(x.ref) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
@@ -854,6 +876,8 @@
     else if (a === 'dop-share') sdilet();
     else if (a === 'prodl') { var o = ((svData || {}).prodlouzeni || {}).moznosti || [], pick = null; o.forEach(function (x) { if (String(x.let) === b.getAttribute('data-let')) pick = x; });
       if (pick) { $('#qrBox').innerHTML = '<p style="margin:10px 0 4px"><b>Platba ' + kc(pick.kc) + '</b> – naskenujte QR kód v bankovní aplikaci:</p><div class="qr"><canvas id="qrC" width="240" height="240"></canvas></div><dl class="dl"><dt>Účet</dt><dd>' + esc(pick.ucet) + '</dd><dt>Částka</dt><dd>' + kc(pick.kc) + '</dd><dt>Var. symbol</dt><dd>' + esc(pick.vs) + '</dd></dl><p class="small">Variabilní symbol neměňte. Po připsání platby se záruka prodlouží sama a pošleme potvrzení.</p>'; qrDraw($('#qrC'), pick.spd); } }
+    else if (a === 'ud-hotovo') udAkce('hotovo');
+    else if (a === 'ud-toggle') udAkce(b.checked ? 'zapnout' : 'vypnout');
     else if (a === 'regdone') { dv.registrace = true; store.set('bd-app-dvere', dv); renderMoje(); }
     else if (a === 'remove') { openDlg('<h2>Odebrat dveře?</h2><p>Údaje se smažou jen z tohoto telefonu. U nás v kartotéce zůstávají.</p><div class="btns"><button class="b pri" id="rmYes">Odebrat</button><button class="b" onclick="this.closest(\'dialog\').close()">Zpět</button></div>');
       $('#rmYes').onclick = function () { try { localStorage.removeItem('bd-app-dvere'); } catch (er) {} closeDlg(); renderMoje(); }; }

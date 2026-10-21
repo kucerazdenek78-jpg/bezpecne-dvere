@@ -40,7 +40,7 @@
       '<ul class="sk-pts">' +
         '<li>Celá historie dveří: montáž, registrace, servis i prohlídky</li>' +
         '<li>Připomínka roční prohlídky a objednání termínu z mobilu</li>' +
-        '<li>Návod k užívání a péči a certifikáty dveří ke stažení</li>' +
+        '<li>Návod k údržbě s připomínkou každých 6 měsíců a certifikáty dveří ke stažení</li>' +
         '<li>Až +12 měsíců záruky navíc (6 za registraci, 6 za recenzi)</li>' +
       '</ul>') +
       '<div class="sk-btns">' + btn1 + '<a class="sk-btn" href="aplikace/#viz">Vyzkoušet dveře na fotce</a></div>' +
