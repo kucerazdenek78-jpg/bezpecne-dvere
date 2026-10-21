@@ -73,7 +73,7 @@ function udrzba_mail_text(array $z, array $d, string $termin): string {
     . "• těsnění dveří a zárubně ošetřete silikonovým mazivem,\n"
     . "• promažte zamykací čepy a krycí misku vložky olejem nebo WD-40 (do samotné vložky jen teflonový nebo grafitový sprej),\n"
     . "• povrch umyjte teplou vodou s trochou saponátu a měkkou houbou – bez drhnutí, rozpouštědel a abrazivních prostředků,\n"
-    . "• vyzkoušejte, že dveře samy dovřou a zámek jde lehce.\n\nSeřízení a promazání dveří děláme zdarma do 6 měsíců od předání, potom jako placenou servisní službu; oprava vady dveří je v záruce vždy zdarma.\n\n"
+    . "• vyzkoušejte, že dveře samy dovřou a zámek jde lehce.\n\nDveře při předání seřizujeme a promazáváme. Když dveře drhnou nebo nezapadají, seřídíme je zdarma do 6 měsíců od předání, potom jako placenou servisní službu (stejně jako preventivní seřízení a promazání); oprava vady dveří je v záruce vždy zdarma.\n\n"
     . "Celý návod: " . UDRZBA_NAVOD_URL . "\n\n"
     . "Až budete hotovi, potvrďte to prosím v aplikaci Moje dveře tlačítkem „Údržbu jsem provedl/a“ – zapíše se do servisní knížky dveří:\n" . UDRZBA_APP_URL . "\n\n"
     . "Pravidelná údržba podle návodu je důležitá i pro záruku – na vady způsobené zanedbanou údržbou se záruka nevztahuje. Připomínky si můžete v aplikaci vypnout i znovu zapnout.\n\n"

@@ -854,8 +854,8 @@
     // servis
     var fa = freeAdjust(dv);
     h += '<div class="card c-s"><h3>🛠 Servis a reklamace</h3><p class="small">Něco nefunguje? Popište závadu a přiložte fotku. Údaje o vašich dveřích už máme, ozveme se a domluvíme termín.</p>' +
-      (fa ? '<div class="status ' + (fa.active ? 'ok' : 'info') + '"><span>🔧</span><div><b>' + (fa.active ? 'Seřízení a promazání zdarma do ' + fmt(fa.do_) : 'Bezplatné seřízení skončilo ' + fmt(fa.do_)) + '</b>' +
-        (fa.active ? 'v prvním půl roce po montáži dveře nejvíc „sedají“, proto seřízení a promazání v té době děláme zdarma' : 'další seřízení a promazání je placená servisní služba (podle ceníku); oprava vady dveří nebo montáže je v záruce vždy zdarma') + '</div></div>' : '') +
+      (fa ? '<div class="status ' + (fa.active ? 'ok' : 'info') + '"><span>🔧</span><div><b>' + (fa.active ? 'Seřízení zdarma (je-li potřeba) do ' + fmt(fa.do_) : 'Bezplatné seřízení skončilo ' + fmt(fa.do_)) + '</b>' +
+        (fa.active ? 'v prvním půl roce po montáži dveře nejvíc „sedají“ – drhnou-li nebo nezapadají, seřídíme je zdarma; preventivní seřízení a promazání je placené' : 'další seřízení a promazání je placená servisní služba (podle ceníku); oprava vady dveří nebo montáže je v záruce vždy zdarma') + '</div></div>' : '') +
       (doorToken(dv) ? '<div id="svBox"></div>' : '') +
       '<button class="b pri wide" data-act="servis">Nahlásit závadu</button><a class="b wide" href="../objednani-klicu.html">Objednat klíče</a></div>';
 
@@ -868,7 +868,7 @@
       '<li>Každých 6 měsíců ošetřete těsnění dveří a zárubně (pokud je) silikonovým mazivem.</li>' +
       '<li>Každých 6 měsíců promažte zamykací čepy a krycí misku vložky (pokud je) olejem nebo WD-40.</li>' +
       '<li><b>Pozor – samotná vložka (cylindr):</b> když jdou klíče špatně zasouvat, použijte pouze teflonový nebo grafitový sprej. Nic jiného do vložky nepatří, ani olej, ani WD-40.</li></ul>' +
-      '<p class="small">Seřízení a promazání dveří provádíme zdarma do 6 měsíců od předání, potom jako placenou servisní službu.</p><p class="small"><a href="../udrzba-dveri.html" target="_blank">Celý návod k užívání a údržbě</a> · <a href="../udrzba-dveri.html#certifikaty" target="_blank">Certifikáty dveří</a></p></div>';
+      '<p class="small">Seřízení, když dveře drhnou nebo nezapadají, děláme zdarma do 6 měsíců od předání, potom jako placenou servisní službu. Preventivní seřízení a promazání bez potřeby je placené.</p><p class="small"><a href="../udrzba-dveri.html" target="_blank">Celý návod k užívání a údržbě</a> · <a href="../udrzba-dveri.html#certifikaty" target="_blank">Certifikáty dveří</a></p></div>';
 
     if (hist.length) h += '<div class="card"><h3>Odeslané z aplikace</h3><ul class="hist">' + hist.slice(0, 10).map(function (x) {
       return '<li>' + fmt(new Date(x.d)) + ' – ' + esc(x.co) + (x.ref ? ' (' + esc(x.ref) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
@@ -932,14 +932,14 @@
   function openService(dv) {
     var tok = doorToken(dv);
     if (tok) {
-      openDlg('<h2>Nahlásit závadu</h2><p class="small">Údaje o objednávce a adresu už máme z kartotéky – stačí popsat, co se děje. Seřízení a promazání dveří je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
+      openDlg('<h2>Nahlásit závadu</h2><p class="small">Údaje o objednávce a adresu už máme z kartotéky – stačí popsat, co se děje. Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
         '<label>Co se děje? *<textarea name="popis" required minlength="5" placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
         '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactLite(kontakt()) +
         '<label>Kdy se vám hodí návštěva<input name="termin" placeholder="např. odpoledne po 15. hod."></label>' + CONSENT +
         '<button class="b pri wide" type="submit">Odeslat</button><p class="msg" role="status"></p></form>');
       return submitApi($('#svForm'), tok, 'zavada', function (o) { return o.popis; }, svOk);
     }
-    openDlg('<h2>Nahlásit závadu</h2><p class="small">Seřízení a promazání dveří je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
+    openDlg('<h2>Nahlásit závadu</h2><p class="small">Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
       '<label>Co se děje? *<textarea name="popis" required placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
       '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactFields(kontakt(), true) +
       '<label>Kdy se vám hodí návštěva<input name="termin" placeholder="např. odpoledne po 15. hod."></label>' + CONSENT +
