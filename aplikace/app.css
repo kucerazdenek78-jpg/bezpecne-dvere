@@ -250,3 +250,5 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .ps.tz small{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
 @keyframes tzs{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.ps.tz b{animation:none}}
+.pick a.konfgo{display:inline-flex;margin:.55rem 0 .25rem;text-decoration:none;color:#fff}
+.pick small{color:var(--muted,#5b6b62);font-size:.78rem;line-height:1.35}

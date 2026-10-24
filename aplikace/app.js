@@ -420,7 +420,8 @@
     if (V.cat === 'byt' || !x) { el.hidden = true; return; }
     el.hidden = false;
     el.style.marginBottom = '.6rem'; el.innerHTML = '<b>' + esc(x[0]) + '</b>' + (x[4] ? ' <em class="sk">skladem</em>' : '') + '<br><span>' + esc(x[2]) + '</span>' +
-      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + '<br><a href="' + V.web + '">' + (V.konf ? '← Upravit konfiguraci' : 'Katalog a ceny na webu →') + '</a>';
+      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + (V.cat === 'domu' && !V.konf ? '<br><a class="b pri sm konfgo" href="' + konfUrl(x[0]) + '" data-konf>Nastavit dekor, rozměr a cenu →</a><br><small>V konfigurátoru vyberete vzor, dekor, rozměr, kování a uvidíte přesnou cenu. Pak se sem vrátíte i s touto fotkou.</small>' : '') +
+      '<br><a href="' + V.web + '"' + (V.konf ? ' data-konf' : '') + '>' + (V.konf ? '← Upravit konfiguraci' : 'Katalog a ceny na webu →') + '</a>';
   }
   function decHtml() {
     var d = DEC(); if (!d || d.length < 2) return '';
@@ -520,6 +521,28 @@
     openAsk();
   });
 
+  /* dveře do domu → konfigurátor ERKADO (stejné názvy řad); fotka a rohy se uloží, ať je po návratu nemusí zákazník dělat znovu */
+  function konfUrl(n) { return '../konfigurator-erkado.html#' + String(n).toLowerCase(); }
+  function savePhoto() {
+    if (!photo) return;
+    try {
+      var s = Math.min(1, 1600 / Math.max(photo.width, photo.height)), c = document.createElement('canvas');
+      c.width = Math.round(photo.width * s); c.height = Math.round(photo.height * s); c.getContext('2d').drawImage(photo, 0, 0, c.width, c.height);
+      localStorage.setItem('bd-viz-foto', JSON.stringify({ img: c.toDataURL('image/jpeg', 0.85), pts: pts.length === 4 ? pts : null, flip: flip, ts: Date.now() }));
+    } catch (e) { try { localStorage.removeItem('bd-viz-foto'); } catch (e2) {} }
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest('a[data-konf], #unlock')) savePhoto(); }, true);
+  function restorePhoto() {
+    var o = null; try { o = JSON.parse(localStorage.getItem('bd-viz-foto') || 'null'); } catch (e) {}
+    if (!o || !o.img || Date.now() - o.ts > 864e5) return;
+    var im = new Image();
+    im.onload = function () {
+      if (photo) return; setPhoto(im);
+      if (o.pts && o.pts.length === 4) { pts = o.pts; snapped = [true, true, true, true]; afterCorners(); hint.textContent = 'Vaše fotka i označené rohy zůstaly. Rohy můžete doladit tažením.'; }
+    };
+    im.src = o.img;
+  }
+
   /* výsledek vizualizace zpět do konfigurátoru (localStorage, při plném úložišti menší obrázek) */
   function backToKonf(btn) {
     btn.disabled = true; btn.textContent = 'Ukládám…';
@@ -534,7 +557,7 @@
     };
     tryOne([1600, 1100, 800]).then(function (ok) {
       if (!ok) { btn.disabled = false; btn.textContent = 'Přiložit k poptávce a zpět do konfigurátoru'; hint.textContent = 'Vizualizaci se nepodařilo uložit – použijte „Uložit“ a pošlete ji k poptávce zvlášť.'; return; }
-      stat('konfigurator', 'domu', MN()); location.href = VIZ[vizModel].web;
+      stat('konfigurator', 'domu', MN()); savePhoto(); location.href = VIZ[vizModel].web;
     });
   }
 
@@ -1088,6 +1111,7 @@
   buildModels(); statDen();
   if (initGL()) { buildShades(); loadDoor(shadeIdx); state(); }
   route();
+  if (VIZ.konf && /m=konf/.test(location.hash)) restorePhoto();
   window.__app = { setPhoto: setPhoto, setPts: function (p) { pts = p; snapped = [false, false, false, false]; afterCorners(); }, snapPoint: snapPoint, get light() { return light; }, render: render,
     setShade: function (i, cb, di) { shadeIdx = i; decIdx = di || 0; showPick(); loadDoor(i, function () { render(); cb && cb(); }); }, setModel: setModel, setSplit: setSplit };
 })();
