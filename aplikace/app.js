@@ -420,7 +420,7 @@
     if (V.cat === 'byt' || !x) { el.hidden = true; return; }
     el.hidden = false;
     el.style.marginBottom = '.6rem'; el.innerHTML = '<b>' + esc(x[0]) + '</b>' + (x[4] ? ' <em class="sk">skladem</em>' : '') + '<br><span>' + esc(x[2]) + '</span>' +
-      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + (V.cat === 'domu' && !V.konf ? '<br><a class="b pri sm konfgo" href="' + konfUrl(x[0]) + '" data-konf>Nastavit dekor, rozměr a cenu →</a><br><small>V konfigurátoru vyberete vzor, dekor, rozměr, kování a uvidíte přesnou cenu. Pak se sem vrátíte i s touto fotkou.</small>' : '') +
+      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + (V.cat === 'domu' && !V.konf && konfOn() ? '<br><a class="b pri sm konfgo" href="' + konfUrl(x[0]) + '" data-konf>Nastavit dekor, rozměr a cenu →</a><br><small>V konfigurátoru vyberete vzor, dekor, rozměr, kování a uvidíte přesnou cenu. Pak se sem vrátíte i s touto fotkou.</small>' : '') +
       '<br><a href="' + V.web + '"' + (V.konf ? ' data-konf' : '') + '>' + (V.konf ? '← Upravit konfiguraci' : 'Katalog a ceny na webu →') + '</a>';
   }
   function decHtml() {
@@ -522,6 +522,8 @@
   });
 
   /* dveře do domu → konfigurátor ERKADO (stejné názvy řad); fotka a rohy se uloží, ať je po návratu nemusí zákazník dělat znovu */
+  /* odkaz do konfigurátoru z aplikace: od 1. 11. 2026 (dřív jen s přepínačem bd-bonus, stejně jako Moje dveře) */
+  function konfOn() { var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} return on; }
   function konfUrl(n) { return '../konfigurator-erkado.html#' + String(n).toLowerCase(); }
   function savePhoto() {
     if (!photo) return;
