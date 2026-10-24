@@ -1,6 +1,6 @@
 /* Poptávka dveří – vlastní formulář (náhrada Jotform 253084834051050)
    Ceny a volby: dvere-do-bytu.html (ceny) + Jotform poptávka (volby), stav 11. 10. 2026.
-   Odeslání: FormSubmit (klasicky přes skrytý iframe kvůli přílohám: PDF + fotky) → kucerazd@kksystem.cz + kopie chci@bezpecne-dvere.cz.
+   Odeslání: vlastní server formulare.dvere.app (formulare-klient.js, přílohy PDF + fotky jako skutečné soubory); adresáty určuje server (kucerazd@kksystem.cz + kopie).
    Pole „data_json“ nese strojově čitelná data pro pozdější import do systému na NAS. */
 (function () {
   'use strict';
@@ -503,9 +503,11 @@
     if (OBJ) {
       d.zdroj = 'web-objednavka'; d.typ = 'objednavka';
       d.z_poptavky = state.fromRef || '';
+      d.predani_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); d.zakaznik_token = (function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); })(); /* tajný kód pro QR „Moje dveře“ (záruka, servis) pro zákazníka */
+      /* tajný kód pro QR „předání díla“ na 2. straně předávacího listu */
       d.obj_cislo = fv('obj_cislo'); d.obj_datum = fv('obj_datum'); d.prodavac = val('prodavac');
       d.op = fv('op'); d.zvonek = fv('zvonek'); d.tl_zarubne = val('tl_zarubne') || (m.order.frame.length === 1 ? m.order.frame[0] : '');
-      d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.interni = fv('interni');
+      d.tl_zdi = fv('tl_zdi'); d.termin = fv('termin'); d.termin_datum = fv('termin_datum'); d.interni = fv('interni');
       d.zaloha_label = zalohaLabel(); d.zaloha = zaloha(); d.doplatek = Math.max(0, r.total - d.zaloha);
       d.cena_zakladni_bezna = m.regular || m.price;
     }
@@ -530,7 +532,7 @@
       rows.push(['Číslo OP', d.op, 2], ['Zvonek', d.zvonek, 2]);
       rows.push(['Číslo objednávky', d.obj_cislo, 3], ['Datum', d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : '', 3], ['Prodavač', d.prodavac, 3],
         ['Tloušťka zárubně', d.tl_zarubne, 3], ['Zeď', [d.zed, d.tl_zdi ? d.tl_zdi + ' cm' : ''].filter(Boolean).join(', '), 3],
-        ['Termín montáže', d.termin, 3], ['Poznámka pro zákazníka', d.poznamka, 3], ['Interní poznámka', d.interni, 3], ['Z poptávky', d.z_poptavky, 3]);
+        ['Termín montáže', [d.termin_datum ? new Date(d.termin_datum).toLocaleDateString('cs-CZ') : '', d.termin].filter(Boolean).join(' · '), 3], ['Poznámka pro zákazníka', d.poznamka, 3], ['Interní poznámka', d.interni, 3], ['Z poptávky', d.z_poptavky, 3]);
     } else
     rows.push(['Zeď', d.zed, 3], ['Výška k nadpraží', d.vyska_cm ? d.vyska_cm + ' cm' : '', 3], ['Fotky', d.fotky.length ? d.fotky.length + ' ks' : '', 3], ['Poznámka', d.poznamka, 3]);
     return rows.filter(function (r) { return r[1]; });
@@ -618,43 +620,18 @@
     if (th.length && (url.length + th.join('~').length) < 24000) url += '&f=' + th.join('~');
     return url;
   }
-  /* AJAX – spolehlivé, ale FormSubmit přílohy zahodí → jen záloha bez souborů */
-  function sendAjax(d) {
-    var fd = new FormData();
-    fields(d).forEach(function (x) { fd.append(x[0], x[1]); });
-    return fetch('https://formsubmit.co/ajax/' + TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
-      .then(function (r) { return r.json(); })
-      .then(function (j) { if (!(j && (j.success === true || j.success === 'true'))) throw new Error('fail'); });
+  /* odeslání na vlastní server (formulare.dvere.app) – přílohy jdou jako skutečné soubory.
+     typ určuje adresáty na serveru: poptavka | objednavka_interni | objednavka_zakaznik */
+  var canFiles = true;
+  function pickField(list, key) { var r = ''; list.forEach(function (x) { if (x[0] === key) r = x[1]; }); return r; }
+  function sendFields(typ, fieldList, files, ref, extra) {
+    var o = { typ: typ, predmet: pickField(fieldList, '_subject'), telo: BDForm.bodyFromFields(fieldList), reply_to: pickField(fieldList, '_replyto'),
+      cislo: ref, data_json: pickField(fieldList, 'data_json'), honey: pickField(fieldList, '_honey'), files: files || [] };
+    for (var k in (extra || {})) o[k] = extra[k];
+    return BDForm.send(o);
   }
-  /* klasické odeslání (multipart) do skrytého iframe – tak FormSubmit přílohy doručí;
-     úspěch = iframe skončí na naší stránce poptavka-odeslano.html (_next) */
-  var canFiles = (function () { try { return !!new DataTransfer().items; } catch (e) { return false; } })();
-  function sendClassic(d, files) { return sendClassicFields(fields(d), files, d.cislo); }
-  function sendClassicFields(fieldList, files, ref) {
-    return new Promise(function (ok, ko) {
-      var name = 'pqSend' + Date.now(), done = false;
-      var ifr = document.createElement('iframe'); ifr.name = name; ifr.hidden = true; ifr.setAttribute('aria-hidden', 'true');
-      var f = document.createElement('form');
-      f.action = 'https://formsubmit.co/' + TO; f.method = 'POST'; f.enctype = 'multipart/form-data'; f.target = name; f.hidden = true;
-      var next = new URL('poptavka-odeslano.html?ref=' + encodeURIComponent(ref), location.href).href;
-      fieldList.concat([['_next', next]]).forEach(function (x) {
-        var i = document.createElement('input'); i.type = 'hidden'; i.name = x[0]; i.value = x[1]; f.appendChild(i);
-      });
-      files.forEach(function (fl) {
-        var i = document.createElement('input'); i.type = 'file'; i.name = fl.name;
-        var dt = new DataTransfer(); dt.items.add(new File([fl.blob], fl.file, { type: fl.blob.type || 'application/octet-stream' })); i.files = dt.files;
-        f.appendChild(i);
-      });
-      var timer = setTimeout(function () { if (!done) { done = true; cleanup(); ko(new Error('timeout')); } }, 35000);
-      function cleanup() { setTimeout(function () { ifr.remove(); f.remove(); }, 1000); }
-      ifr.addEventListener('load', function () {
-        var href = ''; try { href = ifr.contentWindow.location.href; } catch (e) { return; }
-        if (!done && href.indexOf('poptavka-odeslano') > -1) { done = true; clearTimeout(timer); cleanup(); ok(); }
-      });
-      document.body.appendChild(ifr); document.body.appendChild(f);
-      f.submit();
-    });
-  }
+  function sendAjax(d) { return sendFields('poptavka', fields(d), [], d.cislo); }
+  function sendClassic(d, files) { return sendFields('poptavka', fields(d), files, d.cislo); }
   function pdfExtra(d) {
     var m = MODELS[state.model], sh = null;
     m.shades.forEach(function (s) { if (s[0] === d.odstin) sh = s[1]; });
@@ -670,13 +647,10 @@
       ['_cc', [CC_OBJ, d.email].filter(Boolean).join(',')], ['_replyto', CC]
     ];
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
+    if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); }
+    if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) f.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
     reviewRows(d).forEach(function (r) { if (['Interní poznámka', 'Z poptávky', 'Číslo OP'].indexOf(r[0]) < 0 && r[2] !== 'x') f.push([r[0], r[1]]); });
     return f;
-  }
-  function sendAjaxFields(f) {
-    var fd = new FormData(); f.forEach(function (x) { fd.append(x[0], x[1]); });
-    return fetch('https://formsubmit.co/ajax/' + TO, { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd })
-      .then(function (r) { return r.json(); }).then(function (j) { if (!(j && (j.success === true || j.success === 'true'))) throw new Error('fail'); });
   }
   function submitOrder() {
     var msg = $('#pqMsg'), btn = $('#pqSubmit');
@@ -695,17 +669,20 @@
         ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'],
         ['Voucher Doporuč a získej', voucher ? 'poslán zákazníkovi s objednávkou' : '–'], ['data_json', JSON.stringify(d)]];
       // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane; voucher jde jen zákazníkovi
-      var intFiles = []; if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });
-      if (intFiles.length && canFiles) return sendClassicFields(internal, intFiles, d.obj_cislo + '-int')
-        .catch(function () { return sendAjaxFields(internal); });
-      return sendAjaxFields(internal);
+      var intFiles = []; if (pdf) intFiles.push({ name: 'objednavka_pdf', file: 'Objednavka-' + d.obj_cislo + '.pdf', blob: pdf }); /* PDF objednávky se uloží i do kartotéky */ if (plist) intFiles.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });
+      var ix = d.email ? { reply_to: d.email } : {};
+      if (intFiles.length) return sendFields('objednavka_interni', internal, intFiles, d.obj_cislo, ix)
+        .catch(function () { return sendFields('objednavka_interni', internal, [], d.obj_cislo, ix); });
+      return sendFields('objednavka_interni', internal, [], d.obj_cislo, ix);
     }).then(function () {
       var files = pdf ? [{ name: 'objednavka_pdf', file: 'Objednavka-' + d.obj_cislo + '.pdf', blob: pdf }] : [];
       if (voucher) files.push({ name: 'voucher_doporuc_a_ziskej_pdf', file: 'Voucher-Doporuc-a-ziskej.pdf', blob: voucher });
       var cf = customerFields(d);
       if (voucher) cf.push(['Doporuč a získej', 'V příloze posíláme vouchery na slevu 1 000 Kč pro vaše známé na dveře PREMIUM 60. Za každé úspěšné doporučení dostanete po montáži 1 500 Kč (nejvýše za 3 doporučení). Pravidla: www.bezpecne-dvere.cz']);
-      if (!canFiles || !files.length) { custOk = !files.length; return sendAjaxFields(cf); }
-      return sendClassicFields(cf, files, d.obj_cislo).catch(function () { custOk = false; return sendAjaxFields(cf); });
+      // zákazníkovi jde e-mail jen s jeho adresou; bez e-mailu dostane objednávku s PDF jen obchod
+      var ctyp = d.email ? 'objednavka_zakaznik' : 'objednavka_interni', cx = d.email ? { email_zakaznik: d.email } : {};
+      if (!files.length) { custOk = true; return sendFields(ctyp, cf, [], d.obj_cislo, cx); }
+      return sendFields(ctyp, cf, files, d.obj_cislo, cx).catch(function () { custOk = false; return sendFields(ctyp, cf, [], d.obj_cislo, cx); });
     }).then(function () {
       $('#doneRef').textContent = d.obj_cislo;
       var w = $('#doneWarn');
@@ -718,6 +695,16 @@
       }
       if (voucher) { var vl = $('#doneVoucher'); if (vl) { vl.href = URL.createObjectURL(voucher); vl.download = 'Voucher-Doporuc-a-ziskej-' + d.obj_cislo + '.pdf'; vl.hidden = false; } }
       if (plist) { var hl = $('#doneHandover'); if (hl) { hl.href = URL.createObjectURL(plist); hl.download = 'Predavaci-list-' + d.obj_cislo + '.pdf'; hl.hidden = false; } }
+      if (d.zaloha > 0 && window.BDPlatba && $('#donePay')) {
+        try {
+          var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), box = $('#donePayQr'); box.innerHTML = '';
+          var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'width:min(300px,80vw);height:auto;image-rendering:pixelated'; box.appendChild(cv);
+          var zl = (d.zaloha_label || 'zálohy').toLowerCase(); $('#donePayLabel').textContent = zl === 'záloha' ? 'zálohy' : zl;
+          $('#donePayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '');
+          $('#donePayCopy').onclick = function () { var b = this, t = pi2.odkaz; (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'Zkopírováno'; }, function () { window.prompt('Odkaz na platbu:', t); }); };
+          $('#donePay').hidden = false;
+        } catch (e) {}
+      }
       $('.pq-layout').hidden = true; $('.pq-steps').hidden = true; $('#pqDone').hidden = false;
       window.scrollTo({ top: $('.pq-wrap').offsetTop - 80, behavior: 'smooth' });
     }).catch(function () {

@@ -165,8 +165,12 @@
         if (O) {
           /* platba a termín */
           section('Platba a termín');
-          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)], ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
-            ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']], M, 34, cw - 34) + 1;
+          var pay = (d.zaloha > 0 && window.BDPlatba) ? window.BDPlatba.info(d.obj_cislo || d.cislo, d.zaloha) : null, y0 = y;
+          y = pairs([[d.zaloha_label || 'Záloha', fmt(d.zaloha)],
+            pay ? ['Platba ' + String(d.zaloha_label || 'zálohy').toLowerCase().replace(/^záloha$/, 'zálohy').replace(/^rezervace$/, 'rezervace'), 'účet ' + pay.ucet + (pay.vs ? ', VS ' + pay.vs : '') + ' (nebo QR vpravo)'] : null,
+            ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
+            ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']].filter(Boolean), M, 34, cw - 34 - (pay ? 30 : 0)) + 1;
+          if (pay) { try { doc.addImage(window.BDPlatba.png(pay.spd, 300), 'PNG', W - M - 27, y0 - 2, 27, 27); font('normal', 6.5, MUTED); doc.text('QR platba', W - M - 13.5, y0 + 27, { align: 'center' }); } catch (e) {} y = Math.max(y, y0 + 29); }
           if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, M, y); y += pl.length * 4.4 + 3; }
           /* fotky z poptávky (malé) */
           var fit = x.fit || { photoH: 52, legal: 7.4 };
@@ -283,6 +287,10 @@
             while (fnt.widthOfTextAtSize(text, sz) > maxW && text.length > 3) text = text.slice(0, -2) + '…';
             page.drawText(text, { x: x, y: H - yTop, size: sz, font: fnt, color: col });
           }
+          // nadpis „PŘEDÁVACÍ LIST“ → „PŘEDÁVACÍ A ZÁRUČNÍ LIST“ (přemaže původní nápis vpravo nahoře) + věta o záručním listu nad poli pro podpisy
+          page.drawRectangle({ x: 440, y: H - 47, width: 140, height: 14, color: L.rgb(1, 1, 1) });
+          (function () { var t = 'PŘEDÁVACÍ A ZÁRUČNÍ LIST', sz = 7.5, w = f[0].widthOfTextAtSize(t, sz); page.drawText(t, { x: 559 - w, y: H - 43.5, size: sz, font: f[0], color: L.rgb(0.07, 0.24, 0.15) }); })();
+          put('Tento list slouží zároveň jako záruční list.', 51, 719, 400, 8, false);
           var prov = [d.model, d.odstin].filter(Boolean).join(' · ');   // jen model a barva
           put(prov, 136, 216.5, 148);                    // Model a provedení
           put(d.obj_cislo, 389, 216.5, 154);             // Číslo objednávky
@@ -291,7 +299,37 @@
           put(adr, 51, 754, 150, 8, true);               // Místo (datum doplní montážník)
           put((d.jmeno + ' ' + d.prijmeni).trim(), 392, 782, 150, 8, true);   // pod „Objednatel (podpis)“
           put('Objednávka ' + d.obj_cislo + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 490, 7, true);
+          // QR „Moje dveře“ (záruka, servis, registrace) pro zákazníka: nahradí v kartě „Zaregistrujte své dveře“ původní QR registrace
+          var pm = (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl)
+            ? pdf.embedPng(window.BDPlatba.png(window.BDPlatba.mojeUrl(d.zakaznik_token), 600)).then(function (qimg) {
+                page.drawRectangle({ x: 49, y: H - 602, width: 74, height: 74, color: L.rgb(1, 1, 1) });
+                page.drawImage(qimg, { x: 49, y: H - 602, width: 74, height: 74 });
+              })
+            : Promise.resolve();
+          return pm.then(function () {
+          // 2. strana jen pro montážníka: QR kód „předání díla“ (po načtení v přihlášené kartotéce zapíše předání, začátek záruky a odepíše dveře ze skladu)
+          if (d.predani_token && window.BDPlatba && window.BDPlatba.predaniUrl) {
+            return pdf.embedPng(window.BDPlatba.png(window.BDPlatba.predaniUrl(d.predani_token), 600)).then(function (img) {
+              var p2 = pdf.addPage([page.getWidth(), H]), W = page.getWidth(), ink = L.rgb(0.1, 0.1, 0.1), y = 70;
+              function t2(text, size, bold, color) { if (!text) return; p2.drawText(text, { x: 56, y: H - y, size: size, font: bold ? f[0] : f[1], color: color || ink }); y += size + 8; }
+              t2('PŘEDÁNÍ DÍLA – POUZE PRO MONTÁŽNÍKA', 11, true, col); y += 6;
+              t2('Objednávka ' + d.obj_cislo, 22, true); y += 4;
+              t2(((d.jmeno || '') + ' ' + (d.prijmeni || '')).trim(), 13, false);
+              t2([d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', '), 11, false);
+              t2([d.model, d.odstin, d.kovani, d.otevirani].filter(Boolean).join(' · '), 10, false);
+              y += 18;
+              p2.drawImage(img, { x: (W - 250) / 2, y: H - y - 250, width: 250, height: 250 }); y += 270;
+              t2('Po dokončení montáže a předání dveří zákazníkovi:', 12, true); y += 2;
+              t2('1. Naskenujte QR kód telefonem (jste-li přihlášen do kartotéky).', 11, false);
+              t2('2. Zkontrolujte datum předání a potvrďte tlačítkem „Potvrdit předání“.', 11, false);
+              t2('3. Do kartotéky se zapíše datum předání a začátek záruky; dveře se odepíší ze skladu.', 11, false);
+              y += 10;
+              t2('Tento list zákazníkovi nepředávejte. QR kód je neveřejný a bez přihlášení do kartotéky nefunguje.', 9.5, false, L.rgb(0.55, 0.1, 0.1));
+              return pdf.save();
+            });
+          }
           return pdf.save();
+          });
         });
       });
     }).then(function (bytes) { return new Blob([bytes], { type: 'application/pdf' }); });
