@@ -14,7 +14,7 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var kc = function (n) { return Math.round(n).toLocaleString('cs-CZ').replace(/\s/g, ' ') + ' Kč'; };
   var int = function (v) { var x = parseInt(String(v == null ? '' : v).replace(/\s/g, ''), 10); return isNaN(x) ? 0 : x; };
-  var st = { kat: '', rows: [] };   // rows: {model, odstin, nazev, popis, ks, cena, sleva}
+  var st = { kat: '', rows: [], rozp: false, rozpBuf: null, rozpName: '', rozpPages: 0 };   // rows: {model, odstin, nazev, popis, ks, cena, sleva}; rozp = rozpočet z jiného programu (PDF) místo položek
   var fv = function (n) { return form.elements[n] ? String(form.elements[n].value).trim() : ''; };
 
   /* dveře do bytu i do domu: jedny dveře na adresu (víc kusů jen u interiérových) */
@@ -43,6 +43,64 @@
       (st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
         st.kat ? 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.' : 'Nejdřív vyberte kategorii.'));
     $('#nbAdd').disabled = !st.kat || (limited() && st.rows.length >= 1);
+    renderMode();
+  }
+
+  /* ── rozpočet z jiného programu (PDF): jen dveře do domu a interiérové; místo položek se nahraje PDF ── */
+  function rozpOk() { return st.kat === 'dum' || st.kat === 'interier'; }
+  function defUvod(k) {
+    return 'Dobrý den,\nděkujeme za Váš zájem. Na základě Vašeho požadavku jsme pro Vás připravili cenovou nabídku na ' + (k === 'interier' ? 'interiérové dveře' : 'vchodové dveře do domu') +
+      '. Podrobný rozpis položek, rozměrů, provedení a cen najdete v přiloženém rozpočtu za touto stranou.\n' +
+      'Jsme rodinná firma z Mostu a působíme od roku 1996. Dveře si můžete prohlédnout naživo v naší vzorkovně KK SYSTEM, Obchodní 36, Most. Nabídku Vám rádi vysvětlíme nebo upravíme podle Vašich přání.';
+  }
+  var lastUvod = '';
+  function ensureRozpUI() {
+    if ($('#nbRozpVolba')) return;
+    var fs = $('#nbRows').parentNode, box = document.createElement('div');
+    box.innerHTML = '<div id="nbRozpVolba" class="pq-chips" style="margin-bottom:1rem" hidden>' +
+      '<label class="pq-opt pq-chip"><input type="radio" name="zadani" value="polozky" checked>Položky ručně</label>' +
+      '<label class="pq-opt pq-chip"><input type="radio" name="zadani" value="rozpocet">Rozpočet z jiného programu (PDF)</label></div>' +
+      '<div id="nbRozp" hidden>' +
+      '<p class="pq-help" style="margin:0 0 .8rem">Nahrajte rozpočet z programu jako PDF. Zákazník dostane jedno PDF: naše úvodní strana (zákazník, předmět, cena, ' + (OBJ ? 'platba, smluvní ujednání a podpisy' : 'podmínky nabídky') + ') a za ní celý rozpočet.</p>' +
+      '<label class="pq-f">Rozpočet (PDF) *<input type="file" id="nbRozpFile" accept="application/pdf,.pdf"></label>' +
+      '<p class="pq-help" id="nbRozpInfo" style="margin:.3rem 0 .8rem"></p>' +
+      '<div class="pq-grid2">' +
+      '<label class="pq-f">Předmět ' + (OBJ ? 'objednávky' : 'nabídky') + ' (krátce, jde do PDF a kartotéky) *<input name="rozp_popis" placeholder="např. Interiérové dveře 5 ks vč. zárubní a kování"></label>' +
+      '<label class="pq-f">Číslo rozpočtu v programu (volitelné)<input name="rozp_cislo"></label>' +
+      '<label class="pq-f">Cena celkem vč. DPH (Kč) *<input name="rozp_cena" inputmode="numeric" placeholder="0"></label></div>' +
+      (OBJ ? '' : '<label class="pq-f" style="margin-top:.8rem">Úvodní text nabídky (jde do PDF, lze upravit)<textarea name="uvod" rows="6"></textarea></label>') +
+      '</div>';
+    while (box.firstChild) fs.insertBefore(box.firstChild, fs.children[1] || null);
+  }
+  function renderMode() {
+    ensureRozpUI();
+    if (!rozpOk()) st.rozp = false;
+    $('#nbRozpVolba').hidden = !rozpOk() || st.rows.length > 0;
+    var r = document.querySelector('input[name="zadani"][value="' + (st.rozp ? 'rozpocet' : 'polozky') + '"]'); if (r) r.checked = true;
+    $('#nbRozp').hidden = !st.rozp;
+    $('#nbRows').hidden = st.rozp;
+    $('#nbAdd').parentNode.hidden = st.rozp;
+    var sl = form.elements.sleva_kc; if (sl) sl.closest('.pq-grid2').hidden = st.rozp;
+    var u = form.elements.uvod;
+    if (u && st.rozp && (u.value === '' || u.value === lastUvod)) { u.value = defUvod(st.kat); lastUvod = u.value; }
+  }
+  function rozpFile(f) {
+    var info = $('#nbRozpInfo');
+    st.rozpBuf = null; st.rozpName = ''; st.rozpPages = 0; info.textContent = '';
+    if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var buf = fr.result, head = new Uint8Array(buf.slice(0, 5));
+      if (String.fromCharCode.apply(null, head) !== '%PDF-') { info.textContent = '⚠ Soubor není PDF. Uložte rozpočet z programu jako PDF a nahrajte ho znovu.'; return; }
+      st.rozpBuf = buf; st.rozpName = f.name;
+      var mb = (f.size / 1048576).toFixed(1).replace('.', ','), warn = f.size > 8 * 1048576 ? ' ⚠ Soubor je velký – e-mail s přílohou nemusí odejít; zkuste rozpočet uložit menší (bez fotek / v nižší kvalitě).' : '';
+      info.textContent = '✓ ' + f.name + ' · ' + mb + ' MB' + warn;
+      var P = window.PoptavkaPDF;
+      if (P && P.preparePL) P.preparePL().then(function () { return window.PDFLib.PDFDocument.load(buf, { ignoreEncryption: true }); })
+        .then(function (doc) { st.rozpPages = doc.getPageCount(); info.textContent = '✓ ' + f.name + ' · ' + st.rozpPages + ' str. · ' + mb + ' MB' + warn; })
+        .catch(function () { info.textContent = '✓ ' + f.name + ' · ' + mb + ' MB (počet stran se nepodařilo zjistit – PDF se přiloží jako samostatný soubor)' + warn; });
+    };
+    fr.readAsArrayBuffer(f);
   }
 
   /* ── položky ── */
@@ -100,11 +158,13 @@
     sums();
   }
   function totals() {
+    if (st.rozp) { var c = Math.max(0, int(fv('rozp_cena'))); return { sub: c, sleva: 0, total: c }; }
     var sub = 0; st.rows.forEach(function (r) { sub += r.ks * r.cena - r.sleva; });
     var sl = int(fv('sleva_kc')); return { sub: sub, sleva: sl, total: Math.max(0, sub - sl) };
   }
   function sums() {
     var t = totals();
+    if (st.rozp) { $('#nbSum').innerHTML = t.total ? '<b>Celkem ' + kc(t.total) + '</b> vč. DPH (dle rozpočtu)' : ''; return; }
     $('#nbSum').innerHTML = st.rows.length ? 'Mezisoučet ' + kc(t.sub) + (t.sleva ? ' – celková sleva ' + kc(t.sleva) : '') + ' → <b>celkem ' + kc(t.total) + '</b> vč. DPH' : '';
     st.rows.forEach(function (r, i) { var e = document.querySelector('[data-tot="' + i + '"]'); if (e) e.innerHTML = 'Za položku: <b>' + kc(r.ks * r.cena - r.sleva) + '</b>'; });
   }
@@ -122,6 +182,8 @@
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (t.name === 'kat') { st.kat = t.value; setDefaults(); renderKat(); return; }
+    if (t.name === 'zadani') { st.rozp = t.value === 'rozpocet'; renderKat(); sums(); return; }
+    if (t.id === 'nbRozpFile') { rozpFile(t.files && t.files[0]); return; }
     if (t.dataset && t.dataset.f === 'cat') { var r = st.rows[+t.dataset.i]; applyCat(r, t.value); renderRows(); return; }
     if (t.dataset && t.dataset.f === 'dekor') {
       var r2 = st.rows[+t.dataset.i], c = catFind(r2.cat); r2.odstin = t.value; r2.shadeImg = '';
@@ -138,7 +200,7 @@
     var t = e.target;
     if (t.dataset && t.dataset.f && ['model', 'cat', 'dekor', 'imgfile'].indexOf(t.dataset.f) < 0) {
       var r = st.rows[+t.dataset.i], f = t.dataset.f; r[f] = (f === 'ks' || f === 'cena' || f === 'sleva') ? int(t.value) : t.value; sums();
-    } else if (t.name === 'sleva_kc') sums();
+    } else if (t.name === 'sleva_kc' || t.name === 'rozp_cena') sums();
   });
   document.addEventListener('click', function (e) {
     var t = e.target;
@@ -178,6 +240,13 @@
       sleva_celkem: t.sleva, sleva_text: fv('sleva_text'), mezisoucet: t.sub, cena_celkem: t.total,
       z_poptavky: st.fromRef || ''
     };
+    if (st.rozp) {
+      var rp = fv('rozp_popis'), rc = fv('rozp_cislo');
+      d.rozpocet = { popis: rp, cislo: rc, soubor: st.rozpName, strany: st.rozpPages || null };
+      d.model = rp.toLowerCase().indexOf(KAT[st.kat].split(' ')[0].toLowerCase()) === 0 ? rp : KAT[st.kat] + ': ' + rp;
+      d.polozky = [{ co: rp, volba: 'dle přiloženého rozpočtu' + (rc ? ' č. ' + rc : ''), priplatek: t.total, nazev: rp }];
+      if (!OBJ) d.uvod = fv('uvod');
+    } else {
     d.pocet_kusu = st.rows.reduce(function (a, r) { return a + r.ks; }, 0);
     d.model = KAT[st.kat] + ': ' + st.rows.map(function (r) { return (r.ks > 1 ? r.ks + '× ' : '') + r.nazev; }).join(', ');
     d.polozky = st.rows.map(function (r) {
@@ -185,6 +254,7 @@
       return { co: r.nazev + (r.ks > 1 ? ' (' + r.ks + ' ks × ' + kc(r.cena) + ')' : ''), volba: [specTxt(sp), r.popis, r.sleva ? 'sleva ' + kc(r.sleva) : ''].filter(Boolean).join(' · '), priplatek: r.ks * r.cena - r.sleva,
         model_kod: r.model, odstin: r.odstin, cfg: r.cfg || null, popis: r.popis, nazev: r.nazev, ks: r.ks, cena_ks: r.cena, sleva: r.sleva, spec: sp, obrazek: r.img || '' };
     });
+    }
     if (OBJ) {
       var pr = fv('zaloha_proc') === '' ? ZALOHA_PROC : int(fv('zaloha_proc'));
       d.zaloha_proc = pr; d.zaloha_label = 'Záloha'; d.zaloha = Math.round(t.total * pr / 100); d.doplatek = Math.max(0, t.total - d.zaloha);
@@ -209,9 +279,15 @@
   }
   function validate(d) {
     if (!st.kat) return 'Vyberte kategorii dveří.';
+    if (st.rozp) {
+      if (!st.rozpBuf) return 'Nahrajte rozpočet z programu (PDF).';
+      if (!fv('rozp_popis')) return 'Doplňte krátce předmět ' + (OBJ ? 'objednávky' : 'nabídky') + '.';
+      if (!(int(fv('rozp_cena')) > 0)) return 'Doplňte cenu celkem vč. DPH podle rozpočtu.';
+    } else {
     if (!st.rows.length) return 'Přidejte aspoň jednu položku.';
     for (var i = 0; i < st.rows.length; i++) { var r = st.rows[i]; if (!r.nazev.trim()) return 'Položka ' + (i + 1) + ': doplňte název.'; if (r.ks < 1) return 'Položka ' + (i + 1) + ': počet kusů musí být aspoň 1.'; if (r.cena <= 0) return 'Položka ' + (i + 1) + ': doplňte cenu za kus.'; }
     if (limited() && (st.rows.length > 1 || st.rows[0].ks !== 1)) return 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jen jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře dejte do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '.';
+    }
     if (!d.jmeno || !d.prijmeni) return 'Doplňte jméno a příjmení zákazníka.';
     if (OBJ && (!d.ulice || !d.mesto)) return 'Doplňte adresu montáže (ulice a město).';
     if (OBJ && !(int(fv('zaloha_proc')) >= 0 && int(fv('zaloha_proc')) <= 100)) return 'Záloha v procentech musí být 0 až 100.';
@@ -228,7 +304,23 @@
     try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {}
     return on;
   }
+  /* výsledné PDF: naše strany + za nimi celý rozpočet z jiného programu (pdf-lib). Když PDF rozpočtu nejde připojit (zaheslované apod.), vrátí merged: false a rozpočet se pošle jako samostatná příloha. */
   function buildPdf(d) {
+    return buildOwn(d).then(function (b) {
+      if (!d.rozpocet || !st.rozpBuf) return b;
+      var P = window.PoptavkaPDF;
+      return P.preparePL().then(function () { return b.blob.arrayBuffer(); }).then(function (own) {
+        var L = window.PDFLib;
+        return Promise.all([L.PDFDocument.load(own), L.PDFDocument.load(st.rozpBuf.slice(0), { ignoreEncryption: true })]).then(function (x) {
+          return x[0].copyPages(x[1], x[1].getPageIndices()).then(function (ps) {
+            ps.forEach(function (pg) { x[0].addPage(pg); });
+            return x[0].save().then(function (bytes) { return { blob: new Blob([bytes], { type: 'application/pdf' }), pages: x[0].getPageCount(), merged: true }; });
+          });
+        });
+      }).catch(function (er) { try { console.error(er); } catch (e) {} b.merged = false; return b; });
+    });
+  }
+  function buildOwn(d) {
     var P = window.PoptavkaPDF; if (!P || !P.prepare) return Promise.reject(new Error('pdf'));
     var imgJobs = st.rows.map(function (r) { return Promise.all([toJpeg(r.imgData || r.img, 600), (r.shadeImg && r.shadeImg.indexOf('color:') !== 0) ? toJpeg(r.shadeImg, 120) : Promise.resolve(null)]); });
     return Promise.all([P.prepare(), toJpeg('logo.jpg', 600), Promise.all(imgJobs)]).then(function (res) {
@@ -267,8 +359,21 @@
       font('normal', 7.5, MUTED); doc.text(OBJ ? 'doplatek po montáži ' + money(d.doplatek) : 'vystaveno ' + dt(d.obj_datum || d.odeslano), W - M - 58, top0 + 11.8);
       y = Math.max(y, top0 + 17) + 4;
 
+      /* rozpočet z jiného programu: úvodní text (nabídka) a předmět místo karet položek */
+      if (d.rozpocet) {
+        if (!OBJ && d.uvod) { y += 1; para(d.uvod, 9.6, [15, 42, 28], 4.6); y += 1; }
+        section(OBJ ? 'Předmět objednávky' : 'Předmět nabídky');
+        var rz = d.rozpocet, rTxt = (OBJ && d.z_nabidky ? 'Dle nabídky č. ' + d.z_nabidky + ' a přiloženého rozpočtu' : 'Dle přiloženého rozpočtu') + (rz.cislo ? ' č. ' + rz.cislo : '') + (rz.strany ? ' (' + rz.strany + ' ' + (rz.strany === 1 ? 'strana' : rz.strany < 5 ? 'strany' : 'stran') + ')' : '') +
+          '. Rozpočet obsahuje rozpis položek, rozměrů, provedení a cen a je nedílnou součástí této ' + (OBJ ? 'objednávky' : 'nabídky') + ' – je připojen za ' + (OBJ ? 'smluvním ujednáním a podpisy.' : 'touto stranou.');
+        font('bold', 11.5); var rtl = doc.splitTextToSize(rz.popis, CW - 10); font('normal', 9); var rdl = doc.splitTextToSize(rTxt, CW - 10);
+        var rh = rtl.length * 5.2 + rdl.length * 4.3 + 9; ensure(rh + 4);
+        doc.setFillColor(255, 255, 255); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.3); doc.roundedRect(M, y - 2, CW, rh, 2.5, 2.5, 'FD');
+        var ry = y + 5; font('bold', 11.5, GREEN); doc.text(rtl, M + 5, ry); ry += rtl.length * 5.2 + 1;
+        font('normal', 9, [40, 60, 50]); doc.text(rdl, M + 5, ry); y += rh + 4;
+      }
+
       /* karty položek */
-      section(OBJ ? 'Objednané dveře' : 'Nabízené dveře');
+      if (!d.rozpocet) section(OBJ ? 'Objednané dveře' : 'Nabízené dveře');
       d.polozky.forEach(function (p, i) {
         if (p.ks == null) return;
         var r = st.rows[i], im = ims[i] || [null, null];
@@ -338,7 +443,7 @@
         var LG = P.LEGAL || [];
         var cutTo = function (t, m) { var i = t.indexOf(m); return i < 0 ? t : t.slice(0, i); };
         var legal = [];
-        if (LG[0]) legal.push(LG[0].replace('dodávku a montáž bezpečnostních bytových dveří dle výše uvedených parametrů', 'dodávku a montáž dveří dle výše uvedených položek'));
+        if (LG[0]) legal.push(LG[0].replace('dodávku a montáž bezpečnostních bytových dveří dle výše uvedených parametrů', d.rozpocet ? 'dodávku a montáž dveří dle přiloženého rozpočtu' : 'dodávku a montáž dveří dle výše uvedených položek'));
         if (LG[1]) legal.push(d.kategorie === 'interier' ? LG[1].replace(/; podmínky bonusu a prodloužení záruky na 5 nebo 10 let jsou na [^ ]+\./, '.') : LG[1]);
         if (LG[2]) legal.push(LG[2]);
         if (LG[3]) legal.push(LG[3]);
@@ -413,16 +518,17 @@
     if (err) { msg.textContent = err; msg.hidden = false; return; }
     if (form._honey.value) return;
     var btn = $('#nbSubmit'); btn.disabled = true; btn.textContent = 'Připravuji PDF…';
-    var pdf = null, custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
+    var pdf = null, extraFiles = [], custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
     var TYP = OBJ ? 'objednavka_interni' : 'nabidka';
     buildPdf(d).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
       pdf = b ? b.blob : null; window.__nbPages = b ? b.pages : 0; btn.textContent = 'Odesílám…';
-      var files = pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : [];
+      if (d.rozpocet && st.rozpBuf && !(b && b.merged)) extraFiles = [{ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) }];
+      var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
       var ix = d.email ? { reply_to: d.email } : {};
       return send(TYP, internalList(d), files, d.obj_cislo, ix).catch(function () { return send(TYP, internalList(d), [], d.obj_cislo, ix); });
     }).then(function () {
       if (!d.email) return;
-      var files = pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : [];
+      var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
       return send('objednavka_zakaznik', customerList(d), files, d.obj_cislo, { email_zakaznik: d.email })
         .catch(function () { custOk = false; return send('objednavka_zakaznik', customerList(d), [], d.obj_cislo, { email_zakaznik: d.email }); });
     }).then(function () {
@@ -471,6 +577,11 @@
         if (o.zahrnuje && form.zahrnuje) form.zahrnuje.value = o.zahrnuje;
         if (o.termin_text && form.termin_text) form.termin_text.value = o.termin_text;
         if (o.prodavac) { var pr0 = document.querySelector('input[name="prodavac"][value="' + o.prodavac + '"]'); if (pr0) pr0.checked = true; }
+        if (o.rozpocet && (o.kategorie === 'dum' || o.kategorie === 'interier')) {   // nabídka s rozpočtem z jiného programu → stejný režim, PDF rozpočtu se nahraje znovu
+          ensureRozpUI(); st.rozp = true;
+          form.elements.rozp_popis.value = o.rozpocet.popis || ''; form.elements.rozp_cislo.value = o.rozpocet.cislo || ''; form.elements.rozp_cena.value = o.cena_celkem || '';
+          st.rozpNote = ' Nahrajte k objednávce znovu rozpočet v PDF' + (o.rozpocet.soubor ? ' (v nabídce byl „' + esc(o.rozpocet.soubor) + '“)' : '') + ' – stejný, nebo upravený podle domluvy.';
+        }
       } else if (m) {
         st.kat = 'byt'; var r = newRow(); r.model = m.k; r.odstin = o.odstin || ''; r.nazev = m.name + (r.odstin ? ' – ' + r.odstin : '');
         r.cena = int(o.cena_celkem) || modelPrice(r) || m.price; r.img = m.img || '';
@@ -491,7 +602,7 @@
         r2.ks = int(o.pocet_ks) || 1; st.rows.push(r2);
       }
       setDefaults();
-      var info = $('#nbLoaded'); info.hidden = false; info.innerHTML = '✓ Načteno z ' + (o.typ === 'nabidka' ? 'nabídky' : 'poptávky') + ' <b>' + esc(o.cislo || '') + '</b>. Položky a ceny jsou přenesené; zkontrolujte je a doplňte, co chybí.';
+      var info = $('#nbLoaded'); info.hidden = false; info.innerHTML = '✓ Načteno z ' + (o.typ === 'nabidka' ? 'nabídky' : 'poptávky') + ' <b>' + esc(o.cislo || '') + '</b>. ' + (st.rozp ? 'Předmět a cena jsou přenesené.' + (st.rozpNote || '') : 'Položky a ceny jsou přenesené; zkontrolujte je a doplňte, co chybí.');
     } catch (e) {}
   })();
   renderKat(); renderRows();

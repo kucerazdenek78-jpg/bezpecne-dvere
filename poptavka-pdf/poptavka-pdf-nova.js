@@ -314,7 +314,7 @@
             sigsDone = Promise.all(sigs);
           }
           put((d.jmeno + ' ' + d.prijmeni).trim(), 392, 782, 150, 8, true);   // pod „Objednatel (podpis)“
-          put('Objednávka ' + d.obj_cislo + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 330, 7, true);
+          put('Objednávka ' + d.obj_cislo + (d.z_nabidky ? ' dle nabídky ' + d.z_nabidky : '') + (d.rozpocet ? ' · rozpočet' + (d.rozpocet.cislo ? ' č. ' + d.rozpocet.cislo : ' v příloze objednávky') : '') + (d.prodavac ? ' · prodavač ' + d.prodavac : '') + (d.telefon ? ' · tel. ' + d.telefon : ''), 49.5, 290, 330, 7, true);
           // bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1)
           (function () {
             var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
