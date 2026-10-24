@@ -874,7 +874,7 @@
       return '<li>' + fmt(new Date(x.d)) + ' – ' + esc(x.co) + (x.ref ? ' (' + esc(x.ref) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
     h += '<h2 class="ph">Mohlo by vás zajímat</h2><div class="strip">' + PROMOS.filter(function (p) { return !p.moje && !p.pred; }).map(function (p) {
       return '<a class="tile" href="' + p.href + '" style="--g1:' + p.c1 + ';--g2:' + p.c2 + '"><img src="' + p.img + '" alt="" loading="lazy"><b>' + esc(p.t) + '</b><span>' + esc(p.s) + '</span></a>'; }).join('') + '</div>';
-    h += '<div class="btns"><button class="b sm" data-act="edit">Upravit údaje</button><button class="b sm" data-act="remove">Odebrat dveře z telefonu</button></div>';
+    h += '<div class="btns"><button class="b sm" data-act="remove">Odhlásit dveře z telefonu</button></div>';
     $('#mojeDoor').innerHTML = h; svLoad(dv);
   }
   $('#mojeDoor').addEventListener('click', function (e) {
@@ -887,7 +887,7 @@
     else if (a === 'ud-hotovo') udAkce('hotovo');
     else if (a === 'ud-toggle') udAkce(b.checked ? 'zapnout' : 'vypnout');
     else if (a === 'regdone') { dv.registrace = true; store.set('bd-app-dvere', dv); renderMoje(); }
-    else if (a === 'remove') { openDlg('<h2>Odebrat dveře?</h2><p>Údaje se smažou jen z tohoto telefonu. U nás v kartotéce zůstávají.</p><div class="btns"><button class="b pri" id="rmYes">Odebrat</button><button class="b" onclick="this.closest(\'dialog\').close()">Zpět</button></div>');
+    else if (a === 'remove') { openDlg('<h2>Odhlásit dveře z telefonu?</h2><p>Údaje se smažou jen z tohoto telefonu. U nás v kartotéce zůstávají a dveře si můžete znovu přidat číslem objednávky.</p><div class="btns"><button class="b pri" id="rmYes">Odhlásit</button><button class="b" onclick="this.closest(\'dialog\').close()">Zpět</button></div>');
       $('#rmYes').onclick = function () { try { localStorage.removeItem('bd-app-dvere'); } catch (er) {} closeDlg(); renderMoje(); }; }
     else if (a === 'edit') openManual(dv);
     else if (a === 'servis') openService(dv);
