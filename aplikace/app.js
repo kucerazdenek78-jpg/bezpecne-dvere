@@ -43,6 +43,12 @@
     web: '../dvere-do-interieru.html', ask: '../dvere-do-interieru.html#poptavka', priceNote: 'Cena komplet se zárubní, bez kování a bez DPH.',
     note: 'Nejdřív jsou dveře skladem – u nich si vyberete i odstín. Na fotce nahradíte křídlo; zárubeň zůstává vaše.' };
   VIZ.premium60.cat = VIZ.extreme54.cat = 'byt';
+  /* konfigurátor ERKADO (../konfigurator-erkado.html) → #viz?m=konf: přesně nakonfigurované dveře (dekor, vzor, světlíky, strana).
+     Předává se přes localStorage (stejná doména); výsledek se vrací zpět do konfigurátoru a přiloží se k poptávce. */
+  var KONF = null; try { KONF = JSON.parse(localStorage.getItem('bd-konf-viz') || 'null'); } catch (e) {}
+  if (KONF && KONF.img && Date.now() - KONF.ts < 864e5) VIZ.konf = { cat: 'domu', konf: true, name: KONF.nazev, label: 'Vaše konfigurace', noFrame: true, def: 0,
+    shades: [[KONF.nazev, KONF.img, KONF.popis, KONF.cena, false]], web: KONF.zpet, priceNote: 'orientačně z konfigurátoru',
+    note: KONF.svetliky ? 'Dveře se světlíky: označte 4 rohy celého otvoru včetně světlíků.' : 'Dveře přesně podle konfigurátoru. Označte 4 rohy křídla dveří.' };
   var vizModel = 'premium60', frameIdx = 0, locked = false;
   function SH() { return VIZ[vizModel].shades; }
   /* odstíny interiérových dveří (6. pole provedení): [[název, obrázek], …] */
@@ -414,7 +420,7 @@
     if (V.cat === 'byt' || !x) { el.hidden = true; return; }
     el.hidden = false;
     el.style.marginBottom = '.6rem'; el.innerHTML = '<b>' + esc(x[0]) + '</b>' + (x[4] ? ' <em class="sk">skladem</em>' : '') + '<br><span>' + esc(x[2]) + '</span>' +
-      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + '<br><a href="' + V.web + '">Katalog a ceny na webu →</a>';
+      (x[3] ? '<br><strong>' + esc(x[3]) + '</strong> <small>' + esc(V.priceNote) + '</small>' : '') + decHtml() + '<br><a href="' + V.web + '">' + (V.konf ? '← Upravit konfiguraci' : 'Katalog a ceny na webu →') + '</a>';
   }
   function decHtml() {
     var d = DEC(); if (!d || d.length < 2) return '';
@@ -428,6 +434,8 @@
     $('#catBox').hidden = on; $('#vizModel').hidden = on ? true : !byt;
     $('#lockBar').hidden = !on;
     if (on) $('#lockTxt').textContent = MN();
+    var ul = $('#unlock'); ul.textContent = V.konf ? '← Zpět do konfigurátoru' : 'Vybrat jiné dveře →'; ul.href = V.konf ? V.web : '#viz';
+    $('#ask').textContent = V.konf ? 'Přiložit k poptávce a zpět do konfigurátoru' : ASK0;
     $$('#vizCat .cat').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-c') === V.cat); });
   }
   function setModel(m) {
@@ -504,11 +512,31 @@
   /* režim prodejce (odkaz z panelu: #viz?p=1): tlačítko vede rovnou na formulář nabídky s předvyplněným modelem a odstínem */
   var seller = false; try { seller = sessionStorage.getItem('bd-app-prodejce') === '1'; } catch (e) {}
   if (seller) { $('#ask').textContent = 'Vytvořit nabídku pro zákazníka'; document.body.classList.add('seller'); }
+  var ASK0 = $('#ask').textContent;
   $('#ask').addEventListener('click', function () {
     var V = VIZ[vizModel];
+    if (V.konf) { backToKonf(this); return; }
     if (seller && V.cat === 'byt') { location.href = '../poptavka-dvere.html?model=' + vizModel + '&odstin=' + encodeURIComponent(shadeName()); return; }
     openAsk();
   });
+
+  /* výsledek vizualizace zpět do konfigurátoru (localStorage, při plném úložišti menší obrázek) */
+  function backToKonf(btn) {
+    btn.disabled = true; btn.textContent = 'Ukládám…';
+    var tryOne = function (sizes) {
+      var sz = sizes.shift();
+      return resultBlob(sz, 0.84).then(function (b) {
+        return new Promise(function (ok) { var fr = new FileReader(); fr.onload = function () { ok(fr.result); }; fr.readAsDataURL(b); });
+      }).then(function (u) {
+        try { localStorage.setItem('bd-konf-viz-vysledek', JSON.stringify({ img: u, ts: Date.now() })); return true; }
+        catch (e) { if (sizes.length) return tryOne(sizes); return false; }
+      });
+    };
+    tryOne([1600, 1100, 800]).then(function (ok) {
+      if (!ok) { btn.disabled = false; btn.textContent = 'Přiložit k poptávce a zpět do konfigurátoru'; hint.textContent = 'Vizualizaci se nepodařilo uložit – použijte „Uložit“ a pošlete ji k poptávce zvlášť.'; return; }
+      stat('konfigurator', 'domu', MN()); location.href = VIZ[vizModel].web;
+    });
+  }
 
   /* ═══════════════ návod: focení a označení rohů ═══════════════ */
   function openHowto() {

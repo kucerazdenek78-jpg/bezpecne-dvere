@@ -627,7 +627,7 @@
         zaskleni: zasklTyp() ? st.sklo : '', zaskleni_rc2: st.rc2, kovani: kovText(), madlo: madloText(), vlozky_trida: st.tridaC ? 'C' : 'B', odstin_skla: st.odstin, svetliky: svText(), rozsireni_ramu: Object.keys(st.rozs), vybava: Object.keys(st.vyb), katalog: E.katalog, strana_katalogu: m.str
       },
       polozky: r.lines.map(function (l) { return { co: l[0], volba: l[2] || '', priplatek: l[1] }; }),
-      cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber,
+      cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber, vizualizace: !!vizRes,
       doprava_km: r.dop ? r.dop.km : null, doprava_cena: r.dop ? r.dop.fee : null, cena_celkem: r.total,
       jmeno: jm[0] || '', prijmeni: jm.slice(1).join(' '), telefon: $('kfTel').value.trim(), email: $('kfEmail').value.trim(),
       ulice: $('kfAdr').value.trim(), mesto: $('kfObec').value.trim(), poznamka: $('kfPozn').value.trim()
@@ -675,7 +675,7 @@
         if (im[0]) { var lh = 16, lw = lh * im[0].w / im[0].h; doc.addImage(im[0].data, 'JPEG', Mg, 7, lw, lh); }
         font('bold', 15, [255, 255, 255]); doc.text('Poptávka vchodových dveří ERKADO', W - Mg, 13, { align: 'right' });
         font('normal', 9.5, [210, 230, 218]); doc.text('č. ' + d.cislo + '  ·  ' + new Date(d.odeslano).toLocaleString('cs-CZ'), W - Mg, 19.5, { align: 'right' });
-        doc.text('Konfigurátor na webu bezpecne-dvere (testovací verze)', W - Mg, 24.5, { align: 'right' });
+        doc.text('Konfigurátor dveří ERKADO · bezpecne-dvere.cz', W - Mg, 24.5, { align: 'right' });
         y = 40;
         function footer() { font('normal', 7.5, MUTED); doc.text('Bezpečné dveře · Zdeněk Kučera, IČ 64682676 · vzorkovna Obchodní 36, Most · +420 725 559 235 · chci@bezpecne-dvere.cz', W / 2, 289, { align: 'center' }); }
         function ensure(h) { if (y + h > 280) { footer(); doc.addPage(); page++; y = 18; } }
@@ -685,7 +685,7 @@
         }
         section('Zákazník');
         var yl = pairs([['Jméno', (d.jmeno + ' ' + d.prijmeni).trim() || '—'], ['Telefon', d.telefon || '—'], ['E-mail', d.email || '—']], Mg, 22, 66);
-        var yr = pairs([['Montáž', d.montaz ? ([d.ulice, d.mesto].filter(Boolean).join(', ') || 'ano, adresa neuvedena') : 'bez montáže (osobní odběr)']], 108, 22, 66);
+        var yr = pairs([['Montáž', d.montaz ? ([d.ulice, d.mesto].filter(Boolean).join(', ') || 'ano, adresa neuvedena') : st.odber === 'doprava' ? 'bez montáže, doprava na adresu' : 'bez montáže (osobní odběr)'], ['Adresa', !d.montaz && st.odber === 'doprava' ? ([d.ulice, d.mesto].filter(Boolean).join(', ') || 'neuvedena') : '']], 108, 22, 66);
         y = Math.max(yl, yr) + 3;
         section('Vybrané dveře');
         var top = y - 3, iw0 = 40, ih0 = 76;
@@ -717,10 +717,16 @@
         font('bold', 15, ORANGE); doc.text(kc(r.total), W - Mg - 4, y + 3.4, { align: 'right' });
         y += 12;
         font('normal', 8, MUTED);
-        var nt = doc.splitTextToSize((d.montaz ? 'Cena s montáží na klíč (DPH 12 % z celé zakázky). ' : 'Cena bez montáže, DPH 21 %, odběr ve vzorkovně KK SYSTEM, Obchodní 36, Most. ') +
+        var nt = doc.splitTextToSize((d.montaz ? 'Cena s montáží na klíč (DPH 12 % z celé zakázky). ' : st.odber === 'doprava' ? 'Cena bez montáže, DPH 21 %, doprava z Mostu ' + E.doprava.zaKm + ' Kč/km s DPH (jen cesta tam). ' : 'Cena bez montáže, DPH 21 %, odběr ve vzorkovně KK SYSTEM, Obchodní 36, Most. ') +
           'Ceny dveří a příslušenství podle katalogu ERKADO Ocelové dveře 2026 (NETTO bez DPH). Orientační cena – závaznou nabídku pošleme po zaměření. ' + r.info.join(' '), cw);
         doc.text(nt, Mg, y); y += nt.length * 3.4 + 4;
         if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, Mg, y); y += pl.length * 4.4 + 3; }
+        if (vizRes) {
+          footer(); doc.addPage(); page++; y = 18; section('Vizualizace na fotce zákazníka');
+          var vp = doc.getImageProperties(vizRes.img), vr = Math.min(cw / vp.width, 235 / vp.height);
+          doc.addImage(vizRes.img, 'JPEG', Mg + (cw - vp.width * vr) / 2, y, vp.width * vr, vp.height * vr); y += vp.height * vr + 5;
+          font('normal', 8, MUTED); doc.text(doc.splitTextToSize('Ilustrativní náhled z aplikace Bezpečné dveře – dveře vložené do fotky zákazníka. Odlesky, stíny a přesné kování se neupravují.', cw), Mg, y);
+        }
         footer();
         return doc.output('blob');
       });
@@ -830,6 +836,7 @@
     }).then(function (blob) {
       pdf = blob; d.pdf = !!pdf; b.textContent = 'Odesílám…';
       var rows = mailRows(d), files = pdf ? [{ name: 'poptavka_pdf', file: 'Poptavka-' + d.cislo.replace(/[\s\/]+/g, '-') + '.pdf', blob: pdf }] : [];
+      if (vizRes) { rows.push(['Vizualizace', 'fotka zákazníka s dveřmi v příloze']); files.push({ name: 'vizualizace', file: 'vizualizace-' + d.cislo.replace(/[\s\/]+/g, '-') + '.jpg', blob: dataBlob(vizRes.img) }); }
       var o = { typ: 'poptavka', predmet: 'Poptávka dveří ' + d.cislo + ' – ' + d.model + ' – ' + (d.prijmeni || d.jmeno) + ', ' + d.mesto,
         telo: window.BDForm.bodyFromFields(rows), reply_to: d.email, cislo: d.cislo, data_json: JSON.stringify(d), honey: $('kfHoney').value, files: files };
       return window.BDForm.send(o).catch(function () { o.files = []; d.poznamka_system = 'PDF se nepodařilo přiložit'; o.data_json = JSON.stringify(d); return window.BDForm.send(o); });
@@ -846,9 +853,70 @@
     });
   });
 
+  /* ── vyzkoušení na fotce zákazníka: aplikace/#viz?m=konf (obojí na bezpecne-dvere.cz, předává se přes localStorage) ── */
+  var VIZ_KEY = 'bd-konf-viz', VIZ_RES = 'bd-konf-viz-vysledek', VIZ_ST = 'bd-konf-stav', vizRes = null;
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function dataBlob(u) { var p = u.split(','), b = atob(p[1]), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return new Blob([a], { type: 'image/jpeg' }); }
+  /* obrázek přesně jako „Konečný vzhled zvenku“: dveře v dekoru (zrcadlově pro levé) + světlíky */
+  function vizImage() {
+    var m = M();
+    return paint(slug(m, st.typ), st.dekor).then(function (u) {
+      return new Promise(function (ok, ko) {
+        var im = new Image();
+        im.onload = function () {
+          var z = svSize(), H = 1100, sc = H / (z.hc || 2075), dw = Math.round(im.naturalWidth * H / im.naturalHeight);
+          var L = st.sv.l ? Math.round(z.l * sc) : 0, P = st.sv.p ? Math.round(z.p * sc) : 0, T = st.sv.h ? Math.round(z.hv * sc) : 0;
+          var cv = document.createElement('canvas'); cv.width = L + dw + P; cv.height = T + H; var cx = cv.getContext('2d');
+          var light = function (x, y, w, h) {
+            var b = Math.max(4, Math.round(H * 4 / 340)), g = cx.createLinearGradient(x, y, x + w * 0.6, y + h);
+            g.addColorStop(0, '#d3dee3'); g.addColorStop(0.55, '#93a7b1'); g.addColorStop(1, '#c2d0d6');
+            cx.fillStyle = '#33383b'; cx.fillRect(x, y, w, h); cx.fillStyle = g; cx.fillRect(x + b, y + b, w - 2 * b, h - 2 * b);
+          };
+          if (T) light(0, 0, cv.width, T); if (L) light(0, T, L, H); if (P) light(L + dw, T, P, H);
+          cx.save(); if (st.strana === 'L') { cx.translate(L + dw, 0); cx.scale(-1, 1); cx.drawImage(im, 0, T, dw, H); } else cx.drawImage(im, L, T, dw, H); cx.restore();
+          ok(cv.toDataURL('image/jpeg', 0.88));
+        };
+        im.onerror = ko; im.src = u;
+      });
+    });
+  }
+  function formVals() { var o = {}; ['kfJmeno', 'kfTel', 'kfEmail', 'kfObec', 'kfPozn', 'kfAdr'].forEach(function (id) { o[id] = $(id).value; }); o.gdpr = $('kfGdpr').checked; return o; }
+  function tryOnPhoto(b) {
+    var t0 = b.textContent; b.disabled = true; b.textContent = 'Připravuji…';
+    vizImage().then(function (img) {
+      var m = M(), r = calc();
+      var ok = lsSet(VIZ_KEY, { img: img, nazev: 'ERKADO ' + typName(m, st.typ), popis: [PROV[st.prov] ? PROV[st.prov][1].split('|')[0] : st.prov, DEK[st.dekor][1], KON[st.kon].nazev, (st.strana === 'P' ? 'pravé' : 'levé') + ' ' + (st.smer === 'ven' ? 'ven' : 'dovnitř')].join(' · '),
+        cena: kc(r.total) + ' s DPH', svetliky: anySv(), zpet: new URL('konfigurator-erkado.html#viz-zpet', location.href).href, ts: Date.now() }) &&
+        lsSet(VIZ_ST, { st: st, form: formVals(), ts: Date.now() });
+      if (!ok) throw new Error('storage');
+      location.href = 'aplikace/#viz?m=konf';
+    }).catch(function () { b.disabled = false; b.textContent = t0; alertMsg('Náhled se nepodařilo předat do vizualizace (prohlížeč nepovolil uložení). Zkuste jiný prohlížeč.'); });
+  }
+  function alertMsg(s) { $('kfMsg').textContent = s; }
+  document.querySelectorAll('[data-viz]').forEach(function (b) { b.addEventListener('click', function () { tryOnPhoto(b); }); });
+  function showVizRes() {
+    var w = $('kfVizRes'); if (!w) return;
+    w.hidden = !vizRes; if (vizRes) $('kfVizImg').src = vizRes.img;
+  }
+  $('kfVizDel').addEventListener('click', function () { vizRes = null; lsSet(VIZ_RES, null); showVizRes(); });
+  /* návrat z vizualizace: obnovit konfiguraci a převzít výsledek */
+  (function () {
+    var res = lsGet(VIZ_RES); if (res && res.img && Date.now() - res.ts < 864e5) vizRes = res; else if (res) lsSet(VIZ_RES, null);
+    if (location.hash !== '#viz-zpet') return;
+    var s = lsGet(VIZ_ST);
+    if (s && s.st && Date.now() - s.ts < 864e5) {
+      Object.keys(s.st).forEach(function (k) { if (k in st) st[k] = s.st[k]; });
+      Object.keys(s.form || {}).forEach(function (k) { if (k === 'gdpr') $('kfGdpr').checked = !!s.form.gdpr; else if ($(k)) $(k).value = s.form[k]; });
+      st.step = 5;
+    }
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  })();
+
   /* předvolba z odkazu: #horn-4 */
   var h = (location.hash || '').replace('#', '').toLowerCase().split('-');
   if (h[0] && MOD[h[0]]) { st.model = h[0]; st.typ = +h[1] || MOD[h[0]].typy[0]; st.prov = MOD[h[0]].provedeni[0]; }
-  window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf };
-  render();
+  window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf, vizImage: vizImage };
+  render(); showVizRes();
+  if (st.step === 5 && vizRes) setTimeout(function () { var e = $('kfVizRes'); if (e) e.scrollIntoView({ block: 'center' }); }, 300);
 })();
