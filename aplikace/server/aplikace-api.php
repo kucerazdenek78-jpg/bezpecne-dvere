@@ -37,7 +37,12 @@ if ($akce === 'sparovat') {
   if ($cislo === '' || !preg_match('/^\d{4}$/', $tel4)) chyba(400, 'data', 'Zadejte číslo objednávky a 4 číslice telefonu.');
 
   // nejnovější záznam objednávky s tímto číslem (bez ohledu na velikost písmen a mezery)
-  $norm = function ($s) { return strtoupper(preg_replace('/\s+/', '', (string)$s)); };
+  // zákazník může napsat 83/2026, 83 / 2026, 83-2026, 83.2026 i jen číslice jako variabilní symbol (832026) → 83/2026
+  $norm = function ($s) {
+    $s = strtoupper(preg_replace('/\s+/', '', (string)$s));
+    if (preg_match('~^(\d{1,5})[-./_]((?:19|20)\d\d)$~', $s, $m) || preg_match('~^(\d{1,5})((?:20)\d\d)$~', $s, $m)) $s = ltrim($m[1], '0') . '/' . $m[2];
+    return $s;
+  };
   $st = $pdo->prepare("SELECT * FROM zadosti WHERE typ IN ('objednavka_interni','objednavka') AND REPLACE(UPPER(cislo),' ','')=? ORDER BY id DESC LIMIT 10");
   $st->execute([$norm($cislo)]);
   $nalez = null;
