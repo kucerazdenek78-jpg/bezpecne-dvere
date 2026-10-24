@@ -26,7 +26,7 @@
   var st = {
     step: 1, model: 'horn', typ: 1, prov: 'PLAIN GLASS', kon: 't64', zar: 'ocel', smer: 'ven', strana: 'P',
     sirka: '90', sc: '', vyska: 'std', hc: '', dekor: 'dub-surovy', dvou: 'ne', dekor2: 'bily-mat', sklo: 'std', rc2: false,
-    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: true, km: '', tripMsg: '', trip: null
+    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, km: '', tripMsg: '', trip: null
   };
 
   /* ── pomocné ── */
@@ -429,8 +429,8 @@
       [['h', 'Nahoře'], ['l', 'Vlevo'], ['p', 'Vpravo']].map(function (o) { return '<label class="pq-check"><input type="checkbox" data-rozs="' + o[0] + '"' + (st.rozs[o[0]] ? ' checked' : '') + '><span><b>Rozšíření rámu ' + o[1].toLowerCase() + '</b></span><em>+ ' + kc(E.rozsireniRamu) + '</em></label>'; }).join('');
   }
   function renderStep5(r) {
-    $('kfMontaz').innerHTML = '<label class="pq-opt pq-chip">' + radio('montaz', '1', st.montaz) + 'S montáží na klíč <em>+ ' + kc(E.montaz.cena) + ' bez DPH</em> <small>DPH 12 %</small></label>' +
-      '<label class="pq-opt pq-chip">' + radio('montaz', '0', !st.montaz) + 'Bez montáže <small>DPH 21 %, osobní odběr</small></label>';
+    $('kfMontaz').innerHTML = '<label class="pq-opt pq-chip">' + radio('montaz', '0', !st.montaz) + 'Bez montáže <small>DPH 21 %, osobní odběr</small></label>' +
+      '<label class="pq-opt pq-chip">' + radio('montaz', '1', st.montaz) + 'S montáží na klíč <em>+ ' + kc(E.montaz.cena) + ' bez DPH</em> <small>DPH 12 %</small></label>';
     $('kfAddrWrap').hidden = !st.montaz;
     var tm = $('kfTripMsg');
     if (st.montaz && r.dop) {
