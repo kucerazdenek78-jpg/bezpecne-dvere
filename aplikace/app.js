@@ -83,6 +83,8 @@
       if (localStorage.getItem('bd-bonus') === '1') on = true;
     } catch (e) {}
     var tab = document.getElementById('tabMoje'); if (tab) tab.hidden = !on;
+    /* spárované dveře: Moje dveře jsou v dolním menu na prvním místě */
+    if (tab) { var paired = false; try { paired = on && !!door(); } catch (e) {} tab.style.order = paired ? '-1' : ''; }
     document.querySelector('.tabs').style.gridTemplateColumns = 'repeat(' + (on ? 4 : 3) + ',1fr)';
     return on;
   }
@@ -888,7 +890,7 @@
     else if (a === 'ud-toggle') udAkce(b.checked ? 'zapnout' : 'vypnout');
     else if (a === 'regdone') { dv.registrace = true; store.set('bd-app-dvere', dv); renderMoje(); }
     else if (a === 'remove') { openDlg('<h2>Odhlásit dveře z telefonu?</h2><p>Údaje se smažou jen z tohoto telefonu. U nás v kartotéce zůstávají a dveře si můžete znovu přidat číslem objednávky.</p><div class="btns"><button class="b pri" id="rmYes">Odhlásit</button><button class="b" onclick="this.closest(\'dialog\').close()">Zpět</button></div>');
-      $('#rmYes').onclick = function () { try { localStorage.removeItem('bd-app-dvere'); } catch (er) {} closeDlg(); renderMoje(); }; }
+      $('#rmYes').onclick = function () { try { localStorage.removeItem('bd-app-dvere'); } catch (er) {} closeDlg(); mojeOn(); renderMoje(); }; }
     else if (a === 'edit') openManual(dv);
     else if (a === 'servis') openService(dv);
     else if (a === 'prohlidka') openInspection(dv);
