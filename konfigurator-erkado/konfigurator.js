@@ -36,6 +36,22 @@
   function M() { return MOD[st.model]; }
   function typName(m, t) { return m.nazev + (t ? ' ' + t : ''); }
   function slug(m, t) { return t ? m.id + '-' + t : m.id; }
+  /* provedení: vzorek ze str. 20–21 katalogu, „krátký název|popis z katalogu“ */
+  var PROV = {
+    'LABEL BLACK STR': ['label-black', 'Černé ozdobné lišty|panel lakovaný načerno 2 mm, nalepený na křídlo'],
+    'LABEL INOX': ['label-inox', 'Nerezové ozdobné lišty|panel 2 mm s povrchem INOX, nalepený na křídlo'],
+    'LABEL DIAMOND GLASS': ['label-diamond', 'Černé sklo se zkosením|panel z černého skla 5 mm se zkosenou hranou'],
+    'PLAIN GLASS': ['plain-glass', 'Černé sklo v rovině|panel z černého skla zarovnaný s povrchem křídla'],
+    'PLAIN LACOBEL GLASS': ['plain-lacobel', 'Černé lakované sklo v rovině|Lacobel zarovnaný s povrchem, zevnitř hladké křídlo'],
+    'PLAIN LACOBEL DUO GLASS': ['plain-lacobel', 'Černé lakované sklo z obou stran|Lacobel zarovnaný s povrchem zvenku i zevnitř'],
+    'STAMP': ['stamp', 'Prolisy|oboustranné prolisy 10 mm, hloubka 2 mm'],
+    'STAMP ROLLER': ['stamp-roller', 'Široké prolisy|oboustranné prolisy 25 mm, hloubka 2 mm'],
+    'STAMP INOX': ['stamp-intarzie', 'Prolisy s nerezovou intarzií|prolis 25 mm, intarzie INOX v rovině křídla'],
+    'STAMP BLACK STR': ['', 'Prolisy s černou intarzií|prolis 25 mm, intarzie lakovaná načerno v rovině křídla', 'black'],
+    'FRAME': ['frame', 'Lišta v dekoru dveří|profilovaná hliníková lišta 51 × 19 mm v dekoru křídla'],
+    'FRAME BLACK STR': ['frame-black', 'Černá lišta|profilovaná hliníková lišta 51 × 19 mm v černé STR'],
+    'SOLID': ['', 'Hladké křídlo|bez prolisů a ozdob', 'solid']
+  };
   function hot(k) { return k === 'h88' || k === 'h78'; }
   function zarKey() { var k = KON[st.kon]; return st.kon + '-' + (k.zarubenStd === 'hlinik' || st.zar === 'hlinik' ? 'hlinik' : 'ocel'); }
   function isAlu() { return KON[st.kon].zarubenStd === 'hlinik' || st.zar === 'hlinik'; }
@@ -284,10 +300,17 @@
         '<img src="' + IMG + 'typy/' + slug(m, t) + '.jpg" data-p="' + slug(m, t) + '|' + st.dekor + '" alt="" width="107" height="212">' +
         '<span>' + typName(m, t) + '</span><em>' + (g ? kc(g.ceny.t64[1]) : '') + '</em></label>';
     }).join('');
+    /* cena dveří v daném provedení (skupina ceníku + příplatek), rozdíl proti nejlevnějšímu */
+    var provCena = function (p) { var g = provOk(m, st.typ, p) && group(m, st.typ, p); return g ? g.ceny[st.kon][1] + ((m.provPriplatek && m.provPriplatek[p]) || 0) : null; };
+    var base = Math.min.apply(null, m.provedeni.map(provCena).filter(function (x) { return x != null; }));
     $('kfProv').innerHTML = m.provedeni.map(function (p) {
-      var ok = provOk(m, st.typ, p) && group(m, st.typ, p), pp = m.provPriplatek && m.provPriplatek[p];
-      return '<label class="pq-opt pq-chip">' + radio('prov', p, p === st.prov, !ok) + p + (pp ? ' <em>+ ' + kc(pp) + '</em>' : '') + (!ok ? ' <small>ne pro tento vzor</small>' : '') + '</label>';
+      var c = provCena(p), ok = c != null, pp = ok ? c - base : 0, d = PROV[p] || ['', '', ''];
+      return '<label class="pq-opt kf-prov">' + radio('prov', p, p === st.prov, !ok) +
+        (d[0] ? '<img src="' + IMG + 'provedeni/' + d[0] + '.jpg" alt="" width="120" height="96">' : '<i class="kf-prov-chip ' + (d[2] || '') + '"></i>') +
+        '<span><b>' + esc(d[1] ? d[1].split('|')[0] : p) + '</b><small>' + esc(p) + (d[1] ? ' · ' + d[1].split('|')[1] : '') + '</small>' +
+        (pp ? '<em>+ ' + kc(pp) + '</em>' : '<em class="z">bez příplatku</em>') + (!ok ? '<small class="no">ne pro tento vzor</small>' : '') + '</span></label>';
     }).join('');
+    $('kfProvNote').hidden = m.provedeni.length < 2;
     $('kfModelNotes').innerHTML = m.pozn.length ? '<div class="pq-note"><ul>' + m.pozn.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '';
   }
   function renderStep2() {
