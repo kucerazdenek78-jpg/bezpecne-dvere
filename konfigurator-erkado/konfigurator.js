@@ -526,9 +526,8 @@
     $('kfPImg').setAttribute('data-p', sl + '|' + st.dekor); $('kfPImg').className = mir ? 'mir' : ''; $('kfPImg').alt = typName(m, st.typ);
     $('kfMImg').setAttribute('data-p', sl + '|' + st.dekor); $('kfMImg').className = mir ? 'mir' : '';
     $('kfFinOut').setAttribute('data-p', sl + '|' + st.dekor); $('kfFinOut').className = mir ? 'mir' : '';
-    $('kfFinIn').setAttribute('data-p', sl + '|' + d2); $('kfFinIn').className = mir ? '' : 'mir';
     finalLights();
-    $('kfFinOutT').textContent = DEK[st.dekor][1]; $('kfFinInT').textContent = DEK[d2][1] + (st.dvou === 'ne' ? '' : ' (dvoubarevné)');
+    $('kfFinOutT').textContent = DEK[st.dekor][1] + (st.dvou === 'ne' ? '' : ', zevnitř ' + DEK[d2][1]);
     $('kfPDek').src = IMG + 'dekory/' + st.dekor + '.jpg'; $('kfPDekName').textContent = DEK[st.dekor][1];
     $('kfPCap').textContent = 'Orientační náhled zvenku: dekor přenesený na fotku vzoru z katalogu' + (mir ? ', zrcadlově pro levé dveře.' : '.') + ' Skutečný odstín ověřte na vzorníku ve vzorkovně.';
     $('kfSName').textContent = 'ERKADO ' + typName(m, st.typ);
