@@ -66,6 +66,15 @@ function poz_vytvor(PDO $pdo, array $cfg, string $DATA, array $z, array $in, arr
     . "Přijmout a domluvit termín: " . rtrim((string)($cfg['kartoteka_url'] ?? 'https://kartoteka.dvere.app'), '/') . '/servis-pozadavky.php';
   $komu = (array)($cfg['prijemci']['poptavka']['to'] ?? [$cfg['from'] ?? '']);
   posli_mail($cfg, $DATA, array_filter($komu), (array)($cfg['prijemci']['poptavka']['cc'] ?? []), $mail ?: ($cfg['from'] ?? ''), "Servis $cislo – $cisloObj – " . POZ_DRUHY[$druh], $telo);
+  // potvrzení zákazníkovi (jen když máme platný e-mail); chyba odeslání nesmí zrušit založení požadavku
+  if ($mail) {
+    try {
+      $potv = "Dobrý den,\n\nděkujeme, váš požadavek $cislo (" . POZ_DRUHY[$druh] . ") k objednávce č. $cisloObj jsme přijali. Ozveme se vám s termínem návštěvy.\n\n"
+        . "Váš popis: $popis\n" . (($in['preferovany'] ?? '') !== '' ? 'Vhodný termín: ' . poz_cisti((string)$in['preferovany'], 200) . "\n" : '')
+        . "\nStav požadavku uvidíte v aplikaci Moje dveře: https://bezpecne-dvere.cz/aplikace/\nSpěchá to? Zavolejte nám na +420 725 559 235.\n\nBezpečné dveře · KK SYSTEM\nwww.bezpecne-dvere.cz";
+      posli_mail($cfg, $DATA, [$mail], [], $cfg['from'] ?? '', "Přijali jsme váš požadavek – $cislo", $potv);
+    } catch (Throwable $e) { /* potvrzení je doplněk */ }
+  }
   return [$id, $cislo];
 }
 
@@ -105,6 +114,6 @@ function poz_rodny_list(PDO $pdo, array $z): array {
 function poz_mail_termin(array $cfg, string $DATA, array $r, string $cisloObj): bool {
   $em = filter_var(trim((string)$r['email']), FILTER_VALIDATE_EMAIL); if (!$em) return false;
   $telo = "Dobrý den,\n\nvaši žádost " . $r['cislo'] . " k objednávce č. $cisloObj jsme přijali. Návštěvu máme domluvenou na " . poz_datum($r['termin_datum']) . ($r['termin_cas'] ? ' (' . $r['termin_cas'] . ')' : '') . ".\n"
-    . ($r['zprava'] ? "\n" . $r['zprava'] . "\n" : '') . "\nStav požadavku najdete v aplikaci Moje dveře nebo na stránce Moje dveře (QR kód na předávacím listu). Kdyby se termín nehodil, ozvěte se: +420 725 559 235.\n\nBezpečné dveře · KK SYSTEM\nwww.bezpecne-dvere.cz";
+    . ($r['zprava'] ? "\n" . $r['zprava'] . "\n" : '') . "\nStav požadavku najdete v aplikaci Moje dveře (https://bezpecne-dvere.cz/aplikace/). Kdyby se termín nehodil, ozvěte se: +420 725 559 235.\n\nBezpečné dveře · KK SYSTEM\nwww.bezpecne-dvere.cz";
   return posli_mail($cfg, $DATA, [$em], (array)($cfg['prijemci']['objednavka_zakaznik']['cc'] ?? []), $cfg['from'], 'Termín návštěvy – ' . $r['cislo'], $telo);
 }
