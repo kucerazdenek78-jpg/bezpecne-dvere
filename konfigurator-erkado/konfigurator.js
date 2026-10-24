@@ -1,7 +1,8 @@
 /* Konfigurátor vchodových ocelových dveří ERKADO – testovací verze 24. 10. 2026.
    Data: konfigurator-erkado/erkado-data.js (ceny NETTO bez DPH z katalogu 2026).
    Cena = komplet z katalogu (* bez kování / ** se základním kováním) + příplatky; montáž +10 000 Kč bez DPH,
-   s montáží DPH 12 % z celé zakázky, bez montáže 21 %. Doprava podle pásem jako u poptávky dveří do bytu (do 40 km zdarma). */
+   s montáží DPH 12 % z celé zakázky, bez montáže 21 %. Doprava s montáží podle pásem (do 40 km zdarma, 41–80 km 1 200 Kč s DPH, dál upřesníme);
+   bez montáže osobní odběr zdarma, nebo doprava na adresu 18 Kč/km s DPH (jen cesta tam, km z Mapy.com). */
 (function () {
   'use strict';
   var E = window.ERKADO;
@@ -26,7 +27,7 @@
   var st = {
     step: 1, model: 'horn', typ: 1, prov: 'PLAIN GLASS', kon: 't64', zar: 'ocel', smer: 'ven', strana: 'P',
     sirka: '90', sc: '', vyska: 'std', hc: '', dekor: 'dub-surovy', dvou: 'ne', dekor2: 'bily-mat', sklo: 'std', rc2: false,
-    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, km: '', tripMsg: '', trip: null
+    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
   };
 
   /* ── pomocné ── */
@@ -249,9 +250,10 @@
     var rate = st.montaz ? E.montaz.dphMontaz : E.montaz.dph;
     var dph = Math.round(bez * rate / 100), sDph = bez + dph;
     var dop = null;
-    if (st.montaz && st.km !== '' && !isNaN(+st.km)) {
+    if (doruc() && st.km !== '' && !isNaN(+st.km)) {
       var km = +st.km, fee = null;
-      E.doprava.pasma.forEach(function (p) { if (fee === null && km <= p[0]) fee = p[1]; });
+      if (st.montaz) E.doprava.pasma.forEach(function (p) { if (fee === null && km <= p[0]) fee = p[1]; });
+      else fee = Math.round(km * E.doprava.zaKm);
       dop = { km: km, fee: fee };
     }
     var total = sDph + (dop && dop.fee ? dop.fee : 0);
@@ -428,15 +430,27 @@
     }).join('') + '<div class="kf-sub" style="margin-top:1rem">Rozšíření rámu <small style="font-weight:500;color:var(--text-muted)">' + (st.kon === 'h88' ? '30' : '28') + ' mm, ' + kc(E.rozsireniRamu) + ' za kus (str. 70)</small></div>' +
       [['h', 'Nahoře'], ['l', 'Vlevo'], ['p', 'Vpravo']].map(function (o) { return '<label class="pq-check"><input type="checkbox" data-rozs="' + o[0] + '"' + (st.rozs[o[0]] ? ' checked' : '') + '><span><b>Rozšíření rámu ' + o[1].toLowerCase() + '</b></span><em>+ ' + kc(E.rozsireniRamu) + '</em></label>'; }).join('');
   }
+  /* doprava se počítá s montáží, nebo bez montáže při volbě „doprava na adresu“ */
+  function doruc() { return st.montaz || st.odber === 'doprava'; }
+  function dopVal(r) {
+    if (!r.dop) return st.montaz ? 'do 40 km zdarma' : 'spočítáme z adresy';
+    return r.dop.fee === null ? 'upřesníme' : r.dop.fee ? kc(r.dop.fee) : 'zdarma';
+  }
+  function dopLabel(r) { return 'Doprava' + (r.dop ? ' ' + String(r.dop.km).replace('.', ',') + ' km' : '') + (st.montaz ? '' : ' (' + E.doprava.zaKm + ' Kč/km s DPH)'); }
   function renderStep5(r) {
-    $('kfMontaz').innerHTML = '<label class="pq-opt pq-chip">' + radio('montaz', '0', !st.montaz) + 'Bez montáže <small>DPH 21 %, osobní odběr</small></label>' +
+    $('kfMontaz').innerHTML = '<label class="pq-opt pq-chip">' + radio('montaz', '0', !st.montaz) + 'Bez montáže <small>DPH 21 %</small></label>' +
       '<label class="pq-opt pq-chip">' + radio('montaz', '1', st.montaz) + 'S montáží na klíč <em>+ ' + kc(E.montaz.cena) + ' bez DPH</em> <small>DPH 12 %</small></label>';
-    $('kfAddrWrap').hidden = !st.montaz;
+    $('kfOdber').hidden = st.montaz;
+    $('kfOdber').innerHTML = '<label class="pq-opt pq-chip">' + radio('odber', 'odber', st.odber === 'odber') + 'Osobní odběr <small>vzorkovna Most, zdarma</small></label>' +
+      '<label class="pq-opt pq-chip">' + radio('odber', 'doprava', st.odber === 'doprava') + 'Doprava na adresu <em>' + E.doprava.zaKm + ' Kč/km s DPH</em> <small>z Mostu, jen cesta tam</small></label>';
+    $('kfAddrWrap').hidden = !doruc();
+    $('kfAdrL').firstChild.nodeValue = st.montaz ? 'Adresa montáže' : 'Adresa doručení';
     var tm = $('kfTripMsg');
-    if (st.montaz && r.dop) {
+    if (doruc() && r.dop) {
       tm.hidden = false; tm.className = 'pq-trip ok';
-      tm.innerHTML = '🚚 ' + String(r.dop.km).replace('.', ',') + ' km od vzorkovny – doprava ' + (r.dop.fee === null ? '<b>upřesníme</b> (nad 80 km)' : r.dop.fee ? '<b>' + kc(r.dop.fee) + '</b>' : '<b>zdarma</b>') + (st.tripMsg ? ' <small>' + esc(st.tripMsg) + '</small>' : '');
-    } else if (st.montaz && st.tripMsg) { tm.hidden = false; tm.className = 'pq-trip'; tm.textContent = st.tripMsg; }
+      tm.innerHTML = '🚚 ' + String(r.dop.km).replace('.', ',') + ' km od vzorkovny – doprava ' + (r.dop.fee === null ? '<b>upřesníme</b> (nad 80 km)' : r.dop.fee ? '<b>' + kc(r.dop.fee) + '</b>' : '<b>zdarma</b>') +
+        (!st.montaz ? ' <small>(' + String(r.dop.km).replace('.', ',') + ' km × ' + E.doprava.zaKm + ' Kč s DPH)</small>' : '') + (st.tripMsg ? ' <small>' + esc(st.tripMsg) + '</small>' : '');
+    } else if (doruc() && st.tripMsg) { tm.hidden = false; tm.className = 'pq-trip'; tm.textContent = st.tripMsg; }
     else tm.hidden = true;
     var m = M(), rows = [
       ['Dveře', 'ERKADO ' + typName(m, st.typ) + ' · ' + st.prov],
@@ -449,7 +463,7 @@
       ['Madlo', madloText()],
       ['Světlíky', svText()],
       ['Výbava', E.vybava.filter(function (v) { return st.vyb[v.id]; }).map(function (v) { return v.nazev; }).join(', ') || '—'],
-      ['Montáž', st.montaz ? 'ano, na klíč' + (r.dop ? ' · ' + String(r.dop.km).replace('.', ',') + ' km' : '') : 'ne']
+      ['Montáž', st.montaz ? 'ano, na klíč' + (r.dop ? ' · ' + String(r.dop.km).replace('.', ',') + ' km' : '') : 'ne, ' + (st.odber === 'doprava' ? 'doprava na adresu' + (r.dop ? ' · ' + String(r.dop.km).replace('.', ',') + ' km' : '') : 'osobní odběr ve vzorkovně')]
     ];
     $('kfReview').innerHTML = rows.map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('');
   }
@@ -501,11 +515,11 @@
     var li = r.lines.map(function (l) { return '<li><span>' + esc(l[0]) + '</span><b>' + (l[1] ? kc(l[1]) : 'upřesníme') + '</b></li>'; });
     li.push('<li class="sub"><span>Cena bez DPH</span><b>' + kc(r.bez) + '</b></li>');
     li.push('<li><span>DPH ' + r.rate + ' %</span><b>' + kc(r.dph) + '</b></li>');
-    if (st.montaz) li.push('<li><span>Doprava' + (r.dop ? ' ' + String(r.dop.km).replace('.', ',') + ' km' : '') + '</span><b>' + (!r.dop ? 'do 40 km zdarma' : r.dop.fee === null ? 'upřesníme' : r.dop.fee ? kc(r.dop.fee) : 'zdarma') + '</b></li>');
+    if (doruc()) li.push('<li><span>' + esc(dopLabel(r)) + '</span><b>' + dopVal(r) + '</b></li>');
     $('kfSLines').innerHTML = li.join('');
     $('kfSTotal').textContent = kc(r.total);
     $('kfSLabel').textContent = 'Celkem s ' + r.rate + ' % DPH';
-    $('kfSNote').innerHTML = (st.montaz ? 'S montáží na klíč: DPH 12 % z celé zakázky (bydlení). ' : 'Bez montáže: DPH 21 %, odběr ve vzorkovně KK SYSTEM, Obchodní 36, Most. ') +
+    $('kfSNote').innerHTML = (st.montaz ? 'S montáží na klíč: DPH 12 % z celé zakázky (bydlení). ' : (st.odber === 'doprava' ? 'Bez montáže: DPH 21 %, doprava z Mostu ' + E.doprava.zaKm + ' Kč/km s DPH (jen cesta tam). ' : 'Bez montáže: DPH 21 %, odběr ve vzorkovně KK SYSTEM, Obchodní 36, Most. ')) +
       'Ceny dveří podle katalogu ERKADO 2026 (bez DPH). Orientační cena, závazná je nabídka po zaměření.' +
       (r.info.length ? '<br>' + r.info.map(esc).join('<br>') : '');
   }
@@ -560,7 +574,7 @@
   }
   function trip() {
     var a = $('kfAdr').value.trim();
-    if (!a) { st.tripMsg = 'Napište adresu montáže, nebo zadejte vzdálenost ručně.'; render(); return; }
+    if (!a) { st.tripMsg = 'Napište adresu, nebo zadejte vzdálenost ručně.'; render(); return; }
     $('kfTrip').disabled = true; $('kfTrip').textContent = 'Počítám…';
     Promise.all([
       mapy('geocode', { query: E.doprava.odkud, lang: 'cs', limit: 1, type: 'regional.address' }),
@@ -590,7 +604,7 @@
         zaskleni: zasklTyp() ? st.sklo : '', zaskleni_rc2: st.rc2, kovani: kovText(), madlo: madloText(), vlozky_trida: st.tridaC ? 'C' : 'B', odstin_skla: st.odstin, svetliky: svText(), rozsireni_ramu: Object.keys(st.rozs), vybava: Object.keys(st.vyb), katalog: E.katalog, strana_katalogu: m.str
       },
       polozky: r.lines.map(function (l) { return { co: l[0], volba: l[2] || '', priplatek: l[1] }; }),
-      cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz,
+      cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber,
       doprava_km: r.dop ? r.dop.km : null, doprava_cena: r.dop ? r.dop.fee : null, cena_celkem: r.total,
       jmeno: jm[0] || '', prijmeni: jm.slice(1).join(' '), telefon: $('kfTel').value.trim(), email: $('kfEmail').value.trim(),
       ulice: $('kfAdr').value.trim(), mesto: $('kfObec').value.trim(), poznamka: $('kfPozn').value.trim()
@@ -672,7 +686,8 @@
         doc.setDrawColor.apply(doc, LINE); doc.line(Mg, y - 2.6, W - Mg, y - 2.6); y += 1;
         priceRow('Cena bez DPH', kc(r.bez), true);
         priceRow('DPH ' + r.rate + ' %', kc(r.dph));
-        if (d.montaz) priceRow('Doprava' + (r.dop ? ' (' + String(r.dop.km).replace('.', ',') + ' km od vzorkovny)' : ''), !r.dop ? 'do 40 km zdarma' : r.dop.fee === null ? 'upřesníme' : r.dop.fee ? kc(r.dop.fee) : 'zdarma');
+        if (doruc()) priceRow(dopLabel(r), dopVal(r));
+        else priceRow('Osobní odběr ve vzorkovně (Obchodní 36, Most)', 'zdarma');
         ensure(16); y += 2;
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(Mg, y - 4.5, cw, 12, 2, 2, 'FD');
         font('bold', 11, GREEN); doc.text('Celkem vč. ' + r.rate + ' % DPH', Mg + 4, y + 3);
@@ -759,7 +774,7 @@
     rows.push(['Kování', k.kovani], ['Madlo', k.madlo || '–'], ['Vložky', 'třída ' + k.vlozky_trida]);
     d.polozky.forEach(function (p) { rows.push(['· ' + p.co, (p.volba ? p.volba + ' – ' : '') + (p.priplatek ? kc(p.priplatek) : 'upřesníme')]); });
     rows.push(['Cena bez DPH', kc(d.cena_bez_dph)], ['DPH ' + d.dph_sazba + ' %', kc(d.dph)], ['Montáž', d.montaz ? 'ano' : 'ne'],
-      ['Doprava', d.doprava_km == null ? 'nespočítána' : d.doprava_km + ' km – ' + (d.doprava_cena == null ? 'upřesníme' : kc(d.doprava_cena))],
+      ['Doprava', d.doprava === 'odber' ? 'osobní odběr ve vzorkovně' : (d.montaz ? 's montáží' : 'bez montáže, ' + E.doprava.zaKm + ' Kč/km s DPH') + ' – ' + (d.doprava_km == null ? 'km nespočítány' : d.doprava_km + ' km – ' + (d.doprava_cena == null ? 'upřesníme' : kc(d.doprava_cena)))],
       ['Cena celkem s DPH', kc(d.cena_celkem)], ['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email],
       ['Adresa montáže', d.ulice], ['Obec', d.mesto], ['Poznámka', d.poznamka || '–'], ['Odesláno', new Date(d.odeslano).toLocaleString('cs-CZ')]);
     return rows;

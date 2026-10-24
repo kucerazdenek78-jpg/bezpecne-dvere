@@ -345,11 +345,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
         <!-- KROK 5 -->
         <div data-step="5" hidden>
           <fieldset class="pq-block">
-            <legend>Montáž</legend>
+            <legend>Montáž a doprava</legend>
             <div class="pq-chips" id="kfMontaz"></div>
+            <div class="pq-chips" id="kfOdber" style="margin-top:.8rem" hidden></div>
             <div id="kfAddrWrap">
               <div class="kf-row" style="margin-top:1rem">
-                <label class="pq-f" style="flex:3 1 260px">Adresa montáže<input type="text" id="kfAdr" autocomplete="street-address" placeholder="Ulice a číslo, obec"></label>
+                <label class="pq-f" style="flex:3 1 260px" id="kfAdrL">Adresa montáže<input type="text" id="kfAdr" autocomplete="street-address" placeholder="Ulice a číslo, obec"></label>
                 <button type="button" class="kf-btn" id="kfTrip">Spočítat dopravu</button>
               </div>
               <div class="kf-row">
@@ -418,7 +419,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 </section>
 
 <script src="formulare-klient.js?v=20261024a"></script>
-<script src="konfigurator-erkado/erkado-data.js?v=20261024e"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261024f"></script>
+<script src="konfigurator-erkado/erkado-data.js?v=20261024g"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261024g"></script>
 </body>
 </html>
