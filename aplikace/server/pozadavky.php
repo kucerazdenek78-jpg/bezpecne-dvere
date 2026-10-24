@@ -59,7 +59,7 @@ function poz_vytvor(PDO $pdo, array $cfg, string $DATA, array $z, array $in, arr
   $pdo->prepare('UPDATE servis_pozadavky SET cislo=?, fotky=? WHERE id=?')->execute([$cislo, implode("\n", $ulozene), $id]);
   // upozornění nám
   $cisloObj = (string)($d['obj_cislo'] ?? $z['cislo']);
-  $telo = "Nový servisní požadavek $cislo (" . POZ_DRUHY[$druh] . ") z aplikace / stránky Moje dveře.\n\n"
+  $telo = "Nový servisní požadavek $cislo (" . POZ_DRUHY[$druh] . ") – zdroj: $zdroj.\n\n"
     . "Objednávka: $cisloObj · " . ($d['model'] ?? '') . (!empty($d['odstin']) ? ' · ' . $d['odstin'] : '') . "\n"
     . "Zákazník: $jmeno\nTelefon: $tel" . ($mail ? "\nE-mail: $mail" : '') . "\nAdresa: $adresa\n"
     . "Popis: $popis\n" . ($in['preferovany'] ?? '' ? 'Vhodný termín: ' . poz_cisti((string)$in['preferovany'], 200) . "\n" : '') . 'Fotky: ' . count($ulozene) . " ks\n\n"

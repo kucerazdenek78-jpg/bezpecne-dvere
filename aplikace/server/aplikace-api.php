@@ -64,6 +64,44 @@ if ($akce === 'sparovat') {
     'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
 }
 
+// „servis_web“: formulář Servis dveří na webu (servis-dveri.html). Dveře se najdou podle čísla objednávky + posledních 4 číslic telefonu
+// (stejně jako „sparovat“), požadavek se založí do servis_pozadavky (kartotéka → servis-pozadavky.php) a zákazník ho uvidí i v aplikaci.
+// Když objednávku nenajdeme (starší papírová objednávka, překlep), vrátí 404 a web pošle požadavek jako poptávku přes odeslat.php.
+if ($akce === 'servis_web') {
+  $pdo = db(); poz_tabulky($pdo); $ip = klient_ip(); $ted = time();
+  $st = $pdo->prepare("SELECT COUNT(*) FROM pokusy WHERE ip=? AND typ='web_servis' AND cas>?"); $st->execute([$ip, $ted - 3600]);
+  if ((int)$st->fetchColumn() >= 10) chyba(429, 'limit', 'Příliš mnoho požadavků, zkuste to za hodinu.');
+  $pdo->prepare("INSERT INTO pokusy (ip, typ, cas) VALUES (?, 'web_servis', ?)")->execute([$ip, $ted]);
+  if (!empty($_POST['_honey'])) vystup(200, ['ok' => true, 'cislo' => 'S-0']);
+  $cislo = strtoupper(preg_replace('/\s+/', '', mb_substr((string)($_POST['cislo'] ?? ''), 0, 40)));
+  if (preg_match('~^(\d{1,5})[-./_]((?:19|20)\d\d)$~', $cislo, $m)) $cislo = $m[1] . '/' . $m[2];
+  $tel = preg_replace('/\D/', '', (string)($_POST['telefon'] ?? ''));
+  if ($cislo === '' || strlen($tel) < 4) chyba(400, 'data', 'Zadejte číslo objednávky a telefon.');
+  $st = $pdo->prepare("SELECT * FROM zadosti WHERE typ='objednavka_interni' AND REPLACE(UPPER(cislo),' ','')=? ORDER BY id DESC LIMIT 10");
+  $st->execute([$cislo]);
+  $zz = null;
+  foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    $d = json_decode((string)$r['data_json'], true); if (!is_array($d)) continue;
+    $t2 = preg_replace('/\D/', '', (string)($d['telefon'] ?? ''));
+    if (strlen($t2) >= 4 && hash_equals(substr($t2, -4), substr($tel, -4))) { $zz = $r; break; }
+  }
+  if (!$zz) chyba(404, 'nenalezeno', 'Objednávku jsme nenašli.');
+  $soubory = [];
+  foreach (['foto', 'foto1', 'foto2', 'foto3'] as $k) if (!empty($_FILES[$k]['tmp_name']) && ($_FILES[$k]['error'] ?? 1) === UPLOAD_ERR_OK) $soubory[] = [$_FILES[$k]['tmp_name'], (string)$_FILES[$k]['name']];
+  // kontakt z formuláře připíšeme k popisu (může se lišit od objednávky – např. jiná osoba v domácnosti)
+  $kontakt = trim(poz_cisti((string)($_POST['jmeno'] ?? ''), 80) . ' ' . poz_cisti((string)($_POST['prijmeni'] ?? ''), 80));
+  $adr = trim(implode(', ', array_filter([poz_cisti((string)($_POST['ulice'] ?? ''), 120), poz_cisti((string)($_POST['mesto'] ?? ''), 80)])));
+  $popis = poz_cisti((string)($_POST['popis'] ?? ''), 2800);
+  if (mb_strlen($popis) < 5) chyba(400, 'data', 'Popište prosím závadu alespoň několika slovy.');
+  $kdo = implode(', ', array_filter([$kontakt, $adr]));
+  if ($kdo !== '') $popis .= "\n\n(Z webového formuláře: " . $kdo . ')';
+  try {
+    [$pid, $scislo] = poz_vytvor($pdo, $cfg, $DATA, $zz, ['druh' => 'zavada', 'popis' => $popis, 'preferovany' => '',
+      'telefon' => $_POST['telefon'] ?? '', 'email' => $_POST['email'] ?? ''], $soubory, 'web – formulář Servis dveří');
+  } catch (InvalidArgumentException $x) { chyba(400, 'data', 'Popište prosím závadu alespoň několika slovy.'); }
+  vystup(200, ['ok' => true, 'cislo' => $scislo, 'objednavka' => (string)$zz['cislo']]);
+}
+
 // Servis v aplikaci. Dveře se poznají podle tajného zákaznického kódu (stejný jako v odkazu „Moje dveře“, aplikace si ho uloží při spárování).
 // „servis_stav“: stav požadavků + rodný list dveří (objednávka, předání, záruka, servisy, domluvené návštěvy). „servis_nahlasit“: nový požadavek (závada / roční prohlídka) i s fotkami.
 if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_akce' || $akce === 'doporucit' || $akce === 'sparovat_kod' || $akce === 'udrzba_akce') {
