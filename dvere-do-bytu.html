@@ -78,7 +78,8 @@
 
     /* ── PROD IMAGE ── */
     .prod-img-wrap { position:relative; }
-    .prod-img-wrap img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); }
+    .prod-img-wrap { display:flex; flex-direction:column; align-items:center; }
+    .prod-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
     .cert-badge {
       display:flex; align-items:center; justify-content:center; gap:0.85rem;
       margin-top:1rem; background:var(--navy); border-radius:var(--radius);
@@ -280,7 +281,7 @@
         </div>
       </div>
       <div class="prod-img-wrap">
-        <img src="userFiles/dvere/premium-60.png" alt="PREMIUM 60 bezpečnostní dveře RC3 EI60">
+        <img src="userFiles/dvere/premium-60-hero.webp" width="580" height="1190" fetchpriority="high" alt="PREMIUM 60 bezpečnostní dveře RC3 EI60">
         <div class="cert-badge">
           <span class="num">EI60</span>
           <span class="lbl">minutová<br>protipožárnost</span>
