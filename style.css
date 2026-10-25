@@ -14,6 +14,7 @@
   --orange-pale:  #fff3eb;
   --orange-text:  #c2410c;   /* oranžová pro TEXT na světlém podkladu (kontrast ≥ 4,5:1) */
   --navy:         #123d27;
+  --head:         #123d27;   /* barva nadpisů a textu (motivy ji mění) */
   --navy-mid:     #1f6b43;
   --navy-light:   #e8f5ee;
   --blue:         #15803d;
@@ -47,7 +48,7 @@ a  { color: inherit; text-decoration: none; }
 ul { list-style: none; }
 
 /* ─── Typography ─── */
-h1, h2, h3, h4 { font-weight: 700; line-height: 1.2; color: var(--navy); }
+h1, h2, h3, h4 { font-weight: 700; line-height: 1.2; color:var(--head); }
 h1 { font-size: clamp(2rem, 4vw, 3rem); }
 h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
 h3 { font-size: clamp(1.15rem, 2vw, 1.45rem); }
@@ -97,7 +98,7 @@ section.tight { padding: 3rem 0; }
 }
 .btn-outline {
   background: transparent;
-  color: var(--navy);
+  color:var(--head);
   border-color: var(--gray-200);
 }
 .btn-outline:hover {
@@ -188,12 +189,12 @@ section.tight { padding: 3rem 0; }
   white-space: nowrap;
 }
 .nav-link:hover, .nav-link.active {
-  color: var(--navy);
+  color:var(--head);
   background: var(--gray-100);
 }
 .nav-link svg { width: 11px; height: 11px; transition: transform var(--transition); }
 @media (hover:hover){.nav-item:hover .nav-link svg { transform: rotate(180deg); }}
-.nav-tel { font-size: 0.85rem; color: var(--navy); font-weight: 600; margin-right: 0.4rem; }
+.nav-tel { font-size: 0.85rem; color:var(--head); font-weight: 600; margin-right: 0.4rem; }
 
 /* Dropdown */
 .dropdown {
@@ -229,7 +230,7 @@ section.tight { padding: 3rem 0; }
 }
 .dropdown a:hover {
   background: var(--gray-100);
-  color: var(--navy);
+  color:var(--head);
   padding-left: 1.6rem;
 }
 
@@ -327,7 +328,7 @@ section.tight { padding: 3rem 0; }
 }
 .product-card-body { padding: 1.5rem; }
 .product-class { font-size: 0.72rem; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem; }
-.product-card-body h3 { color: var(--navy); margin-bottom: 0.7rem; }
+.product-card-body h3 { color:var(--head); margin-bottom: 0.7rem; }
 .product-specs { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.2rem; }
 .spec-tag {
   background: var(--gray-100); color: var(--gray-600);
@@ -378,13 +379,13 @@ section.tight { padding: 3rem 0; }
 }
 @media (hover:hover){.why-item:hover { box-shadow: var(--shadow); transform: translateX(4px); }}
 .why-item-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.05rem; }
-.why-item h4   { color: var(--navy); margin-bottom: 0.15rem; }
+.why-item h4   { color:var(--head); margin-bottom: 0.15rem; }
 .why-item p    { font-size: 0.88rem; }
 .why-image img { border-radius: var(--radius-lg); width: 100%; box-shadow: var(--shadow-lg); }
 
 /* ─── REVIEWS ─── */
 .reviews-section { background: var(--bg); }
-.reviews-section .section-title    { color: var(--navy); }
+.reviews-section .section-title    { color:var(--head); }
 .reviews-section .section-subtitle { color: var(--gray-400); }
 .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 1.25rem; }
 .review-card {
@@ -405,7 +406,7 @@ section.tight { padding: 3rem 0; }
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 0.82rem; color: var(--orange); flex-shrink: 0;
 }
-.review-name { font-size: 0.87rem; font-weight: 600; color: var(--navy); }
+.review-name { font-size: 0.87rem; font-weight: 600; color:var(--head); }
 .review-city { font-size: 0.73rem; color: var(--gray-400); }
 
 /* ─── LOCATIONS ─── */
@@ -413,7 +414,7 @@ section.tight { padding: 3rem 0; }
 .locations-grid { display: flex; flex-wrap: wrap; gap: 0.65rem; justify-content: center; margin-top: 2rem; }
 .location-tag {
   background: var(--white); border: 1px solid var(--gray-200);
-  color: var(--navy); font-size: 0.87rem; font-weight: 500;
+  color:var(--head); font-size: 0.87rem; font-weight: 500;
   padding: 0.45rem 1.1rem; border-radius: 100px;
   display: flex; align-items: center; gap: 0.35rem;
   transition: var(--transition); box-shadow: var(--shadow-sm);
@@ -447,7 +448,7 @@ section.tight { padding: 3rem 0; }
 }
 .contact-items { display: flex; gap: 2.5rem; align-items: center; justify-content: center; flex-wrap: wrap; }
 .contact-item  { display: flex; align-items: center; gap: 0.7rem; color: var(--text-muted); font-size: 0.9rem; }
-.contact-item strong { color: var(--navy); }
+.contact-item strong { color:var(--head); }
 .contact-item-icon   { font-size: 1.2rem; }
 
 /* ─── FOOTER ─── */
@@ -496,7 +497,7 @@ footer {
 }
 .product-detail-image img { max-height: 300px; object-fit: contain; }
 .product-detail-body { padding: 2.5rem; }
-.product-detail-body h2 { color: var(--navy); margin-bottom: 0.4rem; }
+.product-detail-body h2 { color:var(--head); margin-bottom: 0.4rem; }
 .promo-badge {
   display: inline-block; background: #d42a2a; color: var(--white);
   font-size: 0.72rem; font-weight: 700;
@@ -530,7 +531,7 @@ footer {
 .servis-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
 @media (hover:hover){.servis-card:hover .servis-card-image img { transform: scale(1.04); }}
 .servis-card-body { padding: 1.75rem; flex: 1; }
-.servis-card-body h3 { color: var(--navy); margin-bottom: 0.7rem; }
+.servis-card-body h3 { color:var(--head); margin-bottom: 0.7rem; }
 .servis-card-body p  { font-size: 0.88rem; }
 .servis-card-footer  { padding: 1rem 1.75rem; border-top: 1px solid var(--gray-200); }
 
@@ -538,7 +539,7 @@ footer {
 .price-note {
   background: var(--navy-light); border-left: 4px solid var(--orange);
   border-radius: var(--radius); padding: 1.2rem 1.6rem;
-  font-size: 0.88rem; color: var(--navy); margin-top: 2rem;
+  font-size: 0.88rem; color:var(--head); margin-top: 2rem;
 }
 .price-note strong { color: var(--orange); }
 .price-note a { color: var(--navy-mid); text-decoration: underline; }
@@ -741,7 +742,7 @@ footer p { color: rgba(255,255,255,0.6); }
 /* Pruh Doporuč a získej */
 .refer-band{background:#e8f5ee;border-top:1px solid #cfe8d9;border-bottom:1px solid #cfe8d9;padding:1.3rem 0}
 .refer-inner{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap}
-.refer-text{color:var(--navy);line-height:1.5;flex:1;min-width:260px}
+.refer-text{color:var(--head);line-height:1.5;flex:1;min-width:260px}
 .refer-text strong{font-size:1.1rem}
 .refer-pill{display:inline-block;background:#15803d;color:#fff;font-weight:800;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .7rem;border-radius:99px;margin-right:.6rem}
 a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shadow:none;text-decoration:none}
@@ -760,7 +761,7 @@ a.stock-tag.warr{background:#fff;color:#15803d;border:2px solid #15803d;box-shad
 .perks-line{display:flex;flex-wrap:wrap;gap:.5rem .9rem;margin:0 0 1.25rem;font-weight:700;font-size:.95rem;color:#15803d}
 
 /* Štítek „Moje dveře – aplikace v ceně“ (vkládá bonus.js, odkazuje na moje-dvere.html) */
-.md-bonus{display:inline-flex;align-items:center;gap:.4rem;margin:.55rem 0 .15rem;padding:.28rem .7rem .28rem .5rem;border:1px solid var(--gray-200);border-radius:99px;background:var(--navy-light);color:var(--navy);font-size:.76rem;font-weight:600;line-height:1.25;text-decoration:none;max-width:100%}
+.md-bonus{display:inline-flex;align-items:center;gap:.4rem;margin:.55rem 0 .15rem;padding:.28rem .7rem .28rem .5rem;border:1px solid var(--gray-200);border-radius:99px;background:var(--navy-light);color:var(--head);font-size:.76rem;font-weight:600;line-height:1.25;text-decoration:none;max-width:100%}
 .md-bonus::before{content:"";flex:none;width:1.05rem;height:1.05rem;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231f6b43%22 stroke-width=%221.7%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%226%22 y=%222%22 width=%2212%22 height=%2220%22 rx=%222.5%22/%3E%3Crect x=%229%22 y=%226%22 width=%226%22 height=%2211%22 rx=%220.8%22/%3E%3Ccircle cx=%2213.6%22 cy=%2211.8%22 r=%220.5%22 fill=%22%231f6b43%22/%3E%3Cpath d=%22M10.5 20h3%22/%3E%3C/svg%3E") center/contain no-repeat}
 .md-bonus:hover{border-color:var(--navy-mid)}
 .md-bonus small{font-weight:500;color:var(--text-muted)}

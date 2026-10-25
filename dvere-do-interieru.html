@@ -31,7 +31,7 @@
       font-size: 1.1rem; font-weight: 900; letter-spacing: .05em;
       padding: .5rem 1.1rem; border-radius: var(--radius);
     }
-    .brand-header h2 { font-size: 1.6rem; color: var(--navy); margin: 0; }
+    .brand-header h2 { font-size: 1.6rem; color:var(--head); margin: 0; }
 
     /* ── dostupnost label ── */
     .avail-label {
@@ -49,10 +49,10 @@
     .kov-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
     .kov-img{width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;display:block;background:#f7f7f7}
     .kov-body{padding:.7rem .9rem .85rem;display:flex;flex-direction:column;gap:.2rem}
-    .kov-name{font-weight:800;color:var(--navy);font-size:.95rem}
+    .kov-name{font-weight:800;color:var(--head);font-size:.95rem}
     .kov-sub{font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem}
     .kov-price{display:flex;justify-content:space-between;font-size:.82rem;color:var(--gray-500)}
-    .kov-price strong{color:var(--navy)}
+    .kov-price strong{color:var(--head)}
     @media(max-width:480px){.kov-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}}
     /* zarovnání karet do řádků */
     .int-card{position:relative}
@@ -93,10 +93,10 @@
       padding: .75rem 1rem .9rem;
       flex: 1; display: flex; flex-direction: column; gap: .25rem;
     }
-    .int-card-name { font-weight: 800; color: var(--navy); font-size: .95rem; }
+    .int-card-name { font-weight: 800; color:var(--head); font-size: .95rem; }
     .int-card-sub { font-size: .75rem; color: var(--text-muted); }
     .int-card-price { font-size: .82rem; color: var(--gray-500); margin-top: .1rem; }
-    .int-card-price strong { color: var(--navy); }
+    .int-card-price strong { color:var(--head); }
 
     /* Barevné čipy */
     .color-chips {
@@ -161,14 +161,14 @@
     }
     .zaruben-badge svg { flex-shrink: 0; }
     .int-card-price-line { font-size: .82rem; color: var(--gray-500); }
-    .int-card-price-line strong { color: var(--navy); font-size: .9rem; }
+    .int-card-price-line strong { color:var(--head); font-size: .9rem; }
     .int-card-price-wing { font-size: .73rem; color: var(--text-muted); }
   
     .int-form-section { background: var(--gray-100); padding: 3.5rem 0; }
     .int-form { background: var(--white); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow); max-width: 700px; margin: 0 auto; }
     .int-fr { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .int-fg { margin-bottom: 1rem; }
-    .int-fg label { display: block; font-size: .85rem; font-weight: 600; color: var(--navy); margin-bottom: .4rem; }
+    .int-fg label { display: block; font-size: .85rem; font-weight: 600; color:var(--head); margin-bottom: .4rem; }
     .int-fg input, .int-fg select, .int-fg textarea { width: 100%; padding: .75rem 1rem; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-family: inherit; font-size: .9rem; color: var(--text); background: var(--white); outline: none; }
     .int-fg input:focus, .int-fg select:focus, .int-fg textarea:focus { border-color: var(--blue); }
     .int-fg textarea { min-height: 100px; resize: vertical; }
@@ -238,13 +238,13 @@
   <div class="container">
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-lg);padding:1rem 1.5rem;margin:0 0 1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;"><span style="font-size:.95rem;"><strong>📷 Vyzkoušejte si dveře u sebe.</strong> Vyfoťte své dveře a podívejte se, jak by vypadala vybraná provedení.</span><a href="aplikace/#viz?m=interier" class="btn btn-primary">Vyzkoušet na fotce →</a></div>
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-lg);padding:1.5rem 2rem;margin-bottom:.5rem;">
-      <h3 style="color:var(--navy);margin:0 0 .75rem;font-size:1.05rem;">Ceny a podmínky dodání</h3>
+      <h3 style="color:var(--head);margin:0 0 .75rem;font-size:1.05rem;">Ceny a podmínky dodání</h3>
       <p style="margin:0 0 .4rem;font-size:.9rem;"><strong>Ceny jsou za kompletní dveře včetně zárubně</strong>, bez kování a bez DPH.</p>
       <p style="margin:0 0 .4rem;font-size:.9rem;"><strong>Montáž:</strong> zákazník si montáž vyžádá, přijde technik a zaměří. Montáž provádíme na místě.</p>
       <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.9rem;">
         <div style="background:#fff;border:1px solid #dce9e1;border-radius:8px;padding:.65rem 1.1rem;flex:1;min-width:160px;">
           <div style="font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">Prodej bez montáže</div>
-          <div style="font-size:1.25rem;font-weight:900;color:var(--navy);">DPH 21 %</div>
+          <div style="font-size:1.25rem;font-weight:900;color:var(--head);">DPH 21 %</div>
         </div>
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:.65rem 1.1rem;flex:1;min-width:160px;">
           <div style="font-size:.72rem;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem;">Montáž naší firmou</div>
@@ -999,7 +999,7 @@
           </div>
         </div>
       </div>
-      <h3 style="color:var(--navy);font-size:1rem;margin:1.6rem 0 .3rem;">Klika s uzamykáním k bezfalcovým dveřím ALTAMURA 1 (bez spodní rozety)</h3>
+      <h3 style="color:var(--head);font-size:1rem;margin:1.6rem 0 .3rem;">Klika s uzamykáním k bezfalcovým dveřím ALTAMURA 1 (bez spodní rozety)</h3>
       <p style="color:var(--text-muted);font-size:.85rem;margin:0 0 1rem;">Pro skladové bezfalcové dveře Altamura 1.</p>
       <div class="kov-grid">
         <div class="kov-card">

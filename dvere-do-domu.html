@@ -75,7 +75,7 @@
     }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 0.4rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color:var(--head); margin-bottom: 0.4rem; }
     .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 0.75rem 1rem;
@@ -96,7 +96,7 @@
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
 
     .erkado-miru { max-width:900px; margin:0 auto 2.5rem; padding:1.4rem 1.6rem; background:var(--white); border:1px solid var(--gray-200); border-left:4px solid var(--orange); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
-    .erkado-miru h3 { color:var(--navy); margin:0 0 .6rem; font-size:1.15rem; }
+    .erkado-miru h3 { color:var(--head); margin:0 0 .6rem; font-size:1.15rem; }
     .erkado-miru p { color:var(--text); font-size:.95rem; line-height:1.65; margin:0; }
     /* ERKADO catalog */
     @media(max-width:480px){.erkado-featured{grid-template-columns:repeat(3,1fr)!important;gap:.5rem}.e-card-more{display:none!important}.e-card-meta .variants{display:none}.e-card-body{padding:.5rem!important}.e-card-meta .variants{font-size:.65rem}.e-card-meta .price{font-size:.78rem}.e-card .btn{font-size:.68rem!important;padding:.45rem .2rem!important}.erkado-featured .e-card-head .model-label{font-size:.6rem!important;padding:1.5rem .3rem .5rem!important;letter-spacing:-.01em}.e-card-head .nov-badge{font-size:.55rem;padding:.15rem .4rem;top:6px;right:6px}.erkado-mini-grid{grid-template-columns:repeat(3,1fr)!important;gap:.5rem}.e-mini-body{padding:.45rem .45rem .55rem}.e-mini-name{font-size:.78rem}.e-mini-price{font-size:.68rem}.e-mini-more{font-size:.68rem}.e-mini-btn{font-size:.7rem}}
@@ -122,7 +122,7 @@
     @media (hover:hover){.e-mini:hover { box-shadow:var(--shadow); transform:translateY(-2px); }}
     .e-mini-img { width:100%; height:auto; aspect-ratio:302/600; object-fit:contain; background:#f3f4f2; display:block; }
     .e-mini-body { padding:0.65rem 0.8rem 0.8rem; flex:1; display:flex; flex-direction:column; }
-    .e-mini-name { font-weight:700; color:var(--navy); font-size:0.9rem; display:flex; align-items:center; gap:0.35rem; }
+    .e-mini-name { font-weight:700; color:var(--head); font-size:0.9rem; display:flex; align-items:center; gap:0.35rem; }
     .e-mini-badge { background:var(--orange); color:#fff; font-size:0.6rem; font-weight:700; padding:0.15rem 0.4rem; border-radius:100px; }
     .e-mini-price { font-size:0.78rem; color:var(--gray-500); margin-top:0.2rem; }
     .e-mini-btn { display:block; margin-top:auto; padding-top:0.55rem; text-align:center; font-size:0.75rem; color:var(--blue); font-weight:600; text-decoration:none; }
@@ -134,7 +134,7 @@
     .e-mini-btn { padding-top:.3rem !important; }
     .erkado-thermo-info { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-bottom:2rem; }
     .thermo-box { background:var(--gray-100); border-radius:var(--radius); padding:0.75rem; text-align:center; }
-    .thermo-box .val { font-size:1.2rem; font-weight:800; color:var(--navy); }
+    .thermo-box .val { font-size:1.2rem; font-weight:800; color:var(--head); }
     .thermo-box.hot .val { color:var(--orange); }
     .thermo-box .lbl { font-size:0.68rem; color:var(--gray-500); margin-top:0.2rem; }
     @media(max-width:600px){ .erkado-thermo-info{grid-template-columns:1fr 1fr;} .erkado-mini-grid{grid-template-columns:1fr 1fr;} .erkado-featured{grid-template-columns:1fr;} }
@@ -237,7 +237,7 @@
         </div>
 
         <div>
-          <h3 style="margin-bottom:1.25rem;color:var(--navy);">Technické údaje</h3>
+          <h3 style="margin-bottom:1.25rem;color:var(--head);">Technické údaje</h3>
           <ul class="specs-list">
             <li>Bezpečnostní třída: <strong>RC3</strong></li>
             <li>Tepelná izolace: <strong>0,99 W/m²K</strong></li>
@@ -282,7 +282,7 @@
 
       <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:3rem;align-items:start;margin-top:1.5rem;">
         <div>
-          <h3 style="margin-bottom:1.25rem;color:var(--navy);">Technické údaje</h3>
+          <h3 style="margin-bottom:1.25rem;color:var(--head);">Technické údaje</h3>
           <ul class="specs-list">
             <li>Bezpečnostní třída: <strong>RC3</strong></li>
             <li>Tepelná izolace: <strong>0,8 W/m²K</strong></li>
@@ -367,7 +367,7 @@
     </div>
 
     <!-- DOPORUČENÉ MODELY -->
-    <h3 style="color:var(--navy);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:2px solid var(--orange);">⭐ Doporučené modely</h3>
+    <h3 style="color:var(--head);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:2px solid var(--orange);">⭐ Doporučené modely</h3>
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-lg);padding:1rem 1.5rem;margin:0 0 1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;"><span style="font-size:.95rem;"><strong>📷 Vyzkoušejte si dveře u sebe.</strong> Vyfoťte své vchodové dveře a vyzkoušejte si na nich provedení ERKADO.</span><a href="aplikace/#viz?m=domovni" class="btn btn-primary">Vyzkoušet na fotce →</a></div>
     <div class="erkado-featured">
 
@@ -516,7 +516,7 @@
     </div><!-- /erkado-featured -->
 
     <!-- KOMPLETNÍ NABÍDKA -->
-    <h3 style="color:var(--navy);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gray-200);">Kompletní nabídka — všechny řady</h3>
+    <h3 style="color:var(--head);font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid var(--gray-200);">Kompletní nabídka — všechny řady</h3>
     <div class="erkado-mini-grid">
 
       <div class="e-mini"><img src="erkado-dvere/horn.jpg" alt="HORN" class="e-mini-img" loading="lazy"><div class="e-mini-body"><div class="e-mini-name">HORN</div><div class="e-mini-price"><span class="e-nw">od 38 371 Kč</span> <span class="e-var"><i>· </i>4 var.</span></div><a class="e-mini-more" href="katalog-erkado.html#strana-23">📖 Katalog, str. 23</a><a class="e-mini-btn" href="#poptavka" onclick="setTimeout(()=>{document.getElementById('erkado-model').value='ERKADO HORN'},50)">Poptávka →</a></div></div>
