@@ -83,7 +83,17 @@
     .pr-adv-img img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; }
     .pr-adv figcaption { padding:0.65rem 0.8rem 0.8rem; font-size:0.8rem; line-height:1.4; color:var(--text-muted); }
     .pr-adv figcaption b { display:block; color:var(--navy); font-size:0.88rem; margin-bottom:0.15rem; }
+    .pr-adv-wide { grid-column:1 / -1; }
+    .pr-adv-wide .pr-adv-img { height:190px; }
     @media (max-width:420px){ .pr-adv { grid-template-columns:1fr; } }
+    .pr-certs { margin-top:1.6rem; }
+    .pr-certs h4 { color:var(--navy); margin:0 0 0.75rem; }
+    .pr-certdoc { display:grid; grid-template-columns:84px minmax(0,1fr); gap:0.9rem; align-items:start; background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.8rem; margin-bottom:0.7rem; box-shadow:var(--shadow-sm); color:var(--text); text-decoration:none; }
+    .pr-certdoc img { width:84px; height:auto; border:1px solid var(--gray-200); border-radius:4px; }
+    .pr-certdoc span { font-size:0.82rem; line-height:1.45; color:var(--text-muted); min-width:0; }
+    .pr-certdoc b { display:block; color:var(--navy); font-size:0.9rem; margin-bottom:0.2rem; }
+    .pr-certdoc em { display:block; font-style:normal; font-weight:700; color:var(--navy-mid, var(--navy)); margin-top:0.4rem; }
+    @media (hover:hover){ .pr-certdoc:hover { border-color:var(--navy); } }
     .prod-img-wrap { position:relative; }
     .prod-img-wrap { display:flex; flex-direction:column; align-items:center; }
     .prod-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
@@ -365,6 +375,22 @@
           </div>
           <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;">Příplatkové odstíny (Bílá wenge, Ocelově šedá) — příplatek 4 000 Kč, dodací lhůta 8–12 týdnů.</p>
         </div>
+
+        <div class="pr-certs">
+          <h4>Certifikáty ověřené v České republice</h4>
+          <a class="pr-certdoc" href="dokumenty/certifikaty/PREMIUM60-NBU-T0030-2026.pdf" target="_blank" rel="noopener">
+            <img src="userFiles/dvere/premium60/certifikaty/nbu.webp" width="360" height="510" alt="Certifikát NBÚ č. T0030/2026 pro dveře PREMIUM 60 RC3 EI" loading="lazy">
+            <span><b>Národní bezpečnostní úřad</b>Certifikát technického prostředku č. T0030/2026 – typ 3. Platí do 13. 4. 2029.<em>PDF ke stažení ↓</em></span>
+          </a>
+          <a class="pr-certdoc" href="dokumenty/certifikaty/PREMIUM60-certifikat-shody-TT-120-2026.pdf" target="_blank" rel="noopener">
+            <img src="userFiles/dvere/premium60/certifikaty/trezor-test.webp" width="360" height="510" alt="Certifikát shody TREZOR TEST č. TT-120/2026 – bezpečnostní třída RC 3" loading="lazy">
+            <span><b>TREZOR TEST s.r.o.</b>Certifikát shody č. TT-120/2026 – bezpečnostní třída RC 3 podle ČSN EN 1627. Platí do 13. 4. 2029.<em>PDF ke stažení ↓</em></span>
+          </a>
+          <a class="pr-certdoc" href="dokumenty/certifikaty/PREMIUM60-RC3-EI-certifikat-vyrobku-CZ.pdf" target="_blank" rel="noopener">
+            <img src="userFiles/dvere/premium60/certifikaty/pavus.webp" width="360" height="510" alt="Certifikát výrobku PAVUS č. 216/C5/2024/0015 – protipožární dveře RC3" loading="lazy">
+            <span><b>PAVUS a.s.</b>Certifikát výrobku č. 216/C5/2024/0015 – požární odolnost EW 60 / EI<sub>2</sub> 60 ze strany se závěsy, RC 3.<em>PDF ke stažení ↓</em></span>
+          </a>
+        </div>
       </div>
 
       <div>
@@ -393,8 +419,7 @@
         <div class="pr-adv">
           <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/rez-letak.jpg" width="516" height="520" alt="Schéma čepů PREMIUM 60: aktivní čepy na straně zámku a nahoře, pevné trny na straně závěsů" loading="lazy"></div><figcaption><b>Jistí i nahoře</b>7 vodorovných čepů, 1 svislý nahoře a 6 pevných trnů na straně závěsů.</figcaption></figure>
           <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/kovani-letak.jpg" width="700" height="336" alt="Kování PREMIUM 60: klika/koule INOX a černá" loading="lazy"></div><figcaption><b>Kování RC3 v ceně</b>Klika nebo koule, inox nebo černé. Vložka s 5 klíči a panoramatické kukátko.</figcaption></figure>
-          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/certifikat-nbu.webp" width="360" height="510" alt="Certifikát NBÚ pro dveře PREMIUM 60 RC3 EI" loading="lazy"></div><figcaption><b>Certifikováno v ČR</b>NBÚ ČR, Trezor test a PAVUS. Jediné bytové dveře ověřené českou autoritou.</figcaption></figure>
-          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 v dekorech dub, antracit a ořech" loading="lazy"></div><figcaption><b>Šest dekorů skladem</b>Dub, ořech, světlé wenge, bílá, černá perleť a antracit.</figcaption></figure>
+          <figure class="pr-adv-wide"><div class="pr-adv-img"><img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 v dekorech dub, antracit a ořech" loading="lazy"></div><figcaption><b>Šest dekorů skladem</b>Dub, ořech, světlé wenge, bílá, černá perleť a antracit.</figcaption></figure>
         </div>
 
         <div class="yt-short-wrap">
