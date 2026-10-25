@@ -147,7 +147,7 @@
         y += noteL.length * 3.4 + 5;
 
         /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */
-        var bonusOn = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+        var bonusOn = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
         try { if (localStorage.getItem('bd-bonus') === '1') bonusOn = true; } catch (e) {}
         if (bonusOn) {
           var regB = (d.model_kod === 'premium60' || d.model_kod === 'extreme54' || d.model_kod === 'magnum56' || d.model_kod === 'securido65') && !/Ano,\s*na/.test(String(d.zaruka || '')), bh0 = regB ? 15 : 11;

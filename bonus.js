@@ -1,7 +1,7 @@
 /* Štítek „Aplikace Moje dveře v ceně“ na kartách a v detailech dveří. Texty a podmínky bonusu jsou na moje-dvere.html. */
 (function () {
   /* Štítek se na ostrém webu zapne samo od 1. 11. 2026. Náhled dřív: otevřete jakoukoli stránku s ?bonus=1 (vypnutí ?bonus=0), platí jen v tom prohlížeči. */
-  var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+  var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
   try {
     var q = location.search.match(/[?&]bonus=([01])/);
     if (q) { if (q[1] === '1') localStorage.setItem('bd-bonus', '1'); else localStorage.removeItem('bd-bonus'); }

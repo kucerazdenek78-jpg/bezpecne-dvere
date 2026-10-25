@@ -2,7 +2,7 @@
    Zobrazí se od 1. 11. 2026 (náhled dřív: přidej ?nahled=1 do adresy).
    Použití: <div data-servisni-knizka></div>  nebo  <div data-servisni-knizka="kompakt"></div> */
 (function () {
-  var START = new Date('2026-11-01T00:00:00+01:00').getTime();
+  var START = new Date('2026-10-25T00:00:00+01:00').getTime();
   var preview = /[?&]nahled=1/.test(location.search);
   if (Date.now() < START && !preview) return;
   var slots = document.querySelectorAll('[data-servisni-knizka]');

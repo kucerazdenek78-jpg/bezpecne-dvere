@@ -1,7 +1,7 @@
 /* Konfigurátor ERKADO na stránce Dveře do domu – zapne se sám od 1. 11. 2026 (do té doby jen zkušební provoz přes panel prodejce).
    Náhled dřív: stránka s ?bonus=1 (vypnutí ?bonus=0), stejný přepínač bd-bonus jako bonus.js; platí jen v tom prohlížeči. */
 (function () {
-  var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+  var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
   try {
     var q = location.search.match(/[?&]bonus=([01])/);
     if (q) { if (q[1] === '1') localStorage.setItem('bd-bonus', '1'); else localStorage.removeItem('bd-bonus'); }

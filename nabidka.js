@@ -300,7 +300,7 @@
 
   /* ── PDF ── */
   function bonusOn() {
-    var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+    var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
     try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {}
     return on;
   }

@@ -82,7 +82,7 @@
   /* Moje dveře: zapne se samo od 1. 11. 2026 (jen dveře z kartotéky, tj. koupené od tohoto data).
      Náhled dřív: #moje?test=1 (platí jen v tomto prohlížeči, vypnutí #moje?test=0) nebo stejný přepínač bd-bonus jako na webu (?bonus=1). */
   function mojeOn() {
-    var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime();
+    var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
     try {
       var t = /[?&]test=([01])/.exec(location.hash);
       if (t && /^#moje/.test(location.hash)) { if (t[1] === '1') localStorage.setItem('bd-bonus', '1'); else localStorage.removeItem('bd-bonus'); }
@@ -523,7 +523,7 @@
 
   /* dveře do domu → konfigurátor ERKADO (stejné názvy řad); fotka a rohy se uloží, ať je po návratu nemusí zákazník dělat znovu */
   /* odkaz do konfigurátoru z aplikace: od 1. 11. 2026 (dřív jen s přepínačem bd-bonus, stejně jako Moje dveře) */
-  function konfOn() { var on = Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} return on; }
+  function konfOn() { var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} return on; }
   function konfUrl(n) { return '../konfigurator-erkado.html#' + String(n).toLowerCase(); }
   function savePhoto() {
     if (!photo) return;

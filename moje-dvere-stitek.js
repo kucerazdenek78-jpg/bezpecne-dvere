@@ -4,7 +4,7 @@
    - na <img data-md-stitek>  → fotka se obalí a štítek je v jejím pravém dolním rohu
    - na kontejneru <div data-md-stitek="kontejner"> (pozice relative) → štítek je v rohu kontejneru */
 (function () {
-  var START = new Date('2026-11-01T00:00:00+01:00').getTime();
+  var START = new Date('2026-10-25T00:00:00+01:00').getTime();
   var preview = /[?&]nahled=1/.test(location.search);
   if (Date.now() < START && !preview) return;
   var END = null; /* konec zobrazení štítku u loga: null = do odvolání, jinak např. new Date('2027-02-01T00:00:00+01:00').getTime() */

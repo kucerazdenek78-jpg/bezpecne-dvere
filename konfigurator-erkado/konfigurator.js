@@ -770,7 +770,7 @@
   $('kfAdr').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); trip(); } });
   var lastUrl = null;
   var LIVE = !!(window.BDForm && window.BDForm.send);
-  if (LIVE && Date.now() >= new Date('2026-11-01T00:00:00+01:00').getTime()) $('kfMode').hidden = true; /* od 1. 11. ostrý provoz */
+  if (LIVE && Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime()) $('kfMode').hidden = true; /* od 1. 11. ostrý provoz */
   if (!LIVE) { $('kfMode').textContent = 'Testovací verze · neodesílá se'; $('kfSendBtn').hidden = true; $('kfJsonBtn').hidden = false;
     $('kfMsg').textContent = 'Testovací verze: nic se neodesílá. PDF má stejný vzhled jako PDF poptávky dveří do bytu.'; }
   function showPdf(blob) {
