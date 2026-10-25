@@ -100,8 +100,8 @@
     @media(max-width:480px){ .corner-pill { font-size:.66rem; padding:.4rem .8rem; letter-spacing:.08em; } .specs-hero .pspec-value { font-size:1.4rem; } .specs-hero .pspec.top .pspec-value { font-size:1.7rem; } .specs-hero .pspec-value.sm { font-size:1rem; } }
     .pspec-value { font-size:0.93rem; font-weight:700; color:var(--navy); }
     .premium-img-wrap { position:relative; }
-    .premium-img-wrap { display:flex; justify-content:center; }
-    .premium-img-wrap img { width:100%; height:auto; }
+    .premium-img-wrap { display:flex; justify-content:center; width:fit-content; max-width:100%; margin:0 auto; }
+    .premium-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(760px,82vh); transform-origin:50% 100%; will-change:transform; filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
     .cert-badge {
       display:flex; align-items:center; justify-content:center; gap:0.85rem;
       margin-top:1rem; background:var(--navy); border-radius:var(--radius);
@@ -409,7 +409,7 @@
 
       <div class="premium-img-wrap" data-md-stitek="kontejner">
         <span class="corner-pill">⭐ TOP dveře</span>
-        <img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 – dveře v dekoru dub, antracit a ořech">
+        <img src="userFiles/dvere/premium-60-hero.webp" width="580" height="1190" alt="PREMIUM 60 bezpečnostní dveře RC3 EI60">
         <div class="discount-badge">🏷️ AKCE SLEVA</div>
       </div>
 
@@ -966,6 +966,19 @@
 </script>
 <!-- VITEJ-ANTRE:end -->
 <script src="servisni-knizka.js?v=20261021"></script>
+<script>
+/* PREMIUM 60 na úvodu: při posunu stránky se dveře plynule zvětšují (vypnuto při „omezit pohyb“) */
+(function(){
+  var img=document.querySelector('.premium-img-wrap img'); if(!img) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var wrap=img.parentNode, raf=0;
+  function upd(){ raf=0; var r=wrap.getBoundingClientRect(), vh=window.innerHeight||800;
+    var p=Math.max(0,Math.min(1,(vh*0.95-r.top)/(vh*0.8)));
+    img.style.transform=p?'scale('+(1+0.14*p).toFixed(3)+')':''; }
+  function on(){ if(!raf) raf=requestAnimationFrame(upd); }
+  window.addEventListener('scroll',on,{passive:true}); window.addEventListener('resize',on); upd();
+})();
+</script>
 <script src="moje-dvere-stitek.js?v=20261025b"></script>
 </body>
 </html>
