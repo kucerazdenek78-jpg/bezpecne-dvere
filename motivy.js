@@ -2,7 +2,7 @@
    Automaticky podle data a hodiny. Zkoušení: ?motiv=zima-noc (uloží se v prohlížeči), ?motiv=auto vrátí automatiku,
    ?motivy=1 zobrazí přepínač. Vypnout celé: MOTIVY_ZAPNUTO = false. */
 (function () {
-  var MOTIVY_ZAPNUTO = false;  /* false = pro návštěvníky vypnuto, zkoušet jde přes ?motivy=1 nebo ?motiv=zima-noc; true = zapnout automatiku pro všechny */
+  var MOTIVY_ZAPNUTO = true;  /* false = pro návštěvníky vypnuto, zkoušet jde přes ?motivy=1 nebo ?motiv=zima-noc; true = zapnout automatiku pro všechny */
   var NOC_OD = 19, NOC_DO = 6;           /* hodiny: noc je od 19:00 do 6:00 */
   var KEY = 'bd-motiv';
   var root = document.documentElement;
