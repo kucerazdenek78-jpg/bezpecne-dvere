@@ -725,6 +725,7 @@ footer p { color: rgba(255,255,255,0.6); }
 .hero-photos img:nth-child(2){margin-bottom:1.1rem}
 .hero-photos img:nth-child(1),.hero-photos img:nth-child(3){transform:translateY(.4rem)}
 .page-header.hero-modern.has-photos::after{display:none}
+@media(min-width:1001px){.page-header.has-photos .container>*{max-width:630px}}
 @media(max-width:1000px){.hero-photos{display:none}}
 @media(max-width:700px){.hero-photos{display:none}}
 
