@@ -88,7 +88,8 @@
     .pspec-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange-text); display:block; margin-bottom:0.15rem; }
     .pspec-value { font-size:0.93rem; font-weight:700; color:var(--navy); }
     .premium-img-wrap { position:relative; }
-    .premium-img-wrap img { width:100%; border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); }
+    .premium-img-wrap { display:flex; justify-content:center; }
+    .premium-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
     .cert-badge {
       display:flex; align-items:center; justify-content:center; gap:0.85rem;
       margin-top:1rem; background:var(--navy); border-radius:var(--radius);
@@ -420,7 +421,7 @@
       </div>
 
       <div class="premium-img-wrap">
-        <img src="userFiles/dvere/premium-60.png" alt="PREMIUM 60">
+        <img src="userFiles/dvere/premium-60-hero.webp" width="580" height="1190" alt="PREMIUM 60">
         <div class="discount-badge">🏷️ AKCE SLEVA</div>
       </div>
 
