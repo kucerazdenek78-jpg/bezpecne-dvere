@@ -101,7 +101,8 @@
     .pr-certdoc em { display:block; font-style:normal; font-weight:700; color:var(--navy-mid, var(--navy)); margin-top:0.4rem; }
     @media (hover:hover){ .pr-certdoc:hover { border-color:var(--navy); } }
     .prod-img-wrap { position:relative; }
-    .prod-img-wrap { display:flex; flex-direction:column; align-items:center; }
+    .prod-img-wrap { display:flex; flex-direction:column; align-items:center; perspective:1100px; }
+    .prod-img-wrap > img { transform-origin:12% 55%; will-change:transform; }
     .prod-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
     .cert-badge {
       display:flex; align-items:center; justify-content:center; gap:0.85rem;
@@ -992,6 +993,19 @@
   })();
 </script>
 <script>
+/* hlavní fotka dveří: při posouvání stránky se dveře lehce otevřou (otočení kolem závěsů) a zvětší; vypnuto při „omezit pohyb“ */
+(function () {
+  var img = document.querySelector('.prod-img-wrap > img');
+  if (!img || !window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var busy = false;
+  function frame() {
+    busy = false;
+    var p = Math.max(0, Math.min(1, (window.pageYOffset || 0) / 600));   // 0 … 1 během prvních 600 px
+    img.style.transform = p ? 'rotateY(' + (-26 * p).toFixed(2) + 'deg) scale(' + (1 + 0.1 * p).toFixed(3) + ')' : '';
+  }
+  window.addEventListener('scroll', function () { if (!busy) { busy = true; requestAnimationFrame(frame); } }, { passive: true });
+  frame();
+})();
 /* zvětšení obrázku po kliknutí (img[data-zoom]); zavře klik, Esc nebo tlačítko */
 (function () {
   var imgs = document.querySelectorAll('img[data-zoom]');
