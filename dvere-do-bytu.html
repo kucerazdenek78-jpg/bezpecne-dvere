@@ -101,8 +101,8 @@
     .pr-certdoc em { display:block; font-style:normal; font-weight:700; color:var(--navy-mid, var(--navy)); margin-top:0.4rem; }
     @media (hover:hover){ .pr-certdoc:hover { border-color:var(--navy); } }
     .prod-img-wrap { position:relative; }
-    .prod-img-wrap { display:flex; flex-direction:column; align-items:center; perspective:1100px; }
-    .prod-img-wrap > img { transform-origin:12% 55%; will-change:transform; }
+    .prod-img-wrap { display:flex; flex-direction:column; align-items:center; }
+    .prod-img-wrap > img { transform-origin:50% 40%; will-change:transform; }
     .prod-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
     .cert-badge {
       display:flex; align-items:center; justify-content:center; gap:0.85rem;
@@ -304,7 +304,7 @@
           <a href="dokumenty/letak-premium-60.pdf" target="_blank" class="btn btn-outline">📄 Stáhnout leták</a>
         </div>
       </div>
-      <div class="prod-img-wrap">
+      <div class="prod-img-wrap" data-md-stitek="kontejner">
         <img src="userFiles/dvere/premium-60-hero.webp" width="580" height="1190" fetchpriority="high" alt="PREMIUM 60 bezpečnostní dveře RC3 EI60">
         <div class="cert-badge">
           <span class="num">EI60</span>
@@ -534,7 +534,7 @@
       </div>
 
       <div>
-        <img src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 24px rgba(18,61,39,.18));margin-bottom:1.5rem;">
+        <img data-md-stitek src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 24px rgba(18,61,39,.18));margin-bottom:1.5rem;">
 
         <div class="delivery-box">
           <h4>Co dostanu při dodávce na klíč?</h4>
@@ -573,7 +573,7 @@
       <!-- MAGNUM 56 -->
       <div id="magnum56">
         <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2rem;box-shadow:var(--shadow-sm);">
-          <img src="userFiles/barva-dveri/magnum56/magnum-3-uvod.jpg" alt="MAGNUM 56" style="width:100%;height:220px;object-fit:contain;background:#fff;border-radius:var(--radius);margin-bottom:1.5rem;">
+          <img data-md-stitek src="userFiles/barva-dveri/magnum56/magnum-3-uvod.jpg" alt="MAGNUM 56" style="width:100%;height:220px;object-fit:contain;background:#fff;border-radius:var(--radius);margin-bottom:1.5rem;">
 
           <h3 style="color:var(--navy);font-size:1.35rem;margin-bottom:0.3rem;">MAGNUM 56 <span style="color:var(--orange-text);font-size:1rem;">RC3 EI30</span></h3>
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.2rem;">Výrobce HT dveře — fóliovaný povrch, ocelovými tyčemi a dřevěným rámem vyztužená konstrukce</p>
@@ -638,7 +638,7 @@
       <!-- SECURIDO 65 -->
       <div id="securido65">
         <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:2rem;box-shadow:var(--shadow-sm);">
-          <img src="userFiles/dvere/securido65.png" alt="SECURIDO 65" style="width:100%;height:220px;object-fit:contain;border-radius:var(--radius);margin-bottom:1.5rem;background:var(--bg);">
+          <img data-md-stitek src="userFiles/dvere/securido65.png" alt="SECURIDO 65" style="width:100%;height:220px;object-fit:contain;border-radius:var(--radius);margin-bottom:1.5rem;background:var(--bg);">
 
           <h3 style="color:var(--navy);font-size:1.35rem;margin-bottom:0.3rem;">SECURIDO 65 <span style="color:var(--orange-text);font-size:1rem;">RC3 EI30</span></h3>
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.2rem;">Celokovové dveře s ANTIPANIC systémem — odemykání zevnitř bez klíče. Certifikace CERTEST + NBÚ (SK)</p>
@@ -1001,7 +1001,7 @@
   function frame() {
     busy = false;
     var p = Math.max(0, Math.min(1, (window.pageYOffset || 0) / 600));   // 0 … 1 během prvních 600 px
-    img.style.transform = p ? 'rotateY(' + (-26 * p).toFixed(2) + 'deg) scale(' + (1 + 0.1 * p).toFixed(3) + ')' : '';
+    img.style.transform = p ? 'scale(' + (1 + 0.08 * p).toFixed(3) + ')' : '';
   }
   window.addEventListener('scroll', function () { if (!busy) { busy = true; requestAnimationFrame(frame); } }, { passive: true });
   frame();
@@ -1031,5 +1031,6 @@
 <script src="cookies.js?v=3" defer></script>
 <script src="bonus.js?v=20261016c" defer></script>
 <script src="servisni-knizka.js?v=20261021"></script>
+<script src="moje-dvere-stitek.js?v=20261025"></script>
 </body>
 </html>
