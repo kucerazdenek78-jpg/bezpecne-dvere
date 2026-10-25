@@ -86,6 +86,18 @@
     .premium-specs-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem; margin-bottom:2rem; }
     .pspec { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); padding:0.85rem 1rem; box-shadow:var(--shadow-sm); }
     .pspec-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange-text); display:block; margin-bottom:0.15rem; }
+    .corner-pill { position:absolute; top:.6rem; left:.6rem; z-index:3; display:inline-flex; align-items:center; background:var(--orange); color:#fff; font-size:.78rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:.5rem 1.1rem; border-radius:100px; border:2px solid #fff; box-shadow:0 8px 20px rgba(0,0,0,.25); transform:rotate(-3deg); }
+    .corner-pill.cv { background:#123d27; }
+    .specs-hero { gap:.8rem; }
+    .specs-hero .pspec { padding:1rem 1.1rem; border-left:5px solid var(--orange); }
+    .specs-hero .pspec-value { display:block; font-size:1.7rem; font-weight:900; line-height:1.1; letter-spacing:-.01em; }
+    .specs-hero .pspec-value.sm { font-size:1.1rem; padding-top:.3rem; }
+    .specs-hero .pspec-sub { display:block; font-size:.8rem; font-weight:600; color:var(--text-muted); margin-top:.2rem; }
+    .specs-hero .pspec.top { background:linear-gradient(135deg,#1f6b45,#123d27); border-color:#123d27; border-left-color:#ffbe96; box-shadow:0 10px 22px rgba(18,61,39,.28); }
+    .specs-hero .pspec.top .pspec-label { color:#ffbe96; }
+    .specs-hero .pspec.top .pspec-value { color:#fff; font-size:2.1rem; }
+    .specs-hero .pspec.top .pspec-sub { color:#cfe9da; }
+    @media(max-width:480px){ .corner-pill { font-size:.66rem; padding:.4rem .8rem; letter-spacing:.08em; } .specs-hero .pspec-value { font-size:1.4rem; } .specs-hero .pspec.top .pspec-value { font-size:1.7rem; } .specs-hero .pspec-value.sm { font-size:1rem; } }
     .pspec-value { font-size:0.93rem; font-weight:700; color:var(--navy); }
     .premium-img-wrap { position:relative; }
     .premium-img-wrap { display:flex; justify-content:center; }
@@ -381,38 +393,19 @@
     <div class="premium-hero-grid">
 
       <div>
-        <div class="premium-star-tag">⭐ TOP dveře</div>
         <a href="podminky-prodlouzeni-zaruky.html" class="stock-tag warr" style="margin-bottom:1rem">až +12 měsíců záruky v aplikaci · dle podmínek</a>
         <h2>Dveře <span>PREMIUM 60</span><br>RC3 · EI60</h2>
         <p style="color:var(--text-muted);font-size:1rem;margin-bottom:1.5rem;">
           Nejlépe zpracované bytové bezpečnostní dveře z těch nejlepších materiálů. Certifikováno Národním bezpečnostním úřadem a firmou Trezor v České republice.
         </p>
         <p class="perks-line"><span>✓ Doprava do 40 km zdarma</span><span>✓ Bez příplatku za cihlu a zapuštěnou zárubeň</span><a href="tedee.html" style="color:inherit;text-decoration:underline">✓ Z výroby připraveno pro chytrý zámek tedee PRO (ovládání mobilem) →</a></p>
-        <div class="premium-specs-grid">
-          <div class="pspec">
-            <span class="pspec-label">Tloušťka křídla</span>
-            <span class="pspec-value">60 mm</span>
-          </div>
-          <div class="pspec">
-            <span class="pspec-label">Bezpečnostní třída</span>
-            <span class="pspec-value">RC3</span>
-          </div>
-          <div class="pspec">
-            <span class="pspec-label">Protipožární</span>
-            <span class="pspec-value">EI60</span>
-          </div>
-          <div class="pspec">
-            <span class="pspec-label">Odhlučnění</span>
-            <span class="pspec-value">42 dB</span>
-          </div>
-          <div class="pspec">
-            <span class="pspec-label">Tepelná propustnost</span>
-            <span class="pspec-value">1,2 W/m²K</span>
-          </div>
-          <div class="pspec">
-            <span class="pspec-label">Certifikace</span>
-            <span class="pspec-value">NBÚ ČR + Trezor</span>
-          </div>
+        <div class="premium-specs-grid specs-hero">
+          <div class="pspec top"><span class="pspec-label">Bezpečnostní třída</span><span class="pspec-value">RC3</span><span class="pspec-sub">dle normy EN 1627</span></div>
+          <div class="pspec top"><span class="pspec-label">Protipožárnost</span><span class="pspec-value">EI 60</span><span class="pspec-sub">minut odolnosti</span></div>
+          <div class="pspec"><span class="pspec-label">Tloušťka křídla</span><span class="pspec-value">60 mm</span></div>
+          <div class="pspec"><span class="pspec-label">Odhlučnění</span><span class="pspec-value">42 dB</span></div>
+          <div class="pspec"><span class="pspec-label">Tepelná propustnost</span><span class="pspec-value">1,2 W/m²K</span></div>
+          <div class="pspec"><span class="pspec-label">Certifikace</span><span class="pspec-value sm">NBÚ ČR + Trezor</span></div>
         </div>
         <div class="btn-row">
           <a href="dvere-do-bytu.html#premium60" class="btn btn-primary">Zjistit více</a>
@@ -421,6 +414,7 @@
       </div>
 
       <div class="premium-img-wrap" data-md-stitek="kontejner">
+        <span class="corner-pill">⭐ TOP dveře</span>
         <img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 – dveře v dekoru dub, antracit a ořech">
         <div class="discount-badge">🏷️ AKCE SLEVA</div>
       </div>
@@ -437,18 +431,18 @@
 </section>
 
 <!-- ═══════════════════════════════════════
-     EXTREME 54 — LEVNĚJŠÍ ALTERNATIVA
+     EXTREME 54
 ════════════════════════════════════════ -->
 <section class="extreme-section">
   <div class="container">
     <div class="extreme-grid">
 
       <div>
-        <img src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" class="extreme-img" data-md-stitek>
+        <div style="position:relative;"><span class="corner-pill cv">🏆 Nejlepší poměr cena/výkon</span>
+        <img src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" class="extreme-img" data-md-stitek></div>
       </div>
 
       <div>
-        <div class="extreme-tag">💡 Nejlepší cena</div>
         <h2>Dveře <span>EXTREME 54</span><br>RC3 · EI30</h2>
         <p style="font-size:0.98rem;margin-bottom:0.5rem;">
           Nejlepší poměr ceny a výkonu — dveře od největšího výrobce ve střední a východní Evropě s německým kováním Winkhaus.
