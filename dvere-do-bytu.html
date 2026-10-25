@@ -21,7 +21,7 @@
   <style>
     /* ── PRODUCT HERO ── */
     .prod-hero {
-      background: linear-gradient(150deg, #eef6f1 0%, #e8f5ee 50%, #f6faf7 100%);
+      background: linear-gradient(150deg, var(--gray-100,#eef6f1) 0%, var(--navy-light,#e8f5ee) 50%, var(--bg,#f6faf7) 100%);
       padding: 8.5rem 0 4rem;
       border-bottom: 1px solid var(--gray-200);
       position: relative; overflow: hidden;
@@ -59,7 +59,7 @@
     .specs-hero .sbox { padding:1rem 1.1rem; border-left:5px solid var(--orange); border-radius:var(--radius); }
     .specs-hero .sbox-val { display:block; font-size:1.7rem; font-weight:900; line-height:1.1; letter-spacing:-0.01em; }
     .specs-hero .sbox-sub { display:block; font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-top:0.2rem; }
-    .specs-hero .sbox.top { background:linear-gradient(135deg,#1f6b45,#123d27); border-color:#123d27; border-left-color:#ffbe96; box-shadow:0 10px 22px rgba(18,61,39,.28); }
+    .specs-hero .sbox.top { background:linear-gradient(135deg,var(--navy-mid,#1f6b45),var(--navy,#123d27)); border-color:var(--navy,#123d27); border-left-color:#ffbe96; box-shadow:0 10px 22px rgba(18,61,39,.28); }
     .specs-hero .sbox.top .sbox-label { color:#ffbe96; }
     .specs-hero .sbox.top .sbox-val { color:#fff; font-size:2.1rem; }
     .specs-hero .sbox.top .sbox-sub { color:#cfe9da; }
@@ -91,7 +91,7 @@
     /* ── PROD IMAGE ── */
     .pr-adv { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-top:1rem; }
     .pr-adv figure { margin:0; background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; display:flex; flex-direction:column; min-width:0; }
-    .pr-adv-img { height:150px; display:flex; align-items:center; justify-content:center; background:linear-gradient(150deg,#eef6f1,#f6faf7); padding:0.5rem; }
+    .pr-adv-img { height:150px; display:flex; align-items:center; justify-content:center; background:linear-gradient(150deg,var(--gray-100,#eef6f1),var(--bg,#f6faf7)); padding:0.5rem; }
     .pr-adv-img img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; }
     .pr-adv figcaption { padding:0.65rem 0.8rem 0.8rem; font-size:0.8rem; line-height:1.4; color:var(--text-muted); }
     .pr-adv figcaption b { display:block; color:var(--head); font-size:0.88rem; margin-bottom:0.15rem; }
@@ -221,6 +221,8 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#123d27">
+<link rel="stylesheet" href="motivy.css?v=1">
+<script src="motivy.js?v=1"></script>
 </head>
 <body>
 

@@ -1,0 +1,70 @@
+/* Motivy webu podle ročního období a denní doby (jaro/léto/podzim/zima × den/noc).
+   Nastavuje motivy.js přes <html data-sezona="jaro|leto|podzim|zima" data-doba="den|noc">.
+   Oranžová barva tlačítek zůstává ve všech motivech (značka). */
+
+/* ───────── DEN ───────── */
+html[data-sezona="jaro"]{
+  --head:#1b5a30; --navy:#1b5a30; --navy-mid:#2f8a4c; --navy-light:#e9f7ec; --blue:#1e9a4a;
+  --bg:#f6fbf1; --bg-alt:#ecf6e3; --gray-100:#eef7e8; --gray-200:#d9ebcc; --gray-600:#3f5f45; --text-muted:#4a6a50;
+  --mt-hero:linear-gradient(135deg,#1a5e32 0%,#2f8a4c 55%,#8cc864 120%);
+}
+html[data-sezona="leto"]{
+  --head:#0e4f4a; --navy:#0e4f4a; --navy-mid:#17806f; --navy-light:#e6f6f2; --blue:#0f8a73;
+  --bg:#fffbf0; --bg-alt:#fff3d1; --gray-100:#fff6dc; --gray-200:#f0e3bd; --gray-600:#555a3c; --text-muted:#5b6044;
+  --mt-hero:linear-gradient(135deg,#0d4f4a 0%,#17806f 55%,#e8b53c 125%);
+}
+html[data-sezona="podzim"]{
+  --head:#4a2b14; --navy:#4a2b14; --navy-mid:#8a4a1f; --navy-light:#f8ecdc; --blue:#a8530f;
+  --bg:#fbf5ec; --bg-alt:#f5e9d6; --gray-100:#f7ecdc; --gray-200:#e8d6bb; --gray-600:#5e4630; --text-muted:#6a5039; --text:#2b1a0e;
+  --mt-hero:linear-gradient(135deg,#3b2312 0%,#7a4220 55%,#c9801f 125%);
+}
+html[data-sezona="zima"]{
+  --head:#12344f; --navy:#12344f; --navy-mid:#1f5f8f; --navy-light:#e6f1fa; --blue:#2563a8;
+  --bg:#f3f8fc; --bg-alt:#e6f0f8; --gray-100:#eaf2f9; --gray-200:#d2e2ef; --gray-600:#3c5870; --text-muted:#4a6479; --text:#0e2233;
+  --mt-hero:linear-gradient(135deg,#0c2a44 0%,#1f5f8f 60%,#7fb0d6 130%);
+}
+/* hero bannery podstránek a patička přebírají barvu motivu */
+html[data-sezona] .page-header.hero-modern{background:radial-gradient(900px 380px at 85% 0%,rgba(255,255,255,.12),transparent 60%),var(--mt-hero)}
+html[data-sezona] body{background:var(--bg)}
+
+/* ───────── NOC (tmavý režim) ───────── */
+html[data-doba="noc"]{
+  color-scheme:dark;
+  --white:#16231c; --bg:#0d1712; --bg-alt:#111e17; --gray-100:#1a2a21; --gray-200:#27392e; --gray-400:#9bb3a5; --gray-600:#bcd0c4;
+  --text:#e7f1eb; --text-muted:#a9c0b2; --head:#e3f3ea; --navy-light:#18291f;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.4); --shadow:0 4px 20px rgba(0,0,0,.45); --shadow-lg:0 10px 40px rgba(0,0,0,.55);
+}
+html[data-doba="noc"][data-sezona="jaro"]{--bg:#0d1810;--white:#15231a;--navy:#133d22;--navy-mid:#1f6b3a;--blue:#4ade80;--mt-hero:linear-gradient(135deg,#0b2a17,#16502b 70%,#2d6b3c 130%)}
+html[data-doba="noc"][data-sezona="leto"]{--bg:#0b1716;--white:#13231f;--navy:#0b3a37;--navy-mid:#12665a;--blue:#34d3b6;--mt-hero:linear-gradient(135deg,#082d2b,#0f5a52 70%,#8a6a1a 140%)}
+html[data-doba="noc"][data-sezona="podzim"]{--bg:#17110b;--white:#241a11;--bg-alt:#1d150d;--gray-100:#2b1f14;--gray-200:#3d2c1c;--head:#f3e0c8;--text:#f1e4d3;--text-muted:#cbb59b;--gray-600:#d8c4ab;--navy:#3a2210;--navy-mid:#6a3a18;--blue:#f0a24a;--mt-hero:linear-gradient(135deg,#25150a,#5c3216 70%,#9a5f1c 140%)}
+html[data-doba="noc"][data-sezona="zima"]{--bg:#0a121b;--white:#111d2a;--bg-alt:#0e1a26;--gray-100:#172636;--gray-200:#243a50;--head:#e1eefa;--text:#e4eef7;--text-muted:#a9c0d4;--gray-600:#bcd0e2;--navy:#0f2a43;--navy-mid:#1a4a73;--blue:#6aaef0;--mt-hero:linear-gradient(135deg,#08192a,#143e63 70%,#3b6f9c 140%)}
+html[data-doba="noc"] .navbar{background:rgba(13,23,18,.94)}
+html[data-doba="noc"][data-sezona="zima"] .navbar{background:rgba(10,18,27,.94)}
+html[data-doba="noc"][data-sezona="podzim"] .navbar{background:rgba(23,17,11,.94)}
+html[data-doba="noc"] .nav-link{color:var(--text)}
+html[data-doba="noc"] .nav-link:hover,html[data-doba="noc"] .nav-link.active{color:#fff;background:var(--gray-100)}
+html[data-doba="noc"] img{filter:brightness(.92)}
+html[data-doba="noc"] .nav-logo-img{filter:none}
+
+/* ───────── efekty (padající okvětní lístky / sluneční záře / listí / sníh / hvězdy) ───────── */
+.mt-fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:40}
+.mt-fx i{position:absolute;top:-8vh;font-style:normal;line-height:1;opacity:.85;will-change:transform;animation:mt-fall linear infinite}
+@keyframes mt-fall{0%{transform:translate3d(0,-8vh,0) rotate(0)}50%{transform:translate3d(var(--dx),55vh,0) rotate(var(--rot))}100%{transform:translate3d(calc(var(--dx)*-.5),112vh,0) rotate(calc(var(--rot)*2))}}
+.mt-fx.slunce::before{content:"";position:absolute;right:-10vw;top:-14vw;width:42vw;height:42vw;max-width:520px;max-height:520px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,90,.55) 0%,rgba(255,214,90,.18) 45%,transparent 70%);animation:mt-pulse 7s ease-in-out infinite}
+@keyframes mt-pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+.mt-fx.hvezdy i{top:auto;animation:mt-twinkle ease-in-out infinite;color:#fff;opacity:.3}
+@keyframes mt-twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.9;transform:scale(1.2)}}
+.mt-fx.mesic::after{content:"";position:absolute;right:6vw;top:12vh;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fffbe6,#e8e2b8 60%,#cfc890);box-shadow:0 0 40px 10px rgba(255,250,210,.25)}
+@media(prefers-reduced-motion:reduce){.mt-fx i,.mt-fx.slunce::before{animation:none}.mt-fx i{display:none}}
+
+/* přepínač motivů (jen ve zkušebním režimu ?motivy=1) */
+.mt-panel{position:fixed;left:12px;bottom:12px;z-index:9999;font:600 13px/1.2 Inter,system-ui,sans-serif;background:#fff;color:#123d27;border:2px solid #123d27;border-radius:14px;padding:.55rem .65rem;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:calc(100vw - 24px)}
+.mt-panel b{display:block;margin-bottom:.4rem}
+.mt-panel button{font:inherit;margin:2px;padding:.35rem .55rem;border-radius:8px;border:1px solid #9bb3a5;background:#f3f7f4;color:#123d27;cursor:pointer}
+.mt-panel button.on{background:#123d27;color:#fff;border-color:#123d27}
+
+/* noc: pevně zadané světlé plochy */
+html[data-doba="noc"]{--orange-pale:#2d1d10}
+html[data-doba="noc"] .cert-note{background:#2a1c10;border-color:#6b4a25}
+html[data-doba="noc"] .refer-band{background:var(--bg-alt);border-color:var(--gray-200)}
+html[data-doba="noc"] .refer-text,html[data-doba="noc"] .refer-text strong{color:var(--text)}
