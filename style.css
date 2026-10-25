@@ -720,6 +720,14 @@ footer p { color: rgba(255,255,255,0.6); }
 .hero-chips span.on{background:#fff;color:#15803d;border-color:#fff}
 @media(max-width:700px){.page-header.hero-modern{padding:7rem 0 2.2rem}.page-header.hero-modern::after{display:none}}
 .page-header.hero-modern .hero-chips{margin-bottom:1rem}
+.hero-photos{position:absolute;right:max(2rem,calc(50% - 560px));top:55%;transform:translateY(-45%);display:flex;align-items:flex-end;gap:.9rem;pointer-events:none;z-index:1}
+.hero-photos img{display:block;height:clamp(200px,21vw,265px);width:auto;border-radius:8px;border:3px solid #fff;box-shadow:0 18px 34px rgba(0,0,0,.4);background:#eceeeb}
+.hero-photos img:nth-child(2){margin-bottom:1.1rem}
+.hero-photos img:nth-child(1),.hero-photos img:nth-child(3){transform:translateY(.4rem)}
+.page-header.hero-modern.has-photos::after{display:none}
+@media(max-width:1000px){.hero-photos{display:none}}
+@media(max-width:700px){.hero-photos{display:none}}
+
 .page-header.hero-modern .breadcrumb{justify-content:flex-start;margin-top:1rem}
 
 /* SERVIS – sjednocení fotek zeleným nádechem */
