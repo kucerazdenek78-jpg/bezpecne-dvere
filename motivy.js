@@ -3,6 +3,7 @@
    ?motivy=1 zobrazí přepínač. Vypnout celé: MOTIVY_ZAPNUTO = false. */
 (function () {
   var MOTIVY_ZAPNUTO = true;  /* false = pro návštěvníky vypnuto, zkoušet jde přes ?motivy=1 nebo ?motiv=zima-noc; true = zapnout automatiku pro všechny */
+  var NOC_ZAPNUTA = false;               /* false = automatika vždy denní motiv; noc jde zkoušet jen ručně (?motiv=zima-noc) */
   var NOC_OD = 19, NOC_DO = 6;           /* hodiny: noc je od 19:00 do 6:00 */
   var KEY = 'bd-motiv';
   var root = document.documentElement;
@@ -14,7 +15,7 @@
   function auto() {
     var d = new Date(), m = d.getMonth() + 1, den = d.getDate(), md = m * 100 + den, h = d.getHours();
     var s = md >= 320 && md < 621 ? 'jaro' : md >= 621 && md < 923 ? 'leto' : md >= 923 && md < 1221 ? 'podzim' : 'zima';
-    return s + '-' + ((h >= NOC_OD || h < NOC_DO) ? 'noc' : 'den');
+    return s + '-' + (NOC_ZAPNUTA && (h >= NOC_OD || h < NOC_DO) ? 'noc' : 'den');
   }
   function apply() {
     var v = get(); var m = /^(jaro|leto|podzim|zima)-(den|noc)$/.exec(v) || /^(jaro|leto|podzim|zima)-(den|noc)$/.exec(auto());
