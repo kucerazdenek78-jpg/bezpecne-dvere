@@ -83,6 +83,12 @@
     .pr-adv-img img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; }
     .pr-adv figcaption { padding:0.65rem 0.8rem 0.8rem; font-size:0.8rem; line-height:1.4; color:var(--text-muted); }
     .pr-adv figcaption b { display:block; color:var(--navy); font-size:0.88rem; margin-bottom:0.15rem; }
+    .zoom-btn { position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%; padding:0; border:0; background:none; cursor:zoom-in; }
+    .zoom-hint { position:absolute; right:0.4rem; bottom:0.4rem; background:rgba(18,61,39,.88); color:#fff; font-size:0.72rem; font-weight:700; padding:0.2rem 0.55rem; border-radius:100px; }
+    .zoom-box { position:fixed; inset:0; z-index:10000; background:rgba(10,20,15,.88); display:flex; align-items:center; justify-content:center; padding:max(16px, env(safe-area-inset-top, 0px)) 16px 16px; cursor:zoom-out; }
+    .zoom-box[hidden] { display:none; }
+    .zoom-box img { width:min(100%, 720px); max-height:100%; object-fit:contain; background:#fff; border-radius:var(--radius); box-shadow:0 10px 40px rgba(0,0,0,.5); cursor:default; }
+    .zoom-x { position:absolute; top:max(12px, env(safe-area-inset-top, 0px)); right:14px; width:44px; height:44px; border:0; border-radius:50%; background:#fff; color:#123d27; font-size:1.8rem; line-height:1; cursor:pointer; }
     .pr-adv-wide { grid-column:1 / -1; }
     .pr-adv-wide .pr-adv-img { height:190px; }
     @media (max-width:420px){ .pr-adv { grid-template-columns:1fr; } }
@@ -417,7 +423,7 @@
         </div>
 
         <div class="pr-adv">
-          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/rez-letak.jpg" width="516" height="520" alt="Schéma čepů PREMIUM 60: aktivní čepy na straně zámku a nahoře, pevné trny na straně závěsů" loading="lazy"></div><figcaption><b>Jistí i nahoře</b>7 vodorovných čepů, 1 svislý nahoře a 6 pevných trnů na straně závěsů.</figcaption></figure>
+          <figure><div class="pr-adv-img"><button type="button" class="zoom-btn" aria-label="Zvětšit schéma čepů"><img src="userFiles/dvere/premium60/rez-letak.jpg" data-zoom="userFiles/dvere/premium60/rez-letak.jpg" width="516" height="520" alt="Schéma čepů PREMIUM 60: aktivní čepy na straně zámku a nahoře, pevné trny na straně závěsů" loading="lazy"><span class="zoom-hint">🔍 Zvětšit</span></button></div><figcaption><b>Jistí i nahoře</b>7 vodorovných čepů, 1 svislý nahoře a 6 pevných trnů na straně závěsů.</figcaption></figure>
           <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/kovani-letak.jpg" width="700" height="336" alt="Kování PREMIUM 60: klika/koule INOX a černá" loading="lazy"></div><figcaption><b>Kování RC3 v ceně</b>Klika nebo koule, inox nebo černé. Vložka s 5 klíči a panoramatické kukátko.</figcaption></figure>
           <figure class="pr-adv-wide"><div class="pr-adv-img"><img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 v dekorech dub, antracit a ořech" loading="lazy"></div><figcaption><b>Šest dekorů skladem</b>Dub, ořech, světlé wenge, bílá, černá perleť a antracit.</figcaption></figure>
         </div>
@@ -984,6 +990,29 @@
       });
     });
   })();
+</script>
+<script>
+/* zvětšení obrázku po kliknutí (img[data-zoom]); zavře klik, Esc nebo tlačítko */
+(function () {
+  var imgs = document.querySelectorAll('img[data-zoom]');
+  if (!imgs.length) return;
+  var box = document.createElement('div');
+  box.className = 'zoom-box'; box.hidden = true; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'Zvětšený obrázek');
+  box.innerHTML = '<button type="button" class="zoom-x" aria-label="Zavřít">×</button><img alt="">';
+  document.body.appendChild(box);
+  var big = box.querySelector('img'), last = null;
+  function close() { box.hidden = true; document.body.style.overflow = ''; if (last) last.focus(); }
+  function open(img) {
+    last = img.closest('button') || img; big.src = img.getAttribute('data-zoom'); big.alt = img.alt;
+    box.hidden = false; document.body.style.overflow = 'hidden'; box.querySelector('.zoom-x').focus();
+  }
+  imgs.forEach(function (img) {
+    var b = img.closest('button.zoom-btn');
+    (b || img).addEventListener('click', function () { open(img); });
+  });
+  box.addEventListener('click', function (e) { if (e.target !== big) close(); });
+  document.addEventListener('keydown', function (e) { if (!box.hidden && e.key === 'Escape') close(); });
+})();
 </script>
 <script src="cookies.js?v=3" defer></script>
 <script src="bonus.js?v=20261016c" defer></script>
