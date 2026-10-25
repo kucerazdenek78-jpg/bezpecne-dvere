@@ -34,7 +34,7 @@
       var b = badge(); if (mb) b.style.bottom = (mb + 9) + 'px'; w.appendChild(b);
     } else {
       if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
-      el.appendChild(badge());
+      var bd = badge(); if (el.getAttribute('data-md-stitek') === 'kontejner-vys') bd.style.bottom = '5.2rem'; el.appendChild(bd);
     }
   });
 })();
