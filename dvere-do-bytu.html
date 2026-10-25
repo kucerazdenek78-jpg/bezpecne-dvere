@@ -77,6 +77,13 @@
     .feature-bullets li::before { content:"✓"; color:var(--orange); font-weight:800; flex-shrink:0; margin-top:1px; }
 
     /* ── PROD IMAGE ── */
+    .pr-adv { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-top:1rem; }
+    .pr-adv figure { margin:0; background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; display:flex; flex-direction:column; min-width:0; }
+    .pr-adv-img { height:150px; display:flex; align-items:center; justify-content:center; background:linear-gradient(150deg,#eef6f1,#f6faf7); padding:0.5rem; }
+    .pr-adv-img img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; }
+    .pr-adv figcaption { padding:0.65rem 0.8rem 0.8rem; font-size:0.8rem; line-height:1.4; color:var(--text-muted); }
+    .pr-adv figcaption b { display:block; color:var(--navy); font-size:0.88rem; margin-bottom:0.15rem; }
+    @media (max-width:420px){ .pr-adv { grid-template-columns:1fr; } }
     .prod-img-wrap { position:relative; }
     .prod-img-wrap { display:flex; flex-direction:column; align-items:center; }
     .prod-img-wrap img { width:auto; max-width:100%; height:auto; max-height:min(820px,82vh); filter:drop-shadow(0 30px 30px rgba(60,40,20,.28)) drop-shadow(0 4px 6px rgba(60,40,20,.18)); }
@@ -383,11 +390,11 @@
           <img src="userFiles/barva-dveri/gerda/rez-certifikovano.png" alt="Certifikace PREMIUM 60" style="max-width:100%;border-radius:var(--radius-lg);box-shadow:var(--shadow);">
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem;">
-          <img src="userFiles/dvere/premium60/detaily/img_20251013_121738.jpg.tn.jpg" alt="Detail PREMIUM 60" style="border-radius:var(--radius);width:100%;object-fit:cover;height:100px;">
-          <img src="userFiles/dvere/premium60/detaily/img_20251013_121744.jpg.tn.jpg" alt="Detail PREMIUM 60" style="border-radius:var(--radius);width:100%;object-fit:cover;height:100px;">
-          <img src="userFiles/dvere/premium60/detaily/img_20251013_121858.jpg.tn.jpg" alt="Detail PREMIUM 60" style="border-radius:var(--radius);width:100%;object-fit:cover;height:100px;">
-          <img src="userFiles/dvere/premium60/detaily/img_20251013_121926.jpg.tn.jpg" alt="Detail PREMIUM 60" style="border-radius:var(--radius);width:100%;object-fit:cover;height:100px;">
+        <div class="pr-adv">
+          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/rez-letak.jpg" width="516" height="520" alt="Schéma čepů PREMIUM 60: aktivní čepy na straně zámku a nahoře, pevné trny na straně závěsů" loading="lazy"></div><figcaption><b>Jistí i nahoře</b>7 vodorovných čepů, 1 svislý nahoře a 6 pevných trnů na straně závěsů.</figcaption></figure>
+          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/kovani-letak.jpg" width="700" height="336" alt="Kování PREMIUM 60: klika/koule INOX a černá" loading="lazy"></div><figcaption><b>Kování RC3 v ceně</b>Klika nebo koule, inox nebo černé. Vložka s 5 klíči a panoramatické kukátko.</figcaption></figure>
+          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium60/certifikat-nbu.webp" width="360" height="510" alt="Certifikát NBÚ pro dveře PREMIUM 60 RC3 EI" loading="lazy"></div><figcaption><b>Certifikováno v ČR</b>NBÚ ČR, Trezor test a PAVUS. Jediné bytové dveře ověřené českou autoritou.</figcaption></figure>
+          <figure><div class="pr-adv-img"><img src="userFiles/dvere/premium-60-tri-odstiny.webp" width="1081" height="822" alt="PREMIUM 60 v dekorech dub, antracit a ořech" loading="lazy"></div><figcaption><b>Šest dekorů skladem</b>Dub, ořech, světlé wenge, bílá, černá perleť a antracit.</figcaption></figure>
         </div>
 
         <div class="yt-short-wrap">
