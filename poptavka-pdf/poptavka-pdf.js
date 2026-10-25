@@ -250,7 +250,7 @@
     plReady = (window.PDFLib ? Promise.resolve() : loadScript(BASE + 'pdf-lib.min.js'))
       .then(function () { return window.fontkit ? null : loadScript(BASE + 'fontkit.umd.min.js'); })
       .then(function () {
-        return Promise.all([fetch(new URL('../prodejce/predavaci-list.pdf', BASE).href), fetch(BASE + 'Inter-Bold.ttf'), fetch(BASE + 'Inter-Regular.ttf')])
+        return Promise.all([fetch(new URL('../prodejce/predavaci-list.pdf', BASE).href + '?v=20261025'), fetch(BASE + 'Inter-Bold.ttf'), fetch(BASE + 'Inter-Regular.ttf')])
           .then(function (rs) { rs.forEach(function (r) { if (!r.ok) throw new Error('pl'); }); return Promise.all(rs.map(function (r) { return r.arrayBuffer(); })); });
       });
     plReady.catch(function () { plReady = null; });
@@ -342,7 +342,7 @@
   function buildVoucher(d) {
     if (!voucherActive()) return Promise.resolve(null);
     return preparePL().then(function (b) {
-      return fetch(new URL('../prodejce/voucher-doporuc-a-ziskej.pdf', BASE).href).then(function (r) { if (!r.ok) throw new Error('voucher'); return r.arrayBuffer(); })
+      return fetch(new URL('../prodejce/voucher-doporuc-a-ziskej.pdf', BASE).href + '?v=20261025').then(function (r) { if (!r.ok) throw new Error('voucher'); return r.arrayBuffer(); })
         .then(function (vb) {
           var L = window.PDFLib;
           return L.PDFDocument.load(vb).then(function (pdf) {
