@@ -36,6 +36,9 @@
       display:grid; grid-template-columns:1.1fr 0.9fr;
       gap:4rem; align-items:center; position:relative; z-index:1;
     }
+    .star-pill.corner-pill { position:absolute; top:.6rem; z-index:3; margin:0; box-shadow:0 8px 20px rgba(0,0,0,.25); border:2px solid #fff; transform:rotate(-3deg); font-size:.78rem; padding:.5rem 1.1rem; }
+    .corner-pill.cv { background:#123d27; }
+    @media(max-width:480px){ .star-pill.corner-pill { font-size:.66rem; padding:.4rem .8rem; letter-spacing:.08em; } }
     .star-pill {
       display:inline-flex; align-items:center; gap:0.5rem;
       background:var(--orange); color:#fff;
@@ -281,7 +284,6 @@
   <div class="container">
     <div class="prod-hero-grid">
       <div>
-        <span class="star-pill">⭐ TOP dveře</span>
         <span class="stock-tag">✓ Skladem u nás · s montáží do 14 dnů</span>
         <a href="podminky-prodlouzeni-zaruky.html" class="stock-tag warr">až +12 měsíců záruky v aplikaci · dle podmínek</a>
         <h1>PREMIUM 60<br><span>RC3 EI 60</span></h1>
@@ -314,6 +316,7 @@
         </div>
       </div>
       <div class="prod-img-wrap" data-md-stitek="kontejner">
+        <span class="star-pill corner-pill corner-top" style="left:max(0px,calc(50% - min(50%,0.2437 * min(820px,82vh))))">⭐ TOP dveře</span>
         <img src="userFiles/dvere/premium-60-hero.webp" width="580" height="1190" fetchpriority="high" alt="PREMIUM 60 bezpečnostní dveře RC3 EI60">
       </div>
     </div>
@@ -461,7 +464,6 @@
 <section class="prod-section" id="extreme54">
   <div class="container">
     <div style="text-align:center;margin-bottom:2.5rem;">
-      <span class="section-label">Levnější alternativa</span>
       <h2 class="section-title">EXTREME 54 &nbsp;<span style="color:var(--orange-text);">RC3 EI30</span></h2>
       <div style="text-align:center;"><span class="stock-tag">✓ Skladem u nás · s montáží do 14 dnů</span>
         <a href="podminky-prodlouzeni-zaruky.html" class="stock-tag warr">až +12 měsíců záruky v aplikaci · dle podmínek</a></div>
@@ -539,7 +541,8 @@
       </div>
 
       <div>
-        <img data-md-stitek src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 24px rgba(18,61,39,.18));margin-bottom:1.5rem;">
+        <div style="position:relative;margin-bottom:1.5rem;"><span class="star-pill corner-pill cv" style="left:.6rem">🏆 Nejlepší poměr cena/výkon</span>
+        <img data-md-stitek src="extreme-54.png" alt="Bezpečnostní dveře EXTREME 54 – dub, antracit, ořech" style="width:100%;height:auto;display:block;filter:drop-shadow(0 12px 24px rgba(18,61,39,.18));margin-bottom:0;"></div>
 
         <div class="delivery-box">
           <h4>Co dostanu při dodávce na klíč?</h4>
