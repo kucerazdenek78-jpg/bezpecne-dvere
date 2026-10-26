@@ -39,7 +39,12 @@
     try {
       if (get(K) === 'all' && get(V) === '2') {
         marketing(); window.fbq('track', ev, params || {});
-        if (ev === 'Lead') window.gtag('event', 'generate_lead', { lead_source: (params && params.content_name) || '' });
+        if (ev === 'Lead') {
+          var src = (params && params.content_name) || '';
+          window.gtag('event', 'generate_lead', { lead_source: src });
+          // konverze „Žádost o nabídku“ v Google Ads = událost GA4 ads_conversion__dost_o_nab_dku_1 (původně načtení stránky /poptavka na starém webu)
+          window.gtag('event', 'ads_conversion__dost_o_nab_dku_1', { lead_source: src });
+        }
       }
     } catch (e) {}
   };
