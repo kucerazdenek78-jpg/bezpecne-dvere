@@ -162,10 +162,22 @@
     var sub = 0; st.rows.forEach(function (r) { sub += r.ks * r.cena - r.sleva; });
     var sl = int(fv('sleva_kc')); return { sub: sub, sleva: sl, total: Math.max(0, sub - sl) };
   }
+  /* fakturace a DPH (jen objednávka dům/interiér – blok #nbFak) */
+  function hasFak() { return !!(form.elements.dph_rezim); }
+  function radioVal(n) { var el = form.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : ''; }
+  function firma() { return hasFak() && radioVal('fakturace') === 'Firma nebo OSVČ'; }
+  function dphRezim() { if (!hasFak()) return ''; var v = radioVal('dph_rezim'); return v === '21' || (v === 'pdp' && firma()) ? v : '12'; }
+  function dphTxt() { var r = dphRezim(); return r === 'pdp' ? 'bez DPH (přenesená daňová povinnost)' : r ? 'vč. ' + r + ' % DPH' : 'vč. DPH'; }
+  function fakToggle() {
+    if (!hasFak()) return;
+    var f = firma(); $('#nbFirma').hidden = !f; $('#nbPdp').hidden = !f;
+    $('#nbFirma').style.display = f ? '' : 'none'; $('#nbPdp').style.display = f ? '' : 'none';   // pq-grid2 / pq-opt mají vlastní display, samotné hidden nestačí
+    if (!f && radioVal('dph_rezim') === 'pdp') form.querySelector('input[name="dph_rezim"][value="12"]').checked = true;
+  }
   function sums() {
     var t = totals();
-    if (st.rozp) { $('#nbSum').innerHTML = t.total ? '<b>Celkem ' + kc(t.total) + '</b> vč. DPH (dle rozpočtu)' : ''; return; }
-    $('#nbSum').innerHTML = st.rows.length ? 'Mezisoučet ' + kc(t.sub) + (t.sleva ? ' – celková sleva ' + kc(t.sleva) : '') + ' → <b>celkem ' + kc(t.total) + '</b> vč. DPH' : '';
+    if (st.rozp) { $('#nbSum').innerHTML = t.total ? '<b>Celkem ' + kc(t.total) + '</b> ' + dphTxt() + ' (dle rozpočtu)' : ''; return; }
+    $('#nbSum').innerHTML = st.rows.length ? 'Mezisoučet ' + kc(t.sub) + (t.sleva ? ' – celková sleva ' + kc(t.sleva) : '') + ' → <b>celkem ' + kc(t.total) + '</b> ' + dphTxt() : '';
     st.rows.forEach(function (r, i) { var e = document.querySelector('[data-tot="' + i + '"]'); if (e) e.innerHTML = 'Za položku: <b>' + kc(r.ks * r.cena - r.sleva) + '</b>'; });
   }
   function toJpeg(src, maxPx) {
@@ -240,6 +252,15 @@
       sleva_celkem: t.sleva, sleva_text: fv('sleva_text'), mezisoucet: t.sub, cena_celkem: t.total,
       z_poptavky: st.fromRef || ''
     };
+    if (hasFak()) {
+      var rz = dphRezim(), sz = rz === 'pdp' ? 0 : +rz, bez = rz === 'pdp' ? t.total : Math.round(t.total / (1 + sz / 100));
+      d.dph_rezim = rz; d.dph_sazba = sz; d.cena_bez_dph = bez; d.dph_kc = t.total - bez;
+      d.fakturace = firma() ? 'Jiná adresa – firma nebo OSVČ' : 'Stejná jako instalační';
+      if (firma()) {
+        d.fak_jmeno = fv('fak_jmeno'); d.fak_adresa = fv('fak_adresa'); d.ic = fv('ic').replace(/\s+/g, ''); d.dic = fv('dic').replace(/\s+/g, '').toUpperCase();
+        d.platce_dph = !!(form.platce_dph && form.platce_dph.checked); d.ares_overeno = $('#nbFirma').getAttribute('data-ares-overeno') || '';
+      }
+    }
     if (st.rozp) {
       var rp = fv('rozp_popis'), rc = fv('rozp_cislo');
       d.rozpocet = { popis: rp, cislo: rc, soubor: st.rozpName, strany: st.rozpPages || null };
@@ -289,6 +310,11 @@
     if (limited() && (st.rows.length > 1 || st.rows[0].ks !== 1)) return 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jen jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře dejte do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '.';
     }
     if (!d.jmeno || !d.prijmeni) return 'Doplňte jméno a příjmení zákazníka.';
+    if (hasFak() && firma()) {
+      if (!d.ic || (window.BDAres && !window.BDAres.icoOk(d.ic))) return 'Doplňte platné IČ firmy.';
+      if (!d.fak_jmeno || !d.fak_adresa) return 'Doplňte název firmy a fakturační adresu (tlačítko Ověřit v ARES je doplní samo).';
+      if (d.dph_rezim === 'pdp' && !d.platce_dph) return 'Přenesená daňová povinnost jde jen u odběratele, který je plátce DPH.';
+    }
     if (OBJ && (!d.ulice || !d.mesto)) return 'Doplňte adresu montáže (ulice a město).';
     if (OBJ && !(int(fv('zaloha_proc')) >= 0 && int(fv('zaloha_proc')) <= 100)) return 'Záloha v procentech musí být 0 až 100.';
     if (d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return 'E-mail zákazníka nevypadá správně.';
@@ -353,6 +379,7 @@
       font('bold', 9, ORANGE); doc.text('ZÁKAZNÍK', M, y); y += 5;
       font('bold', 10.5); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y); y += 4.8;
       font('normal', 9.5); [[d.ulice, d.psc, d.mesto].filter(Boolean).join(', '), [d.telefon, d.email].filter(Boolean).join(' · ')].filter(Boolean).forEach(function (l) { doc.text(l, M, y); y += 4.4; });
+      if (d.ic) { font('normal', 8.5, MUTED); doc.splitTextToSize('Fakturace: ' + d.fak_jmeno + ', ' + d.fak_adresa + ', IČ ' + d.ic + (d.dic ? ', DIČ ' + d.dic : ''), W - 2 * M - 70).forEach(function (l) { doc.text(l, M, y); y += 3.9; }); }
       doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(W - M - 62, top0 - 4, 62, 19, 2, 2, 'FD');
       font('bold', 7.5, MUTED); doc.text(OBJ ? 'ZÁLOHA ' + d.zaloha_proc + ' %' : 'PLATNOST NABÍDKY', W - M - 58, top0 + 0.5);
       font('bold', 13, ORANGE); doc.text(OBJ ? money(d.zaloha) : (d.nabidka_do ? 'do ' + dt(d.nabidka_do) : 'do odvolání'), W - M - 58, top0 + 7);
@@ -419,7 +446,8 @@
         font('normal', 9.5, ORANGE); doc.text('Celková sleva' + (d.sleva_text ? ' (' + d.sleva_text + ')' : ''), W - M - 70, y); doc.text('-' + money(d.sleva_celkem), W - M - 1, y, { align: 'right' }); y += 6;
       }
       doc.setFillColor.apply(doc, GREEN); doc.roundedRect(M, y - 5, CW, 11, 2, 2, 'F');
-      font('bold', 11, [255, 255, 255]); doc.text('CENA CELKEM vč. DPH', M + 4, y + 1.6); doc.text(money(d.cena_celkem), W - M - 4, y + 1.6, { align: 'right' }); y += 14;
+      font('bold', 11, [255, 255, 255]); doc.text(d.dph_rezim === 'pdp' ? 'CENA CELKEM bez DPH' : d.dph_rezim ? 'CENA CELKEM vč. ' + d.dph_sazba + ' % DPH' : 'CENA CELKEM vč. DPH', M + 4, y + 1.6); doc.text(money(d.cena_celkem), W - M - 4, y + 1.6, { align: 'right' }); y += 14;
+      if (d.dph_rezim) { font('normal', 8.5, MUTED); doc.text(d.dph_rezim === 'pdp' ? 'Režim přenesení daňové povinnosti – daň odvede zákazník.' : 'Základ ' + money(d.cena_bez_dph) + ' + DPH ' + d.dph_sazba + ' % ' + money(d.dph_kc) + '.', M, y - 2); y += 4; }
 
       /* co cena zahrnuje, platba, termín */
       if (!OBJ && d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
@@ -492,7 +520,7 @@
       var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
       var lo = [['_subject', 'Objednávka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
         ['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.'],
-        ['Objednávka', d.obj_cislo], ['Celkem vč. DPH', kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
+        ['Objednávka', d.obj_cislo], ['Celkem ' + dphTxt(), kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
         ['Doplatek po montáži', kc(d.doplatek) + ' hotově']];
       return lo.concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
     }
@@ -503,7 +531,7 @@
   function internalList(d) {
     return [['_subject', (OBJ ? 'Objednávka ' : 'Nabídka ') + d.obj_cislo + ' (interní) – ' + KAT[d.kategorie] + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')],
       [OBJ ? 'Číslo objednávky' : 'Číslo nabídky', d.obj_cislo], ['Kategorie', KAT[d.kategorie]], ['Prodavač', d.prodavac], [OBJ ? 'Z nabídky / poptávky' : 'Z poptávky', (OBJ ? d.z_nabidky : d.z_poptavky) || '–'], ['Interní poznámka', d.interni || '–'],
-      ['Cena celkem', kc(d.cena_celkem)]].concat(OBJ ? [['Záloha / doplatek', kc(d.zaloha) + ' (' + d.zaloha_proc + ' %) / ' + kc(d.doplatek)]] : [['Vytvořit objednávku', d.objednavka_odkaz]]).concat([['data_json', JSON.stringify(d)]]).concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
+      ['Cena celkem', kc(d.cena_celkem) + (d.dph_rezim ? ' ' + dphTxt() : '')]].concat(d.dph_rezim ? [['DPH (pro účetnictví)', d.dph_rezim === 'pdp' ? 'přenesená daňová povinnost, základ ' + kc(d.cena_bez_dph) : d.dph_sazba + ' %, základ ' + kc(d.cena_bez_dph) + ', DPH ' + kc(d.dph_kc)]] : []).concat(d.ic ? [['Fakturace', d.fak_jmeno + ', ' + d.fak_adresa + ', IČ ' + d.ic + (d.dic ? ', DIČ ' + d.dic : '') + (d.platce_dph ? ', plátce DPH' : '')]] : []).concat(OBJ ? [['Záloha / doplatek', kc(d.zaloha) + ' (' + d.zaloha_proc + ' %) / ' + kc(d.doplatek)]] : [['Vytvořit objednávku', d.objednavka_odkaz]]).concat([['data_json', JSON.stringify(d)]]).concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
   }
   function pick(list, k) { var r = ''; list.forEach(function (x) { if (x[0] === k) r = x[1]; }); return r; }
   function send(typ, list, files, ref, extra) {
@@ -550,6 +578,11 @@
   });
 
   /* ── start ── */
+  if (hasFak()) {
+    form.addEventListener('change', function (e) { if (e.target.name === 'fakturace' || e.target.name === 'dph_rezim') { fakToggle(); sums(); } });
+    if (window.BDAres) window.BDAres.attach($('#nbFirma'));
+    fakToggle();
+  }
   $('#nbSeller').innerHTML = PRODAVACI.map(function (p) { return '<label class="pq-opt pq-chip"><input type="radio" name="prodavac" value="' + esc(p) + '">' + esc(p) + '</label>'; }).join('');
   form.obj_cislo.placeholder = 'načítám další číslo…';
   (window.BDForm && window.BDForm.nextNumber ? window.BDForm.nextNumber(OBJ ? 'objednavka' : 'nabidka') : Promise.resolve('')).then(function (c) { if (!form.obj_cislo.value) form.obj_cislo.value = c; form.obj_cislo.placeholder = c ? '' : 'např. N 12/2026'; });

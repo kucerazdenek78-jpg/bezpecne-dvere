@@ -107,7 +107,7 @@
         var adr = [d.ulice, [d.psc, d.mesto].filter(Boolean).join(' ')].filter(Boolean).join(', ');
         var yl = pairs([['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email]].concat(O ? [['Číslo OP', d.op ? d.op + ' (pro likvidaci odpadu)' : ''], ['Zvonek', d.zvonek]] : []), M, 22, 66);
         var bill = d.fakturace;
-        if (d.fakturace && d.fakturace.indexOf('Stejná') !== 0) bill = d.fak_jmeno + '\n' + d.fak_adresa + (d.ic ? '\nIČ ' + d.ic + (d.platce_dph ? ', plátce DPH' : '') : '');
+        if (d.fakturace && d.fakturace.indexOf('Stejná') !== 0) bill = d.fak_jmeno + '\n' + d.fak_adresa + (d.ic ? '\nIČ ' + d.ic + (d.dic ? ', DIČ ' + d.dic : '') + (d.platce_dph ? ', plátce DPH' : '') : '');
         var yr = pairs([['Montáž', adr], ['Patro', d.patro == null ? '' : (d.patro === 0 ? 'přízemí' : d.patro + '. patro, ' + (d.vytah === 'Ano' ? 's výtahem' : 'bez výtahu'))], ['Fakturace', bill]], 108, 22, 66);
         y = Math.max(yl, yr) + 3;
 
@@ -139,11 +139,12 @@
         ensure(14);
         y += 1;
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(cx, y - 4.5, cw, 12, 2, 2, 'FD');
-        font('bold', 11, GREEN); doc.text('Celkem vč. 12 % DPH', cx + 4, y + 3);
+        var dphR = O ? (d.dph_rezim || '12') : '12';
+        font('bold', 11, GREEN); doc.text(dphR === 'pdp' ? 'Celkem bez DPH' : 'Celkem vč. ' + (dphR === '21' ? 21 : 12) + ' % DPH', cx + 4, y + 3);
         font('bold', 15, ORANGE); doc.text(fmt(d.cena_celkem), cx + cw - 4, y + 3.4, { align: 'right' });
         y += 12;
         font('normal', 8, MUTED);
-        var noteL = O ? doc.splitTextToSize('DPH bude vyčísleno na konečné faktuře. Cena zahrnuje dodávku, montáž na klíč, demontáž a odvoz starých dveří a hrubý úklid.' + (d.doprava_km != null ? ' Vzdálenost od vzorkovny Obchodní 36, Most: ' + String(d.doprava_km).replace('.', ',') + ' km.' : ''), cw) : doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
+        var noteL = O ? doc.splitTextToSize((dphR === 'pdp' ? 'Režim přenesení daňové povinnosti – daň odvede zákazník. ' : dphR === '21' && d.cena_bez_dph ? 'Základ ' + fmt(d.cena_bez_dph) + ' + DPH 21 % ' + fmt(d.dph_kc) + '. ' : '') + (dphR === 'pdp' ? '' : 'DPH bude vyčísleno na konečné faktuře. ') + 'Cena zahrnuje dodávku, montáž na klíč, demontáž a odvoz starých dveří a hrubý úklid.' + (d.doprava_km != null ? ' Vzdálenost od vzorkovny Obchodní 36, Most: ' + String(d.doprava_km).replace('.', ',') + ' km.' : ''), cw) : doc.splitTextToSize('Cena zahrnuje montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody' + (d.doprava_km != null ? ' (spočítáno ' + String(d.doprava_km).replace('.', ',') + ' km po silnici od vzorkovny Obchodní 36, Most)' : '') + '. ' + (x.priceNote || '') + ' Nezávazná poptávka, konečnou cenu potvrdí prodejce.', cw); doc.text(noteL, cx, y);
         y += noteL.length * 3.4 + 5;
 
         /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */

@@ -345,8 +345,9 @@
     if (!MODELS[d.model_kod]) return false;
     var mr = form.querySelector('input[name="model"][value="' + d.model_kod + '"]'); mr.checked = true; state.model = d.model_kod; buildOptions(d.model_kod);
     ['odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'fakturace', 'zed', 'vytah'].forEach(function (n) { setRadio(n, d[n]); });
-    ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'fak_jmeno', 'fak_adresa', 'ic', 'poznamka'].forEach(function (n) { if (form.elements[n] && d[n] != null) form.elements[n].value = d[n]; });
+    ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'fak_jmeno', 'fak_adresa', 'ic', 'dic', 'poznamka'].forEach(function (n) { if (form.elements[n] && d[n] != null) form.elements[n].value = d[n]; });
     if (d.platce_dph && form.platce_dph) form.platce_dph.checked = true;
+    if (d.dph_rezim) setRadio('dph_rezim', d.dph_rezim);
     if (d.patro != null) { form.patro.value = String(d.patro); $('#pqLift').hidden = !(+d.patro > 0); }
     $('#pqBillingFields').hidden = val('fakturace') === BILLING[0] || !val('fakturace');
     $('#pqCompany').hidden = val('fakturace') !== BILLING[2];
@@ -414,9 +415,28 @@
       if (num('vybava_kc') || fv('vybava_text')) { total += num('vybava_kc'); lines.push(['Další výbava', fv('vybava_text') || '–', num('vybava_kc')]); }
       if (num('sleva_kc') > 0) { total -= num('sleva_kc'); lines.push(['Sleva', fv('sleva_text') || '', -num('sleva_kc')]); }
     }
-    return { total: total, lines: lines };
+    // sazba DPH: ceník je s 12 % DPH; u firmy jde zvolit 21 % nebo přenesenou daňovou povinnost (stejný základ bez DPH)
+    var rez = dphRezim(), s12 = total, bez = Math.round(s12 / 1.12);
+    if (rez === '21') { total = Math.round(bez * 1.21); lines.push(['DPH 21 % místo 12 %', 'nebytové prostory', total - s12]); }
+    if (rez === 'pdp') { total = bez; lines.push(['Přenesená daňová povinnost', 'cena bez DPH (daň odvede zákazník)', bez - s12]); }
+    var sazba = rez === '21' ? 21 : rez === 'pdp' ? 0 : 12;
+    var zaklad = rez === 'pdp' ? total : Math.round(total / (1 + sazba / 100));
+    return { total: total, lines: lines, rezim: rez, sazba: sazba, bez_dph: zaklad, dph: total - zaklad };
   }
 
+  function dphRezim() {
+    if (!OBJ || val('fakturace') !== BILLING[2] || !$('#pqDph')) return '12';
+    var v = val('dph_rezim'); return v === '21' || v === 'pdp' ? v : '12';
+  }
+  function dphText(r) { return r === '21' ? 'vč. 21 % DPH' : r === 'pdp' ? 'bez DPH (přenesená daňová povinnost)' : 'vč. 12 % DPH'; }
+  function showDph() {
+    var box = $('#pqDph'); if (!box) return;
+    box.hidden = val('fakturace') !== BILLING[2];
+    var inf = $('#pqDphInfo'); if (!inf) return;
+    var r = calc(), rz = dphRezim();
+    inf.textContent = !r ? '' : rz === 'pdp' ? 'Fakturuje se bez DPH s textem o přenesení daňové povinnosti. Jen pro plátce DPH a stavební práce – rozhodnutí potvrďte s účetní.'
+      : 'Základ ' + kc(r.bez_dph) + ' + DPH ' + r.sazba + ' % ' + kc(r.dph) + ' = ' + kc(r.total) + '.';
+  }
   function updateSummary() {
     var m = MODELS[state.model], r = calc();
     if (!m) return;
@@ -427,7 +447,8 @@
     }).join('');
     $('#sumPrice').textContent = kc(r.total);
     if (OBJ) { var z = zaloha(); $('#sumPay').innerHTML = (zalohaLabel() + ': <b>' + kc(z) + '</b> · doplatek po montáži: <b>' + kc(Math.max(0, r.total - z)) + '</b>'); }
-    $('#sumNote').textContent = 'Vč. 12 % DPH, montáže na klíč a odvozu starých dveří. ' +
+    showDph();
+    $('#sumNote').textContent = (dphRezim() === 'pdp' ? 'Bez DPH (přenesená daňová povinnost), vč. ' : dphRezim() === '21' ? 'Vč. 21 % DPH, ' : 'Vč. 12 % DPH, ') + 'montáže na klíč a odvozu starých dveří. ' +
       (state.trip && state.trip.km != null ? '' : 'Doprava do 40 km zdarma, přesně ji spočítáme podle adresy montáže.') +
       (m.masonry ? ' Případné zednické práce upřesníme podle stavu zdi.' : ' Bez příplatku za cihlu a zapuštěnou zárubeň.');
   }
@@ -512,7 +533,8 @@
       patro: f.patro.value === '' ? null : +f.patro.value, vytah: +f.patro.value > 0 ? val('vytah') : '',
       doprava_km: state.trip ? state.trip.km : null, doprava_cena: state.trip && state.trip.km != null ? state.trip.fee : null,
       souradnice: state.addr ? [state.addr.lon, state.addr.lat] : null, adresa_overena: !!(state.addr && state.addr.picked),
-      fakturace: val('fakturace'), fak_jmeno: fv('fak_jmeno'), fak_adresa: fv('fak_adresa'), ic: fv('ic'), platce_dph: !!(f.platce_dph && f.platce_dph.checked),
+      fakturace: val('fakturace'), fak_jmeno: fv('fak_jmeno'), fak_adresa: fv('fak_adresa'), ic: fv('ic'), dic: fv('dic'), platce_dph: !!(f.platce_dph && f.platce_dph.checked),
+      dph_rezim: r.rezim, dph_sazba: r.sazba, cena_bez_dph: r.bez_dph, dph_kc: r.dph, ares_overeno: ($('#pqBillingFields') && $('#pqBillingFields').getAttribute('data-ares-overeno')) || '',
       zed: val('zed'), vyska_cm: fv('vyska_cm'), poznamka: fv('poznamka'),
       fotky: Object.keys(state.photos)
     };
@@ -541,9 +563,9 @@
       ['Doprava', d.doprava_km != null ? String(d.doprava_km).replace('.', ',') + ' km – ' + (d.doprava_cena == null ? 'upřesníme' : d.doprava_cena ? kc(d.doprava_cena) : 'zdarma') : 'upřesníme', 2],
       ['Fakturace', d.fakturace, 2]
     ];
-    if (d.fakturace !== BILLING[0]) { rows.push(['Objednatel', d.fak_jmeno, 2], ['Fakturační adresa', d.fak_adresa, 2]); if (d.ic) rows.push(['IČ', d.ic + (d.platce_dph ? ', plátce DPH' : ''), 2]); }
+    if (d.fakturace !== BILLING[0]) { rows.push(['Objednatel', d.fak_jmeno, 2], ['Fakturační adresa', d.fak_adresa, 2]); if (d.ic) rows.push(['IČ', d.ic + (d.dic ? ', DIČ ' + d.dic : '') + (d.platce_dph ? ', plátce DPH' : ''), 2]); }
     if (OBJ) {
-      rows[9] = ['Cena celkem', kc(d.cena_celkem) + ' vč. 12 % DPH a montáže', 1];
+      rows[9] = ['Cena celkem', kc(d.cena_celkem) + ' ' + dphText(d.dph_rezim) + ' a montáže' + (d.dph_rezim === 'pdp' ? '' : ' (základ ' + kc(d.cena_bez_dph) + ', DPH ' + kc(d.dph_kc) + ')'), 1];
       rows.splice(10, 0, ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek) + ' po montáži hotově', 1]);
       rows.push(['Číslo OP', d.op, 2], ['Zvonek', d.zvonek, 2]);
       rows.push(['Číslo objednávky', d.obj_cislo, 3], ['Datum', d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : '', 3], ['Prodavač', d.prodavac, 3],
@@ -683,7 +705,7 @@
       pdf = res[0]; plist = res[1]; voucher = res[2]; btn.textContent = 'Odesílám…';
       var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
         ['Číslo objednávky', d.obj_cislo], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Číslo OP', d.op || '–'], ['Interní poznámka', d.interni || '–'],
-        ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)],
+        ['Cena celkem', kc(d.cena_celkem) + ' ' + dphText(d.dph_rezim)], ['DPH (pro účetnictví)', d.dph_rezim === 'pdp' ? 'přenesená daňová povinnost, základ ' + kc(d.cena_bez_dph) : d.dph_sazba + ' %, základ ' + kc(d.cena_bez_dph) + ', DPH ' + kc(d.dph_kc)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)],
         ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'],
         ['Voucher Doporuč a získej', voucher ? 'poslán zákazníkovi s objednávkou' : '–'], ['data_json', JSON.stringify(d)]];
       // předávací list jen prodejcům (interní e-mail), zákazník ho nedostane; voucher jde jen zákazníkovi
@@ -901,6 +923,7 @@
     if (t.name === 'fakturace') {
       $('#pqBillingFields').hidden = t.value === BILLING[0];
       $('#pqCompany').hidden = t.value !== BILLING[2];
+      if ($('#pqDph')) $('#pqDph').hidden = t.value !== BILLING[2];
     }
     if (t.classList && t.classList.contains('bad')) t.classList.remove('bad');
     updateSummary();
@@ -925,6 +948,7 @@
   });
 
   buildModels(); buildStatic();
+  if (OBJ && window.BDAres && $('#pqCompany')) window.BDAres.attach($('#pqBillingFields'), { onChange: updateSummary });
   if (OBJ) {
     $('#poSeller').innerHTML = PRODAVACI.map(function (p) { return radio('prodavac', p, esc(p), 'pq-chip'); }).join('');
     form.obj_cislo.value = '';

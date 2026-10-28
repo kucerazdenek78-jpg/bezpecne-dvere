@@ -373,8 +373,19 @@
                 <label class="pq-f">Fakturační adresa (ulice, č. p., město, PSČ) *<input name="fak_adresa" data-req></label>
               </div>
               <div class="pq-grid2" id="pqCompany" hidden>
-                <label class="pq-f">IČ *<input name="ic" inputmode="numeric" data-req-firma></label>
-                <label class="pq-check"><input type="checkbox" name="platce_dph" value="Ano"> Jsem plátce DPH</label>
+                <label class="pq-f">IČ *<span class="ares-row"><input name="ic" inputmode="numeric" data-req-firma><button type="button" class="btn btn-outline ares-btn" data-ares>Ověřit v ARES</button></span></label>
+                <label class="pq-f">DIČ<input name="dic" placeholder="CZ…" autocomplete="off"></label>
+                <label class="pq-check"><input type="checkbox" name="platce_dph" value="Ano"> Je plátce DPH</label>
+                <p class="pq-help ares-out" data-ares-out>Tlačítko doplní název, sídlo, DIČ a plátcovství podle ARES.</p>
+              </div>
+              <div class="pq-block-in" id="pqDph" hidden>
+                <p class="pq-help" style="margin:.4rem 0 .6rem"><b>Sazba DPH *</b> – ceník je s 12 % DPH (bydlení). U jiné sazby se cena přepočítá ze stejného základu bez DPH.</p>
+                <div class="pq-chips">
+                  <label class="pq-opt pq-chip"><input type="radio" name="dph_rezim" value="12" checked>12 % – bydlení</label>
+                  <label class="pq-opt pq-chip"><input type="radio" name="dph_rezim" value="21">21 % – nebytové prostory</label>
+                  <label class="pq-opt pq-chip"><input type="radio" name="dph_rezim" value="pdp">Přenesená daňová povinnost</label>
+                </div>
+                <p class="pq-help" id="pqDphInfo" style="margin:.5rem 0 0"></p>
               </div>
             </div>
           </fieldset>
@@ -592,8 +603,9 @@
 <script src="formulare-klient.js?v=20261024a"></script>
 <script src="platba/qrcode.js"></script>
 <script src="platba/platba.js?v=3"></script>
-<script src="poptavka-pdf/poptavka-pdf-nova.js?v=20261025c"></script>
-<script src="poptavka-dvere-nova.js?v=20261025c"></script>
+<script src="poptavka-pdf/poptavka-pdf-nova.js?v=20261028a"></script>
+<script src="firma-ares.js?v=20261028a"></script>
+<script src="poptavka-dvere-nova.js?v=20261028a"></script>
 <script src="bonus.js?v=20261025c" defer></script>
 <script src="systembar.js?v=2"></script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>
