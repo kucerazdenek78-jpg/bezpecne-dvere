@@ -100,7 +100,7 @@
       var ref = makeRef(), modelTxt = items.map(function (x) { return (x.ks > 1 ? x.ks + '× ' : '') + x.model + (x.od ? ' ' + x.od : ''); }).join(', '), odTxt = items.map(function (x) { return x.od; }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }).join(', '), ksSum = items.reduce(function (n, x) { return n + x.ks; }, 0);
       var d = { verze: 1, cislo: ref, odeslano: new Date().toISOString(), zdroj: 'web-poptavka-' + kat, kategorie: kat, kategorie_nazev: K.nazev,
         model: items.map(function (x) { return x.model; }).join(', '), model_kod: '', odstin: odTxt, pocet_ks: ksSum,
-        polozky: items.map(function (x) { return { co: x.model, volba: (x.od ? x.od : '') + (K.multi ? (x.od ? ', ' : '') + x.ks + ' ks' : ''), priplatek: 0, info: '' }; }),
+        polozky: items.map(function (x) { return { co: x.model, odstin: x.od, ks: x.ks, volba: (x.od ? x.od : '') + (K.multi ? (x.od ? ', ' : '') + x.ks + ' ks' : ''), priplatek: 0, info: '' }; }),
         jmeno: f.jmeno.value.trim(), prijmeni: f.prijmeni.value.trim(), telefon: f.telefon.value.trim(), email: f.email.value.trim(),
         ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(), poznamka: f.poznamka.value.trim(), fotky: list.map(function (_, i) { return 'foto' + (i + 1); }) };
       var predmet = 'Poptávka ' + K.nazev.toLowerCase() + ' ' + ref + ' – ' + modelTxt + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '');
@@ -109,8 +109,13 @@
     });
     return el;
   }
-  function pick(model) { var s = document.querySelector('[data-poptavka-kat] [data-m]'); if (!s) return false;
-    [].some.call(s.options, function (o) { if (o.value === model || o.text.indexOf(model) === 0) { s.value = o.value; s.dispatchEvent(new Event('change', { bubbles: true })); return true; } return false; }); s.scrollIntoView({ behavior: 'smooth', block: 'center' }); return true; }
+  /* předvýběr modelu z tlačítka „Poptávka“: ignoruje předponu výrobce (ERKADO/INVADO/PORTA) a rozdíly v „/“ a „·“ */
+  function norm(x) { return String(x).toUpperCase().replace(/^(ERKADO|INVADO|PORTA)\s+/, '').replace(/\s*[\/·]\s*/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function pick(model) { var s = document.querySelector('[data-poptavka-kat] [data-m]'); if (!s) return false; var n = norm(model), hit = null;
+    [].forEach.call(s.options, function (o) { if (o.value && norm(o.value) === n) hit = hit || o; });
+    if (!hit) [].forEach.call(s.options, function (o) { if (o.value && !hit && (norm(o.value).indexOf(n) === 0 || n.indexOf(norm(o.value)) === 0)) hit = o; });
+    if (hit) { s.value = hit.value; s.dispatchEvent(new Event('change', { bubbles: true })); }
+    s.scrollIntoView({ behavior: 'smooth', block: 'center' }); return !!hit; }
   window.PoptavkaKat = { mount: mount, pick: pick };
   document.addEventListener('DOMContentLoaded', function () { [].forEach.call(document.querySelectorAll('[data-poptavka-kat]'), function (el) { if (!el.firstChild) mount(el, el.getAttribute('data-poptavka-kat')); }); });
 })();
