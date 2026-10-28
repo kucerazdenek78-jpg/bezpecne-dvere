@@ -4,8 +4,8 @@
 //   • recenze = další +6 měsíců (zákazník potvrdí, že ji napsal; prodavač ji v kartotéce – Servisní požadavky – schválí).
 // Jen pokud má zákazník pouze základní záruku (neobjednal při objednávce prodlouženou, neplatil prodloužení) a nejde o interiérové dveře.
 // Podmínka (od 28. 10. 2026): bonusové měsíce (registrace, recenze) platí jen, dokud zákazník vede zápisy o pravidelné údržbě podle doporučení
-// (každých 6 měsíců od předání, tolerance 30 dnů; zápis „Údržbu jsem provedl/a“ v aplikaci). Při vynechání bonus přestane platit
-// a platí znovu od dalšího zápisu. Základní záruka 2 roky a placené prodloužení 5/10 let touto podmínkou nejsou dotčeny.
+// (každých 6 měsíců od předání, tolerance 30 dnů; zápis „Údržbu jsem provedl/a“ v aplikaci). Při zmeškaném termínu bonus zaniká
+// natrvalo (pozdější zápis ho neobnoví). Základní záruka 2 roky a placené prodloužení 5/10 let touto podmínkou nejsou dotčeny.
 require_once __DIR__ . '/zaruka.php'; require_once __DIR__ . '/posta.php'; require_once __DIR__ . '/udrzba.php';
 const BONUS_MESICU = 6; const BONUS_LHUTA_REG_DNI = 30; const BONUS_UDRZBA_TOLERANCE_DNI = 30;
 function bonus_tabulky(PDO $pdo): void {
@@ -14,11 +14,18 @@ function bonus_tabulky(PDO $pdo): void {
 }
 // kolik bonusových měsíců je v zaruka_do přičteno (registrace + schválená recenze)
 function bonus_mesicu_celkem(array $z): int { return (!empty($z['bonus_reg_dne']) ? BONUS_MESICU : 0) + (!empty($z['bonus_rec_schv_dne']) ? BONUS_MESICU : 0); }
-// údržba podle doporučení: poslední zápis (jinak předání) + 6 měsíců + tolerance; po tomto dni bonus neplatí, dokud zákazník údržbu nezapíše
+// údržba podle doporučení: poslední zápis (jinak předání) + 6 měsíců + tolerance; zmeškaný termín = bonus zaniká natrvalo
 function bonus_udrzba(PDO $pdo, array $z): array {
   if (empty($z['predano_dne'])) return ['aktivni' => true, 'do' => '', 'posledni' => ''];
-  udrzba_tabulky($pdo); $posl = udrzba_posledni($pdo, (int)$z['id']);
-  $zaklad = max((string)$z['predano_dne'], $posl);
+  udrzba_tabulky($pdo);
+  $st = $pdo->prepare("SELECT DISTINCT datum FROM udrzba_zaznamy WHERE zadost_id=? AND typ='provedeno' ORDER BY datum"); $st->execute([(int)$z['id']]);
+  $posl = ''; $zaklad = (string)$z['predano_dne'];
+  // striktně: každý zápis musí přijít nejpozději do termínu (předchozí zápis/předání + 6 měsíců + tolerance); jednou zmeškaný termín = bonus zaniká natrvalo
+  foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $dat) {
+    $lim = date('Y-m-d', strtotime(udrzba_plus($zaklad, UDRZBA_MESICU) . ' +' . BONUS_UDRZBA_TOLERANCE_DNI . ' days'));
+    if ($dat > $lim) return ['aktivni' => false, 'do' => $lim, 'posledni' => $posl];
+    $zaklad = max($zaklad, $dat); $posl = $dat;
+  }
   $do = date('Y-m-d', strtotime(udrzba_plus($zaklad, UDRZBA_MESICU) . ' +' . BONUS_UDRZBA_TOLERANCE_DNI . ' days'));
   return ['aktivni' => date('Y-m-d') <= $do, 'do' => $do, 'posledni' => $posl];
 }

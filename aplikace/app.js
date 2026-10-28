@@ -797,7 +797,7 @@
     if (svMsg) h += '<div class="status ok"><span>✓</span><div>' + esc(svMsg) + '</div></div>';
     if (b.mozne || b.reg || b.rec) {
       h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce. Obojí do 30 dnů od předání. Bonus platí jen při pravidelné údržbě: zapisujte ji tlačítkem „Údržbu jsem provedl/a“ každých 6 měsíců (nejpozději 30 dnů po termínu).</p>';
-      if (b.mesicu_celkem) { if (b.udrzba_ok === false) h += '<p class="bn-warn">⚠ Bonus je pozastaven – chybí zápis o údržbě (měl být do ' + fmt(parseDate(b.udrzba_do)) + '). Proveďte údržbu a zapište ji níže, bonus pak platí znovu.</p>'; else if (b.udrzba_do) h += '<p class="small">🛠 Další zápis o údržbě udělejte nejpozději do <b>' + fmt(parseDate(b.udrzba_do)) + '</b>, aby bonus zůstal v platnosti.</p>'; }
+      if (b.mesicu_celkem) { if (b.udrzba_ok === false) h += '<p class="bn-warn">⚠ Bonus zanikl – zápis o údržbě nebyl proveden do ' + fmt(parseDate(b.udrzba_do)) + '. Základní záruka zůstává.</p>'; else if (b.udrzba_do) h += '<p class="small">🛠 Další zápis o údržbě udělejte nejpozději do <b>' + fmt(parseDate(b.udrzba_do)) + '</b>, aby bonus zůstal v platnosti.</p>'; }
       if (b.reg) h += '<p class="bn-ok">✅ Registrace – záruka prodloužena o 6 měsíců</p>';
       else if (b.lze_reg) h += '<p>📝 Registrace (do ' + fmt(parseDate(b.reg_lhuta)) + ')</p><button class="b pri wide" data-act="bonus-reg">Zaregistrovat dveře (+6 měsíců)</button>';
       else if (b.reg_prosla) h += '<p class="small">Lhůta 30 dnů od předání pro registraci už uplynula.</p>';
