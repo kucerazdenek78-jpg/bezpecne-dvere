@@ -81,14 +81,17 @@ form.sv button{width:100%;margin-top:14px;font:inherit;background:#1f5fbf;color:
   <?php if (!empty($d['kovani']) || !empty($d['otevirani'])): ?><div class="box"><h2>Provedení dveří</h2><dl><?php foreach (['Kování' => 'kovani', 'Otevírání' => 'otevirani'] as $lab => $k) if (!empty($d[$k])): ?><dt><?= $lab ?></dt><dd><?= $e($d[$k]) ?></dd><?php endif; ?></dl></div><?php endif; ?>
   <?php if (!$predano): ?><div class="stav nic">Dveře zatím nebyly předány</div><p class="mut" style="margin:-6px 4px 14px">Záruka začíná dnem předání dveří.</p>
   <?php else:
+    bonus_tabulky($pdo); $zdo = zaruka_efektivni_do($pdo, $z);
     if (empty($z['zaruka_do'])) { $cls = 'nic'; $txt = 'Záruka od ' . $dn($z['zaruka_od']); }
-    elseif ($z['zaruka_do'] >= $dnes) { $cls = 'ok'; $txt = 'V záruce do ' . $dn($z['zaruka_do']); }
-    else { $cls = 'po'; $txt = 'Záruka skončila ' . $dn($z['zaruka_do']); } ?>
+    elseif ($zdo >= $dnes) { $cls = 'ok'; $txt = 'V záruce do ' . $dn($zdo); }
+    else { $cls = 'po'; $txt = 'Záruka skončila ' . $dn($zdo); } ?>
     <div class="stav <?= $cls ?>"><?= $e($txt) ?><div style="font-size:14px;font-weight:400">Dveře předány <?= $e($dn($z['predano_dne'])) ?><?= !empty($z['zaruka_prodlouzeno']) ? ' · včetně prodloužení o 12 měsíců' : '' ?></div></div>
-    <?php bonus_tabulky($pdo); $z = bonus_zadost($pdo, (int)$z['id']) ?: $z; $bs = bonus_stav($z, $d); ?>
+    <?php bonus_tabulky($pdo); $z = bonus_zadost($pdo, (int)$z['id']) ?: $z; $bs = bonus_stav($z, $d, $pdo); ?>
     <?php if (isset($_GET['bz'])): ?><div class="<?= ($_GET['b'] ?? '') === '1' ? 'okb' : 'erb' ?>"><?= $e(mb_substr((string)$_GET['bz'], 0, 200)) ?></div><?php endif; ?>
     <?php if ($bs['mozne'] || $bs['reg'] !== '' || $bs['rec'] !== ''): ?><div class="box bnx" id="bonus">
-      <div class="bnx-h"><span>🎁</span><div><h2>Bonus k záruce: až +12 měsíců</h2><p>6 měsíců za registraci dveří a dalších 6 za recenzi. Platí jen pro základní záruku.</p></div></div>
+      <div class="bnx-h"><span>🎁</span><div><h2>Bonus k záruce: až +12 měsíců</h2><p>6 měsíců za registraci dveří a dalších 6 za recenzi. Platí jen pro základní záruku a jen při pravidelné údržbě: zapisujte ji v aplikaci Moje dveře („Údržbu jsem provedl/a“) každých 6 měsíců podle návodu.</p></div></div>
+      <?php if ($bs['mozne'] && $bs['udrzba_ok'] && $bs['udrzba_do'] !== ''): ?><div class="bnx-row wait"><i>🛠</i><div><b>Údržba</b><small>Další zápis o údržbě udělejte nejpozději do <?= $e($dn($bs['udrzba_do'])) ?>, aby bonus zůstal v platnosti.</small></div></div>
+      <?php elseif ($bs['mozne'] && !$bs['udrzba_ok'] && $bs['mesicu_celkem'] > 0): ?><div class="bnx-row"><i>⚠</i><div><b>Bonus je pozastaven</b><small>Chybí zápis o pravidelné údržbě (měl být do <?= $e($dn($bs['udrzba_do'])) ?>). Údržbu proveďte podle návodu a zapište ji v aplikaci Moje dveře – bonus pak platí znovu.</small></div></div><?php endif; ?>
       <?php if ($bs['reg'] !== ''): ?><div class="bnx-row done"><i>✓</i><div><b>Registrace dveří</b><small>Hotovo – záruka prodloužena o 6 měsíců.</small></div></div>
       <?php elseif ($bs['lze_reg']): ?><div class="bnx-row"><i>1</i><div><b>Registrace dveří · +6 měsíců</b><small>Jedním klepnutím, do <?= $e($dn($bs['reg_lhuta'])) ?></small></div><form method="post"><input type="hidden" name="akce" value="bonus"><input type="hidden" name="druh" value="reg"><button class="btn">Zaregistrovat dveře</button></form></div>
       <?php elseif ($bs['reg_prosla']): ?><div class="bnx-row"><i>1</i><div><b>Registrace dveří</b><small>Lhůta 30 dnů od předání už uplynula.</small></div></div><?php endif; ?>

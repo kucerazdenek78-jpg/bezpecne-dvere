@@ -3,20 +3,41 @@
 //   • registrace dveří = +6 měsíců (automaticky, do 30 dnů od předání),
 //   • recenze = další +6 měsíců (zákazník potvrdí, že ji napsal; prodavač ji v kartotéce – Servisní požadavky – schválí).
 // Jen pokud má zákazník pouze základní záruku (neobjednal při objednávce prodlouženou, neplatil prodloužení) a nejde o interiérové dveře.
-require_once __DIR__ . '/zaruka.php'; require_once __DIR__ . '/posta.php';
-const BONUS_MESICU = 6; const BONUS_LHUTA_REG_DNI = 30;
+// Podmínka (od 28. 10. 2026): bonusové měsíce (registrace, recenze) platí jen, dokud zákazník vede zápisy o pravidelné údržbě podle doporučení
+// (každých 6 měsíců od předání, tolerance 30 dnů; zápis „Údržbu jsem provedl/a“ v aplikaci). Při vynechání bonus přestane platit
+// a platí znovu od dalšího zápisu. Základní záruka 2 roky a placené prodloužení 5/10 let touto podmínkou nejsou dotčeny.
+require_once __DIR__ . '/zaruka.php'; require_once __DIR__ . '/posta.php'; require_once __DIR__ . '/udrzba.php';
+const BONUS_MESICU = 6; const BONUS_LHUTA_REG_DNI = 30; const BONUS_UDRZBA_TOLERANCE_DNI = 30;
 function bonus_tabulky(PDO $pdo): void {
   $sl = array_column($pdo->query('PRAGMA table_info(zadosti)')->fetchAll(PDO::FETCH_ASSOC), 'name');
   foreach (['bonus_reg_dne', 'bonus_rec_dne', 'bonus_rec_schv_dne'] as $c) if (!in_array($c, $sl, true)) $pdo->exec("ALTER TABLE zadosti ADD COLUMN $c TEXT");
 }
-function bonus_stav(array $z, array $d): array {
+// kolik bonusových měsíců je v zaruka_do přičteno (registrace + schválená recenze)
+function bonus_mesicu_celkem(array $z): int { return (!empty($z['bonus_reg_dne']) ? BONUS_MESICU : 0) + (!empty($z['bonus_rec_schv_dne']) ? BONUS_MESICU : 0); }
+// údržba podle doporučení: poslední zápis (jinak předání) + 6 měsíců + tolerance; po tomto dni bonus neplatí, dokud zákazník údržbu nezapíše
+function bonus_udrzba(PDO $pdo, array $z): array {
+  if (empty($z['predano_dne'])) return ['aktivni' => true, 'do' => '', 'posledni' => ''];
+  udrzba_tabulky($pdo); $posl = udrzba_posledni($pdo, (int)$z['id']);
+  $zaklad = max((string)$z['predano_dne'], $posl);
+  $do = date('Y-m-d', strtotime(udrzba_plus($zaklad, UDRZBA_MESICU) . ' +' . BONUS_UDRZBA_TOLERANCE_DNI . ' days'));
+  return ['aktivni' => date('Y-m-d') <= $do, 'do' => $do, 'posledni' => $posl];
+}
+// konec záruky, který platí dnes (zaruka_do v kartotéce obsahuje i bonus; bez údržby se bonusové měsíce odečtou)
+function zaruka_efektivni_do(PDO $pdo, array $z): string {
+  $do = (string)($z['zaruka_do'] ?? ''); if ($do === '') return '';
+  $m = bonus_mesicu_celkem($z); if (!$m || !empty($z['zaruka_prodl_let'])) return $do;
+  return bonus_udrzba($pdo, $z)['aktivni'] ? $do : date('Y-m-d', strtotime($do . ' -' . $m . ' months'));
+}
+function bonus_stav(array $z, array $d, ?PDO $pdo = null): array {
   $dnes = date('Y-m-d'); $predano = !empty($z['predano_dne']);
   $interier = (bool)preg_match('/interi|vnit[rř]n/iu', (string)($d['model_kod'] ?? '') . ' ' . (string)($d['model'] ?? ''));
   $zakladni = !preg_match('/Ano,\s*na/u', (string)($d['zaruka'] ?? '')) && empty($z['zaruka_prodl_let']) && empty($z['zaruka_prodlouzeno']);
   $mozne = $predano && !$interier && $zakladni && !empty($z['zaruka_do']);
   $lhuta = $predano ? date('Y-m-d', strtotime($z['predano_dne'] . ' +' . BONUS_LHUTA_REG_DNI . ' days')) : '';
   $reg = (string)($z['bonus_reg_dne'] ?? ''); $rec = (string)($z['bonus_rec_dne'] ?? ''); $schv = (string)($z['bonus_rec_schv_dne'] ?? '');
-  return ['mozne' => $mozne, 'reg' => $reg, 'reg_lhuta' => $lhuta, 'lze_reg' => $mozne && $reg === '' && $dnes <= $lhuta,
+  $ud = ($pdo && $mozne) ? bonus_udrzba($pdo, $z) : ['aktivni' => true, 'do' => '', 'posledni' => ''];
+  return ['udrzba_ok' => $ud['aktivni'], 'udrzba_do' => $ud['do'], 'udrzba_posledni' => $ud['posledni'], 'mesicu_celkem' => bonus_mesicu_celkem($z),
+    'mozne' => $mozne, 'reg' => $reg, 'reg_lhuta' => $lhuta, 'lze_reg' => $mozne && $reg === '' && $dnes <= $lhuta,
     'rec' => $rec, 'rec_schvaleno' => $schv, 'lze_rec' => $mozne && $rec === '' && $dnes <= $lhuta, 'rec_prosla' => $mozne && $rec === '' && $dnes > $lhuta, 'mesicu' => BONUS_MESICU,
     'reg_prosla' => $mozne && $reg === '' && $dnes > $lhuta];
 }
@@ -28,7 +49,7 @@ function bonus_akce(PDO $pdo, array $cfg, string $DATA, array $z, string $druh):
   if ($druh === 'reg') {
     if (!$s['lze_reg']) return [false, $s['reg'] !== '' ? 'Dveře už jsou zaregistrované.' : 'Registrace už není možná.'];
     $nove = bonus_pridej_mesice($pdo, $z); $pdo->prepare('UPDATE zadosti SET bonus_reg_dne=? WHERE id=?')->execute([$dnes, $z['id']]);
-    return [true, 'Děkujeme, dveře jsou zaregistrované. Záruka je prodloužena o ' . BONUS_MESICU . ' měsíců, nově do ' . date('j. n. Y', strtotime($nove)) . '.'];
+    return [true, 'Děkujeme, dveře jsou zaregistrované. Záruka je prodloužena o ' . BONUS_MESICU . ' měsíců, nově do ' . date('j. n. Y', strtotime($nove)) . '. Bonus platí, dokud každých ' . UDRZBA_MESICU . ' měsíců zapisujete údržbu dveří (tlačítko „Údržbu jsem provedl/a“) – první zápis nejpozději do ' . date('j. n. Y', strtotime(bonus_udrzba($pdo, bonus_zadost($pdo, (int)$z['id']))['do'])) . '.'];
   }
   if ($druh === 'recenze') {
     if (!$s['lze_rec']) return [false, $s['rec'] !== '' ? 'Recenzi už evidujeme.' : 'Lhůta 30 dnů od předání pro recenzi už uplynula.'];

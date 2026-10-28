@@ -76,6 +76,6 @@ function udrzba_mail_text(array $z, array $d, string $termin): string {
     . "• vyzkoušejte, že dveře samy dovřou a zámek jde lehce.\n\nDveře při předání seřizujeme a promazáváme. Když dveře drhnou nebo nezapadají, seřídíme je zdarma do 6 měsíců od předání, potom jako placenou servisní službu (stejně jako preventivní seřízení a promazání); oprava vady dveří je v záruce vždy zdarma.\n\n"
     . "Celý návod: " . UDRZBA_NAVOD_URL . "\n\n"
     . "Až budete hotovi, potvrďte to prosím v aplikaci Moje dveře tlačítkem „Údržbu jsem provedl/a“ – zapíše se do servisní knížky dveří:\n" . UDRZBA_APP_URL . "\n\n"
-    . "Pravidelná údržba podle návodu je důležitá i pro záruku – na vady způsobené zanedbanou údržbou se záruka nevztahuje. Připomínky si můžete v aplikaci vypnout i znovu zapnout.\n\n"
+    . "Pravidelná údržba podle návodu je důležitá i pro záruku – na vady způsobené zanedbanou údržbou se záruka nevztahuje. Bonus k záruce (+6 měsíců za registraci a +6 za recenzi) platí jen, pokud údržbu každých " . UDRZBA_MESICU . " měsíců zapisujete (nejpozději do 30 dnů po termínu). Připomínky si můžete v aplikaci vypnout i znovu zapnout.\n\n"
     . "Kdyby něco nešlo, napište nebo zavolejte: +420 725 559 235.\n\nBezpečné dveře · KK SYSTEM\nwww.bezpecne-dvere.cz";
 }

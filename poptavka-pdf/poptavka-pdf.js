@@ -158,7 +158,7 @@
           doc.setFillColor.apply(doc, GREEN); doc.circle(ix + 3.9, iy + 4.3, 0.3, 'F'); doc.setLineWidth(0.2);
           font('bold', 9.5, GREEN); doc.text('V ceně: aplikace Moje dveře', M + 14, y + 0.6);
           font('normal', 8, MUTED); doc.text('Přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady, roční kontrola.', M + 14, y + 4.9);
-          if (regB) doc.text('Registrací dveří v aplikaci +6 měsíců a recenzí dalších +6 měsíců záruky.', M + 14, y + 8.8);
+          if (regB) doc.text('Registrací dveří +6 měsíců a recenzí dalších +6 měsíců záruky (platí při pravidelné údržbě dveří).', M + 14, y + 8.8);
           y += bh0 + 2;
         }
 

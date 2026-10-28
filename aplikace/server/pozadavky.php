@@ -99,7 +99,7 @@ function poz_rodny_list(PDO $pdo, array $z): array {
   $ob = (string)($d['obj_datum'] ?? substr((string)$z['vytvoreno'], 0, 10));
   if ($ob) $e[] = ['datum' => $ob, 'typ' => 'objednavka', 'text' => 'Objednávka dveří ' . ($d['model'] ?? '') . (!empty($d['odstin']) ? ', ' . $d['odstin'] : '')];
   if (!empty($z['predano_dne'])) $e[] = ['datum' => $z['predano_dne'], 'typ' => 'predani', 'text' => 'Dveře namontovány a předány'];
-  if (!empty($z['zaruka_do'])) $e[] = ['datum' => $z['zaruka_od'] ?: $z['predano_dne'], 'typ' => 'zaruka', 'text' => 'Začátek záruky, platí do ' . poz_datum($z['zaruka_do']) . (!empty($z['zaruka_prodlouzeno']) ? ' (včetně prodloužení)' : '')];
+  if (!empty($z['zaruka_do'])) $e[] = ['datum' => $z['zaruka_od'] ?: $z['predano_dne'], 'typ' => 'zaruka', 'text' => 'Začátek záruky, platí do ' . poz_datum(function_exists('zaruka_efektivni_do') ? zaruka_efektivni_do($pdo, $z) : $z['zaruka_do']) . (!empty($z['zaruka_prodlouzeno']) ? ' (včetně prodloužení)' : '')];
   $st = $pdo->prepare('SELECT * FROM servis WHERE zadost_id=? ORDER BY datum, id'); $st->execute([$z['id']]);
   $druhy = ['kontrola' => 'Roční kontrola', 'servis' => 'Servis', 'reklamace' => 'Reklamace'];
   foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $q) $e[] = ['datum' => (string)$q['datum'], 'typ' => 'servis', 'text' => ($druhy[$q['druh']] ?? $q['druh']) . (!empty($q['verejne']) ? ': ' . $q['verejne'] : '')];

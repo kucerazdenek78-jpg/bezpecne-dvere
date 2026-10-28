@@ -61,7 +61,7 @@ if ($akce === 'sparovat') {
       'odstin' => (string)($d['odstin'] ?? ''), 'zaruka' => (string)($d['zaruka'] ?? ''),
       'termin' => mb_substr($termin, 0, 60),
       // skutečné údaje z kartotéky (potvrzené předání technikem) – aplikace je ukáže místo vlastního odhadu
-      'predano' => (string)($r['predano_dne'] ?? ''), 'zaruka_do' => (string)($r['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($r['zaruka_prodl_let'] ?? 0),
+      'predano' => (string)($r['predano_dne'] ?? ''), 'zaruka_do' => zaruka_efektivni_do($pdo, $r), 'prodlouzeno_let' => (int)($r['zaruka_prodl_let'] ?? 0),
     ],
     // odkaz na zákaznickou stránku „Moje dveře“ na NAS (záruka, servis, prodloužení záruky s QR platbou) – jediný zdroj pravdy
     'moje_url' => !empty($r['predano_dne']) ? zaruka_url($cfg, zaruka_token($pdo, $r)) : '',
@@ -122,7 +122,7 @@ if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_a
     $d = json_decode((string)$zz['data_json'], true) ?: [];
     vystup(200, ['ok' => true, 'dvere' => ['cislo' => (string)($d['obj_cislo'] ?? $zz['cislo']), 'model_kod' => (string)($d['model_kod'] ?? ''), 'model' => (string)($d['model'] ?? ''),
       'odstin' => (string)($d['odstin'] ?? ''), 'zaruka' => (string)($d['zaruka'] ?? ''), 'termin' => '', 'predano' => (string)($zz['predano_dne'] ?? ''),
-      'zaruka_do' => (string)($zz['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)],
+      'zaruka_do' => zaruka_efektivni_do($pdo, $zz), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)],
       'moje_url' => zaruka_url($cfg, (string)$_POST['t']), 'token' => (string)$_POST['t'], 'kontakt' => ['jmeno' => (string)($d['jmeno'] ?? ''), 'prijmeni' => (string)($d['prijmeni'] ?? '')]]);
   }
   if ($akce === 'servis_nahlasit') {
@@ -151,8 +151,8 @@ if ($akce === 'servis_stav' || $akce === 'servis_nahlasit' || $akce === 'bonus_a
     if (!$dok) chyba(400, 'data', $bonusZpr);
   }
   bonus_tabulky($pdo); $zz = bonus_zadost($pdo, (int)$zz['id']) ?: $zz; $dd = json_decode((string)$zz['data_json'], true) ?: [];
-  vystup(200, ['ok' => true, 'zprava' => $bonusZpr, 'bonus' => bonus_stav($zz, $dd), 'doporuceni' => dop_seznam($pdo, (int)$zz['id']), 'prodlouzeni' => bonus_nabidka_platba($cfg, $zz, $dd), 'cislo' => $cislo ?? '', 'pozadavky' => poz_pro_zakaznika($pdo, (int)$zz['id']), 'rodny_list' => poz_rodny_list($pdo, $zz), 'udrzba' => udrzba_stav($pdo, $zz),
-    'predano' => (string)($zz['predano_dne'] ?? ''), 'zaruka_do' => (string)($zz['zaruka_do'] ?? ''), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)]);
+  vystup(200, ['ok' => true, 'zprava' => $bonusZpr, 'bonus' => bonus_stav($zz, $dd, $pdo), 'doporuceni' => dop_seznam($pdo, (int)$zz['id']), 'prodlouzeni' => bonus_nabidka_platba($cfg, $zz, $dd), 'cislo' => $cislo ?? '', 'pozadavky' => poz_pro_zakaznika($pdo, (int)$zz['id']), 'rodny_list' => poz_rodny_list($pdo, $zz), 'udrzba' => udrzba_stav($pdo, $zz),
+    'predano' => (string)($zz['predano_dne'] ?? ''), 'zaruka_do' => zaruka_efektivni_do($pdo, $zz), 'prodlouzeno_let' => (int)($zz['zaruka_prodl_let'] ?? 0)]);
 }
 
 // Akce „udalost“: anonymní počítadlo využití aplikace (otevření, fotka, vizualizace, výběr modelu, odeslání).

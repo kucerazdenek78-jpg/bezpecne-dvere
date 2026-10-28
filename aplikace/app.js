@@ -676,7 +676,7 @@
     $('#models').innerHTML = Object.keys(MODELS).map(function (k) {
       var m = MODELS[k];
       return '<div class="card model"><img src="' + m.img + '" alt="' + esc(m.name) + '" loading="lazy"><div><h3>' + esc(m.name) + (m.tag ? '<span class="tag">' + esc(m.tag) + '</span>' : '') + '</h3>' +
-        '<p><b>' + esc(m.spec) + '</b></p><p>' + esc(m.txt) + '</p><p>Záruka ' + m.base + (m.base === 2 ? ' roky' : ' let') + (m.bonus ? ' + až 12 měsíců bonus (registrace a recenze v aplikaci)' : '') + '</p>' +
+        '<p><b>' + esc(m.spec) + '</b></p><p>' + esc(m.txt) + '</p><p>Záruka ' + m.base + (m.base === 2 ? ' roky' : ' let') + (m.bonus ? ' + až 12 měsíců bonus (registrace a recenze v aplikaci, platí při pravidelné údržbě)' : '') + '</p>' +
         '<div class="btns">' + (VIZ[k] ? '<a class="b sm" href="#viz?m=' + k + '">Vyzkoušet na fotce</a>' : '') +
         '<a class="b sm" href="../dvere-do-bytu.html#' + k + '">Detail a cena</a><a class="b sm pri" href="../poptavka-dvere.html?model=' + k + '">Sestavit</a></div></div></div>';
     }).join('');
@@ -796,7 +796,8 @@
     var b = j.bonus || {}, p = j.prodlouzeni || {}, h = '';
     if (svMsg) h += '<div class="status ok"><span>✓</span><div>' + esc(svMsg) + '</div></div>';
     if (b.mozne || b.reg || b.rec) {
-      h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce. Obojí do 30 dnů od předání.</p>';
+      h += '<div class="bn"><h4>🎁 Bonus k záruce: až +12 měsíců</h4><p class="small">Za registraci dveří <b>6 měsíců</b> a za recenzi <b>dalších 6 měsíců</b> k základní záruce. Obojí do 30 dnů od předání. Bonus platí jen při pravidelné údržbě: zapisujte ji tlačítkem „Údržbu jsem provedl/a“ každých 6 měsíců (nejpozději 30 dnů po termínu).</p>';
+      if (b.mesicu_celkem) { if (b.udrzba_ok === false) h += '<p class="bn-warn">⚠ Bonus je pozastaven – chybí zápis o údržbě (měl být do ' + fmt(parseDate(b.udrzba_do)) + '). Proveďte údržbu a zapište ji níže, bonus pak platí znovu.</p>'; else if (b.udrzba_do) h += '<p class="small">🛠 Další zápis o údržbě udělejte nejpozději do <b>' + fmt(parseDate(b.udrzba_do)) + '</b>, aby bonus zůstal v platnosti.</p>'; }
       if (b.reg) h += '<p class="bn-ok">✅ Registrace – záruka prodloužena o 6 měsíců</p>';
       else if (b.lze_reg) h += '<p>📝 Registrace (do ' + fmt(parseDate(b.reg_lhuta)) + ')</p><button class="b pri wide" data-act="bonus-reg">Zaregistrovat dveře (+6 měsíců)</button>';
       else if (b.reg_prosla) h += '<p class="small">Lhůta 30 dnů od předání pro registraci už uplynula.</p>';
@@ -889,7 +890,7 @@
     else {
       var active = w.base >= today();
       h += '<div class="status ' + (active ? 'ok' : 'info') + '"><span>🛡</span><div><b>' + (active ? 'Záruka platí do ' : 'Záruka skončila ') + fmt(w.base) + '</b>' +
-        (w.ext ? 'prodloužená záruka na ' + w.ext + ' let od předání' : 'základní záruka 2 roky' + (dv.zaruka_do ? ' (včetně případného bonusu)' : '')) + '</div></div>';
+        (w.ext ? 'prodloužená záruka na ' + w.ext + ' let od předání' : 'základní záruka 2 roky' + (dv.zaruka_do ? ' (včetně bonusu, pokud zapisujete údržbu)' : '')) + '</div></div>';
     }
     h += (doorToken(dv) ? '<div id="bnBox"></div>' : '<p class="small">Bonus za registraci a prodloužení záruky najdete po spárování dveří s objednávkou.</p>') +
       '<p class="small"><a href="../podminky-prodlouzeni-zaruky.html" target="_blank">Podmínky bonusu a prodloužení záruky</a></p></div>';
