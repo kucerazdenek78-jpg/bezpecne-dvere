@@ -269,10 +269,17 @@
     <h2>Jaké dveře hledáte?</h2>
     <div class="pq-ch-grid">
       <button type="button" class="pq-ch" id="pqChByt"><img src="poptavka-imgs/premium60.jpg" alt="" loading="lazy"><b>Bezpečnostní dveře do bytu</b><span>PREMIUM 60, EXTREME 54, MAGNUM 56, SECURIDO 65. Sestavíte si je zde s cenou.</span><em>Sestavit dveře →</em></button>
-      <a class="pq-ch" href="dvere-do-domu.html#poptavka"><img src="aplikace/img/domovni/arendal.jpg" alt="" loading="lazy"><b>Vchodové dveře do domu</b><span>Ocelové ERKADO a hliníkové OPTIMAL.</span><em>Vybrat a poptat →</em></a>
-      <a class="pq-ch" href="dvere-do-interieru.html#poptavka"><img src="aplikace/img/interier/altamura1.jpg" alt="" loading="lazy"><b>Interiérové dveře</b><span>Skladové modely i dveře na objednávku.</span><em>Vybrat a poptat →</em></a>
+      <button type="button" class="pq-ch" id="pqChDum"><img src="aplikace/img/domovni/arendal.jpg" alt="" loading="lazy"><b>Vchodové dveře do domu</b><span>Ocelové ERKADO a hliníkové OPTIMAL.</span><em>Vybrat a poptat →</em></button>
+      <button type="button" class="pq-ch" id="pqChInt"><img src="aplikace/img/interier/altamura1.jpg" alt="" loading="lazy"><b>Interiérové dveře</b><span>Skladové modely i dveře na objednávku.</span><em>Vybrat a poptat →</em></button>
     </div>
     <a class="pq-app" href="aplikace/#viz"><div class="ic">📷</div><div><b>Nejdřív si je vyzkoušejte na fotce</b><span>Vyfoťte své dveře a uvidíte, jak by u vás vypadaly nové – do bytu, do domu i interiérové. Z aplikace pak rovnou pošlete poptávku.</span></div><span class="go">Otevřít aplikaci</span></a>
+  </div>
+</section>
+
+<section class="pq-wrap" id="pqKatWrap" hidden>
+  <div class="container">
+    <button type="button" class="pq-back" id="pqKatBack">← Jiný druh dveří</button>
+    <div id="pqKatMount"></div>
   </div>
 </section>
 
@@ -579,18 +586,30 @@
 <script src="formulare-klient.js?v=20261024a"></script>
 <script src="poptavka-pdf/poptavka-pdf.js?v=20261028a"></script>
 <script src="poptavka-dvere.js?v=20261028a"></script>
+<script src="poptavka-kat.js?v=20261028a"></script>
 <script src="cookies.js?v=5" defer></script>
 <script src="bonus.js?v=20261025c" defer></script>
 <script>
-/* rozcestník „Chci dveře“: bez předvolby (?model=, #d=) nejdřív výběr druhu dveří a odkaz na aplikaci */
+/* rozcestník „Chci dveře“: bez předvolby (?model=, #d=) nejdřív výběr druhu dveří a odkaz na aplikaci;
+   byt = průvodce s cenou, dům/interiér = sdílený formulář PoptavkaKat (stejná pole i formát dat) */
 (function () {
   var ch = document.getElementById('pqChoose'), wrap = document.getElementById('pqWrap'), back = document.getElementById('pqBack');
+  var kw = document.getElementById('pqKatWrap'), km = document.getElementById('pqKatMount'), kb = document.getElementById('pqKatBack');
   if (!ch || !wrap) return;
-  var direct = /[?&]model=/.test(location.search) || /[#&]d=/.test(location.hash) || /[#&]byt\b/.test(location.hash);
-  function show(form) { ch.hidden = form; wrap.hidden = !form; back.hidden = !form || direct; window.scrollTo(0, 0); }
-  document.getElementById('pqChByt').addEventListener('click', function () { history.replaceState(null, '', '#byt'); show(true); });
-  back.addEventListener('click', function () { history.replaceState(null, '', location.pathname + location.search); show(false); });
-  show(direct);
+  var h = location.hash, kat = /[#&]dum\b/.test(h) ? 'dum' : /[#&]interier\b/.test(h) ? 'interier' : '';
+  var direct = /[?&]model=/.test(location.search) || /[#&]d=/.test(location.hash) || /[#&]byt\b/.test(h);
+  function show(mode) { /* 'choose' | 'byt' | 'dum' | 'interier' */
+    ch.hidden = mode !== 'choose'; wrap.hidden = mode !== 'byt'; kw.hidden = mode !== 'dum' && mode !== 'interier';
+    back.hidden = mode !== 'byt' || direct;
+    if (!kw.hidden) { km.innerHTML = ''; window.PoptavkaKat.mount(km, mode); }
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('pqChByt').addEventListener('click', function () { history.replaceState(null, '', '#byt'); show('byt'); });
+  document.getElementById('pqChDum').addEventListener('click', function () { history.replaceState(null, '', '#dum'); show('dum'); });
+  document.getElementById('pqChInt').addEventListener('click', function () { history.replaceState(null, '', '#interier'); show('interier'); });
+  function zpet() { history.replaceState(null, '', location.pathname + location.search); show('choose'); }
+  back.addEventListener('click', zpet); kb.addEventListener('click', zpet);
+  show(kat ? kat : direct ? 'byt' : 'choose');
 })();
 </script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>

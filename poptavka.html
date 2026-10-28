@@ -218,51 +218,16 @@
   <div class="container">
     <div class="poptavka-grid">
 
-      <!-- FORMULÁŘ -->
+      <!-- VÝBĚR DRUHU DVEŘÍ: všechny poptávky jdou jedním formulářem (stejná pole i data pro kartotéku) -->
       <div class="form-card">
-        <h3>Poptávkový formulář</h3>
-        <form method="POST" data-email-form>
-          <input type="hidden" name="_subject" value="Poptávka z webu – bezpecne-dvere">
-          <input type="hidden" name="_template" value="table">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Jméno a příjmení *</label>
-              <input type="text" name="jmeno" placeholder="Jan Novák" required>
-            </div>
-            <div class="form-group">
-              <label>Telefon *</label>
-              <input type="tel" name="telefon" placeholder="+420 xxx xxx xxx" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>E-mail</label>
-            <input type="email" name="email" placeholder="vas@email.cz">
-          </div>
-          <div class="form-group">
-            <label>Typ dveří, o které máte zájem</label>
-            <select name="typ">
-              <option value="">– vyberte –</option>
-              <option>PREMIUM 60 (bytové, RC3 EI60)</option>
-              <option>EXTREME 54 (bytové, levnější varianta)</option>
-              <option>MAGNUM 56 (bytové)</option>
-              <option>SECURIDO 65 (bytové)</option>
-              <option>Dveře do domu (OPTIMAL 60 / 75)</option>
-              <option>Nejsem si jistý/á – chci poradit</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Adresa montáže (město, ulice)</label>
-            <input type="text" name="adresa" placeholder="Most, ulice…">
-          </div>
-          <div class="form-group">
-            <label>Zpráva / dotaz</label>
-            <textarea name="zprava" placeholder="Stručně popište Váš požadavek, rozměry otvoru, stávající zárubeň…"></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.9rem;">Odeslat poptávku →</button>
-          <p class="form-note">* Povinné pole. Odesláním formuláře souhlasíte se zpracováním osobních údajů za účelem odpovědi na Vaši poptávku.</p>
-        </form>
+        <h3>Jaké dveře poptáváte?</h3>
+        <p style="margin:0 0 1rem;color:var(--text-muted);">Vyberte druh dveří. Formulář je u všech stejný a odpovíme do 24 hodin.</p>
+        <div style="display:grid;gap:.8rem;">
+          <a class="btn btn-primary" style="justify-content:center;padding:.9rem;" href="poptavka-dvere.html#byt">Bezpečnostní dveře do bytu →</a>
+          <a class="btn btn-primary" style="justify-content:center;padding:.9rem;" href="poptavka-dvere.html#dum">Vchodové dveře do domu →</a>
+          <a class="btn btn-primary" style="justify-content:center;padding:.9rem;" href="poptavka-dvere.html#interier">Interiérové dveře →</a>
+        </div>
+        <p class="form-note">Nevíte si rady? Zavolejte nebo napište, poradíme.</p>
       </div>
 
       <!-- KONTAKTNÍ KARTY -->
