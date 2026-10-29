@@ -31,7 +31,7 @@ th{background:#eef2f8;font-size:12px;text-transform:uppercase;color:#64708a}.mut
 @media(max-width:700px){.hide-m{display:none}}</style></head><body><?php bd_bar('koncepty'); ?><main>
 <?php if (isset($_GET['smazano'])): ?><div class="ok">Rozpracovaná nabídka byla odstraněna ze seznamu.</div><?php endif; ?>
 <div class="box"><h2 style="margin:0 0 6px">📝 Rozpracované nabídky a objednávky</h2>
-<p class="mut" style="margin:0">Uložené tlačítkem „💾 Uložit rozpracovanou“ ve formuláři nabídky (nebo objednávky interiér / dům). Zákazníkovi nic neodešlo. „Pokračovat“ otevře formulář s uloženými údaji; po odeslání nabídka z tohoto seznamu sama zmizí. Přiložené PDF rozpočtu a vlastní obrázky se neukládají – nahrajte je znovu.
+<p class="mut" style="margin:0">Uložené tlačítkem „💾 Uložit rozpracovanou“ ve formuláři nabídky (nebo objednávky interiér / dům). Zákazníkovi nic neodešlo. „Pokračovat“ otevře formulář s uloženými údaji; po odeslání nabídka z tohoto seznamu sama zmizí. Ukládá se i PDF rozpočtu z jiného programu a vlastní obrázky.
 <?= $vse ? '<a href="koncepty.php">Jen rozpracované</a>' : '<a href="koncepty.php?vse=1">Zobrazit i odeslané</a>' ?></p></div>
 <table><tr><th>Uloženo</th><th>Druh</th><th>Číslo</th><th>Zákazník</th><th class="hide-m">Dveře</th><th class="hide-m">Cena</th><th class="hide-m">Prodavač</th><th></th></tr>
 <?php foreach ($rows as $k): ?><tr>
