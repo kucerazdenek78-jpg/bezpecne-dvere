@@ -403,7 +403,7 @@
     d.model = KAT[st.kat] + ': ' + st.rows.map(function (r) { return (r.ks > 1 ? r.ks + '× ' : '') + r.nazev; }).join(', ');
     d.polozky = st.rows.map(function (r) {
       var sp = rowSpec(r);
-      return { co: r.nazev + (r.ks > 1 ? ' (' + r.ks + ' ks × ' + kc(r.cena) + ')' : ''), volba: [specTxt(sp), r.popis, r.sleva ? 'sleva ' + kc(r.sleva) : ''].filter(Boolean).join(' · '), priplatek: r.ks * r.cena - r.sleva,
+      return { co: r.nazev + ' (' + r.ks + ' ks × ' + kc(r.cena) + ')', volba: [specTxt(sp), r.popis, r.sleva ? 'sleva ' + kc(r.sleva) : ''].filter(Boolean).join(' · '), priplatek: r.ks * r.cena - r.sleva,
         model_kod: r.model, odstin: r.odstin, cfg: r.cfg || null, popis: r.popis, nazev: r.nazev, ks: r.ks, cena_ks: r.cena, sleva: r.sleva, spec: sp, obrazek: r.img || '', kovani_id: r.typ === 'kovani' ? r.kid : undefined, rozeta: r.typ === 'kovani' ? r.rozeta : undefined };
     });
     }
@@ -536,7 +536,7 @@
         if (p.ks == null) return;
         var r = st.rows[i], im = ims[i] || [null, null];
         var hasImg = !!im[0], IW = hasImg ? 36 : 0, IH = hasImg ? 52 : 0, x0 = M + (hasImg ? IW + 6 : 5), wTxt = W - M - x0 - 2, wLab = 30;
-        var sp = p.spec || [];
+        var sp = [['Počet', p.ks + ' ks']].concat(p.spec || []);   /* počet kusů vždy viditelně v parametrech */
         font('bold', 11.5); var tl = doc.splitTextToSize(p.nazev, wTxt);
         var h = tl.length * 5.2 + 2;
         var rows = sp.map(function (s) {
@@ -565,7 +565,7 @@
         /* cena položky – dole vpravo v kartě */
         var by = top + cardH - 6;
         if (p.sleva) { font('normal', 8.5, ORANGE); doc.text('sleva na položku -' + money(p.sleva), W - M - 4, by - 9, { align: 'right' }); }
-        font('normal', 9, MUTED); doc.text(p.ks + ' ks × ' + money(p.cena_ks) + ' vč. DPH', W - M - 4, by - 4.3, { align: 'right' });
+        font('bold', 9.5, [40, 60, 50]); doc.text(p.ks + ' ks × ' + money(p.cena_ks) + ' vč. DPH', W - M - 4, by - 4.3, { align: 'right' });
         font('bold', 12.5, ORANGE); doc.text('Celkem ' + money(p.ks * p.cena_ks - p.sleva), W - M - 4, by + 1.2, { align: 'right' });
         y = top + cardH + 4;
       });
