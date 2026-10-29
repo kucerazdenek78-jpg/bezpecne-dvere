@@ -813,6 +813,21 @@
       if (form.requestSubmit) form.requestSubmit($('#nbSubmit')); else $('#nbSubmit').click();
     })();
   }
+  /* náhled PDF rozpracované nabídky z kartotéky (#k=…&pdf=1): přesně to PDF, které by šlo zákazníkovi; nic se neodesílá */
+  st.pdfNahled = /[#&]pdf=1(&|$)/.test(location.hash);
+  function kNahledPdf() {
+    var d = null; try { d = collect(); } catch (e) {}
+    if (!d) { kAutoStav('PDF se nepodařilo připravit – otevřete nabídku a zkontrolujte ji.', true); return; }
+    kAutoStav('📄 Připravuji PDF nabídky ' + (d.obj_cislo || '') + ' (náhled – nic se neodesílá)…');
+    buildPdf(d).then(function (b) {
+      if (!b || !b.blob) throw new Error('x');
+      var u = URL.createObjectURL(b.blob), box = kAutoBox();
+      box.innerHTML = '📄 PDF nabídky ' + esc(d.obj_cislo || '') + ' je připravené – přesně tak, jak by odešlo zákazníkovi' + (d.rozpocet && !b.merged && st.rozpBuf ? ' (rozpočet z jiného programu by šel jako samostatná příloha)' : '') + '. Nic se neodeslalo. ';
+      var a = document.createElement('a'); a.href = u; a.className = 'btn btn-primary'; a.textContent = 'Otevřít PDF'; a.target = '_blank'; a.rel = 'noopener'; box.appendChild(a);
+      var dl = document.createElement('a'); dl.href = u; dl.download = 'Nabidka-' + (d.obj_cislo || 'nahled') + '.pdf'; dl.className = 'btn btn-outline'; dl.textContent = 'Stáhnout'; dl.style.marginLeft = '.5rem'; box.appendChild(dl);
+      location.href = u;   /* rovnou ukázat PDF v prohlížeči */
+    }).catch(function () { kAutoStav('PDF se nepodařilo vytvořit – otevřete nabídku a zkuste „Odeslat“ až po kontrole.', true); });
+  }
   function kAutoDalsi(d) {
     if (!st.auto) return;
     var odesl = 'Nabídka ' + (d.obj_cislo || '') + ' odeslána' + (d.email ? ' zákazníkovi (' + d.email + ').' : ' (zákazník nemá e-mail – odešla jen vám).');
@@ -947,6 +962,7 @@
       var pdfOk = j.rozpocet_pdf > 0 ? kNactiPdf(j.data).then(function () { return true; }).catch(function () { return false; }) : Promise.resolve(null);
       pdfOk.then(function (ok) {
         if (ok === false) kMsg('PDF rozpočtu se nepodařilo načíst – nahrajte ho prosím znovu.', true); else if (ok) kMsg('');
+        if (st.pdfNahled && !st.auto) { setTimeout(kNahledPdf, 600); return; }
         if (st.auto) { if (ok === false) kAutoStav('Automatické odeslání zastaveno: PDF rozpočtu se nenačetlo.' + kAutoZbyva(), true); else if (j.stav === 'odeslano') kAutoStav('Tahle nabídka už byla odeslána – automaticky ji znovu neposílám.' + kAutoZbyva(), true); else setTimeout(kAutoStart, 800); }
       });
       var info = $('#nbLoaded'); info.hidden = false; info.style.background = '#fff7d6'; info.style.borderColor = '#e0b100';
