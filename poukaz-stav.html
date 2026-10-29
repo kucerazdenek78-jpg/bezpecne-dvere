@@ -113,7 +113,7 @@
 <script src="formulare-klient.js?v=20261024a"></script>
 <script src="platba/qrcode.js"></script>
 <script src="platba/platba.js?v=20261029a"></script>
-<script src="poukaz/poukaz.js?v=20261029a"></script>
+<script src="poukaz/poukaz.js?v=20261029b"></script>
 <div class="page-header hero-modern pv-hero">
   <div class="container">
     <span class="section-label">Dárkový poukaz</span>
@@ -169,7 +169,7 @@
       $('#psPdf').href = API + '?akce=soubor&t=' + t;
       $('#psDoklad').onclick = function () { var b = this; b.disabled = true; Poukaz.doklad(p).then(function (bl) { var a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = 'Potvrzeni-platby-' + p.cislo.replace(/[ \/]/g, '-') + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); b.disabled = false; }); };
     } else { $('#psJiny').hidden = false; set('jiny', p.stav === 'zruseno' ? 'Objednávka poukazu byla zrušena. Pokud jste platbu poslali, ozvěte se nám prosím.' : 'Platnost poukazu uplynula.'); }
-    Poukaz.ready().then(function () { Poukaz.kresli($('#psNahled'), p, 3); });
+    Poukaz.ready().then(function () { return p.foto ? Poukaz.nactiFoto(API + '?akce=fotka&t=' + t).then(function (im) { p.foto = im; }, function () { p.foto = null; }) : (p.foto = null); }).then(function () { Poukaz.kresli($('#psNahled'), p, 3); });
   }).catch(function () { chyba('Poukaz se teď nepodařilo načíst. Zkuste to prosím za chvíli.'); });
 })();
 </script>

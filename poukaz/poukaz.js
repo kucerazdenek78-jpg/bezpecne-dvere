@@ -7,8 +7,9 @@
    Poukaz.doklad(data)                 → Promise<Blob> potvrzení o přijetí platby (A4 na výšku)
    Poukaz.scena(ctx, motiv, hodnota, x, y, w, h, S) → jen obrázek dveří se scénou (pro reklamy)
 
-   data = { motiv: 'vanoce'|'narozeniny'|'darkovy', hodnota: 10000, cislo: 'DP 1/2026', kod: 'ABCD-EFGH',
-            platnost_do: '2027-12-01', obdarovany: '', venovani: '', od_koho: '' }
+   data = { motiv: 'vanoce'|'narozeniny'|'darkovy'|'vlastni', hodnota: 10000, cislo: 'DP 1/2026', kod: 'ABCD-EFGH',
+            platnost_do: '2027-12-01', obdarovany: '', venovani: '', od_koho: '', foto: <Image> (jen motiv vlastni) }
+   Poukaz.nactiFoto(File|url) → Promise<Image> (fotka zmenšená na max. 1600 px, pro motiv „Vlastní fotka“)
    Písma: Inter (poptavka-pdf/), Playfair Display a Caveat (OFL, poukaz/). */
 (function (w) {
   'use strict';
@@ -32,6 +33,11 @@
       nazev: 'Dárkový', kicker: 'DÁRKOVÝ POUKAZ',
       vtip: 'Kus nových dveří už je zaplacený. Zbytek vybereme spolu.',
       bg: ['#0b1d33', '#0f2747', '#123d27'], akcent: '#e8650a', kicker_c: '#123d27', ram: '#e8650a', dvere: ['#2b3138', '#3b434c', '#22272d']
+    },
+    vlastni: {
+      nazev: 'Vlastní', kicker: 'DÁRKOVÝ POUKAZ',
+      vtip: 'Kus nových dveří už je zaplacený. Zbytek vybereme spolu.',
+      bg: ['#1f2937', '#123d27', '#0b1d33'], akcent: '#e8650a', kicker_c: '#123d27', ram: '#e8650a', dvere: ['#2b3138', '#3b434c', '#22272d']
     }
   };
   function motiv(m) { return MOTIVY[m] || MOTIVY.darkovy; }
@@ -116,6 +122,15 @@
     else if (mot === 'narozeniny') { var kb = ['#fde047', '#ffffff', '#22d3ee', '#a3e635', '#f0abfc']; for (i = 0; i < 140; i++) { g.save(); g.translate(r() * Wd, r() * Hd); g.rotate(r() * 6); g.fillStyle = kb[i % kb.length]; g.fillRect(-u, -u * 0.45, u * 2, u * 0.9); g.restore(); } }
     else { g.fillStyle = '#fde68a'; for (i = 0; i < 40; i++) { g.globalAlpha = 0.4 + r() * 0.6; hvezda4(g, r() * Wd, r() * Hd, (0.8 + r() * 1.8) * u); } }
     g.globalAlpha = 1;
+    // vlastní fotka místo interiéru (motiv „vlastni“)
+    if (mot === 'vlastni' && opt.foto) {
+      var ft = opt.foto, sc = Math.max(kw / ft.naturalWidth, kh / ft.naturalHeight), fw = ft.naturalWidth * sc, fhh = ft.naturalHeight * sc;
+      g.save(); g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 3 * u; g.shadowOffsetY = u; g.fillStyle = '#ffffff'; rr(g, kx, ky, kw, kh, 3 * u); g.fill(); g.restore();
+      g.save(); rr(g, kx, ky, kw, kh, 3 * u); g.clip(); g.drawImage(ft, kx + (kw - fw) / 2, ky + (kh - fhh) / 2, fw, fhh); g.restore();
+      g.strokeStyle = '#ffffff'; g.lineWidth = 1.2 * u; rr(g, kx, ky, kw, kh, 3 * u); g.stroke();
+      if (opt.stitek !== false) mdStitek(g, kx + kw - 30 * u, ky + kh - 6 * u, 10 * u, -0.06);
+      g.restore(); return;
+    }
     // rámeček s interiérem
     g.save(); g.shadowColor = 'rgba(0,0,0,.4)'; g.shadowBlur = 3 * u; g.shadowOffsetY = u;
     g.fillStyle = '#efe7dc'; rr(g, kx, ky, kw, kh, 3 * u); g.fill(); g.restore();
@@ -240,7 +255,7 @@
     var M = motiv(d.motiv);
     g.save(); g.scale(S, S);
     g.restore();
-    scena(g, d.motiv, d.hodnota, 0, 0, W, H, S, null, { karta: [24, 10, 162, 116] });
+    scena(g, d.motiv, d.hodnota, 0, 0, W, H, S, null, { karta: [24, 10, 162, 116], foto: d.foto });
     g.save(); g.scale(S, S);
     // karta
     g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 4 * S / S; g.shadowOffsetY = 1;
@@ -330,6 +345,24 @@
     });
   }
 
-  w.Poukaz = { MOTIVY: MOTIVY, VZOR_CENA: VZOR_CENA, vychoziMotiv: vychoziMotiv, podil: podil, kc: kc, datum: datum, ready: prepare, kresli: kresli, pdf: pdf, doklad: doklad,
+  /* vlastní fotka: soubor od zákazníka nebo URL → zmenšený obrázek (max. 1600 px), použitelný v canvasu i PDF */
+  function nactiFoto(src) {
+    return new Promise(function (ok, ko) {
+      var url = typeof src === 'string' ? src : URL.createObjectURL(src), i = new Image();
+      if (typeof src === 'string') i.crossOrigin = 'anonymous';
+      i.onload = function () {
+        var k = Math.min(1, 1600 / Math.max(i.naturalWidth, i.naturalHeight)), c = document.createElement('canvas');
+        c.width = Math.round(i.naturalWidth * k); c.height = Math.round(i.naturalHeight * k);
+        var g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(i, 0, 0, c.width, c.height);
+        var out = new Image(); out.onload = function () { ok(out); }; out.onerror = ko; out.src = c.toDataURL('image/jpeg', 0.88);
+      };
+      i.onerror = function () { ko(new Error('Fotku se nepodařilo načíst.')); };
+      i.src = url;
+    });
+  }
+  /* fotka → Blob JPEG (k nahrání na server) */
+  function fotoBlob(img) { return fetch(img.src).then(function (r) { return r.blob(); }); }
+
+  w.Poukaz = { nactiFoto: nactiFoto, fotoBlob: fotoBlob, MOTIVY: MOTIVY, VZOR_CENA: VZOR_CENA, vychoziMotiv: vychoziMotiv, podil: podil, kc: kc, datum: datum, ready: prepare, kresli: kresli, pdf: pdf, doklad: doklad,
     scena: function (g, m, h, x, y, ww, hh, S, cx, opt) { return prepare().then(function () { scena(g, m, h, x, y, ww, hh, S, cx, opt); }); } };
 })(window);

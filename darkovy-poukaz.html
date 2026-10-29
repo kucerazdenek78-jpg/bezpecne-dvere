@@ -49,6 +49,7 @@
     .pv-count{display:block;text-align:right;color:var(--gray-600);font-size:.78rem}
     .pv-row{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.pv-row3{display:grid;grid-template-columns:1.4fr 1fr .6fr;gap:0 1rem}
     .pv-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem;margin:.7rem 0;line-height:1.45}.pv-check input{margin-top:.2rem;flex:none;width:18px;height:18px}
+    .pv-fotobox input[type=file]{padding:.6rem;background:#fff}
     .pv-meter{margin-top:1rem}.pv-meter-bar{height:12px;border-radius:99px;background:#e9efea;overflow:hidden}.pv-meter-bar i{display:block;height:100%;background:linear-gradient(90deg,#7a4f31,#e8650a);border-radius:99px;transition:width .3s}
     .pv-meter p{font-size:.88rem;margin:.45rem 0 0;color:var(--gray-600)}
     .pv-submit{width:100%;font-size:1.05rem;padding:1rem;margin-top:.4rem}
@@ -115,7 +116,7 @@
   <div class="container">
     <span class="section-label" id="pv-label">Dárkový poukaz</span>
     <h1>Darujte kus nových dveří</h1>
-    <p>Dárkový poukaz na bezpečnostní dveře do bytu, vchodové dveře do domu i interiérové dveře – včetně montáže. Vyberete částku, motiv a napíšete věnování. Poukaz v PDF pošleme e-mailem hned, jak dorazí platba.</p>
+    <p>Dárkový poukaz na bezpečnostní dveře do bytu, vchodové dveře do domu i interiérové dveře – včetně montáže. Vyberete částku, motiv nebo vlastní fotku a napíšete věnování. Poukaz v PDF pošleme e-mailem hned, jak dorazí platba.</p>
     <div class="hero-chips"><span class="on">1 000 – 10 000 Kč i vlastní částka</span><span>platí 12 měsíců</span><span>PDF k vytištění nebo vytištěný ve vzorkovně</span><span><a href="moje-dvere.html" style="color:inherit">ke dveřím aplikace Moje dveře v ceně</a></span></div>
     <div class="breadcrumb"><a href="index.html">Úvod</a><span>›</span><span>Dárkový poukaz</span></div>
   </div>
@@ -148,7 +149,9 @@
             <label><input type="radio" name="motiv" value="vanoce"><span>🎄 Vánoční</span></label>
             <label><input type="radio" name="motiv" value="narozeniny"><span>🎈 Narozeninový</span></label>
             <label><input type="radio" name="motiv" value="darkovy"><span>🎁 Dárkový</span></label>
+            <label><input type="radio" name="motiv" value="vlastni"><span>📷 Vlastní fotka</span></label>
           </div>
+          <div class="pv-f pv-fotobox" hidden><label for="pvFoto">Vaše fotka <small>(JPG nebo PNG – třeba společná fotka, domov, mazlíček; na poukazu bude nahoře v rámečku)</small></label><input id="pvFoto" type="file" accept="image/jpeg,image/png,image/webp"><small class="pv-small" id="pvFotoInfo">Nahráním potvrzujete, že k fotce máte práva. Použijeme ji jen na tento poukaz.</small></div>
         </div>
 
         <div class="pv-step">
@@ -219,7 +222,7 @@
   <div class="container pv-wide">
     <h2 class="pv-h">Jak to funguje</h2>
     <div class="pv-3">
-      <div class="pv-box"><h4>1. Objednáte a zaplatíte</h4><p>Vyberete částku a motiv, napíšete věnování a zaplatíte převodem nebo QR kódem.</p></div>
+      <div class="pv-box"><h4>1. Objednáte a zaplatíte</h4><p>Vyberete částku a motiv (nebo nahrajete vlastní fotku), napíšete věnování a zaplatíte převodem nebo QR kódem.</p></div>
       <div class="pv-box"><h4>2. Pošleme poukaz v PDF</h4><p>Jakmile platba dorazí, přijde Vám poukaz e-mailem. Vytisknete ho, pošlete dál, nebo si ho vyzvednete vytištěný ve vzorkovně.</p></div>
       <div class="pv-box"><h4>3. Obdarovaný si vybere dveře</h4><p>Ve vzorkovně v Mostě nebo přes web. Hodnota poukazu se odečte z ceny dveří včetně montáže.</p></div>
     </div>
@@ -327,8 +330,8 @@
 <script src="firma-ares.js?v=20261028a"></script>
 <script src="platba/qrcode.js"></script>
 <script src="platba/platba.js?v=20261029a"></script>
-<script src="poukaz/poukaz.js?v=20261029a"></script>
-<script src="poukaz/poukaz-web.js?v=20261029a"></script>
+<script src="poukaz/poukaz.js?v=20261029b"></script>
+<script src="poukaz/poukaz-web.js?v=20261029b"></script>
 <script src="cookies.js?v=5" defer></script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>
 </body>
