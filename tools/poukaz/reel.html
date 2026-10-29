@@ -1,0 +1,64 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8">
+<!-- Druhá část reelu k dárkovým poukazům (1080×1920). Snímky: setT(sekundy) + screenshot, viz tools/poukaz/reel.py -->
+<style>
+@font-face{font-family:PKPlay;src:url(../../poukaz/PlayfairDisplay-Bold.ttf);font-weight:700}
+@font-face{font-family:PKInter;src:url(../../poptavka-pdf/Inter-Bold.ttf);font-weight:700}
+@font-face{font-family:PKInter;src:url(../../poptavka-pdf/Inter-Regular.ttf);font-weight:400}
+@font-face{font-family:PKCaveat;src:url(../../poukaz/Caveat-Bold.ttf);font-weight:700}
+html,body{margin:0;background:#000}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:PKInter,Arial;color:#fff;background:radial-gradient(120% 70% at 30% 10%,#1d5a3a,#123d27 50%,#081b14)}
+#snow{position:absolute;inset:0}
+.a{position:absolute;opacity:0;will-change:transform,opacity}
+.kick{display:inline-block;background:#f5c56b;color:#3b2a0a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;font-size:32px;padding:12px 30px}
+h1{font-family:PKPlay;font-weight:700;margin:0;line-height:1.04;font-size:118px;text-align:center}
+.hand{font-family:PKCaveat;color:#f5c56b}
+.cta{display:inline-block;background:#e8650a;border-radius:999px;font-weight:700;font-size:46px;padding:26px 56px}
+.lg{border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#v{box-shadow:0 40px 80px rgba(0,0,0,.5);border-radius:16px}
+</style></head><body>
+<div id="s">
+  <canvas id="snow" width="1080" height="1920"></canvas>
+  <div class="a" id="kick" style="left:0;right:0;top:230px;text-align:center"><span class="kick">🎄 Vánoční dárkový poukaz</span></div>
+  <div class="a" id="h1" style="left:60px;right:60px;top:330px"><h1>Darujte kus<br>nových dveří</h1></div>
+  <canvas class="a" id="v" style="left:50%;top:640px;width:640px;margin-left:-320px"></canvas>
+  <div class="a hand" id="hand" style="left:0;right:0;top:1580px;text-align:center;font-size:62px">Tenhle kus už je zaplacený,<br>zbytek doplatí ✂</div>
+  <div class="a" id="p" style="left:80px;right:80px;top:600px;text-align:center;font-size:48px;line-height:1.35">Bezpečnostní, vchodové<br>i interiérové dveře s montáží</div>
+  <div class="a" id="chips" style="left:0;right:0;top:820px;text-align:center;font-size:40px;line-height:1.9">
+    <div>🎁 od 500 Kč · i vlastní částka</div><div>✍️ s vlastním věnováním</div><div>📄 PDF e-mailem po zaplacení</div><div>📱 ke dveřím aplikace Moje dveře</div></div>
+  <img class="a lg" id="logo" src="../../poukaz/logo.png" style="left:50%;top:1250px;width:360px;margin-left:-180px">
+  <div class="a" id="cta" style="left:0;right:0;top:1500px;text-align:center"><span class="cta">bezpecne-dvere.cz</span></div>
+  <div class="a" id="adr" style="left:0;right:0;top:1660px;text-align:center;font-size:34px;opacity:.9">Vzorkovna KK SYSTEM · Obchodní 36, Most</div>
+</div>
+<script src="../../poukaz/poukaz.js"></script>
+<script>
+var vl = [];
+(function () { var s = 11; for (var i = 0; i < 180; i++) { s = (s * 16807) % 2147483647; var x = s % 1080; s = (s * 16807) % 2147483647; var y = s % 1920; s = (s * 16807) % 2147483647; vl.push([x, y, 1.5 + s % 5, 30 + s % 60, .3 + (s % 60) / 100]); } })();
+function ease(x) { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); }
+function win(t, a, b) { return ease((t - a) / (b - a)); }
+function set(id, o, tr) { var e = document.getElementById(id); e.style.opacity = o; e.style.transform = tr || ''; }
+window.ready = function () {
+  return Poukaz.ready().then(function () { return document.fonts.ready; }).then(function () {
+    Poukaz.kresli(document.getElementById('v'), { motiv: 'vanoce', hodnota: 10000, cislo: 'DP 1/2026', kod: 'ABCD-EFGH', platnost_do: '2027-12-24', obdarovany: 'Tomáš a Petra', venovani: 'Ať vám nové dveře hlídají nový domov. Veselé Vánoce!', od_koho: 'Mamka a taťka' }, 4);
+    return 1;
+  });
+};
+window.setT = function (t) {
+  var g = document.getElementById('snow').getContext('2d'); g.clearRect(0, 0, 1080, 1920); g.fillStyle = '#fff';
+  vl.forEach(function (f) { var y = (f[1] + t * f[3] * 3) % 1960 - 20, x = f[0] + Math.sin(t * 1.3 + f[1]) * 14; g.globalAlpha = f[4]; g.beginPath(); g.arc(x, y, f[2], 0, 7); g.fill(); });
+  g.globalAlpha = 1;
+  // scéna 1 (0–5.6 s): nadpis + poukaz
+  var out1 = 1 - win(t, 5.2, 5.7);
+  set('kick', win(t, 0.1, 0.6) * out1, 'translateY(' + (1 - win(t, 0.1, 0.6)) * 30 + 'px)');
+  set('h1', win(t, 0.3, 0.9) * out1, 'scale(' + (0.85 + 0.15 * win(t, 0.3, 0.9)) + ')');
+  var vin = win(t, 1.0, 1.8);
+  set('v', vin * out1, 'translateY(' + (1 - vin) * 500 + 'px) rotate(' + (-8 + 6 * vin + Math.sin(t * 1.5) * 0.6) + 'deg)');
+  set('hand', win(t, 2.4, 3.0) * out1, 'rotate(-3deg) scale(' + (0.9 + 0.1 * win(t, 2.4, 3.0)) + ')');
+  // scéna 2 (5.6–10 s): výhody + logo + web
+  set('p', win(t, 5.7, 6.2), 'translateY(' + (1 - win(t, 5.7, 6.2)) * 30 + 'px)');
+  var ch = document.getElementById('chips'); ch.style.opacity = 1;
+  [].forEach.call(ch.children, function (c, i) { var w = win(t, 6.1 + i * 0.35, 6.5 + i * 0.35); c.style.opacity = w; c.style.transform = 'translateX(' + (1 - w) * -60 + 'px)'; });
+  set('logo', win(t, 7.6, 8.1), 'scale(' + (0.8 + 0.2 * win(t, 7.6, 8.1)) + ')');
+  set('cta', win(t, 8.0, 8.5), 'scale(' + (0.8 + 0.2 * win(t, 8.0, 8.5) + (t > 8.5 ? Math.sin((t - 8.5) * 5) * 0.02 : 0)) + ')');
+  set('adr', win(t, 8.3, 8.8));
+};
+</script></body></html>
