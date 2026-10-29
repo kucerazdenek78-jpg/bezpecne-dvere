@@ -36,6 +36,11 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
 - Při každé změně `style.css` zvýšit číslo verze `style.css?v=…` ve všech HTML (jinak prohlížeče drží starou kopii):
   `sed -i 's/style\.css?v=[0-9a-z]*/style.css?v=RRRRMMDDx/g' *.html`.
 
+## Podpis e-mailů zákazníkům (od 30. 10. 2026)
+- Každý e-mail zákazníkovi má podpis: jméno obchodníka, malé logo (`userFiles/email/logo-podpis.png`) a firemní údaje (BEZPEČNÉ DVEŘE CZ, KKSYSTEM, pobočka/sklady Most Obchodní 36, e-shop, infolinka +420 725 559 235 / +420 471 008 994, info@kksystem.cz, chci@bezpecne-dvere.cz).
+- Kód: NAS `lib/podpis.php`; používá `odeslat.php` (typ objednavka_zakaznik, jméno z pole `prodavac`) a `lib/posta.php` → `posli_mail` (jméno z parametru, jinak přihlášený uživatel kartotéky). Interní e-maily firmě jsou bez podpisu.
+- Nový formulář, který posílá e-mail zákazníkovi, musí posílat `prodavac` (formulare-klient.js ho přenáší). Změna firemních údajů = upravit `lib/podpis.php`.
+
 ## Předlohy prodejce a formuláře poptávky/objednávky (pokaždé, když se změní dokument)
 
 Web generuje PDF poptávky, objednávky a předávacího listu v prohlížeči (`poptavka-dvere.js`, `poptavka-pdf/poptavka-pdf.js`,
