@@ -18,72 +18,11 @@ header('X-Robots-Tag: noindex'); header('Cache-Control: no-store');
 $pdo = db();
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $kc = fn($n) => ($n === null || $n === '' || !is_numeric($n)) ? '–' : number_format((float)$n, 0, ',', ' ') . ' Kč';
-$pdo->exec('CREATE TABLE IF NOT EXISTS zakaznik_info (klic TEXT PRIMARY KEY, stitky TEXT, poznamka TEXT, dalsi_kontakt TEXT, upraveno TEXT)');
-// doplňkové sloupce (úpravy kontaktů, smazání, ruční zákazník)
-$ZK_POLE = ['jmeno' => 'Jméno a příjmení', 'firma' => 'Firma', 'telefon' => 'Telefon', 'email' => 'E-mail', 'ulice' => 'Ulice a číslo', 'mesto' => 'Obec', 'psc' => 'PSČ'];
-$sloupce = array_column($pdo->query('PRAGMA table_info(zakaznik_info)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-foreach (array_merge(array_keys($ZK_POLE), ['smazano', 'rucne', 'zdroj']) as $c) if (!in_array($c, $sloupce, true)) $pdo->exec('ALTER TABLE zakaznik_info ADD COLUMN ' . $c . ' TEXT');
+require_once __DIR__ . '/lib/zakaznici.php'; zk_tabulka($pdo); $ZK_POLE = zk_pole();   // společné funkce (i pro synchronizaci s Google Kontakty)
 
 $TYPY = ['poptavka' => 'Poptávka', 'objednavka_interni' => 'Objednávka', 'objednavka_zakaznik' => 'Objednávka (zákazník)', 'nabidka' => 'Nabídka'];
 $STAVY = ['nove' => 'Nové', 'rozpracovano' => 'Rozpracováno', 'objednano' => 'Objednáno u výrobce', 'termin' => 'Domluven termín',
   'namontovano' => 'Namontováno', 'vyrizeno' => 'Vyřízeno', 'storno' => 'Storno', 'chyba_mailu' => 'E-mail se neodeslal'];
-
-function zk_klic(array $d, array $r): string {
-  $tel = preg_replace('/\D+/', '', (string)($d['telefon'] ?? ''));
-  if (strlen($tel) >= 9) return 't' . substr($tel, -9);
-  $em = strtolower(trim((string)($d['email'] ?? $r['email'] ?? '')));
-  if ($em !== '') return 'e' . $em;
-  $jm = mb_strtolower(trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')));
-  if ($jm !== '') return 'j' . md5($jm . '|' . mb_strtolower((string)($d['mesto'] ?? '')));
-  return '';
-}
-
-// všichni zákazníci sestavení ze záznamů (nejnovější záznam určuje zobrazené kontakty)
-function zk_nacti(PDO $pdo): array {
-  $z = [];
-  $q = $pdo->query('SELECT id, vytvoreno, typ, cislo, predmet, email, data_json, stav, zaloha_prijata_dne, predano_dne, zaruka_od, zaruka_do FROM zadosti ORDER BY vytvoreno ASC, id ASC');
-  foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
-    $d = json_decode((string)($r['data_json'] ?? ''), true); if (!is_array($d)) $d = [];
-    $k = zk_klic($d, $r); if ($k === '') continue;
-    $jmeno = trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? ''));
-    $zz = &$z[$k];
-    if (!isset($zz)) $zz = ['klic' => $k, 'jmeno' => '', 'firma' => '', 'telefon' => '', 'email' => '', 'mesto' => '', 'ulice' => '', 'psc' => '', 'zaznamy' => []];
-    foreach (['telefon' => $d['telefon'] ?? '', 'email' => $d['email'] ?? $r['email'] ?? '', 'mesto' => $d['mesto'] ?? '', 'ulice' => $d['ulice'] ?? '', 'psc' => $d['psc'] ?? '', 'firma' => $d['fak_jmeno'] ?? ''] as $f => $v) {
-      if (trim((string)$v) !== '') $zz[$f] = trim((string)$v);
-    }
-    if ($jmeno !== '') $zz['jmeno'] = $jmeno;
-    $zz['zaznamy'][] = ['id' => (int)$r['id'], 'datum' => $r['vytvoreno'], 'typ' => $r['typ'], 'cislo' => (string)($d['obj_cislo'] ?? $d['cislo'] ?? $r['cislo']),
-      'predmet' => (string)$r['predmet'], 'cena' => $d['cena_celkem'] ?? null, 'stav' => (string)$r['stav'], 'zaloha' => $r['zaloha_prijata_dne'],
-      'predano' => $r['predano_dne'], 'zaruka_od' => $r['zaruka_od'], 'zaruka_do' => $r['zaruka_do']];
-    unset($zz);
-  }
-  return $z;
-}
-
-function zk_info(PDO $pdo): array {
-  $o = [];
-  foreach ($pdo->query('SELECT * FROM zakaznik_info')->fetchAll(PDO::FETCH_ASSOC) as $r) $o[$r['klic']] = $r;
-  return $o;
-}
-
-// Zákazníci ze záznamů + ruční (z telefonu / přidaní ručně), s úpravami z zakaznik_info. Smazaní se vynechají,
-// pokud od smazání nepřišel nový záznam ($i['smazano'] = datum a čas smazání).
-function zk_vsichni(PDO $pdo, array $info, bool $vcSmazanych = false): array {
-  global $ZK_POLE;
-  $vse = zk_nacti($pdo);
-  foreach ($info as $k => $i) if (!isset($vse[$k]) && !empty($i['rucne'])) $vse[$k] = ['klic' => $k, 'jmeno' => '', 'firma' => '', 'telefon' => '', 'email' => '', 'mesto' => '', 'ulice' => '', 'psc' => '', 'zaznamy' => []];
-  foreach ($vse as $k => &$c) {
-    $i = $info[$k] ?? [];
-    foreach (array_keys($ZK_POLE) as $f) if (isset($i[$f]) && $i[$f] !== null && $i[$f] !== '') $c[$f] = (string)$i[$f];
-    $c['upraveny'] = (bool)array_filter(array_keys($ZK_POLE), fn($f) => ($i[$f] ?? '') !== '');
-    $c['rucne'] = !empty($i['rucne']); $c['zdroj'] = (string)($i['zdroj'] ?? '');
-    $posl = $c['zaznamy'] ? end($c['zaznamy'])['datum'] : '';
-    $c['smazany'] = !empty($i['smazano']) && ($posl === '' || strcmp((string)$posl, (string)$i['smazano']) <= 0);
-    if ($c['smazany'] && !$vcSmazanych) unset($vse[$k]);
-  }
-  unset($c);
-  return $vse;
-}
 
 function zk_vcard(array $c): string {   // vCard 3.0 (Android i iPhone ji umí importovat)
   $x = fn($s) => str_replace(["\\", "\n", ',', ';'], ["\\\\", '\\n', '\\,', '\\;'], (string)$s);
@@ -132,6 +71,7 @@ function zk_klic_kontakt(array $c): string {   // stejné pravidlo jako zk_klic 
   $cs = preg_split('/\s+/u', trim($c['jmeno'])); $prij = count($cs) > 1 ? array_pop($cs) : '';
   return zk_klic(['telefon' => $c['telefon'], 'email' => $c['email'], 'jmeno' => implode(' ', $cs), 'prijmeni' => $prij, 'mesto' => $c['mesto']], []);
 }
+function zk_google_nast(): array { global $DATA; $f = $DATA . '/kontakty-sync.json'; return is_file($f) ? (json_decode((string)file_get_contents($f), true) ?: []) : []; }
 $zk_uloz_pole = function (string $k, array $pole, array $navic = []) use ($pdo) {   // zapíše vybraná pole do zakaznik_info (založí řádek, když chybí)
   $pdo->prepare('INSERT OR IGNORE INTO zakaznik_info (klic) VALUES (?)')->execute([$k]);
   $pole = array_merge($pole, $navic, ['upraveno' => date('Y-m-d H:i')]);
@@ -172,6 +112,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($akce === 'vcf_nahled' && is_uploaded_file($_FILES['vcf']['tmp_name'] ?? '')) {   // import z telefonu – 1. krok: přečíst a ukázat
     $txt = (string)file_get_contents($_FILES['vcf']['tmp_name'], false, null, 0, 8 * 1048576);
     $GLOBALS['IMPORT'] = array_slice(zk_vcf_cti($txt), 0, 3000);
+  }
+  if ($akce === 'google_klic') {   // Google Kontakty: založit / změnit tajný klíč (starý přestane platit)
+    $nast = zk_google_nast(); $nast['token'] = bin2hex(random_bytes(20)); $nast['zalozeno'] = date('Y-m-d H:i'); unset($nast['stazeno'], $nast['pocet']);
+    @file_put_contents($DATA . '/kontakty-sync.json', json_encode($nast, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    header('Location: zakaznici.php?google=1&novy_klic=1'); exit;
   }
   if ($akce === 'vcf_import') {   // 2. krok: vybrané kontakty uložit
     $data = json_decode((string)base64_decode((string)($_POST['data'] ?? ''), true), true) ?: [];
@@ -222,7 +167,33 @@ a{color:#1f5fbf}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.fg label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#5a6676}.fg input{width:100%}
 details>summary{cursor:pointer;font-weight:600}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('zakaznici'); ?><main>
-<?php if (!empty($GLOBALS['IMPORT']) || (($_POST['akce'] ?? '') === 'vcf_nahled')): $imp = $GLOBALS['IMPORT'] ?? [];
+<?php if (isset($_GET['google'])): $gn = zk_google_nast();
+  $feed = rtrim((string)($cfg['formulare_url'] ?? 'https://formulare.dvere.app'), '/') . '/kontakty-sync.php?t=' . ($gn['token'] ?? '');
+  $skript = str_replace('__FEED__', $feed, (string)@file_get_contents(__DIR__ . '/lib/kontakty-skript.gs')); ?>
+  <p><a href="zakaznici.php">← Zákazníci</a></p>
+  <h1>🔄 Zákazníci do Google Kontaktů</h1>
+  <?php if (isset($_GET['novy_klic'])): ?><div class="ok">Nový klíč je založený<?= !empty($gn['stazeno']) ? '' : ' – teď vložte skript níže do Google (starý skript s předchozím klíčem už nefunguje)' ?>.</div><?php endif; ?>
+  <div class="box"><h3>Stav</h3>
+    <?php if (empty($gn['token'])): ?><p>Synchronizace zatím není zapnutá.</p>
+      <form method="post"><input type="hidden" name="akce" value="google_klic"><button>Zapnout – vytvořit tajný klíč</button></form>
+    <?php else: ?><p><?= !empty($gn['stazeno']) ? '✅ Google si zákazníky naposledy stáhl <b>' . $e(date('j. n. Y H:i', strtotime($gn['stazeno']))) . '</b> (' . (int)($gn['pocet'] ?? 0) . ' zákazníků s telefonem nebo e-mailem).' : '⏳ Google si zákazníky zatím nestáhl – vložte a spusťte skript podle návodu.' ?></p>
+      <form method="post" onsubmit="return confirm('Vytvořit nový klíč? Starý skript v Google přestane fungovat a bude potřeba vložit nový.')"><input type="hidden" name="akce" value="google_klic"><button class="sec">Vytvořit nový klíč (když unikl / pro jiný účet)</button> <span class="mut">klíč založen <?= $e($gn['zalozeno'] ?? '') ?></span></form><?php endif; ?></div>
+  <?php if (!empty($gn['token'])): ?>
+  <div class="box"><h3>Návod (jednou, asi 5 minut, ideálně na počítači)</h3><ol>
+    <li>Přihlaste se do Google účtu, který máte v telefonu, a otevřete <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com → Nový projekt</a>. Projekt pojmenujte např. „Bezpečné dveře – kontakty“.</li>
+    <li>Smažte, co je v editoru, a vložte celý skript níže (tlačítko <b>Zkopírovat skript</b>).</li>
+    <li>Vlevo u <b>Služby</b> klikněte na <b>+</b>, vyberte <b>People API</b> a dejte <b>Přidat</b>.</li>
+    <li>Uložte (ikona diskety), nahoře vyberte funkci <b>nastavit</b> a klikněte <b>Spustit</b>.</li>
+    <li>Google se zeptá na oprávnění: <b>Zkontrolovat oprávnění</b> → vyberte účet → „Google tuto aplikaci neověřil“ → <b>Rozšířené</b> → <b>Přejít na … (nebezpečné)</b> → <b>Povolit</b>. (Je to váš vlastní skript, proto ho Google neověřoval.)</li>
+    <li>Hotovo – skript se teď spouští sám každých 30 minut. Zákazníci se objeví v Kontaktech ve skupině „Zákazníci Bezpečné dveře“ a do telefonu se dostanou běžnou synchronizací Google účtu.</li></ol>
+    <p class="mut">Zákazníka, kterého už v telefonu máte se stejným číslem, skript nepřepíše – jen ho zařadí do skupiny. Nic nemaže. Adresa ve skriptu obsahuje tajný klíč – nikomu ji neposílejte; při podezření dejte „Vytvořit nový klíč“.</p></div>
+  <div class="box"><h3>Skript</h3><p><button type="button" id="gsKop">📋 Zkopírovat skript</button> <span class="mut" id="gsInfo"></span></p>
+    <textarea id="gsKod" rows="16" readonly style="font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre"><?= $e($skript) ?></textarea></div>
+  <script>document.getElementById('gsKop').addEventListener('click', function () { var t = document.getElementById('gsKod'), i = document.getElementById('gsInfo');
+    function ok() { i.textContent = '✓ zkopírováno – vložte do editoru Google Apps Script'; }
+    if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); document.execCommand('copy'); ok(); }); else { t.select(); document.execCommand('copy'); ok(); } });</script>
+  <?php endif; ?>
+<?php elseif (!empty($GLOBALS['IMPORT']) || (($_POST['akce'] ?? '') === 'vcf_nahled')): $imp = $GLOBALS['IMPORT'] ?? [];
   $vseI = zk_vsichni($pdo, $info, true); ?>
   <p><a href="zakaznici.php">← Zákazníci</a></p>
   <h1>Import kontaktů z telefonu</h1>
@@ -320,7 +291,8 @@ details>summary{cursor:pointer;font-weight:600}
     <button>Zobrazit</button> <a class="btn sec" href="zakaznici.php">Zrušit</a></form></div>
   <div class="box"><h3>📱 Telefon a kontakty</h3>
     <p class="row"><a class="btn" href="zakaznici.php?novy=1">➕ Nový zákazník</a>
-      <a class="btn sec" href="zakaznici.php?vcf=vse">⬇ Export všech do telefonu (.vcf)</a></p>
+      <a class="btn sec" href="zakaznici.php?vcf=vse">⬇ Export všech do telefonu (.vcf)</a>
+      <?php $gn0 = zk_google_nast(); ?><a class="btn sec" href="zakaznici.php?google=1">🔄 Google Kontakty <?= !empty($gn0['stazeno']) ? '<span class="chip ok">' . $e(date('j. n. H:i', strtotime($gn0['stazeno']))) . '</span>' : (!empty($gn0['token']) ? '<span class="chip warn">čeká na skript</span>' : '<span class="chip">vypnuto</span>') ?></a></p>
     <form method="post" enctype="multipart/form-data" class="row" style="margin-top:8px"><input type="hidden" name="akce" value="vcf_nahled">
       <label>Import z telefonu (soubor .vcf)<br><input type="file" name="vcf" accept=".vcf,text/vcard,text/x-vcard" required></label><button class="sec">Načíst a vybrat</button></form>
     <p class="mut" style="margin:8px 0 0">Export: soubor otevřete v telefonu (nebo nahrajte do contacts.google.com → Importovat) – kontakty dostanou skupinu „Zákazníci Bezpečné dveře“. Import: v telefonu Kontakty → Spravovat / Exportovat → soubor .vcf, ten sem nahrajte a vyberte, kdo jsou zákazníci.</p></div>
