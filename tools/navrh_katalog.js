@@ -5,7 +5,7 @@
 const fs = require('fs'), path = require('path'), R = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const nb = JSON.parse(R('nabidka-nova.html').match(/window\.NB_KATALOG=(\[.*?\]);<\/script>/s)[1]);
 global.window = {}; eval(R('aplikace/viz-data.js')); const V = window.VIZ_DATA;
-const js = R('nabidka.js'); const blk = js.slice(js.indexOf('var R1 ='), js.indexOf('var INT_ZAHRNUJE'));
+const js = R('nabidka.js'); const blk = js.slice(js.indexOf('var R1 ='), js.indexOf('/* dekory ERKADO'));
 const INT_CENIK = new Function(blk.replace('var LF', 'var LF') + '; return INT_CENIK;')();
 const out = {
   vytvoreno: new Date().toISOString().slice(0, 10),
@@ -19,4 +19,6 @@ const out = {
       cena_od_bez_dph: !e ? null : (e.v ? Object.fromEntries(Object.entries(e.v).map(([k, a]) => [k, Math.min(...a)])) : Math.min(...e.c)) };
   })
 };
+eval(R('kovani-data.js'));   // kliky k interiérovým dveřím (ceny bez DPH jen pro informaci – cenu do nabídky počítá formulář)
+out.kovani = window.BD_KOVANI.map(k => ({ id: k.id, nazev: k.nazev, povrch: k.povrch, rozety: Object.keys(k.ceny), pozn: k.pozn || '' }));
 process.stdout.write(JSON.stringify(out, null, 1));

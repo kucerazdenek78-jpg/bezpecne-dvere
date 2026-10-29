@@ -527,5 +527,85 @@
    "cena_z_ceniku": false,
    "cena_od_bez_dph": null
   }
+ ],
+ "kovani": [
+  {
+   "id": "favorit",
+   "nazev": "Favorit",
+   "povrch": "nerez matný",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "hit-cerna",
+   "nazev": "Hit",
+   "povrch": "černá matná",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "hit-nikl",
+   "nazev": "Hit",
+   "povrch": "nikl matný",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "cynthia",
+   "nazev": "Cynthia",
+   "povrch": "nikl matný / chróm lesklý",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "topaz",
+   "nazev": "Topaz",
+   "povrch": "nerez matný",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "rumba",
+   "nazev": "Rumba",
+   "povrch": "černá matná",
+   "rozety": [
+    "BB / PZ",
+    "WC"
+   ],
+   "pozn": ""
+  },
+  {
+   "id": "perfecta",
+   "nazev": "Perfecta",
+   "povrch": "nikl matný",
+   "rozety": [
+    "s uzamykáním"
+   ],
+   "pozn": "k bezfalcovým dveřím ALTAMURA 1 (bez spodní rozety)"
+  },
+  {
+   "id": "impressa",
+   "nazev": "Impressa",
+   "povrch": "černá matná",
+   "rozety": [
+    "s uzamykáním"
+   ],
+   "pozn": "k bezfalcovým dveřím ALTAMURA 1 (bez spodní rozety)"
+  }
  ]
 }

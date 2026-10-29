@@ -112,6 +112,9 @@ function nav_nastroj(): array {
         'vychozi' => ['type' => 'boolean', 'description' => 'Interiér: true, když zákazník konkrétní model neuvedl – model pak vybere systém z ceníku (model nech prázdný)'],
         'odstiny_podobne' => ['type' => 'array', 'items' => $str, 'description' => 'Při vychozi=true: přesné názvy dekorů z katalogu interiérů, které jsou nejpodobnější požadované barvě (nejpodobnější první)']]]],
       'interier_dalsi' => ['type' => 'array', 'description' => 'Jen u kategorie byt nebo dum: interiérové dveře, které zákazník chce navíc (samostatná nabídka). Stejná pole jako polozky.', 'items' => ['type' => 'object']],
+      'kovani' => ['type' => 'array', 'description' => 'Kliky k interiérovým dveřím (samostatná položka nabídky) – jen když je zákazník chce nebo jsou v poptávce (pole kovani). Patří k interiérovým dveřím (i k interier_dalsi).', 'items' => ['type' => 'object', 'properties' => [
+        'id' => ['type' => 'string', 'description' => 'Přesné id kliky z KATALOG.kovani'], 'rozeta' => ['type' => 'string', 'description' => 'Přesně jedna z rozety dané kliky (BB / PZ = klíč nebo vložka, WC = koupelna/toaleta)'],
+        'ks' => ['type' => 'integer'], 'nejiste' => ['type' => 'array', 'items' => $str]]]],
       'poznamka_zakaznik' => ['type' => 'string', 'description' => 'Krátká poznámka pro zákazníka do PDF (nejvýš 2 věty), nebo prázdné'],
       'otazky' => ['type' => 'array', 'items' => $str, 'description' => 'Na co se zeptat zákazníka, než se nabídka pošle'],
       'pro_prodejce' => ['type' => 'array', 'items' => $str, 'description' => 'Další poznámky pro prodavače (např. co je vidět na fotce)'],
@@ -127,6 +130,7 @@ function nav_system(array $n, array $priklady): string {
   . "- Interiéry: montáž (zárubeň, osazení křídla, kování do připraveného otvoru) se počítá ke každým dveřím, pokud zákazník výslovně neuvede, že montáž nechce. Když chce vybourat stávající zárubně a připravit otvor (nebo to je zaškrtnuté v poptávce – pole bourani), dej bourani=true: počítá se 2 000 Kč bez DPH za kus vč. odvozu materiálu (cenu přičte formulář). Jiné stavební úpravy až po zaměření – to patří do otazky.\n"
   . "- Tloušťka zárubně u interiérů = tloušťka zdi; vyber rozsah z tl_zarubne jen když zákazník uvedl tloušťku zdi v mm/cm.\n"
   . "- Interiérové dveře, u kterých zákazník neuvedl konkrétní model (např. jen počet kusů a barvu): dej vychozi=true, model nech prázdný a do odstiny_podobne vypiš dekory z katalogu interiérů nejpodobnější barvě, kterou chce – když barvu interiérů neuvedl, vezmi odstín jeho bezpečnostních / vchodových dveří. Model vybere systém (druhý nejlevnější z ceníku).\n"
+  . "- Kliky (kování) k interiérovým dveřím jsou samostatná položka (pole kovani): dej je, jen když je zákazník chce nebo jsou v poptávce (pole kovani z webového formuláře – převezmi id, rozetu a počet). Vyber id a rozetu přesně z KATALOG.kovani; když zákazník typ kliky neuvedl, kliky nedávej a zeptej se v otazky. Počet = počet dveří, pokud neuvedl jinak. WC rozeta jen ke koupelně/toaletě, když to uvedl. Ceny kliky počítá formulář.\n"
   . "- Když zákazník chce dveře do bytu nebo domu A K TOMU interiérové dveře (počet kusů), interiérové dej do interier_dalsi – budou v samostatné nabídce.\n"
   . "- Když poptávka vůbec není na dveře (např. servis oken), dej kategorii nejasne a vysvětli v otazky.\n- Piš česky, stručně. Kontaktní údaje patří jen do pole kontakt (a jen když je v zadání oddíl KONTAKT ZÁKAZNÍKA), nikam jinam.\n\n";
   $s .= "KATALOG (JSON):\n" . json_encode(nav_katalog(), JSON_UNESCAPED_UNICODE) . "\n";
@@ -195,6 +199,25 @@ function nav_kontrola(array $v): array {
   return $v;
 }
 
+// Kliky (kování) proti katalogu: neznámé id zahodit a upozornit, neznámou rozetu nahradit první z katalogu.
+function nav_kovani($kov): array {
+  $kat = []; foreach ((array)(nav_katalog()['kovani'] ?? []) as $x) $kat[$x['id']] = $x;
+  $out = [];
+  foreach ((array)$kov as $k) {
+    if (!is_array($k)) continue; $id = (string)($k['id'] ?? ''); $nej = array_values(array_filter(array_map('strval', (array)($k['nejiste'] ?? []))));
+    if (!isset($kat[$id])) continue;
+    $roz = (string)($k['rozeta'] ?? ''); $r = $kat[$id]['rozety'];
+    if (!in_array($roz, $r, true)) { if ($roz !== '') $nej[] = 'Rozeta „' . $roz . '“ u této kliky není – zkontrolujte.'; $roz = $r[0]; }
+    $out[] = ['id' => $id, 'rozeta' => $roz, 'ks' => max(1, min(99, (int)($k['ks'] ?? 1))), 'nejiste' => array_slice($nej, 0, 5)];
+  }
+  return array_slice($out, 0, 20);
+}
+function nav_kovani_nezname($kov): array {
+  $ids = array_column((array)(nav_katalog()['kovani'] ?? []), 'id'); $n = [];
+  foreach ((array)$kov as $k) if (is_array($k) && !in_array((string)($k['id'] ?? ''), $ids, true)) $n[] = 'Kliku „' . mb_substr((string)($k['id'] ?? ''), 0, 40) . '“ neznám – vyberte kování ručně.';
+  return $n;
+}
+
 // Hlavní funkce: vrátí ['ok'=>true,'id'=>…,'navrh'=>…,'url'=>…] nebo ['ok'=>false,'chyba'=>…]
 function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivatel = ''): array {
   pom_tabulky($pdo); nav_tabulka($pdo); $n = pom_nastaveni($DATA);
@@ -215,6 +238,9 @@ function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivate
   if (!$v) { pom_zapis($pdo, 'navrh', $model, $in, $out, 'bez návrhu'); return ['ok' => false, 'chyba' => 'Pomocník návrh nevrátil. Zkuste to znovu.']; }
   pom_zapis($pdo, 'navrh', $model, $in, $out);
   $dalsi = (in_array($v['kategorie'] ?? '', ['byt', 'dum'], true) && !empty($v['interier_dalsi']) && is_array($v['interier_dalsi'])) ? $v['interier_dalsi'] : [];
+  $kovNez = nav_kovani_nezname($v['kovani'] ?? []); $v['kovani'] = nav_kovani($v['kovani'] ?? []);
+  if ($kovNez) $v['pro_prodejce'] = array_merge((array)($v['pro_prodejce'] ?? []), $kovNez);
+  if (!in_array($v['kategorie'] ?? '', ['interier'], true) && !$dalsi && $v['kovani']) { $v['pro_prodejce'] = array_merge((array)($v['pro_prodejce'] ?? []), ['Zákazník chce kliky k interiérovým dveřím – doplňte v nabídce interiérů.']); $v['kovani'] = []; }
   $v = nav_kontrola($v); unset($v['interier_dalsi']);
   if ($dalsi) $v['interier_dalsi'] = nav_kontrola(['kategorie' => 'interier', 'polozky' => $dalsi])['polozky'];
   $v['kontakt'] = ($kchybi && $kzdroj !== '' && is_array($v['kontakt'] ?? null)) ? nav_kontakt_over($v['kontakt'], $kzdroj) : [];
@@ -222,7 +248,7 @@ function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivate
   $pdo->prepare('INSERT INTO pomocnik_navrhy (cas, zadost_id, poptavka_cislo, uzivatel, model, navrh_json, vstup, vystup) VALUES (?,?,?,?,?,?,?,?)')
     ->execute([date('Y-m-d H:i:s'), $id, $cislo, $uzivatel, $model, json_encode($v, JSON_UNESCAPED_UNICODE), $in, $out]);
   $nid = (int)$pdo->lastInsertId();
-  $url2 = !empty($v['interier_dalsi']) ? nav_url($cfg, $z, $d, ['kategorie' => 'interier', 'polozky' => $v['interier_dalsi'], 'shrnuti' => $v['shrnuti'] ?? '', 'otazky' => $v['otazky'] ?? [], 'kontakt' => $v['kontakt']], $nid) : '';
+  $url2 = !empty($v['interier_dalsi']) ? nav_url($cfg, $z, $d, ['kategorie' => 'interier', 'polozky' => $v['interier_dalsi'], 'shrnuti' => $v['shrnuti'] ?? '', 'otazky' => $v['otazky'] ?? [], 'kontakt' => $v['kontakt'], 'kovani' => $v['kovani']], $nid) : '';
   return ['ok' => true, 'id' => $nid, 'navrh' => $v, 'url' => nav_url($cfg, $z, $d, $v, $nid), 'url2' => $url2];
 }
 
@@ -250,6 +276,7 @@ function nav_url(array $cfg, array $z, array $d, array $v, int $nid): string {
     foreach ($v['byt']['nejiste'] as $t) $pozn[] = $t;
     $o['ai_poznamky'] = $pozn;
   } else { $o['polozky'] = $v['polozky']; $o['ai_poznamky'] = $pozn; }
+  if ($v['kategorie'] === 'interier' && !empty($v['kovani'])) $o['kovani'] = $v['kovani'];   // kliky = samostatné řádky nabídky (nabidka.js)
   $o['interni'] = mb_substr('Návrh pomocníka č. ' . $nid . (!empty($v['shrnuti']) ? ' – ' . $v['shrnuti'] : '') . ($otz ? "\nZeptat se: " . implode('; ', $otz) : ''), 0, 1500);
   $wu = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/');
   return $wu . '/nabidka-nova.html?sys=1#d=' . rtrim(strtr(base64_encode(json_encode($o, JSON_UNESCAPED_UNICODE)), '+/', '-_'), '=');
