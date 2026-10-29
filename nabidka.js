@@ -682,7 +682,7 @@
       if (!el.name || el.type === 'file' || el.name === '_honey' || el.type === 'button' || el.type === 'submit') return;
       if (el.type === 'radio') { if (el.checked) f[el.name] = el.value; } else if (el.type === 'checkbox') f[el.name] = el.checked; else f[el.name] = el.value;
     });
-    return { v: 1, kat: st.kat, rows: st.rows.map(function (r) { var c = {}; for (var k in r) if (k !== 'imgData') c[k] = r[k]; return c; }),
+    return { v: 1, kat: st.kat, rows: st.rows.map(function (r) { var c = {}; for (var k in r) c[k] = r[k]; return c; }),   /* i vlastní obrázky (imgData) */
       rozp: st.rozp, rozpName: st.rozpName || '', fromRef: st.fromRef || '', aiNavrh: st.aiNavrh || '', f: f };
   }
   function kRestore(sn) {
@@ -710,11 +710,38 @@
         if (!j.ok) throw new Error(j.chyba || 'chyba');
         st.konc = { id: j.id, t: j.t };
         try { history.replaceState(null, '', location.pathname + location.search + '#k=' + j.id + '.' + j.t); } catch (e) {}
-        kMsg('✓ Uloženo ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' – najdete v kartotéce v „📝 Rozpracované“. Zákazníkovi nic neodešlo.' + (st.rozpBuf || st.rows.some(function (r) { return r.imgData; }) ? ' PDF rozpočtu a vlastní obrázky se neukládají – při dokončení je nahrajte znovu.' : ''));
+        return kPdf(b);
+      }).then(function () {
+        kMsg('✓ Uloženo ' + new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) + ' – najdete v kartotéce v „📝 Rozpracované“. Zákazníkovi nic neodešlo.');
       }).catch(function () {
         try { localStorage.setItem('bd-koncept-zaloha', JSON.stringify(body)); } catch (e) {}
         kMsg('Server se nepodařilo zastihnout – rozpracovaná nabídka je uložená jen v tomto prohlížeči. Zkuste uložit znovu později.', true);
       }).then(function () { b.disabled = false; b.textContent = '💾 Uložit rozpracovanou'; });
+  }
+  /* PDF rozpočtu z jiného programu: po částech ~1,5 MB (base64), jen když se od posledního uložení změnilo */
+  function kPost(o) { return fetch(KONC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(o) }).then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.chyba || 'chyba'); return j; }); }
+  function kPdf(b) {
+    if (!st.konc) return Promise.resolve();
+    if (!st.rozpBuf) { if (!st.rozpUlozeno) return Promise.resolve(); return kPost({ akce: 'bez_souboru', id: st.konc.id, t: st.konc.t }).then(function () { st.rozpUlozeno = null; }); }
+    if (st.rozpUlozeno === st.rozpBuf) return Promise.resolve();
+    var u8 = new Uint8Array(st.rozpBuf), CH = 1536 * 1024, n = Math.max(1, Math.ceil(u8.length / CH)), i = 0;
+    function b64(a) { var s2 = '', k = 0; for (; k < a.length; k += 32768) s2 += String.fromCharCode.apply(null, a.subarray(k, k + 32768)); return btoa(s2); }
+    function dalsi() {
+      if (i >= n) { st.rozpUlozeno = st.rozpBuf; return Promise.resolve(); }
+      if (b) b.textContent = 'Ukládám PDF rozpočtu… ' + (i + 1) + '/' + n;
+      return kPost({ akce: 'soubor', id: st.konc.id, t: st.konc.t, i: i, n: n, b64: b64(u8.subarray(i * CH, (i + 1) * CH)) }).then(function () { i++; return dalsi(); });
+    }
+    return dalsi();
+  }
+  function kNactiPdf(sn) {
+    return fetch(KONC_URL + '?id=' + st.konc.id + '&t=' + st.konc.t + '&soubor=rozpocet', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('x'); return r.arrayBuffer(); }).then(function (buf) {
+      st.rozpBuf = buf; st.rozpUlozeno = buf; st.rozpName = sn.rozpName || 'rozpocet.pdf'; st.rozpPages = 0;
+      var info = $('#nbRozpInfo'), mb = (buf.byteLength / 1048576).toFixed(1).replace('.', ',');
+      if (info) info.textContent = '✓ ' + st.rozpName + ' · ' + mb + ' MB (uložený u rozpracované nabídky; jiný nahrajete tlačítkem výše)';
+      var P = window.PoptavkaPDF;
+      if (P && P.preparePL) P.preparePL().then(function () { return window.PDFLib.PDFDocument.load(buf, { ignoreEncryption: true }); })
+        .then(function (doc) { st.rozpPages = doc.getPageCount(); if (info) info.textContent = '✓ ' + st.rozpName + ' · ' + st.rozpPages + ' str. · ' + mb + ' MB (uložený u rozpracované nabídky)'; }).catch(function () {});
+    });
   }
   function kHotovo(cislo) {
     if (!st.konc) return;
@@ -837,10 +864,12 @@
     fetch(KONC_URL + '?id=' + m[1] + '&t=' + m[2], { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j.ok || !j.data) throw new Error('x');
       st.konc = { id: +m[1], t: m[2] }; kRestore(j.data);
+      var pdfOk = j.rozpocet_pdf > 0 ? kNactiPdf(j.data).then(function () { return true; }).catch(function () { return false; }) : Promise.resolve(null);
+      pdfOk.then(function (ok) { if (ok === false) kMsg('PDF rozpočtu se nepodařilo načíst – nahrajte ho prosím znovu.', true); else if (ok) kMsg(''); });
       var info = $('#nbLoaded'); info.hidden = false; info.style.background = '#fff7d6'; info.style.borderColor = '#e0b100';
       info.innerHTML = '📝 <b>Rozpracovaná ' + (OBJ ? 'objednávka' : 'nabídka') + '</b> uložená ' + esc(j.upraveno || '') + (j.stav === 'odeslano' ? ' – <b>už byla odeslána</b>, nové odeslání vytvoří další záznam.' : '. Dokončete ji a odešlete, nebo znovu uložte.') +
-        (j.data.rozp ? ' PDF rozpočtu nahrajte znovu' + (j.data.rozpName ? ' (' + esc(j.data.rozpName) + ')' : '') + '.' : '');
-      kMsg('');
+        (j.data.rozp && !(j.rozpocet_pdf > 0) ? ' PDF rozpočtu u ní uložené není – nahrajte ho' + (j.data.rozpName ? ' (' + esc(j.data.rozpName) + ')' : '') + '.' : '');
+      if (!(j.rozpocet_pdf > 0)) kMsg('');
     }).catch(function () { kMsg('Rozpracovanou nabídku se nepodařilo načíst (server nedostupný nebo odkaz neplatí).', true); });
   })();
 })();

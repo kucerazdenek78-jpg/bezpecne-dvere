@@ -3,7 +3,11 @@
 // Veřejné na formulare.dvere.app, ale každý koncept jde číst a měnit jen s jeho tajným klíčem (token, 24 hex znaků).
 //   POST (JSON v těle): {akce:'ulozit', id?, t?, druh, cislo, zakaznik, kategorie, cena, prodavac, data} → {ok, id, t}
 //                       {akce:'hotovo', id, t}  → koncept označen jako odeslaný (zmizí z Rozpracovaných)
-//   GET ?id=N&t=TOKEN → {ok, data, druh}
+//                       {akce:'soubor', id, t, i, n, b64}  → PDF rozpočtu po částech (base64, ~1,5 MB na část; i = pořadí od 0, n = počet částí)
+//                       {akce:'bez_souboru', id, t}         → PDF rozpočtu smazat (v nabídce už není)
+//   GET ?id=N&t=TOKEN → {ok, data, druh, rozpocet_pdf}
+//   GET ?id=N&t=TOKEN&soubor=rozpocet → PDF rozpočtu (application/pdf)
+// Soubory: /data/koncepty/<id>/rozpocet.pdf (mimo web).
 // Patří na NAS do /docker/formulare/app/koncept.php. Seznam pro prodavače: koncepty.php (kartotéka).
 require __DIR__ . '/lib/start.php';
 require_once __DIR__ . '/lib/koncepty.php';
@@ -29,14 +33,20 @@ $najdi = function (int $id, string $t) use ($pdo) {
   return ($k && hash_equals((string)$k['token'], $t)) ? $k : null;
 };
 
+$adr = fn(int $id) => $DATA . '/koncepty/' . $id;
 if ($met === 'GET') {
   $k = $najdi((int)($_GET['id'] ?? 0), (string)($_GET['t'] ?? ''));
   if (!$k) konc_konec(404, ['ok' => false, 'chyba' => 'nenalezeno']);
-  konc_konec(200, ['ok' => true, 'druh' => $k['druh'], 'stav' => $k['stav'], 'upraveno' => $k['upraveno'], 'data' => json_decode((string)$k['data_json'], true)]);
+  $pdf = $adr((int)$k['id']) . '/rozpocet.pdf';
+  if (($_GET['soubor'] ?? '') === 'rozpocet') {
+    if (!is_file($pdf)) konc_konec(404, ['ok' => false, 'chyba' => 'bez souboru']);
+    header('Content-Type: application/pdf'); header('Content-Length: ' . filesize($pdf)); readfile($pdf); exit;
+  }
+  konc_konec(200, ['ok' => true, 'druh' => $k['druh'], 'stav' => $k['stav'], 'upraveno' => $k['upraveno'], 'data' => json_decode((string)$k['data_json'], true), 'rozpocet_pdf' => is_file($pdf) ? filesize($pdf) : 0]);
 }
 if ($met !== 'POST') konc_konec(405, ['ok' => false]);
-$raw = (string)file_get_contents('php://input', false, null, 0, 600001);
-if (strlen($raw) > 600000) konc_konec(413, ['ok' => false, 'chyba' => 'velke']);
+$raw = (string)file_get_contents('php://input', false, null, 0, 6000001);
+if (strlen($raw) > 6000000) konc_konec(413, ['ok' => false, 'chyba' => 'velke']);
 $in = json_decode($raw, true); if (!is_array($in)) konc_konec(400, ['ok' => false, 'chyba' => 'data']);
 $id = (int)($in['id'] ?? 0); $t = (string)($in['t'] ?? ''); $ted = date('Y-m-d H:i:s');
 $c = fn($k, $max = 120) => mb_substr(trim(preg_replace('/[\r\n]+/', ' ', (string)($in[$k] ?? ''))), 0, $max);
@@ -45,6 +55,24 @@ if (($in['akce'] ?? '') === 'hotovo') {
   $k = $najdi($id, $t); if (!$k) konc_konec(404, ['ok' => false]);
   $pdo->prepare("UPDATE koncepty SET stav='odeslano', upraveno=?, cislo=COALESCE(NULLIF(?, ''), cislo) WHERE id=?")->execute([$ted, $c('cislo', 40), $id]);
   konc_konec(200, ['ok' => true]);
+}
+if (in_array($in['akce'] ?? '', ['soubor', 'bez_souboru'], true)) {   // PDF rozpočtu z jiného programu
+  $k = $najdi($id, $t); if (!$k) konc_konec(404, ['ok' => false]);
+  $dir = $adr($id); if (!is_dir($dir) && !@mkdir($dir, 0770, true)) konc_konec(500, ['ok' => false, 'chyba' => 'adresar']);
+  if ($in['akce'] === 'bez_souboru') { @unlink($dir . '/rozpocet.pdf'); @unlink($dir . '/rozpocet.part'); konc_konec(200, ['ok' => true]); }
+  $i = (int)($in['i'] ?? -1); $n = (int)($in['n'] ?? 0); $bin = base64_decode((string)($in['b64'] ?? ''), true);
+  if ($i < 0 || $n < 1 || $n > 40 || $i >= $n || $bin === false) konc_konec(400, ['ok' => false, 'chyba' => 'cast']);
+  $part = $dir . '/rozpocet.part';
+  if ($i === 0) @unlink($part);
+  elseif (!is_file($part)) konc_konec(409, ['ok' => false, 'chyba' => 'poradi']);
+  if (file_put_contents($part, $bin, FILE_APPEND | LOCK_EX) === false) konc_konec(500, ['ok' => false, 'chyba' => 'zapis']);
+  if (filesize($part) > 40 * 1048576) { @unlink($part); konc_konec(413, ['ok' => false, 'chyba' => 'velke']); }
+  if ($i === $n - 1) {
+    $hl = (string)file_get_contents($part, false, null, 0, 5);
+    if ($hl !== '%PDF-') { @unlink($part); konc_konec(400, ['ok' => false, 'chyba' => 'neni pdf']); }
+    rename($part, $dir . '/rozpocet.pdf');
+  }
+  konc_konec(200, ['ok' => true, 'hotovo' => $i === $n - 1]);
 }
 if (($in['akce'] ?? '') !== 'ulozit' || !is_array($in['data'] ?? null)) konc_konec(400, ['ok' => false, 'chyba' => 'akce']);
 $druh = ($in['druh'] ?? '') === 'objednavka-vice' ? 'objednavka-vice' : 'nabidka';
