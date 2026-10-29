@@ -67,6 +67,9 @@
       (st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
         st.kat ? 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.' : 'Nejdřív vyberte kategorii.'));
     $('#nbAdd').disabled = !st.kat || (limited() && st.rows.length >= 1);
+    var kb = $('#nbAddKov');
+    if (!kb && KOV.length) { kb = document.createElement('button'); kb.type = 'button'; kb.id = 'nbAddKov'; kb.className = 'btn btn-outline'; kb.style.marginLeft = '.5rem'; kb.textContent = '+ Přidat kování (kliky)'; $('#nbAdd').parentNode.appendChild(kb); }
+    if (kb) kb.hidden = st.kat !== 'interier';
     renderMode();
   }
 
@@ -170,14 +173,43 @@
     else { r.nazev = c[2] || ('Vchodové dveře ' + c[0]); r.hint = 'Orientační cena z webu: ' + c[3] + '. Konečnou cenu vč. DPH doplňte níže.'; }
   }
   function rowSpec(r) {
+    if (r.typ === 'kovani') { var kk = kovNajdi(r.kid); return [['Klika', kk ? kk.nazev + ' – ' + kk.povrch : r.nazev], ['Rozeta', r.rozeta], ['Cena bez DPH', kk && kk.ceny[r.rozeta] ? kc(kk.ceny[r.rozeta]) + ' za kus' : '']].filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; }); }
     if (st.kat === 'byt') return r.spec || [];
     return [['Provedení', r.prov], ['Odstín / dekor', r.odstin], ['Šířka křídla', r.sirka ? r.sirka + (/cm/i.test(r.sirka) ? '' : ' cm') : ''], ['Otevírání', r.otev], ['Zárubeň', r.zarub], ['Tloušťka zárubně', st.kat === 'interier' && r.tl ? r.tl : ''], ['Kování', r.kov], ['Montáž', st.kat === 'interier' && r.montaz ? 'zárubně, osazení křídla a kování do připraveného otvoru – ' + kc(INT_MONTAZ) + ' bez DPH za kus' : ''], ['Vybourání zárubně', st.kat === 'interier' && r.bourani ? 'stávající zárubeň, příprava otvoru a odvoz materiálu – ' + kc(INT_BOURANI) + ' bez DPH za kus' : '']]
       .filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; });
   }
   function fixSpec(sp) { return (sp || []).map(function (x) { var v = String(x[1] || ''); if (x[0] === 'Záruka') v = v.replace(/^Ne,\s*stačí\s*/i, 'základní ').replace(/^Ano,\s*/i, 'prodloužená: '); return [x[0], v, x[2] || 0, x[3] || '']; }); }
   function specTxt(sp) { return sp.map(function (x) { return x[0] + ': ' + x[1] + (x[2] > 0 ? ' (+' + kc(x[2]) + ')' : (x[3] ? ' (' + x[3] + ')' : '')); }).join('; '); }
+  /* ── kování (kliky) jako samostatná položka – jen interiérové dveře; data v kovani-data.js (stejné jako na webu #kovani) ── */
+  var KOV = window.BD_KOVANI || [];
+  function kovNajdi(id) { var x = null; KOV.forEach(function (k) { if (k.id === id) x = k; }); return x; }
+  function kovDph() { return st.rows.some(function (r) { return r.typ !== 'kovani' && r.montaz; }) ? INT_DPH_MONT : INT_DPH_BEZ; }   // s montáží dveří 12 %, jinak 21 %
+  function kovCena(r) {
+    var k = kovNajdi(r.kid); r.calc = ''; if (!k) return;
+    if (!k.ceny[r.rozeta]) r.rozeta = Object.keys(k.ceny)[0];
+    r.nazev = 'Klika ' + k.nazev + ' – ' + k.povrch + ' (rozeta ' + r.rozeta + ')'; r.img = k.img;
+    var bez = k.ceny[r.rozeta], sz = kovDph(), vc = Math.round(bez * (1 + sz / 100));
+    r.calc = 'Ceník: ' + kc(bez) + ' bez DPH → ' + kc(vc) + ' vč. ' + sz + ' % DPH za kus' + (sz === INT_DPH_MONT ? ' (s montáží dveří)' : '') + '.';
+    if (!r.cenaRuc) r.cena = vc;
+  }
+  function kovRow(kid, rozeta, ks) { var r = newRow(); r.typ = 'kovani'; r.kid = kid || ''; r.rozeta = rozeta || 'BB / PZ'; r.ks = ks || 1; r.montaz = false; kovCena(r); return r; }
+  function kovHtml(r, i) {
+    var k = kovNajdi(r.kid), tot = r.ks * r.cena - r.sleva;
+    return '<div class="pq-block-in" style="border:1.5px solid var(--gray-200);border-radius:12px;padding:1rem;margin-bottom:.8rem;overflow:hidden"><strong>Položka ' + (i + 1) + ' – kování (kliky)</strong>' +
+      '<button type="button" class="btn btn-outline" data-del="' + i + '" style="float:right;padding:.3rem .8rem">Odebrat</button>' +
+      '<div class="nb-sw" style="margin-top:.6rem">' + KOV.map(function (x) { return '<button type="button" data-kpick="' + i + '" data-kid="' + esc(x.id) + '" class="' + (r.kid === x.id ? 'on' : '') + '" title="' + esc(x.pozn || '') + '"><img src="' + esc(x.img) + '" alt="" loading="lazy" style="height:70px">' + esc(x.nazev) + '<br><small>' + esc(x.povrch) + '</small></button>'; }).join('') + '</div>' +
+      (k ? '<div class="pq-grid2"><label class="pq-f">Rozeta<select data-i="' + i + '" data-f="kroz">' + Object.keys(k.ceny).map(function (z) { return '<option' + (z === r.rozeta ? ' selected' : '') + ' value="' + esc(z) + '">' + esc(z) + ' – ' + kc(k.ceny[z]) + ' bez DPH</option>'; }).join('') + '</select></label>' +
+        '<label class="pq-f">Počet kusů<input data-i="' + i + '" data-f="ks" inputmode="numeric" value="' + r.ks + '"></label>' +
+        '<label class="pq-f">Cena za kus vč. DPH (Kč)<input data-i="' + i + '" data-f="cena" inputmode="numeric" value="' + (r.cena || '') + '"></label>' +
+        '<label class="pq-f">Sleva na položku (Kč)<input data-i="' + i + '" data-f="sleva" inputmode="numeric" value="' + (r.sleva || '') + '"></label></div>' +
+        (k.pozn ? '<p class="pq-help" style="margin:.2rem 0 0">' + esc(k.pozn) + '</p>' : '') + '<p class="pq-help" style="margin:.3rem 0 0">' + esc(window.BD_ROZETY && window.BD_ROZETY[r.rozeta] || '') + '. ' + esc(r.calc) +
+        (r.cenaRuc ? ' <button type="button" class="btn btn-outline" data-kreprice="' + i + '" style="padding:.15rem .6rem">Použít cenu z ceníku</button>' : '') + '</p>' : '<p class="pq-help">Vyberte kliku.</p>') +
+      '<p style="margin:.4rem 0 0" data-tot="' + i + '">Za položku: <b>' + kc(tot) + '</b></p></div>';
+  }
   function renderRows() {
+    st.rows.forEach(function (r) { if (r.typ === 'kovani') kovCena(r); });
     $('#nbRows').innerHTML = st.rows.map(function (r, i) {
+      if (r.typ === 'kovani') return kovHtml(r, i);
       var byt = st.kat === 'byt', tot = r.ks * r.cena - r.sleva, im = r.imgData || r.img;
       var thumb = im && (byt || !catFind(r.cat)) ? '<img src="' + esc(im) + '" alt="" style="float:right;max-height:110px;max-width:70px;margin:0 0 .5rem .8rem;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' : '';
       var sel = '';
@@ -250,6 +282,7 @@
   }
   document.addEventListener('change', function (e) {
     var t = e.target;
+    if (t.dataset && t.dataset.f === 'kroz') { var rz = st.rows[+t.dataset.i]; rz.rozeta = t.value; rz.cenaRuc = false; renderRows(); return; }
     if (t.name === 'kat') { st.kat = t.value; setDefaults(); renderKat(); return; }
     if (t.name === 'zadani') { st.rozp = t.value === 'rozpocet'; renderKat(); sums(); return; }
     if (t.id === 'nbRozpFile') { rozpFile(t.files && t.files[0]); return; }
@@ -271,12 +304,15 @@
   });
   document.addEventListener('input', function (e) {
     var t = e.target;
-    if (t.dataset && t.dataset.f && ['model', 'cat', 'dekor', 'imgfile', 'montaz', 'bourani'].indexOf(t.dataset.f) < 0 && !(t.dataset.f === 'tl' && st.kat === 'interier')) {
-      var r = st.rows[+t.dataset.i], f = t.dataset.f; r[f] = (f === 'ks' || f === 'cena' || f === 'sleva') ? int(t.value) : t.value; if (f === 'cena' && intZ(r)) { r.cenaRuc = true; autoPrice(r); } sums();
+    if (t.dataset && t.dataset.f && ['model', 'cat', 'dekor', 'imgfile', 'montaz', 'bourani', 'kroz'].indexOf(t.dataset.f) < 0 && !(t.dataset.f === 'tl' && st.kat === 'interier')) {
+      var r = st.rows[+t.dataset.i], f = t.dataset.f; r[f] = (f === 'ks' || f === 'cena' || f === 'sleva') ? int(t.value) : t.value; if (f === 'cena' && intZ(r)) { r.cenaRuc = true; autoPrice(r); } if (f === 'cena' && r.typ === 'kovani') r.cenaRuc = true; sums();
     } else if (t.name === 'sleva_kc' || t.name === 'rozp_cena') sums();
   });
   document.addEventListener('click', function (e) {
     var t = e.target;
+    if (t.id === 'nbAddKov') { st.rows.push(kovRow('', 'BB / PZ', 1)); renderKat(); renderRows(); return; }
+    var kp = t.closest && t.closest('[data-kpick]'); if (kp) { var rk = st.rows[+kp.getAttribute('data-kpick')]; rk.kid = kp.getAttribute('data-kid'); rk.cenaRuc = false; renderRows(); return; }
+    var krp = t.closest && t.closest('[data-kreprice]'); if (krp) { st.rows[+krp.getAttribute('data-kreprice')].cenaRuc = false; renderRows(); return; }
     if (t.id === 'nbAdd') { if (limited() && st.rows.length >= 1) return; st.rows.push(newRow()); renderKat(); renderRows(); if (st.kat === 'byt') openPick(st.rows.length - 1); }
     if (t.dataset && t.dataset.reprice != null && t.dataset.reprice !== '') { var rr = st.rows[+t.dataset.reprice]; rr.cenaRuc = false; autoPrice(rr); renderRows(); return; }
     if (t.dataset && t.dataset.pick != null && t.dataset.pick !== '') openPick(+t.dataset.pick);
@@ -368,7 +404,7 @@
     d.polozky = st.rows.map(function (r) {
       var sp = rowSpec(r);
       return { co: r.nazev + (r.ks > 1 ? ' (' + r.ks + ' ks × ' + kc(r.cena) + ')' : ''), volba: [specTxt(sp), r.popis, r.sleva ? 'sleva ' + kc(r.sleva) : ''].filter(Boolean).join(' · '), priplatek: r.ks * r.cena - r.sleva,
-        model_kod: r.model, odstin: r.odstin, cfg: r.cfg || null, popis: r.popis, nazev: r.nazev, ks: r.ks, cena_ks: r.cena, sleva: r.sleva, spec: sp, obrazek: r.img || '' };
+        model_kod: r.model, odstin: r.odstin, cfg: r.cfg || null, popis: r.popis, nazev: r.nazev, ks: r.ks, cena_ks: r.cena, sleva: r.sleva, spec: sp, obrazek: r.img || '', kovani_id: r.typ === 'kovani' ? r.kid : undefined, rozeta: r.typ === 'kovani' ? r.rozeta : undefined };
     });
     }
     if (OBJ) {
@@ -779,6 +815,7 @@
       if (o.typ === 'nabidka' && Array.isArray(o.polozky) && KATS.indexOf(o.kategorie) >= 0) {
         st.kat = o.kategorie;
         o.polozky.filter(function (p0) { return p0 && p0.ks != null; }).forEach(function (p0) {
+          if (p0.kovani_id) { var rk0 = kovRow(p0.kovani_id, p0.rozeta, int(p0.ks) || 1); rk0.cena = int(p0.cena_ks); rk0.sleva = int(p0.sleva); rk0.cenaRuc = true; st.rows.push(rk0); return; }
           var r0 = newRow(); r0.nazev = p0.nazev || ''; r0.ks = int(p0.ks) || 1; r0.cena = int(p0.cena_ks); r0.sleva = int(p0.sleva); r0.popis = p0.popis || ''; r0.img = p0.obrazek || ''; r0.model = p0.model_kod || ''; r0.odstin = p0.odstin || ''; r0.cfg = p0.cfg || null;
           (p0.spec || []).forEach(function (x) { var v = String(x[1] || ''); if (x[0] === 'Provedení') r0.prov = v; else if (x[0] === 'Odstín / dekor') r0.odstin = v; else if (x[0] === 'Šířka křídla') r0.sirka = v.replace(/\s*cm$/i, ''); else if (x[0] === 'Otevírání') r0.otev = v; else if (x[0] === 'Zárubeň') r0.zarub = v; else if (x[0] === 'Tloušťka zárubně') r0.tl = v; else if (x[0] === 'Kování') r0.kov = v; });
           r0.montaz = (p0.spec || []).some(function (x) { return x[0] === 'Montáž'; }); r0.bourani = (p0.spec || []).some(function (x) { return x[0] === 'Vybourání zárubně'; });
@@ -813,6 +850,7 @@
           if (!rw.cena) rw.ai.push(st.kat === 'dum' ? 'Cenu doplňte ručně (rozpočet ERKADO z jiného programu).' : 'Cena se z ceníku nedoplnila – zadejte ji ručně.');
           st.rows.push(rw);
         });
+        if (st.kat === 'interier') (o.kovani || []).forEach(function (k2) { if (kovNajdi(k2.id)) { var rk2 = kovRow(k2.id, k2.rozeta, int(k2.ks) || 1); rk2.ai = (k2.nejiste || []).map(String).filter(Boolean); st.rows.push(rk2); } });
       } else if (m) {
         st.kat = 'byt'; var r = newRow(); r.model = m.k; r.odstin = o.odstin || ''; r.nazev = m.name + (r.odstin ? ' – ' + r.odstin : '');
         r.cena = int(o.cena_celkem) || modelPrice(r) || m.price; r.img = m.img || '';
@@ -833,6 +871,7 @@
           var cx = catFind(ht); if (p1.odstin) { rw.odstin = p1.odstin; if (cx && cx[5]) cx[5].forEach(function (d1) { if (d1[0] === p1.odstin) { rw.shadeImg = 'aplikace/' + d1[1]; rw.img = rw.shadeImg; } }); }
           rw.ks = int(p1.ks) || 1; rw.bourani = !!o.bourani; autoPrice(rw); st.rows.push(rw);
         });
+        if (o.kategorie === 'interier') (o.kovani || []).forEach(function (k1) { if (kovNajdi(k1.id)) st.rows.push(kovRow(k1.id, k1.rozeta, int(k1.ks) || 1)); });
       } else if (/interi/i.test(o.model || o.typ_dveri || '') || /dom|erkado/i.test((o.model || '') + ' ' + (o.typ_dveri || ''))) {
         st.kat = /interi/i.test((o.model || '') + ' ' + (o.typ_dveri || '')) ? 'interier' : 'dum';
         var r2 = newRow(), txt = String(o.model || '').toUpperCase(), hit = '';
