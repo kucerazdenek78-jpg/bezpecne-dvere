@@ -60,7 +60,7 @@ window.go = function (mot) {
     document.querySelectorAll('.ad .v').forEach(function (c) { Poukaz.kresli(c, { motiv: mot, hodnota: +c.dataset.h, cislo: 'DP 1/2026', kod: 'ABCD-EFGH', platnost_do: '2027-12-24', obdarovany: 'Tomáš a Petra', venovani: 'Ať vám nové dveře hlídají nový domov. Veselé Vánoce!', od_koho: 'Mamka a taťka' }, 4); });
     document.querySelectorAll('.snow').forEach(function (c) { var r = c.parentNode.getBoundingClientRect(); c.width = r.width; c.height = r.height; var g = c.getContext('2d'), s = 7; g.fillStyle = '#fff';
       for (var i = 0; i < 160; i++) { s = (s * 16807) % 2147483647; var x = s % c.width; s = (s * 16807) % 2147483647; var y = s % c.height; s = (s * 16807) % 2147483647; g.globalAlpha = .25 + (s % 60) / 100; g.beginPath(); g.arc(x, y, 1.5 + s % 4, 0, 7); g.fill(); } });
-    [['b1', 'vanoce'], ['b2', 'darkovy']].forEach(function (x) { var c = document.getElementById(x[0]); var g = c.getContext('2d'); g.clearRect(0, 0, 240, 300); Poukaz.scena(g, x[1], 10000, 0, 0, 96, 120, 2.5); });
+    [['b1', 'vanoce'], ['b2', 'darkovy']].forEach(function (x) { var c = document.getElementById(x[0]); var g = c.getContext('2d'); g.clearRect(0, 0, 240, 300); Poukaz.scena(g, x[1], 10000, 0, 0, 96, 120, 2.5, null, { stitek: false }); });
     return new Promise(function (ok) { setTimeout(ok, 300); });
   });
 };
