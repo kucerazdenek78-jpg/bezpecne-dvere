@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Váš dárkový poukaz | Bezpečné dveře</title>
+  <meta name="description" content="Stav dárkového poukazu, platba a stažení poukazu v PDF.">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://bezpecne-dvere.cz/poukaz-stav.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Bezpečné dveře">
+  <meta property="og:title" content="Váš dárkový poukaz | Bezpečné dveře">
+  <meta property="og:description" content="Stav dárkového poukazu, platba a stažení poukazu v PDF.">
+  <meta property="og:url" content="https://bezpecne-dvere.cz/poukaz-stav.html">
+  <meta property="og:image" content="https://bezpecne-dvere.cz/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bezpecne-dvere.cz/og-image.png">
+  <link rel="stylesheet" href="style.css?v=20261025e">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#123d27">
+  <style>
+    .pv-hero{background:linear-gradient(120deg,#0e2a1f,#123d27 55%,#1d5a3a)}
+    .pv-hero h1,.pv-hero p{color:#fff}.pv-hero .section-label{color:#f5c56b}
+    .pv-sec{padding:2.5rem 0}.pv-alt{background:var(--gray-50,#f6f8f6)}
+    .pv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:2rem;align-items:start}
+    .pv-right{position:sticky;top:90px}
+    .pv-preview canvas{width:100%;height:auto;border-radius:14px;box-shadow:0 10px 30px rgba(15,39,71,.25);display:block}
+    .pv-step{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg,16px);padding:1.3rem 1.4rem;margin-bottom:1rem}
+    .pv-step h2{font-size:1.15rem;color:var(--head);margin:0 0 .9rem;display:flex;align-items:center;gap:.6rem}
+    .pv-step h2 span{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--orange,#e8650a);color:#fff;align-items:center;justify-content:center;font-size:.9rem}
+    .pv-step h2 small{font-weight:500;color:var(--gray-600);font-size:.85rem}
+    .pv-values,.pv-motivy{display:flex;flex-wrap:wrap;gap:.6rem}
+    .pv-values label,.pv-motivy label{position:relative;cursor:pointer}
+    .pv-values input,.pv-motivy input{position:absolute;opacity:0;pointer-events:none}
+    .pv-values span,.pv-motivy span{display:block;padding:.7rem 1.05rem;border:2px solid var(--gray-200);border-radius:12px;font-weight:700;color:var(--head);background:#fff;transition:border-color .15s,background .15s}
+    .pv-values input:checked+span,.pv-motivy input:checked+span{border-color:var(--orange,#e8650a);background:#fff4ec}
+    .pv-values input:focus-visible+span,.pv-motivy input:focus-visible+span{outline:3px solid #fdba74;outline-offset:2px}
+    .pv-f{margin:.8rem 0}.pv-f label{display:block;font-weight:700;font-size:.85rem;color:var(--head);margin-bottom:.35rem}.pv-f label small{font-weight:500;color:var(--gray-600)}
+    .pv-f input,.pv-f textarea{width:100%;padding:.72rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff;box-sizing:border-box}
+    .pv-f input:focus,.pv-f textarea:focus{outline:none;border-color:var(--orange,#e8650a)}
+    .pv-f .bad,.pv-check .bad,input.bad{border-color:#b91c1c!important}
+    .pv-count{display:block;text-align:right;color:var(--gray-600);font-size:.78rem}
+    .pv-row{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.pv-row3{display:grid;grid-template-columns:1.4fr 1fr .6fr;gap:0 1rem}
+    .pv-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem;margin:.7rem 0;line-height:1.45}.pv-check input{margin-top:.2rem;flex:none;width:18px;height:18px}
+    .pv-meter{margin-top:1rem}.pv-meter-bar{height:12px;border-radius:99px;background:#e9efea;overflow:hidden}.pv-meter-bar i{display:block;height:100%;background:linear-gradient(90deg,#7a4f31,#e8650a);border-radius:99px;transition:width .3s}
+    .pv-meter p{font-size:.88rem;margin:.45rem 0 0;color:var(--gray-600)}
+    .pv-submit{width:100%;font-size:1.05rem;padding:1rem;margin-top:.4rem}
+    .pv-small{font-size:.83rem;color:var(--gray-600);margin-top:.6rem}
+    .pv-err{background:#fde2e2;color:#991b1b;border-radius:10px;padding:.7rem .9rem;font-weight:600}
+    .pv-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+    .pv-done{max-width:760px;margin:0 auto;background:#fff;border:2px solid #15803d;border-radius:var(--radius-lg,16px);padding:1.6rem}
+    .pv-done h2{color:var(--head);margin-top:0}
+    .pv-pay{display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;margin:1rem 0}.pv-pay canvas{width:200px;height:200px;border:1px solid var(--gray-200);border-radius:10px}
+    .pv-pay dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:0}.pv-pay dt{color:var(--gray-600)}.pv-pay dd{margin:0;font-weight:700;color:var(--head)}
+    .pv-wide{max-width:900px}.pv-h{color:var(--head);margin:2rem 0 1rem;font-size:1.3rem}.pv-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .pv-box{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg,16px);padding:1.2rem}.pv-box h4{color:var(--head);margin:0 0 .4rem}.pv-box p{font-size:.92rem;margin:0}
+    .pv-terms{padding-left:1.2rem;display:flex;flex-direction:column;gap:.45rem;font-size:.92rem}.pv-terms li{list-style:decimal}
+    .pv-faq details{background:#fff;border:2px solid var(--gray-200);border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem}.pv-faq summary{font-weight:700;color:var(--head);cursor:pointer}.pv-faq p{margin:.5rem 0 0;font-size:.92rem}
+    .pv-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin:1rem 0}
+    .ps-head h2{margin:0 0 .3rem;color:var(--head)}.ps-head{margin-bottom:1rem}
+    .ps-nahled{width:100%;height:auto;border-radius:12px;box-shadow:0 8px 24px rgba(15,39,71,.2);margin-top:1rem}
+    section[id]{scroll-margin-top:90px}#podminky{scroll-margin-top:90px}
+    @media(max-width:900px){.pv-grid{grid-template-columns:1fr}.pv-right{position:static;order:-1}.pv-3{grid-template-columns:1fr}}
+    @media(max-width:600px){.pv-row,.pv-row3{grid-template-columns:1fr}.pv-step{padding:1.1rem}}
+  </style>
+<link rel="stylesheet" href="motivy.css?v=1">
+<script src="motivy.js?v=3"></script>
+</head>
+<body>
+
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.jpg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Do bytu
+          </a>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link">Do interiéru</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="dokumenty.html" class="nav-link">Dokumenty
+          </a>
+        </li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="poptavka-dvere.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<script src="formulare-klient.js?v=20261024a"></script>
+<script src="platba/qrcode.js"></script>
+<script src="platba/platba.js?v=20261029a"></script>
+<script src="poukaz/poukaz.js?v=20261029a"></script>
+<div class="page-header hero-modern pv-hero">
+  <div class="container">
+    <span class="section-label">Dárkový poukaz</span>
+    <h1>Váš dárkový poukaz</h1>
+    <div class="breadcrumb"><a href="index.html">Úvod</a><span>›</span><a href="darkovy-poukaz.html">Dárkový poukaz</a><span>›</span><span>Stav poukazu</span></div>
+  </div>
+</div>
+<section class="pv-sec">
+  <div class="container pv-wide">
+    <p id="psNacitam">Načítám…</p>
+    <div id="psChyba" class="pv-err" hidden></div>
+    <div id="psObsah" hidden>
+      <div class="pv-box ps-head"><h2>Poukaz <span data-f="cislo"></span> · <span data-f="castka"></span></h2><p>Stav: <b class="ps-stav" data-f="stav_text"></b></p></div>
+      <div id="psCeka" hidden>
+        <p>Poukaz čeká na platbu. Zaplaťte prosím převodem nebo naskenujte QR kód v aplikaci banky. Jakmile platbu zaevidujeme, pošleme Vám poukaz v PDF e-mailem a zpřístupníme ho i tady.</p>
+        <div class="pv-pay">
+          <canvas id="psQr" width="240" height="240" aria-label="QR kód pro platbu"></canvas>
+          <dl><dt>Číslo účtu</dt><dd data-f="ucet"></dd><dt>Částka</dt><dd data-f="castka"></dd><dt>Variabilní symbol</dt><dd data-f="vs"></dd><dt>Zaplaťte do</dt><dd data-f="zrusi_se"></dd></dl>
+        </div>
+      </div>
+      <div id="psZaplaceno" hidden>
+        <p>Poukaz je zaplacený. Platí do <b data-f="platnost"></b>. Ověřovací kód: <b data-f="kod"></b>.</p>
+        <div class="pv-actions">
+          <a class="btn btn-primary" id="psPdf" href="#">⬇️ Stáhnout poukaz (PDF)</a>
+          <button type="button" class="btn btn-outline" id="psDoklad">🧾 Potvrzení o přijetí platby (PDF)</button>
+        </div>
+        <p class="pv-small" id="psUplatneno" hidden>Poukaz už byl uplatněn.</p>
+      </div>
+      <div id="psJiny" hidden><p data-f="jiny"></p></div>
+      <canvas id="psNahled" class="ps-nahled" aria-label="Náhled poukazu" role="img"></canvas>
+      <p class="pv-small">Potřebujete pomoct? Zavolejte +420 725 559 235 nebo napište na chci@bezpecne-dvere.cz.</p>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  var API = (window.BDForm && BDForm.ENDPOINT ? BDForm.ENDPOINT : 'https://formulare.dvere.app/odeslat.php').replace('odeslat.php', 'poukaz-api.php');
+  var t = (new URLSearchParams(location.search).get('t') || '').replace(/[^a-f0-9]/g, '');
+  var $ = function (s) { return document.querySelector(s); };
+  function chyba(s) { $('#psNacitam').hidden = true; var e = $('#psChyba'); e.textContent = s; e.hidden = false; }
+  if (!t) { chyba('Chybí odkaz na poukaz. Otevřete prosím odkaz z e-mailu.'); return; }
+  fetch(API + '?akce=stav&t=' + t, { headers: { Accept: 'application/json' } }).then(function (r) { return r.json(); }).then(function (j) {
+    if (!j || !j.ok) return chyba((j && j.chyba) || 'Poukaz se nepodařilo načíst.');
+    var p = j.poukaz, set = function (k, v) { [].forEach.call(document.querySelectorAll('[data-f=' + k + ']'), function (x) { x.textContent = v; }); };
+    $('#psNacitam').hidden = true; $('#psObsah').hidden = false;
+    set('cislo', p.cislo); set('castka', Poukaz.kc(p.hodnota)); set('stav_text', p.stav_text); set('ucet', p.ucet); set('vs', p.vs); set('kod', p.kod);
+    set('platnost', Poukaz.datum(p.platnost_do)); set('zrusi_se', p.zrusi_se ? Poukaz.datum(p.zrusi_se) : '');
+    if (p.stav === 'ceka') {
+      $('#psCeka').hidden = false;
+      if (window.BDPlatba) $('#psQr').getContext('2d').drawImage(BDPlatba.canvas(BDPlatba.spd(p.hodnota, p.vs, 'Darkovy poukaz ' + p.cislo), 240), 0, 0, 240, 240);
+    } else if (p.stav === 'zaplaceno' || p.stav === 'uplatneno') {
+      $('#psZaplaceno').hidden = false; $('#psUplatneno').hidden = p.stav !== 'uplatneno';
+      $('#psPdf').href = API + '?akce=soubor&t=' + t;
+      $('#psDoklad').onclick = function () { var b = this; b.disabled = true; Poukaz.doklad(p).then(function (bl) { var a = document.createElement('a'); a.href = URL.createObjectURL(bl); a.download = 'Potvrzeni-platby-' + p.cislo.replace(/[ \/]/g, '-') + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); b.disabled = false; }); };
+    } else { $('#psJiny').hidden = false; set('jiny', p.stav === 'zruseno' ? 'Objednávka poukazu byla zrušena. Pokud jste platbu poslali, ozvěte se nám prosím.' : 'Platnost poukazu uplynula.'); }
+    Poukaz.ready().then(function () { Poukaz.kresli($('#psNahled'), p, 3); });
+  }).catch(function () { chyba('Poukaz se teď nepodařilo načíst. Zkuste to prosím za chvíli.'); });
+})();
+</script>
+
+
+<!-- FOOTER -->
+<div class="partners-band">
+  <div class="container pb-in">
+    <span class="pb-label">Doporučujeme</span>
+    <a class="pb-card" href="https://www.thaimost.cz/" target="_blank" rel="noopener" title="Thajské masáže Most">
+      <img src="userFiles/partneri/thai-most.png" alt="Thai Most – thajské masáže Most" width="250" height="59" loading="lazy">
+    </a>
+    <a class="pb-card" href="https://kucerazdenek78-jpg.github.io/podologiemost/" target="_blank" rel="noopener" title="Podologie a pedikúra v Mostě">
+      <img src="userFiles/partneri/podologie-most.png" alt="Podologie Most – odborná péče o nohy" width="254" height="60" loading="lazy">
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo.jpg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Jsme tu od roku 1996. Největší výběr bezpečnostních dveří v regionu.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link" target="_blank" rel="noopener" aria-label="Facebook – Bezpečné dveře" title="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.5-3.3h-3.3V8.4c0-.9.4-1.7 1.8-1.7h1.6V3.8s-1.3-.2-2.5-.2c-2.6 0-4.2 1.5-4.2 4.4v2.5H7.4v3.3h2.8V22h3.3z"/></svg></a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link" target="_blank" rel="noopener" aria-label="YouTube – videa dveří" title="YouTube"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg></a>
+          <a href="https://wa.me/420725559235" class="social-link" aria-label="WhatsApp" title="WhatsApp">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+          <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+          <a href="montaz-extreme-54.html">Průběh montáže</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis</h5>
+        <div class="footer-links">
+          <a href="servis-oken.html">Servis oken</a>
+          <a href="nouzove-otevirani.html">Nouzové otevírání</a>
+          <a href="servis-dveri.html">Servis dveří a reklamace</a>
+          <a href="objednani-klicu.html">Objednání klíčů</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="doporuc-nas.html">Doporuč nás</a>
+          <a href="registrace-zaruky.html">Registrace záruky</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span class="cy">2026</span><script>document.currentScript.previousElementSibling.textContent=new Date().getFullYear()</script> Bezpečné dveře · Provozovatel: Zdeněk Kučera, IČ 64682676, DIČ CZ7801242768, fakturační adresa Zd. Štěpánka 2764/1, 434 01 Most · Zapsán v živnostenském rejstříku od 13. 3. 1996 · Prodejna a vzorkovna: Obchodní 36, 434 01 Most</span>
+      <span><a href="panel.html" title="Pro prodejce" aria-label="Pro prodejce" rel="nofollow" style="text-decoration:none;opacity:.4">🔒</a></span>
+      <span><a href="zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">Zásady osobních údajů</a> · <a href="cookies.html" style="color:inherit;text-decoration:underline">Cookies</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden');try{localStorage.setItem('cookiesOk','1')}catch(e){}">Rozumím</button>
+</div>
+<script>try{if(localStorage.getItem('cookiesOk')==='1'){var cb=document.getElementById('cookieBar');if(cb)cb.classList.add('hidden');}}catch(e){}</script>
+
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+
+<script src="cookies.js?v=5" defer></script>
+<script src="moje-dvere-stitek.js?v=20261025c" defer></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dárkový poukaz na dveře | Bezpečné dveře</title>
+  <meta name="description" content="Darujte kus nových dveří: dárkový poukaz na bezpečnostní, vchodové i interiérové dveře s montáží. Vánoční, narozeninový nebo dárkový motiv, PDF e-mailem.">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://bezpecne-dvere.cz/darkovy-poukaz.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Bezpečné dveře">
+  <meta property="og:title" content="Dárkový poukaz na dveře | Bezpečné dveře">
+  <meta property="og:description" content="Darujte kus nových dveří: dárkový poukaz na bezpečnostní, vchodové i interiérové dveře s montáží. Vánoční, narozeninový nebo dárkový motiv, PDF e-mailem.">
+  <meta property="og:url" content="https://bezpecne-dvere.cz/darkovy-poukaz.html">
+  <meta property="og:image" content="https://bezpecne-dvere.cz/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bezpecne-dvere.cz/og-image.png">
+  <link rel="stylesheet" href="style.css?v=20261025e">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#123d27">
+  <style>
+    .pv-hero{background:linear-gradient(120deg,#0e2a1f,#123d27 55%,#1d5a3a)}
+    .pv-hero h1,.pv-hero p{color:#fff}.pv-hero .section-label{color:#f5c56b}
+    .pv-sec{padding:2.5rem 0}.pv-alt{background:var(--gray-50,#f6f8f6)}
+    .pv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:2rem;align-items:start}
+    .pv-right{position:sticky;top:90px}
+    .pv-preview canvas{width:100%;height:auto;border-radius:14px;box-shadow:0 10px 30px rgba(15,39,71,.25);display:block}
+    .pv-step{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg,16px);padding:1.3rem 1.4rem;margin-bottom:1rem}
+    .pv-step h2{font-size:1.15rem;color:var(--head);margin:0 0 .9rem;display:flex;align-items:center;gap:.6rem}
+    .pv-step h2 span{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--orange,#e8650a);color:#fff;align-items:center;justify-content:center;font-size:.9rem}
+    .pv-step h2 small{font-weight:500;color:var(--gray-600);font-size:.85rem}
+    .pv-values,.pv-motivy{display:flex;flex-wrap:wrap;gap:.6rem}
+    .pv-values label,.pv-motivy label{position:relative;cursor:pointer}
+    .pv-values input,.pv-motivy input{position:absolute;opacity:0;pointer-events:none}
+    .pv-values span,.pv-motivy span{display:block;padding:.7rem 1.05rem;border:2px solid var(--gray-200);border-radius:12px;font-weight:700;color:var(--head);background:#fff;transition:border-color .15s,background .15s}
+    .pv-values input:checked+span,.pv-motivy input:checked+span{border-color:var(--orange,#e8650a);background:#fff4ec}
+    .pv-values input:focus-visible+span,.pv-motivy input:focus-visible+span{outline:3px solid #fdba74;outline-offset:2px}
+    .pv-f{margin:.8rem 0}.pv-f label{display:block;font-weight:700;font-size:.85rem;color:var(--head);margin-bottom:.35rem}.pv-f label small{font-weight:500;color:var(--gray-600)}
+    .pv-f input,.pv-f textarea{width:100%;padding:.72rem .9rem;border:2px solid var(--gray-200);border-radius:10px;font:inherit;background:#fff;box-sizing:border-box}
+    .pv-f input:focus,.pv-f textarea:focus{outline:none;border-color:var(--orange,#e8650a)}
+    .pv-f .bad,.pv-check .bad,input.bad{border-color:#b91c1c!important}
+    .pv-count{display:block;text-align:right;color:var(--gray-600);font-size:.78rem}
+    .pv-row{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.pv-row3{display:grid;grid-template-columns:1.4fr 1fr .6fr;gap:0 1rem}
+    .pv-check{display:flex;gap:.6rem;align-items:flex-start;font-size:.9rem;margin:.7rem 0;line-height:1.45}.pv-check input{margin-top:.2rem;flex:none;width:18px;height:18px}
+    .pv-meter{margin-top:1rem}.pv-meter-bar{height:12px;border-radius:99px;background:#e9efea;overflow:hidden}.pv-meter-bar i{display:block;height:100%;background:linear-gradient(90deg,#7a4f31,#e8650a);border-radius:99px;transition:width .3s}
+    .pv-meter p{font-size:.88rem;margin:.45rem 0 0;color:var(--gray-600)}
+    .pv-submit{width:100%;font-size:1.05rem;padding:1rem;margin-top:.4rem}
+    .pv-small{font-size:.83rem;color:var(--gray-600);margin-top:.6rem}
+    .pv-err{background:#fde2e2;color:#991b1b;border-radius:10px;padding:.7rem .9rem;font-weight:600}
+    .pv-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+    .pv-done{max-width:760px;margin:0 auto;background:#fff;border:2px solid #15803d;border-radius:var(--radius-lg,16px);padding:1.6rem}
+    .pv-done h2{color:var(--head);margin-top:0}
+    .pv-pay{display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;margin:1rem 0}.pv-pay canvas{width:200px;height:200px;border:1px solid var(--gray-200);border-radius:10px}
+    .pv-pay dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:0}.pv-pay dt{color:var(--gray-600)}.pv-pay dd{margin:0;font-weight:700;color:var(--head)}
+    .pv-wide{max-width:900px}.pv-h{color:var(--head);margin:2rem 0 1rem;font-size:1.3rem}.pv-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .pv-box{background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius-lg,16px);padding:1.2rem}.pv-box h4{color:var(--head);margin:0 0 .4rem}.pv-box p{font-size:.92rem;margin:0}
+    .pv-terms{padding-left:1.2rem;display:flex;flex-direction:column;gap:.45rem;font-size:.92rem}.pv-terms li{list-style:decimal}
+    .pv-faq details{background:#fff;border:2px solid var(--gray-200);border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem}.pv-faq summary{font-weight:700;color:var(--head);cursor:pointer}.pv-faq p{margin:.5rem 0 0;font-size:.92rem}
+    .pv-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin:1rem 0}
+    .ps-head h2{margin:0 0 .3rem;color:var(--head)}.ps-head{margin-bottom:1rem}
+    .ps-nahled{width:100%;height:auto;border-radius:12px;box-shadow:0 8px 24px rgba(15,39,71,.2);margin-top:1rem}
+    section[id]{scroll-margin-top:90px}#podminky{scroll-margin-top:90px}
+    @media(max-width:900px){.pv-grid{grid-template-columns:1fr}.pv-right{position:static;order:-1}.pv-3{grid-template-columns:1fr}}
+    @media(max-width:600px){.pv-row,.pv-row3{grid-template-columns:1fr}.pv-step{padding:1.1rem}}
+  </style>
+<link rel="stylesheet" href="motivy.css?v=1">
+<script src="motivy.js?v=3"></script>
+</head>
+<body>
+
+
+<!-- NAVIGATION -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.jpg" alt="Bezpečné dveře" class="nav-logo-img">
+      </a>
+      <ul class="nav-menu" id="navMenu">
+        <li class="nav-item">
+          <a href="dvere-do-bytu.html" class="nav-link">Do bytu
+          </a>
+        </li>
+        <li class="nav-item"><a href="dvere-do-domu.html" class="nav-link">Do domu</a></li>
+        <li class="nav-item"><a href="dvere-do-interieru.html" class="nav-link">Do interiéru</a></li>
+        <li class="nav-item">
+          <a href="servis.html" class="nav-link">Servis
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="dokumenty.html" class="nav-link">Dokumenty
+          </a>
+        </li>
+        <li class="nav-item"><a href="poptavka.html" class="nav-link">Kontakt</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="poptavka-dvere.html" class="btn btn-primary" style="padding:0.6rem 1.2rem;font-size:0.85rem;">Chci dveře</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header hero-modern pv-hero">
+  <div class="container">
+    <span class="section-label" id="pv-label">Dárkový poukaz</span>
+    <h1>Darujte kus nových dveří</h1>
+    <p>Dárkový poukaz na bezpečnostní dveře do bytu, vchodové dveře do domu i interiérové dveře – včetně montáže. Vyberete částku, motiv a napíšete věnování. Poukaz v PDF pošleme e-mailem hned, jak dorazí platba.</p>
+    <div class="hero-chips"><span class="on">1 000 – 10 000 Kč i vlastní částka</span><span>platí 12 měsíců</span><span>PDF k vytištění nebo vytištěný ve vzorkovně</span></div>
+    <div class="breadcrumb"><a href="index.html">Úvod</a><span>›</span><span>Dárkový poukaz</span></div>
+  </div>
+</div>
+
+<section class="pv-sec">
+  <div class="container">
+    <form id="pvForm" novalidate>
+    <div class="pv-grid">
+      <div class="pv-left">
+        <div class="pv-step">
+          <h2><span>1</span> Hodnota poukazu</h2>
+          <div class="pv-values" role="radiogroup" aria-label="Hodnota poukazu">
+            <label><input type="radio" name="hodnota_v" value="1000"><span>1 000 Kč</span></label>
+            <label><input type="radio" name="hodnota_v" value="2000"><span>2 000 Kč</span></label>
+            <label><input type="radio" name="hodnota_v" value="5000" checked><span>5 000 Kč</span></label>
+            <label><input type="radio" name="hodnota_v" value="10000"><span>10 000 Kč</span></label>
+            <label class="pv-own"><input type="radio" name="hodnota_v" value="vlastni"><span>Vlastní částka</span></label>
+          </div>
+          <div class="pv-f pv-ownbox" hidden><label for="pvOwn">Vlastní částka (500 – 50 000 Kč, po stokorunách)</label><input id="pvOwn" type="number" min="500" max="50000" step="100" inputmode="numeric" placeholder="např. 3000"></div>
+          <div class="pv-meter" aria-live="polite">
+            <div class="pv-meter-bar"><i id="pvMeterFill"></i></div>
+            <p id="pvMeterText"></p>
+          </div>
+        </div>
+
+        <div class="pv-step">
+          <h2><span>2</span> Motiv</h2>
+          <div class="pv-motivy" role="radiogroup" aria-label="Motiv poukazu">
+            <label><input type="radio" name="motiv" value="vanoce"><span>🎄 Vánoční</span></label>
+            <label><input type="radio" name="motiv" value="narozeniny"><span>🎈 Narozeninový</span></label>
+            <label><input type="radio" name="motiv" value="darkovy"><span>🎁 Dárkový</span></label>
+          </div>
+        </div>
+
+        <div class="pv-step">
+          <h2><span>3</span> Pro koho a věnování</h2>
+          <div class="pv-f"><label for="pvPro">Pro koho <small>(nepovinné)</small></label><input id="pvPro" name="obdarovany" type="text" maxlength="60" placeholder="např. Tomáš a Petra"></div>
+          <div class="pv-f"><label for="pvVen">Věnování <small>(nepovinné, max. 240 znaků – nebo ho dopíšete rukou)</small></label><textarea id="pvVen" name="venovani" maxlength="240" rows="3" placeholder="např. Ať vám nové dveře hlídají nový domov. Veselé Vánoce!"></textarea><small class="pv-count"><span id="pvVenN">0</span>/240</small></div>
+          <div class="pv-f"><label for="pvOd">Od koho <small>(nepovinné)</small></label><input id="pvOd" name="od_koho" type="text" maxlength="60" placeholder="např. Mamka a taťka"></div>
+        </div>
+
+        <div class="pv-step">
+          <h2><span>4</span> Kupující <small>(na potvrzení o platbě)</small></h2>
+          <div class="pv-row">
+            <div class="pv-f"><label for="pvJm">Jméno a příjmení *</label><input id="pvJm" name="kupujici_jmeno" type="text" autocomplete="name" required maxlength="80"></div>
+            <div class="pv-f"><label for="pvTel">Telefon</label><input id="pvTel" name="telefon" type="tel" autocomplete="tel" maxlength="30"></div>
+          </div>
+          <div class="pv-f"><label for="pvEm">E-mail * <small>(sem pošleme poukaz)</small></label><input id="pvEm" name="email" type="email" autocomplete="email" required maxlength="120"></div>
+          <div class="pv-row3">
+            <div class="pv-f"><label for="pvUl">Ulice a číslo *</label><input id="pvUl" name="kupujici_ulice" type="text" autocomplete="street-address" required maxlength="120"></div>
+            <div class="pv-f"><label for="pvMe">Obec *</label><input id="pvMe" name="kupujici_mesto" type="text" autocomplete="address-level2" required maxlength="80"></div>
+            <div class="pv-f"><label for="pvPsc">PSČ *</label><input id="pvPsc" name="kupujici_psc" type="text" autocomplete="postal-code" inputmode="numeric" required maxlength="10"></div>
+          </div>
+          <label class="pv-check"><input type="checkbox" id="pvFirmaCh"> <span>Kupuji na firmu (IČO)</span></label>
+          <div class="pv-firma" id="pvFirma" hidden>
+            <div class="pv-row">
+              <div class="pv-f"><label for="pvIc">IČO</label><div class="ares-row"><input id="pvIc" name="ic" type="text" inputmode="numeric" maxlength="12"><button type="button" class="btn btn-outline ares-btn" data-ares>Ověřit v ARES</button></div></div>
+              <div class="pv-f"><label for="pvDic">DIČ</label><input id="pvDic" name="dic" type="text" maxlength="14"></div>
+            </div>
+            <div class="pv-f"><label for="pvFi">Název firmy</label><input id="pvFi" name="fak_jmeno" type="text" maxlength="120"></div>
+            <input type="hidden" name="fak_adresa"><p class="pq-help ares-out" data-ares-out></p>
+          </div>
+          <label class="pv-check"><input type="checkbox" name="vyzvednout" value="1"> <span>Chci i vytištěný poukaz – vyzvednu si ho ve vzorkovně KK SYSTEM, Obchodní 36, Most</span></label>
+          <label class="pv-check"><input type="checkbox" name="souhlas" value="1" required> <span>Souhlasím s <a href="#podminky">podmínkami dárkového poukazu</a> a se <a href="zasady-osobnich-udaju.html" target="_blank">zpracováním osobních údajů</a> pro vyřízení objednávky. *</span></label>
+          <input type="text" name="_honey" class="pv-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <p class="pv-err" id="pvErr" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary pv-submit" id="pvSubmit">Objednat poukaz za <span id="pvSubmitKc">5 000 Kč</span></button>
+          <p class="pv-small">Zaplatíte převodem nebo QR kódem z mobilu. Poukaz v PDF pošleme na e-mail, jakmile platba dorazí na náš účet. Poukaz můžete koupit i přímo ve vzorkovně.</p>
+        </div>
+      </div>
+
+      <div class="pv-right">
+        <div class="pv-preview">
+          <canvas id="pvCanvas" aria-label="Náhled dárkového poukazu" role="img"></canvas>
+          <p class="pv-small">Náhled – číslo, kód a platnost doplníme po objednání. Poukaz je ve formátu A4 na šířku.</p>
+        </div>
+      </div>
+    </div>
+    </form>
+
+    <div class="pv-done" id="pvDone" hidden>
+      <h2>Děkujeme, poukaz <span data-f="cislo"></span> je objednaný 🎉</h2>
+      <p>Teď ho prosím zaplaťte. Jakmile platba dorazí, pošleme Vám poukaz v PDF na <b data-f="email"></b>. Údaje k platbě jsme poslali i e-mailem.</p>
+      <div class="pv-pay">
+        <canvas id="pvQr" width="240" height="240" aria-label="QR kód pro platbu"></canvas>
+        <dl>
+          <dt>Číslo účtu</dt><dd data-f="ucet"></dd>
+          <dt>Částka</dt><dd data-f="castka"></dd>
+          <dt>Variabilní symbol</dt><dd data-f="vs"></dd>
+          <dt>Zpráva pro příjemce</dt><dd data-f="zprava"></dd>
+        </dl>
+      </div>
+      <p class="pv-small">Nezaplacenou objednávku po 14 dnech rušíme. Stav poukazu najdete kdykoli na <a id="pvStavOdkaz" href="#">stránce Vašeho poukazu</a>.</p>
+      <p class="pv-small" id="pvPdfStav"></p>
+    </div>
+  </div>
+</section>
+
+<section class="pv-sec pv-alt">
+  <div class="container pv-wide">
+    <h2 class="pv-h">Jak to funguje</h2>
+    <div class="pv-3">
+      <div class="pv-box"><h4>1. Objednáte a zaplatíte</h4><p>Vyberete částku a motiv, napíšete věnování a zaplatíte převodem nebo QR kódem.</p></div>
+      <div class="pv-box"><h4>2. Pošleme poukaz v PDF</h4><p>Jakmile platba dorazí, přijde Vám poukaz e-mailem. Vytisknete ho, pošlete dál, nebo si ho vyzvednete vytištěný ve vzorkovně.</p></div>
+      <div class="pv-box"><h4>3. Obdarovaný si vybere dveře</h4><p>Ve vzorkovně v Mostě nebo přes web. Hodnota poukazu se odečte z ceny dveří včetně montáže.</p></div>
+    </div>
+
+    <h2 class="pv-h" id="podminky">Podmínky dárkového poukazu</h2>
+    <ol class="pv-terms">
+      <li>Poukaz vydává Zdeněk Kučera, IČO 64682676, Zd. Štěpánka 2764/1, 434 01 Most (Bezpečné dveře, vzorkovna KK SYSTEM, Obchodní 36, Most).</li>
+      <li>Poukaz lze uplatnit na nákup bezpečnostních dveří do bytu, vchodových dveří do domu a interiérových dveří včetně montáže. Hodnota se odečte z ceny objednávky.</li>
+      <li>Poukaz platí 12 měsíců ode dne objednání; datum platnosti je uvedeno na poukazu.</li>
+      <li>Poukaz je na doručitele – uplatnit ho může kdokoli, kdo ho předloží (číslo poukazu a ověřovací kód). Více poukazů lze sečíst.</li>
+      <li>Poukaz lze uplatnit jednorázově. Je-li cena objednávky nižší než hodnota poukazu, rozdíl se nevrací. Poukaz nelze vyměnit za hotovost.</li>
+      <li>Nezaplacenou objednávku poukazu rušíme po 14 dnech. Poukaz zašleme e-mailem v PDF po připsání platby na účet 1821576001/5500.</li>
+      <li>Kupující, který je spotřebitelem a koupil poukaz na dálku, může od smlouvy odstoupit do 14 dnů od zaplacení, pokud poukaz nebyl uplatněn; peníze vrátíme stejným způsobem, jakým byly zaplaceny.</li>
+      <li>Při ztrátě poukazu ho kupujícímu po ověření znovu zašleme. Za poukaz použitý jiným doručitelem neodpovídáme.</li>
+    </ol>
+    <p class="pv-small">Ke každé platbě vystavíme potvrzení o přijetí platby. Poukaz lze uplatnit na zboží s různou sazbou DPH, proto se daňový doklad vystavuje až při jeho uplatnění.</p>
+
+    <h2 class="pv-h">Časté otázky</h2>
+    <div class="faq-list pv-faq">
+      <details><summary>Stihne poukaz dorazit do Vánoc?</summary><p>Poukaz posíláme e-mailem, jakmile platbu zaevidujeme – příchozí platby kontrolujeme každý den. Platbu proto prosím pošlete s předstihem. Pokud spěcháte, kupte poukaz přímo ve vzorkovně: vytiskneme ho na počkání.</p></details>
+      <details><summary>Na jaké dveře poukaz platí?</summary><p>Na všechny dveře, které prodáváme: bezpečnostní dveře do bytu (PREMIUM 60, EXTREME 54, MAGNUM 56, SECURIDO 65), vchodové dveře ERKADO do domu i interiérové dveře – včetně montáže.</p></details>
+      <details><summary>Co když obdarovaný vybere dražší dveře?</summary><p>Hodnota poukazu se odečte z ceny a zbytek doplatí. Přesně to ukazují dveře na poukazu: kus už je zaplacený, zbytek se doplatí.</p></details>
+      <details><summary>Můžu poukaz koupit na firmu?</summary><p>Ano, zaškrtněte „Kupuji na firmu“ a vyplňte IČO – údaje doplníme z ARES.</p></details>
+    </div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<div class="partners-band">
+  <div class="container pb-in">
+    <span class="pb-label">Doporučujeme</span>
+    <a class="pb-card" href="https://www.thaimost.cz/" target="_blank" rel="noopener" title="Thajské masáže Most">
+      <img src="userFiles/partneri/thai-most.png" alt="Thai Most – thajské masáže Most" width="250" height="59" loading="lazy">
+    </a>
+    <a class="pb-card" href="https://kucerazdenek78-jpg.github.io/podologiemost/" target="_blank" rel="noopener" title="Podologie a pedikúra v Mostě">
+      <img src="userFiles/partneri/podologie-most.png" alt="Podologie Most – odborná péče o nohy" width="254" height="60" loading="lazy">
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html"><img src="logo.jpg" alt="Bezpečné dveře" class="footer-logo-img"></a>
+        <p>Jsme tu od roku 1996. Největší výběr bezpečnostních dveří v regionu.</p>
+        <div class="footer-social" style="margin-top:1rem;">
+          <a href="https://www.facebook.com/BezpecneDvere" class="social-link" target="_blank" rel="noopener" aria-label="Facebook – Bezpečné dveře" title="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.5-3.3h-3.3V8.4c0-.9.4-1.7 1.8-1.7h1.6V3.8s-1.3-.2-2.5-.2c-2.6 0-4.2 1.5-4.2 4.4v2.5H7.4v3.3h2.8V22h3.3z"/></svg></a>
+          <a href="https://www.youtube.com/@BezpecneDvereCZ" class="social-link" target="_blank" rel="noopener" aria-label="YouTube – videa dveří" title="YouTube"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg></a>
+          <a href="https://wa.me/420725559235" class="social-link" aria-label="WhatsApp" title="WhatsApp">💬</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Produkty</h5>
+        <div class="footer-links">
+          <a href="dvere-do-bytu.html">Dveře do bytu</a>
+          <a href="dvere-do-domu.html">Dveře do domu</a>
+          <a href="dvere-do-bytu.html#premium60">PREMIUM 60</a>
+          <a href="dvere-do-bytu.html#extreme54">EXTREME 54</a>
+          <a href="montaz-extreme-54.html">Průběh montáže</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Servis</h5>
+        <div class="footer-links">
+          <a href="servis-oken.html">Servis oken</a>
+          <a href="nouzove-otevirani.html">Nouzové otevírání</a>
+          <a href="servis-dveri.html">Servis dveří a reklamace</a>
+          <a href="objednani-klicu.html">Objednání klíčů</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Kontakt</h5>
+        <div class="footer-links">
+          <a href="poptavka.html">Poptávka</a>
+          <a href="doporuc-nas.html">Doporuč nás</a>
+          <a href="registrace-zaruky.html">Registrace záruky</a>
+          <a href="tel:+420725559235">+420 725 559 235</a>
+          <a href="poptavka.html">Obchodní 36, Most</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span class="cy">2026</span><script>document.currentScript.previousElementSibling.textContent=new Date().getFullYear()</script> Bezpečné dveře · Provozovatel: Zdeněk Kučera, IČ 64682676, DIČ CZ7801242768, fakturační adresa Zd. Štěpánka 2764/1, 434 01 Most · Zapsán v živnostenském rejstříku od 13. 3. 1996 · Prodejna a vzorkovna: Obchodní 36, 434 01 Most</span>
+      <span><a href="panel.html" title="Pro prodejce" aria-label="Pro prodejce" rel="nofollow" style="text-decoration:none;opacity:.4">🔒</a></span>
+      <span><a href="zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">Zásady osobních údajů</a> · <a href="cookies.html" style="color:inherit;text-decoration:underline">Cookies</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="cookie-bar" id="cookieBar">
+  Tento web používá cookies.
+  <button class="btn btn-primary" style="padding:0.5rem 1.2rem;font-size:0.82rem;" onclick="document.getElementById('cookieBar').classList.add('hidden');try{localStorage.setItem('cookiesOk','1')}catch(e){}">Rozumím</button>
+</div>
+<script>try{if(localStorage.getItem('cookiesOk')==='1'){var cb=document.getElementById('cookieBar');if(cb)cb.classList.add('hidden');}}catch(e){}</script>
+
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
+</script>
+<script src="formulare-klient.js?v=20261024a"></script>
+<script src="firma-ares.js?v=20261028a"></script>
+<script src="platba/qrcode.js"></script>
+<script src="platba/platba.js?v=20261029a"></script>
+<script src="poukaz/poukaz.js?v=20261029a"></script>
+<script src="poukaz/poukaz-web.js?v=20261029a"></script>
+<script src="cookies.js?v=5" defer></script>
+<script src="moje-dvere-stitek.js?v=20261025c" defer></script>
+</body>
+</html>

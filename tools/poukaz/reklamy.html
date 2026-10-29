@@ -1,0 +1,61 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:PKPlay;src:url(../../poukaz/PlayfairDisplay-Bold.ttf);font-weight:700}
+@font-face{font-family:PKInter;src:url(../../poptavka-pdf/Inter-Bold.ttf);font-weight:700}
+@font-face{font-family:PKInter;src:url(../../poptavka-pdf/Inter-Regular.ttf);font-weight:400}
+@font-face{font-family:PKCaveat;src:url(../../poukaz/Caveat-Bold.ttf);font-weight:700}
+body{margin:0}
+.ad{position:relative;overflow:hidden;font-family:PKInter,Arial;color:#fff;background:radial-gradient(120% 80% at 30% 10%,#1d5a3a,#123d27 50%,#081b14)}
+.ad .kick{display:inline-block;background:#f5c56b;color:#3b2a0a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:999px}
+.ad h1{font-family:PKPlay;font-weight:700;margin:0;line-height:1.05}
+.ad p{margin:0;opacity:.92}
+.ad .v{position:absolute;box-shadow:0 30px 60px rgba(0,0,0,.45);border-radius:18px}
+.ad .cta{position:absolute;left:0;right:0;text-align:center;font-weight:700}
+.ad .cta b{display:inline-block;background:#e8650a;border-radius:999px;color:#fff}
+.ad .hand{font-family:PKCaveat;color:#f5c56b}
+.ad .snow{position:absolute;inset:0}
+</style></head><body>
+<div id="feed" class="ad" style="width:1080px;height:1350px">
+  <canvas class="snow"></canvas>
+  <div style="position:absolute;left:80px;top:80px;right:80px">
+    <span class="kick" style="font-size:30px;padding:12px 28px">🎄 Vánoční dárkový poukaz</span>
+    <h1 style="font-size:104px;margin-top:34px">Darujte kus<br>nových dveří</h1>
+    <p style="font-size:38px;margin-top:26px">Poukaz na bezpečnostní, vchodové<br>i interiérové dveře s montáží</p>
+  </div>
+  <canvas class="v" data-h="10000" style="left:130px;top:620px;width:820px;transform:rotate(-3deg)"></canvas>
+  <div class="hand" style="position:absolute;left:620px;top:555px;font-size:54px;transform:rotate(-6deg)">kus už je zaplacený ✂</div>
+  <div class="cta" style="bottom:46px;font-size:36px"><b style="padding:22px 46px">bezpecne-dvere.cz · od 500 Kč</b></div>
+</div>
+<div id="ctverec" class="ad" style="width:1080px;height:1080px">
+  <canvas class="snow"></canvas>
+  <div style="position:absolute;left:70px;top:64px;right:70px">
+    <span class="kick" style="font-size:28px;padding:10px 26px">🎄 Vánoční dárkový poukaz</span>
+    <h1 style="font-size:92px;margin-top:26px">Darujte kus nových dveří</h1>
+  </div>
+  <canvas class="v" data-h="5000" style="left:110px;top:360px;width:860px;transform:rotate(-3deg)"></canvas>
+  <div class="cta" style="bottom:54px;font-size:34px"><b style="padding:20px 42px">Poukaz s věnováním · PDF e-mailem</b></div>
+</div>
+<div id="story" class="ad" style="width:1080px;height:1920px">
+  <canvas class="snow"></canvas>
+  <div style="position:absolute;left:80px;top:230px;right:80px;text-align:center">
+    <span class="kick" style="font-size:32px;padding:12px 30px">🎄 Vánoční dárkový poukaz</span>
+    <h1 style="font-size:116px;margin-top:40px">Darujte kus<br>nových dveří</h1>
+    <p style="font-size:42px;margin-top:30px">Bezpečnostní, vchodové i interiérové<br>dveře s montáží – od 500 Kč</p>
+  </div>
+  <canvas class="v" data-h="10000" style="left:60px;top:860px;width:960px;transform:rotate(-3deg)"></canvas>
+  <div class="hand" style="position:absolute;left:0;right:0;text-align:center;top:1600px;font-size:56px">Tenhle kus už je zaplacený, zbytek doplatí ✂</div>
+  <div class="cta" style="bottom:120px;font-size:40px"><b style="padding:24px 50px">bezpecne-dvere.cz</b></div>
+</div>
+<canvas id="b1" width="240" height="300"></canvas><canvas id="b2" width="240" height="300"></canvas>
+<script src="../../poukaz/poukaz.js"></script>
+<script>
+window.go = function (mot) {
+  return Poukaz.ready().then(function () { return document.fonts.ready; }).then(function () {
+    document.querySelectorAll('.ad .v').forEach(function (c) { Poukaz.kresli(c, { motiv: mot, hodnota: +c.dataset.h, cislo: 'DP 1/2026', kod: 'ABCD-EFGH', platnost_do: '2027-12-24', obdarovany: 'Tomáš a Petra', venovani: 'Ať vám nové dveře hlídají nový domov. Veselé Vánoce!', od_koho: 'Mamka a taťka' }, 4); });
+    document.querySelectorAll('.snow').forEach(function (c) { var r = c.parentNode.getBoundingClientRect(); c.width = r.width; c.height = r.height; var g = c.getContext('2d'), s = 7; g.fillStyle = '#fff';
+      for (var i = 0; i < 160; i++) { s = (s * 16807) % 2147483647; var x = s % c.width; s = (s * 16807) % 2147483647; var y = s % c.height; s = (s * 16807) % 2147483647; g.globalAlpha = .25 + (s % 60) / 100; g.beginPath(); g.arc(x, y, 1.5 + s % 4, 0, 7); g.fill(); } });
+    [['b1', 'vanoce'], ['b2', 'darkovy']].forEach(function (x) { var c = document.getElementById(x[0]); var g = c.getContext('2d'); g.clearRect(0, 0, 240, 300); Poukaz.scena(g, x[1], 10000, 0, 0, 96, 120, 2.5); });
+    return new Promise(function (ok) { setTimeout(ok, 300); });
+  });
+};
+</script></body></html>

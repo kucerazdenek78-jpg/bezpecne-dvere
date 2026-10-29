@@ -61,3 +61,11 @@ Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF
 ## Uvítací antré k novému webu (dočasné)
 - Na `index.html` je dole blok mezi komentáři `VITEJ-ANTRE:start` a `VITEJ-ANTRE:end` (okno „Vítejte na našem novém webu“ s jemnou animací, zavíratelné, jednou za návštěvníka přes localStorage `bd-vitej-2026`, respektuje `prefers-reduced-motion`).
 - Samo se přestane zobrazovat **26. 10. 2026** (14 dní od spuštění domény bezpecne-dvere.cz dne 12. 10. 2026). Po tomto datu lze celý blok smazat.
+
+## Dárkové poukazy (od 29. 10. 2026)
+- Web: `darkovy-poukaz.html` (objednávka, noindex do schválení), `poukaz-stav.html?t=…` (stav, QR platba, stažení PDF a potvrzení o platbě),
+  `poukaz/poukaz.js` (grafika a PDF poukazu + potvrzení, jsPDF), `poukaz/poukaz-web.js`, pruh na úvodu `poukaz/poukaz-banner.js` (ZAPNUTO=false, náhled `?poukaz=1`).
+- Písma Playfair Display a Caveat (OFL, z npm @fontsource, sloučeno latin + latin-ext) v `poukaz/`.
+- `VZOR_CENA` v `poukaz/poukaz.js` = akční cena PREMIUM 60 (38 890 Kč) pro ukazatel „kolik dveří je zaplaceno“ – při změně ceny upravit.
+- NAS: `poukaz-api.php` (veřejné), `poukazy.php` (kartotéka), `lib/poukazy.php`, párování plateb v `platby.php` (VS 9RRNNNNN).
+- Reklamní obrázky: `tools/poukaz/reklamy.html` (Playwright snímek prvků #feed, #ctverec, #story po `go('vanoce')`).
