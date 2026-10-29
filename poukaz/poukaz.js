@@ -3,7 +3,7 @@
 
    Poukaz.ready()                      → Promise (načte písma)
    Poukaz.kresli(canvas, data, pxNaMm) → nakreslí celý poukaz do canvasu (náhled)
-   Poukaz.pdf(data)                    → Promise<Blob> PDF poukazu (A4 na šířku)
+   Poukaz.pdf(data)                    → Promise<Blob> PDF poukazu (A4 na výšku)
    Poukaz.doklad(data)                 → Promise<Blob> potvrzení o přijetí platby (A4 na výšku)
    Poukaz.scena(ctx, motiv, hodnota, x, y, w, h, S) → jen obrázek dveří se scénou (pro reklamy)
 
@@ -14,7 +14,7 @@
   'use strict';
   var BASE = (function () { var s = document.currentScript && document.currentScript.src; return s ? s.replace(/[^/]*$/, '') : 'poukaz/'; })();
   var PDFDIR = new URL('../poptavka-pdf/', BASE).href;
-  var W = 297, H = 210;                       // A4 na šířku v mm
+  var W = 210, H = 297;                       // A4 na výšku v mm
   var VZOR_CENA = 38890;                      // PREMIUM 60 (dvere-do-bytu.html, 10/2026) – jen pro ilustraci „kolik dveří je zaplaceno“
 
   var MOTIVY = {
@@ -58,7 +58,7 @@
       .then(function (arr) {
         bufs = arr;
         if (w.FontFace && document.fonts) arr.forEach(function (b, i) { var f = new FontFace(FONTS[i][0], b, { weight: FONTS[i][1] === 'bold' ? '700' : '400' }); document.fonts.add(f); });
-        return Promise.all([nactiObr(BASE + 'dvere-svetle-wenge.jpg'), nactiObr(BASE + 'logo.png')]);
+        return Promise.all([nactiObr(BASE + 'dvere-premium60.jpg'), nactiObr(BASE + 'logo.png')]);
       }).then(function (img) { IMG.dvere = img[0]; IMG.logo = img[1]; if (!IMG.dvere || !IMG.logo) throw new Error('obrazky'); });
     ready.catch(function () { ready = null; });
     return ready;
@@ -81,18 +81,18 @@
   function fnt(g, rodina, tloustka, pt, S) { g.font = (tloustka === 'bold' ? '700 ' : '400 ') + (pt * 0.3528 * S) + 'px ' + rodina + ', Arial, sans-serif'; }
 
   /* ── scéna: dveře s „odstřiženým“ zaplaceným kusem + motiv (x, y, w, h v mm; S = px na mm) ── */
-  function scena(g, mot, hodnota, X, Y, Wd, Hd, S, cx) {
+  function scena(g, mot, hodnota, X, Y, Wd, Hd, S, cx, opt) {
     var M = motiv(mot), r = rnd(mot === 'vanoce' ? 12 : mot === 'narozeniny' ? 34 : 56), f = podil(hodnota);
     g.save(); g.scale(S, S); g.translate(X, Y);
     g.beginPath(); g.rect(0, 0, Wd, Hd); g.clip();
     var gr = g.createLinearGradient(0, 0, Wd * 0.3, Hd); gr.addColorStop(0, M.bg[0]); gr.addColorStop(0.55, M.bg[1]); gr.addColorStop(1, M.bg[2]);
     g.fillStyle = gr; g.fillRect(0, 0, Wd, Hd);
     // rozměry dveří podle panelu
-    var dw = Math.min(Wd * 0.4, Hd * 0.235), dh = dw * 2.5, dx = (cx == null ? Wd / 2 : cx) - dw / 2, dy = Hd * 0.86 - dh, zem = dy + dh;
+    var dw = opt && opt.dw ? opt.dw : Math.min(Wd * 0.4, Hd * 0.235), dh = dw * 2.5, dx = (cx == null ? Wd / 2 : cx) - dw / 2, dy = (opt && opt.zem ? opt.zem : Hd * 0.86) - dh, zem = dy + dh;
     // pozadí motivu
     if (mot === 'vanoce') {
-      g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(dx - dw * 0.42, Hd * 0.1, dw * 0.2, 0, Math.PI * 2); g.fill();
-      g.fillStyle = M.bg[0]; g.beginPath(); g.arc(dx - dw * 0.34, Hd * 0.09, dw * 0.17, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(dx - dw * 1.15, Math.max(14, dy - dw * 0.55), dw * 0.2, 0, Math.PI * 2); g.fill();
+      g.fillStyle = M.bg[0]; g.beginPath(); g.arc(dx - dw * 1.07, Math.max(14, dy - dw * 0.55) - dw * 0.03, dw * 0.17, 0, Math.PI * 2); g.fill();
     }
     // zeď (světlá omítka) kolem dveří
     var zx = dx - dw * 0.42, zw = dw * 1.84, zy = dy - dw * 0.38;
@@ -100,7 +100,7 @@
     g.fillStyle = 'rgba(0,0,0,.06)'; for (var i = 0; i < 9; i++) { var by = zy + 4 + i * ((zem - zy) / 9); g.fillRect(zx, by, zw, 0.35); }
     // střecha nad zdí
     g.fillStyle = mot === 'darkovy' ? '#1f2937' : '#3b2a20'; g.beginPath(); g.moveTo(zx - dw * 0.18, zy + 0.5); g.lineTo(zx + zw / 2, zy - dw * 0.62); g.lineTo(zx + zw + dw * 0.18, zy + 0.5); g.closePath(); g.fill();
-    // dveře PREMIUM 60 Světlé wenge (fotka z premium60.cz včetně zárubně)
+    // dveře PREMIUM 60 Ořech (fotka z premium60.cz včetně zárubně)
     var zr = dw * 0.07, ph = dh + zr, pw = ph * (IMG.dvere ? IMG.dvere.naturalWidth / IMG.dvere.naturalHeight : 0.42), px = dx + dw / 2 - pw / 2, py = dy - zr;
     var yp = zem - dh * f;                    // hranice zaplaceno / zbývá
     // nezaplacená část: jen bledý obrys dveří
@@ -178,45 +178,45 @@
     // štítek „Tenhle kus už je zaplacený“
     var txt = f < 1 ? 'TENHLE KUS UŽ JE ZAPLACENÝ' : 'CELÉ DVEŘE ZAPLACENÉ!';
     g.font = '700 ' + (tagH * 0.42) + 'px PKInter, Arial'; var tw = g.measureText(txt).width + tagH * 0.9;
-    var ty = f < 1 ? (zem - yp < tagH + 5 ? zem + 3.5 : yp + 2.2) : dy + dh * 0.8;
+    var ty = f < 1 ? (zem - yp < tagH + 5 ? zem + 2.2 : yp + 2.2) : dy + dh * 0.8;
     g.fillStyle = M.akcent; rr(g, dx + dw / 2 - tw / 2, ty, tw, tagH, tagH / 2); g.fill();
     g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.fillText(txt, dx + dw / 2, ty + tagH * 0.66);
     g.restore();
   }
 
   /* ── rozvržení textů karty (společné pro canvas i PDF). measure(rodina, tloustka, pt, text) → šířka v mm ── */
-  var CARD = { x: 125, y: 10, w: 162, h: 190 };
+  var CARD = { x: 12, y: 134, w: 186, h: 160 };
   function texty(d, measure) {
-    var M = motiv(d.motiv), L = CARD.x + 11, R = CARD.x + CARD.w - 11, o = [];
+    var M = motiv(d.motiv), L = CARD.x + 12, R = CARD.x + CARD.w - 12, Y = CARD.y, o = [];
     var T = function (t, x, y, rod, tl, pt, col, al, cs) { o.push({ t: t, x: x, y: y, r: rod, tl: tl, pt: pt, c: col, a: al || 'left', cs: cs || 0 }); };
-    T(M.kicker, L, 46, 'Inter', 'bold', 11, M.kicker_c, 'left', 0.55);
-    T('na nové dveře', L, 59, 'Playfair', 'bold', 25, '#14261c');
-    T(kc(d.hodnota), L, 84, 'Inter', 'bold', 46, M.akcent);
-    T(M.vtip, L, 94.5, 'Inter', 'normal', 10.5, '#4b5d52');
-    T('Pro:', L, 111, 'Inter', 'normal', 10, '#6b7c71');
+    T(M.kicker, L, Y + 36, 'Inter', 'bold', 11, M.kicker_c, 'left', 0.55);
+    T('na nové dveře', L, Y + 48, 'Playfair', 'bold', 25, '#14261c');
+    T(kc(d.hodnota), L, Y + 70, 'Inter', 'bold', 46, M.akcent);
+    T(M.vtip, L, Y + 79, 'Inter', 'normal', 10.5, '#4b5d52');
+    T('Pro:', L, Y + 93, 'Inter', 'normal', 10, '#6b7c71');
     var pro = String(d.obdarovany || '').trim();
-    if (pro) T(pro, L + 9, 111.3, 'Playfair', 'bold', 16, '#14261c');
-    // věnování – zalamování do max. 4 řádků
+    if (pro) T(pro, L + 9, Y + 93.3, 'Playfair', 'bold', 16, '#14261c');
+    // věnování – zalamování do max. 3 řádků
     var ven = String(d.venovani || '').replace(/\s+/g, ' ').trim(), rad = [], maxW = R - L - 4, pt = 19;
     if (ven) {
-      for (var pokus = 0; pokus < 4; pokus++) {
+      for (var pokus = 0; pokus < 5; pokus++) {
         rad = []; var slova = ven.split(' '), akt = '';
         slova.forEach(function (sl) { var z = akt ? akt + ' ' + sl : sl; if (measure('Caveat', 'bold', pt, z) > maxW && akt) { rad.push(akt); akt = sl; } else akt = z; });
         if (akt) rad.push(akt);
-        if (rad.length <= 4) break; pt -= 1.5;
+        if (rad.length <= 3) break; pt -= 1.5;
       }
-      rad = rad.slice(0, 4);
-      rad.forEach(function (rr2, i) { T(rr2, L + 2, 126 + i * 9.2, 'Caveat', 'bold', pt, '#1e3a5f'); });
+      rad = rad.slice(0, 3);
+      rad.forEach(function (rr2, i) { T(rr2, L + 2, Y + 102 + i * 8.4, 'Caveat', 'bold', pt, '#1e3a5f'); });
     }
     var od = String(d.od_koho || '').trim();
-    if (od) T(od, R - 2, 126 + Math.max(rad.length, 3) * 9.2 + 1, 'Caveat', 'bold', 19, '#1e3a5f', 'right');
+    if (od) T(od, R - 2, Y + 127.3, 'Caveat', 'bold', 19, '#1e3a5f', 'right');
     // spodní údaje
-    var cy = 171, sl3 = (R - L) / 3;
+    var sl3 = (R - L) / 3;
     [['Číslo poukazu', d.cislo || '—'], ['Ověřovací kód', d.kod || '—'], ['Platí do', d.platnost_do ? datum(d.platnost_do) : '—']].forEach(function (x, i) {
-      T(x[0], L + i * sl3, cy, 'Inter', 'normal', 8, '#6b7c71'); T(x[1], L + i * sl3, cy + 6, 'Inter', 'bold', 12.5, '#14261c');
+      T(x[0], L + i * sl3, Y + 138.5, 'Inter', 'normal', 8, '#6b7c71'); T(x[1], L + i * sl3, Y + 144.5, 'Inter', 'bold', 12.5, '#14261c');
     });
-    T('Uplatníte ve vzorkovně KK SYSTEM, Obchodní 36, Most, nebo při objednávce dveří na www.bezpecne-dvere.cz.', L, 186.5, 'Inter', 'normal', 7.3, '#4b5d52');
-    T('Odečte se z ceny dveří (bezpečnostních, vchodových i interiérových) včetně montáže. Tel. +420 725 559 235.', L, 190.6, 'Inter', 'normal', 7.3, '#4b5d52');
+    T('Uplatníte ve vzorkovně KK SYSTEM, Obchodní 36, Most, nebo při objednávce dveří na www.bezpecne-dvere.cz.', L, Y + 150.6, 'Inter', 'normal', 7.3, '#4b5d52');
+    T('Odečte se z ceny dveří (bezpečnostních, vchodových i interiérových) včetně montáže. Tel. +420 725 559 235.', L, Y + 154.2, 'Inter', 'normal', 7.3, '#4b5d52');
     return o;
   }
   var ROD = { Inter: 'PKInter', Playfair: 'PKPlay', Caveat: 'PKCaveat' };
@@ -226,15 +226,15 @@
     var M = motiv(d.motiv);
     g.save(); g.scale(S, S);
     g.restore();
-    scena(g, d.motiv, d.hodnota, 0, 0, W, H, S, 61);
+    scena(g, d.motiv, d.hodnota, 0, 0, W, H, S, W / 2, { dw: 35, zem: 124 });
     g.save(); g.scale(S, S);
     // karta
     g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 4 * S / S; g.shadowOffsetY = 1;
     g.fillStyle = '#ffffff'; rr(g, CARD.x, CARD.y, CARD.w, CARD.h, 5); g.fill(); g.shadowColor = 'transparent';
     g.strokeStyle = M.ram; g.lineWidth = 0.6; rr(g, CARD.x + 3, CARD.y + 3, CARD.w - 6, CARD.h - 6, 3.5); g.stroke();
     // logo
-    logo(g, CARD.x + 10, CARD.y + 8, 36);
-    var L = CARD.x + 11, R = CARD.x + CARD.w - 11;
+    logo(g, CARD.x + 11, CARD.y + 8, 34);
+    var L = CARD.x + 12, R = CARD.x + CARD.w - 12, Y = CARD.y;
     // ozdobný roh karty podle motivu
     g.fillStyle = M.ram; g.globalAlpha = 0.9;
     if (d.motiv === 'vanoce') { g.font = '700 ' + 9 + 'px PKInter, Arial'; for (var i = 0; i < 3; i++) hvezda4(g, R - 4 - i * 7, CARD.y + 17 - (i % 2) * 4, 2.2 - i * 0.4); }
@@ -242,11 +242,11 @@
     else { for (var k = 0; k < 3; k++) hvezda4(g, R - 4 - k * 7, CARD.y + 16 - (k % 2) * 4, 2 - k * 0.3); }
     g.globalAlpha = 1;
     // linka pod textem
-    g.fillStyle = '#e1e8e3'; g.fillRect(L, 101, R - L, 0.35);
+    g.fillStyle = '#e1e8e3'; g.fillRect(L, Y + 84, R - L, 0.35);
     // řádky pro věnování
-    g.strokeStyle = '#dbe3ec'; g.lineWidth = 0.3; for (var r2 = 0; r2 < 5; r2++) { g.beginPath(); g.moveTo(L, 127.8 + r2 * 9.2); g.lineTo(R, 127.8 + r2 * 9.2); g.stroke(); }
+    g.strokeStyle = '#dbe3ec'; g.lineWidth = 0.3; for (var r2 = 0; r2 < 4; r2++) { g.beginPath(); g.moveTo(L, Y + 103.8 + r2 * 8.4); g.lineTo(R, Y + 103.8 + r2 * 8.4); g.stroke(); }
     // spodní pruh
-    g.fillStyle = '#f5f7f5'; rr(g, L - 3, 164, R - L + 6, 15.5, 2.5); g.fill();
+    g.fillStyle = '#f5f7f5'; rr(g, L - 3, Y + 133, R - L + 6, 13.8, 2.5); g.fill();
     g.restore();
   }
 
@@ -275,7 +275,7 @@
       var S = 11.8;                                   // ≈ 300 dpi
       var c = document.createElement('canvas'); c.width = Math.round(W * S); c.height = Math.round(H * S);
       pozadi(c.getContext('2d'), d, S);
-      var doc = jsPdfDoc('landscape');
+      var doc = jsPdfDoc('portrait');
       doc.setProperties({ title: 'Dárkový poukaz ' + (d.cislo || ''), author: 'Bezpečné dveře · KK SYSTEM', subject: 'Dárkový poukaz na dveře' });
       doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, W, H);
       var meas = function (rod, tl, pt, t) { doc.setFont(rod, tl); doc.setFontSize(pt); return doc.getTextWidth(t); };
