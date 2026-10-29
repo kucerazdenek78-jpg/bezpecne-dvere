@@ -105,7 +105,7 @@ function bd_odkazy(array $r, array $d): array {
   // celá data poptávky (typ dveří, barva, zárubeň, kování… i údaje zákazníka) – stejné klíče jako na webu (LINK_KEYS v poptavka-dvere-nova.js)
   $klice = ['cislo', 'model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'jmeno', 'prijmeni', 'telefon', 'email',
     'ulice', 'mesto', 'psc', 'patro', 'vytah', 'doprava_km', 'doprava_cena', 'souradnice', 'fakturace', 'fak_jmeno', 'fak_adresa', 'ic', 'platce_dph', 'zed', 'vyska_cm', 'poznamka',
-    'model', 'tl_zarubne', 'cena_celkem', 'polozky', 'typ_dveri', 'provedeni', 'pocet_ks', 'zdroj', 'kategorie', 'bourani', 'kovani'];
+    'model', 'tl_zarubne', 'cena_celkem', 'polozky', 'typ_dveri', 'provedeni', 'pocet_ks', 'zdroj', 'kategorie', 'bourani'];
   $o = [];
   foreach ($klice as $k) { $v = $d[$k] ?? null; if ($v !== null && $v !== '' && $v !== false) $o[$k] = $v; }
   if (empty($o['cislo']) && !empty($r['cislo'])) $o['cislo'] = (string)$r['cislo'];
