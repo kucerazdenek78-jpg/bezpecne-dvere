@@ -48,17 +48,18 @@
     ['PKPlay', 'bold', BASE + 'PlayfairDisplay-Bold.ttf', 'PlayfairDisplay-Bold.ttf', 'Playfair'],
     ['PKCaveat', 'bold', BASE + 'Caveat-Bold.ttf', 'Caveat-Bold.ttf', 'Caveat']
   ];
-  var bufs = null, ready = null;
+  var bufs = null, ready = null, IMG = {};
   function b64(buf) { var s = '', u = new Uint8Array(buf), i; for (i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
   function loadScript(src) { return new Promise(function (ok, ko) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
-  function nactiObr(src) { return new Promise(function (ok) { var i = new Image(); i.onload = function () { ok(i); }; i.onerror = function () { ok(null); }; i.src = src; }); }
+  function nactiObr(src) { return new Promise(function (ok) { var i = new Image(); i.crossOrigin = 'anonymous'; i.onload = function () { ok(i); }; i.onerror = function () { ok(null); }; i.src = src; }); }
   function prepare() {
     if (ready) return ready;
     ready = Promise.all(FONTS.map(function (f) { return fetch(f[2]).then(function (r) { if (!r.ok) throw new Error(f[3]); return r.arrayBuffer(); }); }))
       .then(function (arr) {
         bufs = arr;
         if (w.FontFace && document.fonts) arr.forEach(function (b, i) { var f = new FontFace(FONTS[i][0], b, { weight: FONTS[i][1] === 'bold' ? '700' : '400' }); document.fonts.add(f); });
-      });
+        return Promise.all([nactiObr(BASE + 'dvere-svetle-wenge.jpg'), nactiObr(BASE + 'logo.png')]);
+      }).then(function (img) { IMG.dvere = img[0]; IMG.logo = img[1]; if (!IMG.dvere || !IMG.logo) throw new Error('obrazky'); });
     ready.catch(function () { ready = null; });
     return ready;
   }
@@ -75,19 +76,8 @@
     g.beginPath(); g.moveTo(-s * 0.36, s * 0.2); g.lineTo(s * 0.75, -s * 0.18); g.stroke();
     g.beginPath(); g.arc(0, 0, s * 0.07, 0, Math.PI * 2); g.fill(); g.restore();
   }
-  /* logo Bezpečné dveře (podle logo.svg, 320×120 jednotek) */
-  function logo(g, x, y, k) {
-    g.save(); g.translate(x, y); g.scale(k, k);
-    g.fillStyle = '#E8650A'; [[10, 18, 10, 84], [10, 18, 34, 10], [10, 92, 34, 10], [102, 18, 10, 84], [78, 18, 34, 10], [78, 92, 34, 10]].forEach(function (q) { rr(g, q[0], q[1], q[2], q[3], 2); g.fill(); });
-    g.strokeStyle = '#1a2035'; g.fillStyle = '#1a2035'; g.lineWidth = 5; rr(g, 44, 22, 54, 76, 2); g.stroke();
-    g.lineWidth = 3; g.beginPath(); g.moveTo(56, 28); g.lineTo(56, 92); g.moveTo(44, 98); g.lineTo(36, 106); g.lineTo(106, 106); g.lineTo(98, 98); g.stroke();
-    g.beginPath(); g.arc(88, 62, 4, 0, Math.PI * 2); g.fill();
-    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.font = '700 30px PKInter, Arial'; g.fillText('BEZPEČNÉ', 126, 58);
-    g.font = '700 38px PKInter, Arial'; g.fillText('DVEŘE', 126, 92);
-    g.font = '700 18px PKInter, Arial'; g.fillText('.cz', 128, 113);
-    g.restore();
-  }
+  /* logo Bezpečné dveře (logo.jpg z webu, převedené do RGB: poukaz/logo.png, 400×191) – w = šířka v jednotkách kreslení */
+  function logo(g, x, y, w2) { if (IMG.logo) g.drawImage(IMG.logo, x, y, w2, w2 * IMG.logo.naturalHeight / IMG.logo.naturalWidth); }
   function fnt(g, rodina, tloustka, pt, S) { g.font = (tloustka === 'bold' ? '700 ' : '400 ') + (pt * 0.3528 * S) + 'px ' + rodina + ', Arial, sans-serif'; }
 
   /* ── scéna: dveře s „odstřiženým“ zaplaceným kusem + motiv (x, y, w, h v mm; S = px na mm) ── */
@@ -110,32 +100,24 @@
     g.fillStyle = 'rgba(0,0,0,.06)'; for (var i = 0; i < 9; i++) { var by = zy + 4 + i * ((zem - zy) / 9); g.fillRect(zx, by, zw, 0.35); }
     // střecha nad zdí
     g.fillStyle = mot === 'darkovy' ? '#1f2937' : '#3b2a20'; g.beginPath(); g.moveTo(zx - dw * 0.18, zy + 0.5); g.lineTo(zx + zw / 2, zy - dw * 0.62); g.lineTo(zx + zw + dw * 0.18, zy + 0.5); g.closePath(); g.fill();
-    // zárubeň
-    var zr = dw * 0.07; g.fillStyle = '#d9d4cb'; g.fillRect(dx - zr, dy - zr, dw + 2 * zr, dh + zr);
-    g.fillStyle = '#9b958b'; g.fillRect(dx - zr * 0.25, dy - zr * 0.25, dw + zr * 0.5, dh + zr * 0.25);
+    // dveře PREMIUM 60 Světlé wenge (fotka z premium60.cz včetně zárubně)
+    var zr = dw * 0.07, ph = dh + zr, pw = ph * (IMG.dvere ? IMG.dvere.naturalWidth / IMG.dvere.naturalHeight : 0.42), px = dx + dw / 2 - pw / 2, py = dy - zr;
     var yp = zem - dh * f;                    // hranice zaplaceno / zbývá
-    // nezaplacená část: jen skica (průhledná, čárkovaně)
-    g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(dx, dy, dw, yp - dy);
-    g.setLineDash([1.6, 1.2]); g.strokeStyle = 'rgba(60,60,60,.55)'; g.lineWidth = 0.45;
-    g.strokeRect(dx + dw * 0.14, dy + dh * 0.06, dw * 0.72, dh * 0.36); g.strokeRect(dx + dw * 0.14, dy + dh * 0.5, dw * 0.72, dh * 0.42);
-    g.setLineDash([]);
+    // nezaplacená část: jen bledý obrys dveří
+    g.save(); g.beginPath(); g.rect(px - 1, py - 1, pw + 2, yp - py + 1); g.clip();
+    g.fillStyle = '#ffffff'; g.fillRect(px, py, pw, ph);
+    g.globalAlpha = 0.5; try { g.filter = 'grayscale(1)'; } catch (e) {} if (IMG.dvere) g.drawImage(IMG.dvere, px, py, pw, ph); try { g.filter = 'none'; } catch (e) {} g.globalAlpha = 1;
+    g.fillStyle = 'rgba(226,232,240,.45)'; g.fillRect(px, py, pw, ph);
+    g.setLineDash([1.6, 1.2]); g.strokeStyle = 'rgba(60,60,60,.6)'; g.lineWidth = 0.45; g.strokeRect(px + 0.4, py + 0.4, pw - 0.8, ph);
+    g.setLineDash([]); g.restore();
     // zaplacená část: skutečné dveře
-    g.save(); g.beginPath(); g.rect(dx, yp, dw, zem - yp); g.clip();
-    var dg = g.createLinearGradient(dx, 0, dx + dw, 0); dg.addColorStop(0, M.dvere[2]); dg.addColorStop(0.45, M.dvere[1]); dg.addColorStop(1, M.dvere[0]);
-    g.fillStyle = dg; g.fillRect(dx, dy, dw, dh);
-    if (mot !== 'darkovy') { g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 0.25; for (var k = 0; k < 14; k++) { var lx = dx + 1 + k * (dw - 2) / 13; g.beginPath(); g.moveTo(lx, dy); g.bezierCurveTo(lx + 1.2, dy + dh * 0.3, lx - 1.2, dy + dh * 0.6, lx + 0.6, zem); g.stroke(); } }
-    g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.6;
-    g.strokeRect(dx + dw * 0.14, dy + dh * 0.06, dw * 0.72, dh * 0.36); g.strokeRect(dx + dw * 0.14, dy + dh * 0.5, dw * 0.72, dh * 0.42);
-    g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(dx, dy, dw * 0.08, dh);
+    g.save(); g.beginPath(); g.rect(px - 1, yp, pw + 2, zem - yp + 1); g.clip();
+    if (IMG.dvere) g.drawImage(IMG.dvere, px, py, pw, ph);
     g.restore();
-    // kování (vždy vidět)
-    var kx = dx + dw * 0.82, ky = dy + dh * 0.47;
-    g.fillStyle = '#c7c9cc'; rr(g, kx - dw * 0.03, ky - dh * 0.05, dw * 0.06, dh * 0.13, dw * 0.02); g.fill();
-    g.fillStyle = '#e5e7ea'; rr(g, kx - dw * 0.17, ky - dw * 0.025, dw * 0.19, dw * 0.05, dw * 0.025); g.fill();
-    g.fillStyle = '#3f4246'; g.beginPath(); g.arc(kx, ky + dh * 0.05, dw * 0.012, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#c7c9cc'; g.beginPath(); g.arc(dx + dw / 2, dy + dh * 0.3, dw * 0.025, 0, Math.PI * 2); g.fill();   // kukátko
+    g.strokeStyle = M.akcent; g.lineWidth = 0.9; g.strokeRect(px - 0.45, yp, pw + 0.9, zem - yp);   // zvýraznění zaplaceného kusu
+    var kx = px + pw * 0.86, ky = py + ph * 0.45;   // klika na fotce (pro balonky)
     // práh + zem
-    g.fillStyle = '#6b7280'; g.fillRect(dx - zr * 1.6, zem, dw + zr * 3.2, 1.2);
+    g.fillStyle = '#6b7280'; g.fillRect(px - zr, zem, pw + 2 * zr, 1.2);
     // motiv – dekorace
     if (mot === 'vanoce') {
       // girlanda se světýlky nad dveřmi
@@ -251,7 +233,7 @@
     g.fillStyle = '#ffffff'; rr(g, CARD.x, CARD.y, CARD.w, CARD.h, 5); g.fill(); g.shadowColor = 'transparent';
     g.strokeStyle = M.ram; g.lineWidth = 0.6; rr(g, CARD.x + 3, CARD.y + 3, CARD.w - 6, CARD.h - 6, 3.5); g.stroke();
     // logo
-    logo(g, CARD.x + 9, CARD.y + 8, 0.14);
+    logo(g, CARD.x + 10, CARD.y + 8, 36);
     var L = CARD.x + 11, R = CARD.x + CARD.w - 11;
     // ozdobný roh karty podle motivu
     g.fillStyle = M.ram; g.globalAlpha = 0.9;
@@ -311,8 +293,8 @@
     return prepare().then(function () { return w.jspdf ? null : loadScript(PDFDIR + 'jspdf.umd.min.js'); }).then(function () {
       var doc = jsPdfDoc('portrait'), y = 22, G = [18, 61, 39], MU = [79, 106, 91];
       var t = function (s, x, yy, st, pt, col, al) { doc.setFont('Inter', st || 'normal'); doc.setFontSize(pt || 10); doc.setTextColor.apply(doc, col || [20, 38, 28]); doc.text(s, x, yy, al ? { align: al } : undefined); };
-      var lc = document.createElement('canvas'); lc.width = 1280; lc.height = 480; var lg = lc.getContext('2d'); lg.fillStyle = '#fff'; lg.fillRect(0, 0, 1280, 480); logo(lg, 0, 0, 4);
-      doc.addImage(lc.toDataURL('image/jpeg', 0.92), 'JPEG', 18, 12, 48, 18);
+      var lc = document.createElement('canvas'); lc.width = IMG.logo.naturalWidth; lc.height = IMG.logo.naturalHeight; lc.getContext('2d').drawImage(IMG.logo, 0, 0);
+      doc.addImage(lc.toDataURL('image/png'), 'PNG', 20, 12, 40, 40 * lc.height / lc.width);
       t('Potvrzení o přijetí platby', 190, 22, 'bold', 16, G, 'right'); t('za dárkový poukaz ' + (d.cislo || ''), 190, 29, 'normal', 11, MU, 'right');
       y = 48; doc.setDrawColor(220, 233, 225); doc.line(20, y - 6, 190, y - 6);
       t('Prodávající', 20, y, 'bold', 10, G); PRODAVAJICI.forEach(function (s, i) { t(s, 20, y + 6 + i * 5, 'normal', 9.5); });
