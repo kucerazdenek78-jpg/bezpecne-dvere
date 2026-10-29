@@ -23,15 +23,39 @@ function nav_vstup_text(array $z, array $d): string {
   $telo = preg_replace('~\ndata_json[^\n]*~u', '', (string)($z['telo'] ?? ''));
   $radky = [];
   foreach (preg_split('/\R/u', $telo) as $r) {
-    if (preg_match('/tel|mobil|e-?mail|@|adres|ulice|psč|psc|obč|op\b|souřadn|gps|jm[ée]no|příjmení|objednatel|https?:\/\//iu', $r)) continue;
-    if (preg_match('/(\+?\d[\d ]{8,})/', $r)) $r = preg_replace('/\+?\d[\d ]{8,}\d/', '[číslo skryto]', $r);
+    // řádky s popiskem kontaktu vynechat celé, v ostatních zamaskovat e-maily, telefony a odkazy (zbytek textu – co zákazník chce – zůstane)
+    if (preg_match('/^\s*(jm[ée]no|příjmení|tel|mobil|e-?mail|adres|ulice|psč|psc|obec|město|objednatel|číslo op|op\b|souřadn|gps)[^:]{0,25}:/iu', $r)) continue;
+    $r = preg_replace(['/\S+@\S+/u', '/https?:\/\/\S+/u', '/\+?\d[\d \/-]{7,}\d/u'], ['[e-mail skryt]', '[odkaz]', '[číslo skryto]'], $r);
     $radky[] = $r;
   }
   $telo = trim(mb_substr(implode("\n", $radky), 0, 5000));
   $data = pom_ocisti($d);
   unset($data['jmeno'], $data['prijmeni'], $data['fak_jmeno'], $data['fak_adresa'], $data['ic'], $data['dic']);
+  if (isset($data['poznamka'])) $data['poznamka'] = preg_replace(['/\S+@\S+/u', '/\+?\d[\d \/-]{7,}\d/u'], ['[e-mail skryt]', '[číslo skryto]'], (string)$data['poznamka']);
   return "PŘEDMĚT: " . preg_replace('/\S+@\S+/', '', (string)($z['predmet'] ?? '')) . "\n\nÚDAJE Z FORMULÁŘE (JSON):\n" . json_encode($data, JSON_UNESCAPED_UNICODE)
     . "\n\nTEXT ZPRÁVY (kontakty odstraněny):\n" . ($telo !== '' ? $telo : '(prázdné)');
+}
+
+// Kontakt zákazníka, když ho poptávka nemá v samostatných polích (zákazník ho napsal do textu / poznámky).
+// Jen tehdy jde Claudovi i původní text s kontakty – aby z něj vyčetl jméno, telefon, e-mail a adresu do formuláře nabídky.
+function nav_kontakt_chybi(array $z, array $d): bool {
+  return trim((string)($d['prijmeni'] ?? $d['jmeno'] ?? '')) === '' || (trim((string)($d['telefon'] ?? '')) === '' && trim((string)($d['email'] ?? $z['email'] ?? '')) === '')
+    || trim((string)($d['ulice'] ?? '')) === '' || trim((string)($d['mesto'] ?? '')) === '';
+}
+function nav_kontakt_zdroj(array $z, array $d): string {
+  $t = trim((string)($d['poznamka'] ?? '')) . "\n" . preg_replace('~\ndata_json[^\n]*~u', '', (string)($z['telo'] ?? ''));
+  return trim(mb_substr($t, 0, 4000));
+}
+// Kontakt od Claude se převezme jen tehdy, když je opravdu napsaný v textu poptávky (ochrana proti vymyšleným údajům).
+function nav_kontakt_over(array $k, string $zdroj): array {
+  $norm = fn($x) => mb_strtolower(preg_replace('/[\s.,;:\/-]+/u', '', (string)$x));
+  $nz = $norm($zdroj); $cz = preg_replace('/\D+/', '', $zdroj); $out = [];
+  foreach (['jmeno', 'prijmeni', 'ulice', 'mesto'] as $f) { $v = trim((string)($k[$f] ?? '')); if ($v !== '' && mb_strlen($v) <= 80 && str_contains($nz, $norm($v))) $out[$f] = $v; }
+  $tel = preg_replace('/\D+/', '', (string)($k['telefon'] ?? '')); $tel9 = substr($tel, -9);
+  if (strlen($tel9) === 9 && str_contains($cz, $tel9)) $out['telefon'] = trim((string)$k['telefon']);
+  $em = trim((string)($k['email'] ?? '')); if ($em !== '' && filter_var($em, FILTER_VALIDATE_EMAIL) && str_contains(mb_strtolower($zdroj), mb_strtolower($em))) $out['email'] = $em;
+  $psc = preg_replace('/\D+/', '', (string)($k['psc'] ?? '')); if (strlen($psc) === 5 && str_contains($cz, $psc)) $out['psc'] = substr($psc, 0, 3) . ' ' . substr($psc, 3);
+  return $out;
 }
 
 // Fotky z poptávky (jen JPG/PNG, max 3, do 3,5 MB) – Claude je smí použít jen orientačně.
@@ -86,7 +110,9 @@ function nav_nastroj(): array {
         'nejiste' => ['type' => 'array', 'items' => $str, 'description' => 'Co u této položky chybí nebo je potřeba ověřit']]]],
       'poznamka_zakaznik' => ['type' => 'string', 'description' => 'Krátká poznámka pro zákazníka do PDF (nejvýš 2 věty), nebo prázdné'],
       'otazky' => ['type' => 'array', 'items' => $str, 'description' => 'Na co se zeptat zákazníka, než se nabídka pošle'],
-      'pro_prodejce' => ['type' => 'array', 'items' => $str, 'description' => 'Další poznámky pro prodavače (např. co je vidět na fotce)']]]];
+      'pro_prodejce' => ['type' => 'array', 'items' => $str, 'description' => 'Další poznámky pro prodavače (např. co je vidět na fotce)'],
+      'kontakt' => ['type' => 'object', 'description' => 'Jen když je v zadání oddíl KONTAKT ZÁKAZNÍKA: údaje přesně tak, jak je zákazník napsal (nic nedomýšlej, chybějící nech prázdné).',
+        'properties' => ['jmeno' => $str, 'prijmeni' => $str, 'telefon' => $str, 'email' => $str, 'ulice' => ['type' => 'string', 'description' => 'ulice a číslo domu'], 'mesto' => $str, 'psc' => $str]]]]];
 }
 
 function nav_system(array $n, array $priklady): string {
@@ -96,7 +122,7 @@ function nav_system(array $n, array $priklady): string {
   . "- Dveře do bytu a do domu: na jednu adresu jedny dveře (1 položka, 1 kus). Interiérové dveře: libovolně položek a kusů; stejný model a odstín se stejnými parametry = jedna položka s počtem kusů.\n"
   . "- Interiéry: montáž (zárubeň, osazení křídla, kování do připraveného otvoru) se počítá ke každým dveřím, pokud zákazník výslovně neuvede, že montáž nechce. Vše ostatní (bourání, úprava otvoru) až po zaměření – to patří do otazky.\n"
   . "- Tloušťka zárubně u interiérů = tloušťka zdi; vyber rozsah z tl_zarubne jen když zákazník uvedl tloušťku zdi v mm/cm.\n"
-  . "- Když poptávka vůbec není na dveře (např. servis oken), dej kategorii nejasne a vysvětli v otazky.\n- Piš česky, stručně, bez kontaktních údajů.\n\n";
+  . "- Když poptávka vůbec není na dveře (např. servis oken), dej kategorii nejasne a vysvětli v otazky.\n- Piš česky, stručně. Kontaktní údaje patří jen do pole kontakt (a jen když je v zadání oddíl KONTAKT ZÁKAZNÍKA), nikam jinam.\n\n";
   $s .= "KATALOG (JSON):\n" . json_encode(nav_katalog(), JSON_UNESCAPED_UNICODE) . "\n";
   if ($priklady) $s .= "\nPŘÍKLADY Z MINULA – co jsi navrhl a co prodavač nakonec odeslal. Uč se z rozdílů (jak prodavač doplňuje a opravuje):\n" . json_encode($priklady, JSON_UNESCAPED_UNICODE) . "\n";
   if (trim((string)($n['pokyny'] ?? '')) !== '') $s .= "\nDOPLŇUJÍCÍ POKYNY OD ZDEŇKA (mají přednost):\n" . mb_substr(trim((string)$n['pokyny']), 0, 6000) . "\n";
@@ -146,7 +172,9 @@ function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivate
   $st = $pdo->prepare('SELECT * FROM zadosti WHERE id=?'); $st->execute([$id]); $z = $st->fetch(PDO::FETCH_ASSOC);
   if (!$z || $z['typ'] !== 'poptavka') return ['ok' => false, 'chyba' => 'Poptávka nenalezena.'];
   $d = json_decode((string)$z['data_json'], true) ?: [];
-  $obsah = array_merge(nav_fotky($z, $DATA), [['type' => 'text', 'text' => nav_vstup_text($z, $d) . "\n\nPřiprav návrh nabídky nástrojem navrh_nabidky."]]);
+  $kchybi = nav_kontakt_chybi($z, $d); $kzdroj = $kchybi ? nav_kontakt_zdroj($z, $d) : '';
+  $text = nav_vstup_text($z, $d) . ($kchybi && $kzdroj !== '' ? "\n\nKONTAKT ZÁKAZNÍKA (zákazník ho napsal do textu; původní znění jen pro vyplnění pole kontakt – do jiných polí ho nepiš):\n" . $kzdroj : '');
+  $obsah = array_merge(nav_fotky($z, $DATA), [['type' => 'text', 'text' => $text . "\n\nPřiprav návrh nabídky nástrojem navrh_nabidky."]]);
   $model = (string)$n['model'];
   $r = pom_api($n, ['model' => $model, 'max_tokens' => 2500, 'system' => nav_system($n, nav_priklady($pdo)), 'tools' => [nav_nastroj()],
     'tool_choice' => ['type' => 'tool', 'name' => 'navrh_nabidky'], 'messages' => [['role' => 'user', 'content' => $obsah]]], 90);
@@ -156,6 +184,7 @@ function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivate
   if (!$v) { pom_zapis($pdo, 'navrh', $model, $in, $out, 'bez návrhu'); return ['ok' => false, 'chyba' => 'Pomocník návrh nevrátil. Zkuste to znovu.']; }
   pom_zapis($pdo, 'navrh', $model, $in, $out);
   $v = nav_kontrola($v);
+  $v['kontakt'] = ($kchybi && $kzdroj !== '' && is_array($v['kontakt'] ?? null)) ? nav_kontakt_over($v['kontakt'], $kzdroj) : [];
   $cislo = pom_cislo($z, $d);
   $pdo->prepare('INSERT INTO pomocnik_navrhy (cas, zadost_id, poptavka_cislo, uzivatel, model, navrh_json, vstup, vystup) VALUES (?,?,?,?,?,?,?,?)')
     ->execute([date('Y-m-d H:i:s'), $id, $cislo, $uzivatel, $model, json_encode($v, JSON_UNESCAPED_UNICODE), $in, $out]);
@@ -168,11 +197,17 @@ function nav_url(array $cfg, array $z, array $d, array $v, int $nid): string {
   $o = ['ai' => true, 'ai_navrh' => (string)$nid, 'cislo' => pom_cislo($z, $d), 'kategorie' => $v['kategorie']];
   foreach (['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc'] as $k) if (!empty($d[$k])) $o[$k] = (string)$d[$k];
   if (empty($o['email']) && !empty($z['email'])) $o['email'] = (string)$z['email'];
+  $zText = [];   // kontakt vyčtený z textu poptávky (jen pole, která formulář poptávky nevyplnil)
+  foreach ((array)($v['kontakt'] ?? []) as $k => $x) if (empty($o[$k]) && $x !== '') { $o[$k] = (string)$x; $zText[] = $k; }
   if (!empty($v['poznamka_zakaznik'])) $o['poznamka'] = mb_substr((string)$v['poznamka_zakaznik'], 0, 500);
   $pozn = []; $otz = array_values(array_filter(array_map('strval', (array)($v['otazky'] ?? []))));
   foreach ($otz as $t) $pozn[] = 'Zeptat se: ' . $t;
   foreach ((array)($v['pro_prodejce'] ?? []) as $t) if ((string)$t !== '') $pozn[] = (string)$t;
   if ($v['kategorie'] === 'nejasne') $pozn[] = 'Pomocník nepoznal druh dveří – vyberte kategorii a položky ručně.';
+  $nazvy = ['jmeno' => 'jméno', 'prijmeni' => 'příjmení', 'telefon' => 'telefon', 'email' => 'e-mail', 'ulice' => 'ulice', 'mesto' => 'obec', 'psc' => 'PSČ'];
+  if ($zText) $pozn[] = 'Kontakt (' . implode(', ', array_map(fn($k) => $nazvy[$k], $zText)) . ') je vyčtený z textu poptávky – zkontrolujte ho.';
+  $chybi = array_values(array_filter(['jmeno', 'prijmeni', 'telefon', 'ulice', 'mesto'], fn($k) => empty($o[$k])));
+  if ($chybi) $pozn[] = 'Chybí: ' . implode(', ', array_map(fn($k) => $nazvy[$k], $chybi)) . ' – doplňte.';
   if ($v['kategorie'] === 'byt') {
     if ($v['byt']['model_kod'] !== '') { $o['model_kod'] = $v['byt']['model_kod']; if ($v['byt']['odstin'] !== '') $o['odstin'] = $v['byt']['odstin']; }
     else $pozn[] = 'Model dveří do bytu vyberte ručně.';
