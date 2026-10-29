@@ -36,6 +36,17 @@
     'NORMA DECOR 1': { r: R2, v: { 'Dub evropský': [3850, 4450], 'Dub popelavý': [3850, 4450], 'Bílá': [4650, 5300], 'Světle šedá matná': [3900, 4450] } },
     'CPL 1.1': { r: ['75–180 mm', '180–300 mm'], c: [5650, 6000] }, 'DECOR P': { r: ['75–180 mm', '180–300 mm'], c: [4750, 5200] }, 'VERTE HOME G.4': { r: ['75–180 mm', '180–300 mm'], c: [6300, 6800] }
   };
+  /* dekory ERKADO (konfigurátor: konfigurator-erkado/erkado-data.js) – vzorky pro výběr u dveří do domu */
+  var ERK_DEKORY = [["bily-mat","Bílý mat"],["dub-turner","Dub turner"],["hedvabny-antracit","Hedvábný antracit"],["hladky-antracit","Hladký antracit"],["strukturovany-antracit","Strukturovaný antracit"],["cerna","Černá"],["dub-antracit","Dub antracit"],["seda","Šedá"],["bahenni-dub","Bahenní dub"],["dub-stredne-hnedy","Dub středně hnědý"],["orech","Ořech"],["dub-zlaty","Dub zlatý"],["winchester","Winchester"],["borovice-horska","Borovice horská"],["borovice-bila","Borovice bílá"],["dub-prirodni","Dub přírodní"],["dub-prirodni-pricny","Dub přírodní příčný"],["dub-surovy","Dub surový"]];
+  (function () { var c = document.createElement('style'); c.textContent =
+    '.nb-cur{display:flex;gap:.8rem;align-items:center;margin:.3rem 0 .7rem}.nb-cur img{width:54px;height:100px;object-fit:contain;background:#f2f4f3;border-radius:8px;border:1px solid #e3e8e5}' +
+    '.nb-sw{display:flex;flex-wrap:wrap;gap:.5rem;margin:.3rem 0 .8rem}.nb-sw button{border:2px solid #dde3df;background:#fff;border-radius:10px;padding:.3rem;cursor:pointer;width:92px;font:inherit;font-size:.78rem;line-height:1.2;color:#222;text-align:center}' +
+    '.nb-sw button img{display:block;width:100%;height:110px;object-fit:contain;background:#f2f4f3;border-radius:6px;margin-bottom:.25rem}.nb-sw.tex button img{height:64px;object-fit:cover}.nb-sw button.on{border-color:#1d8f4e;box-shadow:0 0 0 2px #1d8f4e33}' +
+    '.nb-sk{display:inline-block;background:#1d8f4e;color:#fff;font-size:.68rem;font-weight:700;border-radius:99px;padding:.05rem .45rem;margin-top:.15rem}.nb-ob{display:inline-block;background:#e9ecea;color:#555;font-size:.68rem;font-weight:700;border-radius:99px;padding:.05rem .45rem}' +
+    '.nb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;padding:1rem;overflow:auto}.nb-card{border:1.5px solid #dde3df;border-radius:12px;background:#fff;padding:.5rem;cursor:pointer;text-align:left;font:inherit;color:#222}' +
+    '.nb-card img{display:block;width:100%;height:190px;object-fit:contain;background:#f2f4f3;border-radius:8px;margin-bottom:.4rem}.nb-card b{display:block;font-size:.95rem}.nb-card small{display:block;color:#666;font-size:.78rem;margin:.15rem 0}' +
+    '@media (hover:hover){.nb-card:hover,.nb-sw button:hover{border-color:#1d8f4e}}';
+    document.head.appendChild(c); })();
   var INT_ZAHRNUJE = 'Montáž zárubně, osazení dveřního křídla a montáž kování do připraveného otvoru: ' + '1 800 Kč bez DPH za dveře, platí jen když dveře, zárubně i kování kupujete u nás. Vše ostatní se určí až po prohlídce a zaměření technikem. Vybourání stávající zárubně a příprava otvoru včetně odvozu materiálu (na přání): 2 000 Kč bez DPH za kus. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody.';
   var DEF_PLATBA = 'Záloha se hradí po potvrzení objednávky, doplatek po montáži hotově.';
   var lastDef = { zahrnuje: '', platba: '' };
@@ -168,7 +179,7 @@
   function renderRows() {
     $('#nbRows').innerHTML = st.rows.map(function (r, i) {
       var byt = st.kat === 'byt', tot = r.ks * r.cena - r.sleva, im = r.imgData || r.img;
-      var thumb = im ? '<img src="' + esc(im) + '" alt="" style="float:right;max-height:110px;max-width:70px;margin:0 0 .5rem .8rem;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' : '';
+      var thumb = im && (byt || !catFind(r.cat)) ? '<img src="' + esc(im) + '" alt="" style="float:right;max-height:110px;max-width:70px;margin:0 0 .5rem .8rem;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' : '';
       var sel = '';
       if (byt) {
         sel = '<p style="margin:.6rem 0"><button type="button" class="btn btn-primary" data-pick="' + i + '">' + (r.model ? 'Změnit výběr dveří' : '🚪 Vybrat dveře (jako v poptávce)') + '</button> ' +
@@ -176,10 +187,15 @@
           (r.spec && r.spec.length ? '<p style="margin:.3rem 0 .8rem;font-size:.88rem;color:var(--text-muted)">' + esc(specTxt(r.spec)) + '</p>' : '');
       } else {
         var groups = catList().map(function (c) { return '<option value="' + esc(c[0]) + '"' + (r.cat === c[0] ? ' selected' : '') + '>' + esc(st.kat === 'interier' ? c[0] + ' – ' + c[2] + ' · ' + c[3] : c[0] + ' · ' + c[3]) + '</option>'; }).join('');
-        var cobj = catFind(r.cat), dek = cobj && cobj[5] && cobj[5].length ? '<label class="pq-f">Odstín / dekor<select data-i="' + i + '" data-f="dekor"><option value="">– vybrat –</option>' + cobj[5].map(function (d) { return '<option value="' + esc(d[0]) + '"' + (r.odstin === d[0] ? ' selected' : '') + '>' + esc(d[0]) + '</option>'; }).join('') + '</select></label>' : '<label class="pq-f">Odstín / dekor<input data-i="' + i + '" data-f="odstin" value="' + esc(r.odstin) + '" placeholder="např. Dub Halifax"></label>';
-        sel = '<label class="pq-f">Model z katalogu<select data-i="' + i + '" data-f="cat"><option value="">– vybrat model –</option>' + groups + '<option value="__jiny"' + (r.cat === '__jiny' ? ' selected' : '') + '>Jiné dveře (vyplním ručně)</option></select></label>' +
+        var cobj = catFind(r.cat), dek = cobj && cobj[5] && cobj[5].length ? '' : '<label class="pq-f">Odstín / dekor<input data-i="' + i + '" data-f="odstin" value="' + esc(r.odstin) + '" placeholder="' + (st.kat === 'dum' ? 'vyberte vzorek níže nebo napište' : 'např. Dub Halifax') + '"></label>';
+        /* odstíny jako obrázky (jako v poptávce): skladové interiéry – celé dveře v dekoru; dveře do domu – vzorky dekorů ERKADO */
+        var swHtml = cobj && cobj[5] && cobj[5].length ? '<div class="pq-f" style="margin-top:.2rem">Odstín / dekor – vyberte</div><div class="nb-sw">' + cobj[5].map(function (d) { return '<button type="button" data-sw="' + i + '" data-v="' + esc(d[0]) + '" class="' + (r.odstin === d[0] ? 'on' : '') + '"><img src="aplikace/' + esc(d[1]) + '" alt="" loading="lazy">' + esc(d[0]) + '<br><span class="nb-sk">skladem</span></button>'; }).join('') + '</div>'
+          : st.kat === 'dum' && r.cat && r.cat !== '__jiny' ? '<div class="pq-f" style="margin-top:.2rem">Dekory ERKADO (orientačně – dostupnost podle modelu ověřte v konfigurátoru)</div><div class="nb-sw tex">' + ERK_DEKORY.map(function (d) { return '<button type="button" data-sw="' + i + '" data-v="' + esc(d[1]) + '" class="' + (r.odstin === d[1] ? 'on' : '') + '"><img src="konfigurator-erkado/img/dekory/' + esc(d[0]) + '.jpg" alt="" loading="lazy">' + esc(d[1]) + '</button>'; }).join('') + '</div>' : '';
+        var curHtml = cobj ? '<div class="nb-cur"><img src="' + esc(r.img || ('aplikace/' + cobj[1])) + '" alt=""><div><b>' + esc(cobj[0]) + '</b>' + (st.kat === 'interier' ? ' ' + (cobj[4] ? '<span class="nb-sk">SKLADEM</span>' : '<span class="nb-ob">na objednávku</span>') : '') + '<br><small>' + esc(st.kat === 'interier' ? cobj[2] + ' · ' + cobj[3] : cobj[3]) + '</small><br><button type="button" class="btn btn-outline" data-catpick="' + i + '" style="padding:.25rem .8rem;margin-top:.3rem">🖼 Změnit model</button></div></div>'
+          : '<p style="margin:.4rem 0 .6rem"><button type="button" class="btn btn-primary" data-catpick="' + i + '">🖼 Vybrat model podle obrázků</button> <small>nebo ze seznamu:</small></p>';
+        sel = curHtml + '<label class="pq-f">' + (cobj ? 'Model (seznam)' : 'Model z katalogu') + '<select data-i="' + i + '" data-f="cat"><option value="">– vybrat model –</option>' + groups + '<option value="__jiny"' + (r.cat === '__jiny' ? ' selected' : '') + '>Jiné dveře (vyplním ručně)</option></select></label>' +
           (r.hint ? '<p class="pq-help" style="margin:.2rem 0 .6rem">' + esc(r.hint) + '</p>' : '') +
-          '<div class="pq-grid2">' + dek +
+          swHtml + '<div class="pq-grid2">' + dek +
           sirkaHtml(r, i) +
           '<label class="pq-f">Otevírání<input data-i="' + i + '" data-f="otev" value="' + esc(r.otev) + '" placeholder="např. levé"></label>' +
           '<label class="pq-f">Zárubeň<input data-i="' + i + '" data-f="zarub" value="' + esc(r.zarub) + '" placeholder="např. obložková, dekor shodný s dveřmi"></label>' + tlHtml(r, i) +
@@ -284,6 +300,39 @@
     var p = e.data.bdPick, r = st.rows[pickIdx]; if (!r) return;
     r.model = p.model_kod; r.odstin = p.odstin || ''; r.nazev = p.nazev; r.popis = ''; r.cena = p.cena; r.cfg = p.cfg; r.img = p.img || ''; r.shadeImg = p.shadeImg || ''; r.spec = fixSpec(p.spec);
     closePick(); renderKat(); renderRows();
+  });
+
+  /* ── výběr modelu interiérových / vchodových dveří podle obrázků (jako v poptávce a v aplikaci) ── */
+  function openCatPick(i) {
+    var list = catList(), interier = st.kat === 'interier', filtr = interier ? 'sklad' : 'vse';
+    var ov = document.createElement('div'); ov.id = 'nbCatPick'; ov.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(10,30,20,.6);display:flex;flex-direction:column;padding:10px';
+    ov.innerHTML = '<div style="background:#fff;border-radius:12px;flex:1;display:flex;flex-direction:column;overflow:hidden;max-width:1200px;width:100%;margin:0 auto"><div style="display:flex;flex-wrap:wrap;gap:.5rem;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-bottom:1px solid #e3e8e5"><strong>' + (interier ? 'Interiérové dveře' : 'Dveře do domu') + ' – vyberte model</strong>' +
+      (interier ? '<span class="pq-chips" style="margin:0"><label class="pq-opt pq-chip"><input type="radio" name="nbcf" value="sklad" checked>Skladem</label><label class="pq-opt pq-chip"><input type="radio" name="nbcf" value="obj">Na objednávku</label><label class="pq-opt pq-chip"><input type="radio" name="nbcf" value="vse">Vše</label></span>' : '') +
+      '<button type="button" id="nbCatX" class="btn btn-outline" style="padding:.3rem .9rem">Zavřít</button></div><div class="nb-grid" id="nbCatGrid"></div></div>';
+    document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    function draw() {
+      $('#nbCatGrid').innerHTML = list.filter(function (c) { return filtr === 'vse' || (filtr === 'sklad' ? c[4] : !c[4]); }).map(function (c) {
+        return '<button type="button" class="nb-card" data-cv="' + esc(c[0]) + '"><img src="aplikace/' + esc(c[1]) + '" alt="" loading="lazy"><b>' + esc(c[0]) + '</b>' +
+          (interier ? (c[4] ? '<span class="nb-sk">SKLADEM</span>' : '<span class="nb-ob">na objednávku</span>') + '<small>' + esc(c[2]) + '</small>' : '') + '<small>' + esc(c[3]) + (interier ? ' (bez DPH)' : '') + '</small>' +
+          (c[5] && c[5].length ? '<small>' + c[5].length + ' dekory skladem</small>' : '') + '</button>';
+      }).join('') + '<button type="button" class="nb-card" data-cv="__jiny" style="display:flex;align-items:center;justify-content:center;min-height:120px"><b>Jiné dveře – vyplním ručně</b></button>';
+    }
+    draw();
+    ov.addEventListener('change', function (e) { if (e.target.name === 'nbcf') { filtr = e.target.value; draw(); } });
+    ov.addEventListener('click', function (e) {
+      if (e.target.id === 'nbCatX' || e.target === ov) { ov.remove(); document.body.style.overflow = ''; return; }
+      var b = e.target.closest('[data-cv]'); if (!b) return;
+      var r = st.rows[i]; applyCat(r, b.getAttribute('data-cv') === '__jiny' ? '__jiny' : b.getAttribute('data-cv'));
+      ov.remove(); document.body.style.overflow = ''; renderRows();
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var cp = e.target.closest('[data-catpick]'); if (cp) { openCatPick(+cp.getAttribute('data-catpick')); return; }
+    var sw = e.target.closest('[data-sw]'); if (!sw) return;
+    var r = st.rows[+sw.getAttribute('data-sw')], v = sw.getAttribute('data-v'), c = catFind(r.cat);
+    r.odstin = r.odstin === v && !(c && c[5]) ? '' : v; r.shadeImg = '';
+    if (c && c[5]) c[5].forEach(function (d) { if (d[0] === v) { r.shadeImg = 'aplikace/' + d[1]; r.img = r.shadeImg; } });
+    autoPrice(r); renderRows();
   });
 
   /* ── data ── */
