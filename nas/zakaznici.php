@@ -289,13 +289,13 @@ details>summary{cursor:pointer;font-weight:600}
     <?php if ($vsechnyStitky): ?><label>Štítek<br><select name="stitek"><option value="">všechny</option><?php foreach (array_keys($vsechnyStitky) as $s): ?><option<?= $st === $s ? ' selected' : '' ?>><?= $e($s) ?></option><?php endforeach; ?></select></label><?php endif; ?>
     <label>Řadit<br><select name="razeni"><option value="posledni"<?= $ra === 'posledni' ? ' selected' : '' ?>>poslední aktivita</option><option value="jmeno"<?= $ra === 'jmeno' ? ' selected' : '' ?>>jméno</option><option value="pocet"<?= $ra === 'pocet' ? ' selected' : '' ?>>počet záznamů</option></select></label>
     <button>Zobrazit</button> <a class="btn sec" href="zakaznici.php">Zrušit</a></form></div>
-  <div class="box"><h3>📱 Telefon a kontakty</h3>
-    <p class="row"><a class="btn" href="zakaznici.php?novy=1">➕ Nový zákazník</a>
-      <a class="btn sec" href="zakaznici.php?vcf=vse">⬇ Export všech do telefonu (.vcf)</a>
-      <?php $gn0 = zk_google_nast(); ?><a class="btn sec" href="zakaznici.php?google=1">🔄 Google Kontakty <?= !empty($gn0['stazeno']) ? '<span class="chip ok">' . $e(date('j. n. H:i', strtotime($gn0['stazeno']))) . '</span>' : (!empty($gn0['token']) ? '<span class="chip warn">čeká na skript</span>' : '<span class="chip">vypnuto</span>') ?></a></p>
+  <?php $gn0 = zk_google_nast(); $gChip = !empty($gn0['stazeno']) ? '<span class="chip ok">Google ' . $e(date('j. n. H:i', strtotime($gn0['stazeno']))) . '</span>' : (!empty($gn0['token']) ? '<span class="chip warn">Google čeká na skript</span>' : '<span class="chip">Google vypnuto</span>'); ?>
+  <details class="box"<?= isset($_GET['import']) ? ' open' : '' ?>><summary style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">📱 Telefon a kontakty <?= $gChip ?> <span class="mut">▾ export, import, Google</span> <a class="btn" href="zakaznici.php?novy=1" style="margin-left:auto;padding:5px 12px;font-size:14px" onclick="event.stopPropagation()">➕ Nový zákazník</a></summary>
+    <p class="row" style="margin-top:10px"><a class="btn sec" href="zakaznici.php?vcf=vse">⬇ Export všech do telefonu (.vcf)</a>
+      <a class="btn sec" href="zakaznici.php?google=1">🔄 Google Kontakty <?= $gChip ?></a></p>
     <form method="post" enctype="multipart/form-data" class="row" style="margin-top:8px"><input type="hidden" name="akce" value="vcf_nahled">
       <label>Import z telefonu (soubor .vcf)<br><input type="file" name="vcf" accept=".vcf,text/vcard,text/x-vcard" required></label><button class="sec">Načíst a vybrat</button></form>
-    <p class="mut" style="margin:8px 0 0">Export: soubor otevřete v telefonu (nebo nahrajte do contacts.google.com → Importovat) – kontakty dostanou skupinu „Zákazníci Bezpečné dveře“. Import: v telefonu Kontakty → Spravovat / Exportovat → soubor .vcf, ten sem nahrajte a vyberte, kdo jsou zákazníci.</p></div>
+    <p class="mut" style="margin:8px 0 0">Export: soubor otevřete v telefonu (nebo nahrajte do contacts.google.com → Importovat) – kontakty dostanou skupinu „Zákazníci Bezpečné dveře“. Import: v telefonu Kontakty → Spravovat / Exportovat → soubor .vcf, ten sem nahrajte a vyberte, kdo jsou zákazníci.</p></details>
   <div class="box tw"><table><tr><th>Zákazník</th><th>Kontakt</th><th>Město</th><th>Záznamy</th><th>Poslední</th><th>Štítky</th><th>Další kontakt</th><th></th></tr>
     <?php foreach ($rows as $c): ?><tr>
       <td><a href="zakaznici.php?k=<?= urlencode($c['klic']) ?>"><b><?= $e($c['jmeno'] ?: '(bez jména)') ?></b></a><?= $c['firma'] ? '<div class="mut">' . $e($c['firma']) . '</div>' : '' ?><?= $c['rucne'] ? ' <span class="chip tel">' . $e($c['zdroj'] === 'telefon' ? 'z telefonu' : 'ručně') . '</span>' : '' ?></td>
