@@ -680,7 +680,7 @@
       var cf = customerFields(d);
       if (voucher) cf.push(['Doporuč a získej', 'V příloze posíláme vouchery na slevu 1 000 Kč pro vaše známé na dveře PREMIUM 60. Za každé úspěšné doporučení dostanete po montáži 1 500 Kč (nejvýše za 3 doporučení). Pravidla: www.bezpecne-dvere.cz']);
       // zákazníkovi jde e-mail jen s jeho adresou; bez e-mailu dostane objednávku s PDF jen obchod
-      var ctyp = d.email ? 'objednavka_zakaznik' : 'objednavka_interni', cx = d.email ? { email_zakaznik: d.email } : {};
+      var ctyp = d.email ? 'objednavka_zakaznik' : 'objednavka_interni', cx = d.email ? { email_zakaznik: d.email, prodavac: d.prodavac } : {};
       if (!files.length) { custOk = true; return sendFields(ctyp, cf, [], d.obj_cislo, cx); }
       return sendFields(ctyp, cf, files, d.obj_cislo, cx).catch(function () { custOk = false; return sendFields(ctyp, cf, [], d.obj_cislo, cx); });
     }).then(function () {

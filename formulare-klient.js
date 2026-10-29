@@ -26,6 +26,7 @@
     fd.append('telo', o.telo || '');
     if (o.reply_to) fd.append('reply_to', o.reply_to);
     if (o.email_zakaznik) fd.append('email_zakaznik', o.email_zakaznik);
+    if (o.prodavac) fd.append('prodavac', o.prodavac);   /* jméno do podpisu e-mailu zákazníkovi */
     if (o.cislo) fd.append('cislo', o.cislo);
     if (o.data_json) fd.append('data_json', o.data_json);
     fd.append('_honey', o.honey || '');

@@ -688,8 +688,8 @@
     }).then(function () {
       if (!d.email) return;
       var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
-      return send('objednavka_zakaznik', customerList(d), files, d.obj_cislo, { email_zakaznik: d.email })
-        .catch(function () { custOk = false; return send('objednavka_zakaznik', customerList(d), [], d.obj_cislo, { email_zakaznik: d.email }); });
+      return send('objednavka_zakaznik', customerList(d), files, d.obj_cislo, { email_zakaznik: d.email, prodavac: d.prodavac })
+        .catch(function () { custOk = false; return send('objednavka_zakaznik', customerList(d), [], d.obj_cislo, { email_zakaznik: d.email, prodavac: d.prodavac }); });
     }).then(function () {
       kHotovo(d.obj_cislo);
       $('#nbRef').textContent = d.obj_cislo; var w = $('#nbWarn');
@@ -843,7 +843,7 @@
       if (b && b.blob) files.push({ name: 'objednavka_pdf', file: fn, blob: b.blob });
       if (d.rozpocet && st.rozpBuf && !(b && b.merged)) files.push({ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) });
       var list = customerList(d).map(function (x) { return x[0] === '_subject' ? ['_subject', '[ZKOUŠKA] ' + x[1]] : x; });
-      return send('objednavka_zakaznik', list, files, d.obj_cislo, { email_zakaznik: st.test });
+      return send('objednavka_zakaznik', list, files, d.obj_cislo, { email_zakaznik: st.test, prodavac: d.prodavac });
     }).then(function () {
       var hl = '✓ Zkušební e-mail nabídky ' + (d.obj_cislo || '') + ' odeslán na ' + st.test + (d.email ? ' (zákazníkovi ' + d.email + ' nic neodešlo)' : '') + '. Nabídka zůstává rozpracovaná.';
       if (!st.autoQ.length) { kAutoStav(hl + ' Hotovo.'); return; }
