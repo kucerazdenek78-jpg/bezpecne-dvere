@@ -704,7 +704,9 @@
       else if (!custOk) { w.textContent = 'E-mail zákazníkovi odešel bez přiloženého PDF. Stáhněte si PDF a pošlete mu ho ručně.'; w.hidden = false; }
       if (pdf) { var u = URL.createObjectURL(pdf), a = $('#nbPdf'); a.href = u; a.download = fn; a.hidden = false; var pr = $('#nbPrint'); pr.hidden = false; pr.onclick = function () { var wn = window.open(u, '_blank'); if (wn) wn.focus(); }; }
       form.hidden = true; $('.pq-hero').hidden = true; $('#nbDone').hidden = false; window.scrollTo(0, 0);
+      kAutoDalsi(d);
     }).catch(function () {
+      if (st.auto) kAutoStav('Odeslání se nepodařilo – automatické odesílání se zastavilo. Zkuste „Odeslat nabídku zákazníkovi“ ručně.' + kAutoZbyva(), true);
       msg.textContent = 'Odeslání se nepodařilo – zkontrolujte připojení a zkuste to znovu.'; msg.hidden = false; btn.disabled = false; btn.textContent = 'Odeslat nabídku zákazníkovi';
     });
   });
@@ -782,6 +784,45 @@
   function kHotovo(cislo) {
     if (!st.konc) return;
     try { fetch(KONC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ akce: 'hotovo', id: st.konc.id, t: st.konc.t, cislo: cislo }) }); } catch (e) {}
+  }
+  /* ── hromadné odeslání vybraných rozpracovaných nabídek z kartotéky: #k=id.token&auto=1&q=id.token,id.token ── */
+  st.auto = /[#&]auto=1(&|$)/.test(location.hash) && !OBJ;
+  st.autoQ = ((location.hash.match(/[#&]q=([0-9a-f.,]*)/) || [])[1] || '').split(',').filter(function (x) { return /^\d+\.[0-9a-f]{24}$/.test(x); });
+  function kAutoBox() {
+    var b = $('#nbAuto'); if (b) return b;
+    b = document.createElement('div'); b.id = 'nbAuto'; b.style.cssText = 'position:relative;z-index:5;margin:0 0 1rem;padding:.8rem 1rem;border-radius:10px;background:#e8f0fb;border:2px solid #1d5fb8;font-weight:600';
+    var h = $('.pq-hero') || form; h.parentNode.insertBefore(b, h); try { b.scrollIntoView({ block: 'center' }); } catch (e) {} return b;
+  }
+  function kAutoZbyva() { return st.autoQ.length ? ' Ve frontě zbývá ještě ' + st.autoQ.length + ' – otevřete je z kartotéky.' : ''; }
+  function kAutoStav(t, chyba) { var b = kAutoBox(); b.textContent = t; b.style.background = chyba ? '#fde2e2' : '#e8f0fb'; b.style.borderColor = chyba ? '#c0392b' : '#1d5fb8'; }
+  function kAutoStart() {
+    var d = null, err = '', cs = $('#nbConsent');
+    if (cs) cs.checked = true;   /* kontrolu potvrdil prodavač v kartotéce při hromadném odeslání */
+    try { d = collect(); err = validate(d); } catch (e) { err = 'Nabídku se nepodařilo připravit.'; }
+    if (err) { kAutoStav('Nabídku nelze odeslat automaticky: ' + err + ' Doplňte to a odešlete ručně.' + kAutoZbyva(), true); return; }
+    var n = 5, b = kAutoBox(), stop = false;
+    b.innerHTML = ''; var t = document.createElement('span'); b.appendChild(t);
+    var x = document.createElement('button'); x.type = 'button'; x.className = 'btn btn-outline'; x.textContent = 'Zastavit'; x.style.marginLeft = '.8rem';
+    x.onclick = function () { stop = true; st.auto = false; kAutoStav('Automatické odeslání zastaveno – nabídku můžete upravit a odeslat ručně.'); };
+    b.appendChild(x);
+    (function tik() {
+      if (stop) return;
+      t.textContent = '📤 Nabídka ' + (d.obj_cislo || '') + ' pro ' + ((d.jmeno || '') + ' ' + (d.prijmeni || '')).trim() + (d.email ? ' (' + d.email + ')' : ' – BEZ e-mailu, odejde jen vám') + ' se odešle za ' + n + ' s…';
+      if (n-- > 0) return setTimeout(tik, 1000);
+      x.remove(); t.textContent = '📤 Odesílám nabídku ' + (d.obj_cislo || '') + '…';
+      if (form.requestSubmit) form.requestSubmit($('#nbSubmit')); else $('#nbSubmit').click();
+    })();
+  }
+  function kAutoDalsi(d) {
+    if (!st.auto) return;
+    var odesl = 'Nabídka ' + (d.obj_cislo || '') + ' odeslána' + (d.email ? ' zákazníkovi (' + d.email + ').' : ' (zákazník nemá e-mail – odešla jen vám).');
+    if (!st.autoQ.length) { kAutoStav('✓ ' + odesl + ' Všechny vybrané nabídky jsou odeslané.'); return; }
+    var dalsi = st.autoQ[0], zbytek = st.autoQ.slice(1);
+    kAutoStav('✓ ' + odesl + ' Za 3 s otevírám další (' + st.autoQ.length + ' zbývá)…');
+    setTimeout(function () {
+      location.href = location.pathname + location.search + '#k=' + dalsi + '&auto=1' + (zbytek.length ? '&q=' + zbytek.join(',') : '');
+      location.reload();
+    }, 3000);
   }
   (function () {
     var sb = $('#nbSubmit'); if (!sb) return;
@@ -904,11 +945,14 @@
       if (!j.ok || !j.data) throw new Error('x');
       st.konc = { id: +m[1], t: m[2] }; kRestore(j.data);
       var pdfOk = j.rozpocet_pdf > 0 ? kNactiPdf(j.data).then(function () { return true; }).catch(function () { return false; }) : Promise.resolve(null);
-      pdfOk.then(function (ok) { if (ok === false) kMsg('PDF rozpočtu se nepodařilo načíst – nahrajte ho prosím znovu.', true); else if (ok) kMsg(''); });
+      pdfOk.then(function (ok) {
+        if (ok === false) kMsg('PDF rozpočtu se nepodařilo načíst – nahrajte ho prosím znovu.', true); else if (ok) kMsg('');
+        if (st.auto) { if (ok === false) kAutoStav('Automatické odeslání zastaveno: PDF rozpočtu se nenačetlo.' + kAutoZbyva(), true); else if (j.stav === 'odeslano') kAutoStav('Tahle nabídka už byla odeslána – automaticky ji znovu neposílám.' + kAutoZbyva(), true); else setTimeout(kAutoStart, 800); }
+      });
       var info = $('#nbLoaded'); info.hidden = false; info.style.background = '#fff7d6'; info.style.borderColor = '#e0b100';
       info.innerHTML = '📝 <b>Rozpracovaná ' + (OBJ ? 'objednávka' : 'nabídka') + '</b> uložená ' + esc(j.upraveno || '') + (j.stav === 'odeslano' ? ' – <b>už byla odeslána</b>, nové odeslání vytvoří další záznam.' : '. Dokončete ji a odešlete, nebo znovu uložte.') +
         (j.data.rozp && !(j.rozpocet_pdf > 0) ? ' PDF rozpočtu u ní uložené není – nahrajte ho' + (j.data.rozpName ? ' (' + esc(j.data.rozpName) + ')' : '') + '.' : '');
       if (!(j.rozpocet_pdf > 0)) kMsg('');
-    }).catch(function () { kMsg('Rozpracovanou nabídku se nepodařilo načíst (server nedostupný nebo odkaz neplatí).', true); });
+    }).catch(function () { kMsg('Rozpracovanou nabídku se nepodařilo načíst (server nedostupný nebo odkaz neplatí).', true); if (st.auto) kAutoStav('Rozpracovanou nabídku se nepodařilo načíst – automatické odeslání zastaveno.' + kAutoZbyva(), true); });
   })();
 })();

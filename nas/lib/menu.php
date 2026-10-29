@@ -38,6 +38,7 @@ function bd_bar(string $akt = ''): void {
   echo '</nav>';
   if ($akt !== 'pomocnik') bd_pomocnik_okno();
   if ($akt === 'kartoteka' && isset($_GET['id'])) bd_navrh_tlacitko((int)$_GET['id']);
+  if ($akt === 'kartoteka' && !isset($_GET['id']) && in_array($_GET['typ'] ?? 'objednavka_interni', ['nabidka', ''], true) && function_exists('konc_kartoteka_box')) konc_kartoteka_box();   // rozpracované nabídky nad seznamem
 }
 
 // Detail poptávky: tlačítko „🤖 Připravit nabídku“ vedle „Vytvořit nabídku z této poptávky“ (pomocník připraví návrh, viz navrh-nabidky.php).
