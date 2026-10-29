@@ -30,7 +30,7 @@ function konc_kartoteka_box(): void {
   $kc = fn($n) => ($n === null || $n === '' || !is_numeric($n) || (float)$n == 0) ? '–' : number_format((float)$n, 0, ',', ' ') . ' Kč';
   $pu = fn($k) => function_exists('bd_prod_url') ? bd_prod_url(konc_url($cfg, $k)) : konc_url($cfg, $k);
   echo '<div class="box" id="bdKonc" style="border:2px solid #e0b100;background:#fffbea"><h3 style="color:#7a5b00">📝 Rozpracované nabídky – neodeslané (' . count($rows) . ')</h3>'
-     . '<p class="mut" style="margin:0 0 8px">Uložené tlačítkem „💾 Uložit rozpracovanou“, zákazníkovi zatím nic neodešlo. Zaškrtněte a dejte „Odeslat vybrané zákazníkům“ – nabídky se otevřou na webu a po krátkém odpočtu se samy odešlou jedna po druhé (odpočet jde zastavit). „Otevřít“ = upravit před odesláním, „PDF“ = náhled toho, co dostane zákazník (nic se neodešle).</p>'
+     . '<p class="mut" style="margin:0 0 8px">Uložené tlačítkem „💾 Uložit rozpracovanou“, zákazníkovi zatím nic neodešlo. Zaškrtněte a dejte „Odeslat vybrané zákazníkům“ – nabídky se otevřou na webu a po krátkém odpočtu se samy odešlou jedna po druhé (odpočet jde zastavit). „Otevřít“ = upravit před odesláním, „PDF“ = náhled toho, co dostane zákazník (nic se neodešle), „✉ Zkouška“ = stejný e-mail přijde vám místo zákazníkovi.</p>'
      . '<table><tr><th style="width:30px"><input type="checkbox" id="bdKoncVse" title="vybrat vše"></th><th>Uloženo</th><th>Číslo</th><th>Zákazník</th><th class="hide-m">E-mail</th><th class="hide-m">Druh</th><th class="num">Cena</th><th class="hide-m">Prodavač</th><th>Stav</th><th>Akce</th></tr>';
   foreach ($rows as $k) {
     $dj = json_decode((string)$k['data_json'], true) ?: []; $em = (string)($dj['f']['email'] ?? '');
@@ -39,16 +39,27 @@ function konc_kartoteka_box(): void {
        . '<td class="mut">' . $e(date('j. n. H:i', strtotime((string)$k['upraveno']))) . '</td><td>' . $e($k['cislo'] ?: '–') . '</td><td>' . $e($k['zakaznik'] ?: '(bez jména)') . '</td>'
        . '<td class="hide-m">' . ($em !== '' ? $e($em) : '<span style="color:#a11">chybí – odejde jen vám</span>') . '</td><td class="hide-m">' . $e($k['kategorie']) . '</td>'
        . '<td class="num">' . $e($kc($k['cena'])) . '</td><td class="hide-m">' . $e($k['prodavac']) . '</td><td><span class="chip s-rozpracovano">Rozpracováno – neodesláno</span></td>'
-       . '<td style="white-space:nowrap"><a class="btn sec" style="padding:4px 8px;font-size:13px" href="' . $e($url) . '">Otevřít</a> <a class="btn sec" style="padding:4px 8px;font-size:13px" target="_blank" rel="noopener" title="Náhled PDF přesně tak, jak by odešlo zákazníkovi (nic se neodešle)" href="' . $e($url . '&pdf=1') . '">PDF</a> <a class="btn" style="padding:4px 8px;font-size:13px" href="' . $e($url . '&auto=1') . '" onclick="return confirm(\'Nabídka je zkontrolovaná a má se odeslat zákazníkovi? E-mail odejde po 5s odpočtu (jde zastavit).\')">Odeslat</a></td></tr>';
+       . '<td style="white-space:nowrap"><a class="btn sec" style="padding:4px 8px;font-size:13px" href="' . $e($url) . '">Otevřít</a> <a class="btn sec" style="padding:4px 8px;font-size:13px" target="_blank" rel="noopener" title="Náhled PDF přesně tak, jak by odešlo zákazníkovi (nic se neodešle)" href="' . $e($url . '&pdf=1') . '">PDF</a> <a class="btn sec bdKoncTest" style="padding:4px 8px;font-size:13px" title="Zkušebně poslat e-mail s nabídkou na váš e-mail (zákazníkovi nic neodejde)" data-k="' . $e($kt) . '" href="' . $e($url) . '">✉ Zkouška</a> <a class="btn" style="padding:4px 8px;font-size:13px" href="' . $e($url . '&auto=1') . '" onclick="return confirm(\'Nabídka je zkontrolovaná a má se odeslat zákazníkovi? E-mail odejde po 5s odpočtu (jde zastavit).\')">Odeslat</a></td></tr>';
   }
-  echo '</table><p style="margin:10px 0 0"><button type="button" class="btn" id="bdKoncOdeslat" disabled>📤 Odeslat vybrané zákazníkům</button> <span class="mut" id="bdKoncInfo"></span> · <a href="koncepty.php">všechny rozpracované</a></p></div>';
+  echo '</table><p style="margin:10px 0 0"><button type="button" class="btn" id="bdKoncOdeslat" disabled>📤 Odeslat vybrané zákazníkům</button> <button type="button" class="btn sec" id="bdKoncTestVyb" disabled title="Vybrané nabídky přijdou na váš e-mail přesně tak, jak by je dostal zákazník">✉ Vybrané zkušebně na můj e-mail</button> <span class="mut" id="bdKoncInfo"></span> · <a href="koncepty.php">všechny rozpracované</a></p></div>';
   echo <<<'JS'
 <script>document.addEventListener('DOMContentLoaded', function () {
   var box = document.getElementById('bdKonc'), main = document.querySelector('main'); if (!box || !main || box.parentNode === main) return;
   var cil = main.querySelector('table'); var mut = cil && cil.previousElementSibling && cil.previousElementSibling.matches('p.mut') ? cil.previousElementSibling : cil;
   if (mut) main.insertBefore(box, mut); else main.insertBefore(box, main.firstChild);
   var chs = [].slice.call(box.querySelectorAll('.bdKoncCh')), btn = document.getElementById('bdKoncOdeslat'), inf = document.getElementById('bdKoncInfo');
-  function upd() { var v = chs.filter(function (c) { return c.checked; }); btn.disabled = !v.length; inf.textContent = v.length ? 'vybráno ' + v.length : ''; }
+  var tb = document.getElementById('bdKoncTestVyb');
+  function upd() { var v = chs.filter(function (c) { return c.checked; }); btn.disabled = tb.disabled = !v.length; inf.textContent = v.length ? 'vybráno ' + v.length : ''; }
+  function testEmail() {   /* adresa pro zkušební e-maily – pamatuje si poslední zadanou */
+    var d = ''; try { d = localStorage.getItem('bd-test-email') || ''; } catch (x) {}
+    var em = prompt('Na jaký e-mail poslat zkušebně? (zákazníkovi nic neodejde, nabídky zůstanou rozpracované)', d || 'kucerazd@kksystem.cz');
+    if (!em) return ''; em = em.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { alert('Neplatný e-mail.'); return ''; }
+    try { localStorage.setItem('bd-test-email', em); } catch (x) {}
+    return em;
+  }
+  function testJdi(urlPrvni, q) { var em = testEmail(); if (em) location.href = urlPrvni + '&test=' + encodeURIComponent(em) + (q ? '&q=' + q : ''); }
+  [].forEach.call(box.querySelectorAll('.bdKoncTest'), function (a) { a.addEventListener('click', function (ev) { ev.preventDefault(); testJdi(a.getAttribute('href'), ''); }); });
+  tb.addEventListener('click', function () { var v = chs.filter(function (c) { return c.checked; }); if (v.length) testJdi(v[0].dataset.url, v.slice(1).map(function (c) { return c.dataset.k; }).join(',')); });
   chs.forEach(function (c) { c.addEventListener('change', upd); });
   document.getElementById('bdKoncVse').addEventListener('change', function () { var on = this.checked; chs.forEach(function (c) { c.checked = on; }); upd(); });
   btn.addEventListener('click', function () {

@@ -828,6 +828,30 @@
       location.href = u;   /* rovnou ukázat PDF v prohlížeči */
     }).catch(function () { kAutoStav('PDF se nepodařilo vytvořit – otevřete nabídku a zkuste „Odeslat“ až po kontrole.', true); });
   }
+  /* zkušební odeslání (#k=…&test=email&q=…): přesně e-mail a PDF jako pro zákazníka, ale na zadanou adresu, předmět „[ZKOUŠKA]“.
+     Interní záznam se nevytváří a nabídka zůstává rozpracovaná. */
+  st.test = (function () { var m = location.hash.match(/[#&]test=([^&]+)/); if (!m) return ''; try { var e = decodeURIComponent(m[1]).trim(); return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) ? e : ''; } catch (x) { return ''; } })();
+  function kTestPoslat() {
+    var d = null, cs = $('#nbConsent'), cs0 = cs ? cs.checked : false, err = '';
+    if (cs) cs.checked = true;
+    try { d = collect(); err = validate(d); } catch (e) { err = 'Nabídku se nepodařilo připravit.'; }
+    if (cs) cs.checked = cs0;
+    if (err) { kAutoStav('Zkušební e-mail neodešel: ' + err + kAutoZbyva(), true); return; }
+    kAutoStav('✉ Připravuji zkušební e-mail nabídky ' + (d.obj_cislo || '') + ' na ' + st.test + '…');
+    var fn = 'Nabidka-' + d.obj_cislo + '.pdf', files = [];
+    buildPdf(d).catch(function () { return null; }).then(function (b) {
+      if (b && b.blob) files.push({ name: 'objednavka_pdf', file: fn, blob: b.blob });
+      if (d.rozpocet && st.rozpBuf && !(b && b.merged)) files.push({ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) });
+      var list = customerList(d).map(function (x) { return x[0] === '_subject' ? ['_subject', '[ZKOUŠKA] ' + x[1]] : x; });
+      return send('objednavka_zakaznik', list, files, d.obj_cislo, { email_zakaznik: st.test });
+    }).then(function () {
+      var hl = '✓ Zkušební e-mail nabídky ' + (d.obj_cislo || '') + ' odeslán na ' + st.test + (d.email ? ' (zákazníkovi ' + d.email + ' nic neodešlo)' : '') + '. Nabídka zůstává rozpracovaná.';
+      if (!st.autoQ.length) { kAutoStav(hl + ' Hotovo.'); return; }
+      var dalsi = st.autoQ[0], zbytek = st.autoQ.slice(1);
+      kAutoStav(hl + ' Za 3 s další (' + st.autoQ.length + ' zbývá)…');
+      setTimeout(function () { location.href = location.pathname + location.search + '#k=' + dalsi + '&test=' + encodeURIComponent(st.test) + (zbytek.length ? '&q=' + zbytek.join(',') : ''); location.reload(); }, 3000);
+    }).catch(function () { kAutoStav('Zkušební e-mail se nepodařilo odeslat (server / limit).' + kAutoZbyva(), true); });
+  }
   function kAutoDalsi(d) {
     if (!st.auto) return;
     var odesl = 'Nabídka ' + (d.obj_cislo || '') + ' odeslána' + (d.email ? ' zákazníkovi (' + d.email + ').' : ' (zákazník nemá e-mail – odešla jen vám).');
@@ -963,6 +987,7 @@
       pdfOk.then(function (ok) {
         if (ok === false) kMsg('PDF rozpočtu se nepodařilo načíst – nahrajte ho prosím znovu.', true); else if (ok) kMsg('');
         if (st.pdfNahled && !st.auto) { setTimeout(kNahledPdf, 600); return; }
+        if (st.test && !st.auto) { if (ok === false) kAutoStav('PDF rozpočtu se nenačetlo – zkušební e-mail neodešel.' + kAutoZbyva(), true); else setTimeout(kTestPoslat, 800); return; }
         if (st.auto) { if (ok === false) kAutoStav('Automatické odeslání zastaveno: PDF rozpočtu se nenačetlo.' + kAutoZbyva(), true); else if (j.stav === 'odeslano') kAutoStav('Tahle nabídka už byla odeslána – automaticky ji znovu neposílám.' + kAutoZbyva(), true); else setTimeout(kAutoStart, 800); }
       });
       var info = $('#nbLoaded'); info.hidden = false; info.style.background = '#fff7d6'; info.style.borderColor = '#e0b100';
