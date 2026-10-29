@@ -1,0 +1,481 @@
+{
+ "vytvoreno": "2026-10-29",
+ "byt": [
+  {
+   "model_kod": "premium60",
+   "nazev": "PREMIUM 60",
+   "odstiny": [
+    "Černá perleť",
+    "Dub",
+    "Ořech",
+    "Světlé wenge",
+    "Bílá",
+    "Antracit",
+    "Bílá wenge",
+    "Ocelově šedá"
+   ],
+   "skladem": [
+    "Černá perleť",
+    "Dub",
+    "Ořech",
+    "Světlé wenge",
+    "Bílá",
+    "Antracit"
+   ],
+   "priplatek_kc": {
+    "Bílá wenge": 4000,
+    "Ocelově šedá": 4000
+   }
+  },
+  {
+   "model_kod": "extreme54",
+   "nazev": "EXTREME 54",
+   "odstiny": [
+    "Ořech natura",
+    "Dub natura",
+    "Ořech bělený",
+    "Bílá",
+    "Antracit",
+    "Beton tmavý",
+    "Dub Milano 4"
+   ],
+   "skladem": [
+    "Ořech natura",
+    "Dub natura"
+   ],
+   "priplatek_kc": {
+    "Beton tmavý": 5000,
+    "Dub Milano 4": 5000
+   }
+  },
+  {
+   "model_kod": "magnum56",
+   "nazev": "MAGNUM 56",
+   "odstiny": [
+    "Dub sonoma",
+    "Bílá",
+    "Světlý ořech",
+    "Zlatý dub",
+    "Antracit",
+    "Tmavý ořech",
+    "Venge",
+    "Dub přírodní",
+    "Beton"
+   ],
+   "skladem": [],
+   "priplatek_kc": {
+    "Antracit": 1000,
+    "Beton": 1000
+   }
+  },
+  {
+   "model_kod": "securido65",
+   "nazev": "SECURIDO 65",
+   "odstiny": [
+    "Kombi (bílá, černá zárubeň a kování)",
+    "Bílá",
+    "Šedá",
+    "Mocca",
+    "Antracit",
+    "Dub Artisan hladký",
+    "Dub Artisan elegant",
+    "Ořech hladký",
+    "Ořech elegant",
+    "Mahagon hladký",
+    "Mahagon elegant"
+   ],
+   "skladem": [],
+   "priplatek_kc": {
+    "Kombi (bílá, černá zárubeň a kování)": 2000
+   }
+  }
+ ],
+ "dum": [
+  "ALTA",
+  "AMBERG",
+  "ARENDAL",
+  "BAZYLEA",
+  "BIENE",
+  "EBERN",
+  "FRYBURG",
+  "HELMOND",
+  "HORN",
+  "KELLA",
+  "KREBEN",
+  "LAHTI",
+  "LANGEN",
+  "LEIMEN",
+  "LEOBEN",
+  "LINDEN",
+  "LUCERNA",
+  "LUTTER",
+  "MELK",
+  "MURTER",
+  "RODING",
+  "ROTTERDAM",
+  "SAMEDAN",
+  "SELTERS",
+  "SINGEN",
+  "SION",
+  "SOLID",
+  "TREBUR",
+  "UTRECHT",
+  "WELS",
+  "WIENER"
+ ],
+ "interier": [
+  {
+   "model": "PATRAS",
+   "popis": "Fólie · falcové · 3 dekory",
+   "skladem": true,
+   "odstiny": [
+    "Dub Halifax",
+    "Kašmír",
+    "Bílá"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "KAVALA",
+   "popis": "Fólie · falcové · 3 dekory",
+   "skladem": true,
+   "odstiny": [
+    "Dub Halifax",
+    "Kašmír",
+    "Bílá"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "LARISA",
+   "popis": "Fólie · falcové · hladké · 3 dekory",
+   "skladem": true,
+   "odstiny": [
+    "Dub Halifax",
+    "Kašmír",
+    "Bílá"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "FRÉZIA 1",
+   "popis": "CPL · falcové · s matným sklem",
+   "skladem": true,
+   "odstiny": [
+    "Dub přírodní",
+    "Bílá",
+    "Cappuccino"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "FRÉZIA 9",
+   "popis": "CPL · falcové · plné bez skla",
+   "skladem": true,
+   "odstiny": [
+    "Cappuccino",
+    "Bílá"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "NEMÉZIA 14",
+   "popis": "CPL · falcové · s matným sklem",
+   "skladem": true,
+   "odstiny": [
+    "Cappuccino",
+    "Bílá"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "LAURENCIA 1",
+   "popis": "CPL · falcové · plné bez skla",
+   "skladem": true,
+   "odstiny": [
+    "Bílá",
+    "Dub přírodní",
+    "Cappuccino"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "ALTAMURA 1",
+   "popis": "CPL",
+   "skladem": true,
+   "odstiny": [],
+   "tl_zarubne": [
+    "80–195 mm",
+    "195–315 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "ALTAMURA 1 – falcové",
+   "popis": "CPL · falcové · plná deska",
+   "skladem": true,
+   "odstiny": [
+    "Dub přírodní",
+    "Bílá",
+    "Cappuccino"
+   ],
+   "tl_zarubne": [
+    "80–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "LAURENCIA",
+   "popis": "PREMIUM / STCPL · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "DAGLÉZIA",
+   "popis": "STCPL / PREMIUM · skleněné výplně · 6 skupin",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "MAGNÓLIA",
+   "popis": "PREMIUM / STCPL · 8 variant (1–8) · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "FRÉZIA",
+   "popis": "STCPL / PREMIUM · varianty 2, 4, 6 · různé dekory",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "ALTAMURA",
+   "popis": "STCPL / PREMIUM · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "ALTAMURA LUX",
+   "popis": "STCPL / PREMIUM · rovný + fazovaný panel",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "NEMÉZIA",
+   "popis": "STCPL / PREMIUM / GREKO · 8 variant panelů",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "MISKANT",
+   "popis": "STCPL / PREMIUM / GREKO · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "LINEA FORTE 5",
+   "popis": "ENDURO / ENDURO 3D / LAMINOLACK · falcové",
+   "skladem": true,
+   "odstiny": [
+    "Dub evropský",
+    "Bílá",
+    "Dub popelavý",
+    "Kašmír matný",
+    "Světle šedá matná"
+   ],
+   "tl_zarubne": [
+    "75–179 mm",
+    "180–299 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "NORMA DECOR 1",
+   "popis": "ENDURO / LAMINOLACK · falcové · plné",
+   "skladem": true,
+   "odstiny": [
+    "Dub evropský",
+    "Bílá",
+    "Dub popelavý",
+    "Světle šedá matná"
+   ],
+   "tl_zarubne": [
+    "75–179 mm",
+    "180–299 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "AVERSA 1",
+   "popis": "ENDURO / LAMINOLACK · falcové · s úzkým sklem",
+   "skladem": true,
+   "odstiny": [
+    "Dub evropský",
+    "Bílá",
+    "Dub popelavý",
+    "Kašmír matný",
+    "Světle šedá matná"
+   ],
+   "tl_zarubne": [
+    "75–179 mm",
+    "180–299 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "DECORATO · BELGATTO",
+   "popis": "ENDURO / LAMINOLACK · 14 variant panelů",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "LINEA FORTE",
+   "popis": "ENDURO / ENDURO 3D · moderní design · falcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "NOGARO · TAMPARO",
+   "popis": "ENDURO / LAMINOLACK · skleněné prvky · falcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "LIBRA · NORMA DECOR",
+   "popis": "ENDURO / CPL · jednoduchý design · falcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "CAPRIO · NIDA · ROMA",
+   "popis": "ENDURO / ENDURO 3D · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "CPL 1.1",
+   "popis": "CPL · falcové · plné bez skla",
+   "skladem": true,
+   "odstiny": [],
+   "tl_zarubne": [
+    "75–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "DECOR P",
+   "popis": "Hliníková zárubeň · bezfalcová / reverzní",
+   "skladem": true,
+   "odstiny": [],
+   "tl_zarubne": [
+    "75–180 mm",
+    "180–300 mm"
+   ],
+   "cena_z_ceniku": true
+  },
+  {
+   "model": "VECTOR",
+   "popis": "VECTOR T / E / U · Hydro Protect · česká norma zdarma",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "VERTE HOME G / H",
+   "popis": "Fólie / Soft CPL · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "VERTE PREMIUM A",
+   "popis": "Fólie / Soft CPL · Traditional + Modern",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "VERTE PREMIUM E",
+   "popis": "Fólie / Soft CPL · Traditional + Rustic",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "HARMONY",
+   "popis": "Modern / Traditional · Soft CPL · top model",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  },
+  {
+   "model": "CPL",
+   "popis": "CPL · Traditional / Rustic · falcové i bezfalcové",
+   "skladem": false,
+   "odstiny": [],
+   "tl_zarubne": [],
+   "cena_z_ceniku": false
+  }
+ ]
+}

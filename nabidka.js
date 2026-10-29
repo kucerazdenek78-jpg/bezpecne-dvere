@@ -186,7 +186,8 @@
           '<label class="pq-f">Vlastní obrázek (volitelné)<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile"></label></div>' + montHtml(r, i);
       }
       return '<div class="pq-block-in" style="border:1.5px solid var(--gray-200);border-radius:12px;padding:1rem;margin-bottom:.8rem;overflow:hidden"><strong>Položka ' + (i + 1) + '</strong> ' + thumb +
-        '<button type="button" class="btn btn-outline" data-del="' + i + '" style="float:right;padding:.3rem .8rem">Odebrat</button>' + sel +
+        '<button type="button" class="btn btn-outline" data-del="' + i + '" style="float:right;padding:.3rem .8rem">Odebrat</button>' +
+        (r.ai && r.ai.length ? '<p style="clear:none;margin:.5rem 0;padding:.45rem .7rem;background:#fff7d6;border:1px solid #e0b100;border-radius:8px;font-size:.9rem">🤖 Ověřte: ' + r.ai.map(esc).join(' · ') + '</p>' : '') + sel +
         '<label class="pq-f">Název *<input data-i="' + i + '" data-f="nazev" value="' + esc(r.nazev) + '" placeholder="' + (byt ? 'doplní se z modelu a odstínu' : 'např. název dveří / modelu') + '"></label>' +
         '<label class="pq-f">Doplňující popis (volitelné, jde do PDF)<input data-i="' + i + '" data-f="popis" value="' + esc(r.popis) + '"></label>' +
         '<div class="pq-grid2"><label class="pq-f">Počet kusů<input data-i="' + i + '" data-f="ks" inputmode="numeric" value="' + r.ks + '"' + (limited() ? ' readonly' : '') + '></label>' +
@@ -294,7 +295,7 @@
       poznamka: fv('poznamka'), interni: fv('interni'), odeslano: new Date().toISOString(),
       zahrnuje: fv('zahrnuje'), platba: fv('platba'), termin_text: fv('termin_text'),
       sleva_celkem: t.sleva, sleva_text: fv('sleva_text'), mezisoucet: t.sub, cena_celkem: t.total,
-      z_poptavky: st.fromRef || ''
+      z_poptavky: st.fromRef || '', ai_navrh: st.aiNavrh || ''
     };
     if (hasFak()) {
       var rz = dphRezim(), sz = rz === 'pdp' ? 0 : +rz, bez = rz === 'pdp' ? t.total : Math.round(t.total / (1 + sz / 100));
@@ -660,6 +661,25 @@
           form.elements.rozp_popis.value = o.rozpocet.popis || ''; form.elements.rozp_cislo.value = o.rozpocet.cislo || ''; form.elements.rozp_cena.value = o.cena_celkem || '';
           st.rozpNote = ' Nahrajte k objednávce znovu rozpočet v PDF' + (o.rozpocet.soubor ? ' (v nabídce byl „' + esc(o.rozpocet.soubor) + '“)' : '') + ' – stejný, nebo upravený podle domluvy.';
         }
+      } else if (o.ai && (o.kategorie === 'interier' || o.kategorie === 'dum') && Array.isArray(o.polozky) && o.polozky.length) {
+        /* návrh nabídky od pomocníka v kartotéce (navrh-nabidky.php): model a odstín z katalogu, cena z akčního ceníku (u interiérů), nejistoty žlutě */
+        st.kat = o.kategorie;
+        o.polozky.forEach(function (p2) {
+          var rw = newRow(), nm = String(p2.model || '');
+          if (nm && catFind(nm)) applyCat(rw, nm); else { rw.cat = '__jiny'; rw.nazev = String(p2.nazev || nm || ''); }
+          if (p2.nazev && rw.cat === '__jiny') rw.nazev = String(p2.nazev);
+          var cx = catFind(rw.cat);
+          if (p2.odstin) { rw.odstin = String(p2.odstin); if (cx && cx[5]) cx[5].forEach(function (d2) { if (d2[0] === rw.odstin) { rw.shadeImg = 'aplikace/' + d2[1]; rw.img = rw.shadeImg; } }); }
+          rw.ks = limited() ? 1 : (int(p2.ks) || 1);
+          if (p2.sirka) rw.sirka = String(p2.sirka).replace(/\s*cm$/i, '');
+          if (p2.otev) rw.otev = String(p2.otev); if (p2.zarub) rw.zarub = String(p2.zarub); if (p2.kov) rw.kov = String(p2.kov); if (p2.popis) rw.popis = String(p2.popis);
+          if (p2.tl) rw.tl = String(p2.tl);
+          if (st.kat === 'interier') rw.montaz = p2.montaz !== false;
+          rw.cenaRuc = false; autoPrice(rw);
+          rw.ai = (p2.nejiste || []).map(String).filter(Boolean);
+          if (!rw.cena) rw.ai.push(st.kat === 'dum' ? 'Cenu doplňte ručně (rozpočet ERKADO z jiného programu).' : 'Cena se z ceníku nedoplnila – zadejte ji ručně.');
+          st.rows.push(rw);
+        });
       } else if (m) {
         st.kat = 'byt'; var r = newRow(); r.model = m.k; r.odstin = o.odstin || ''; r.nazev = m.name + (r.odstin ? ' – ' + r.odstin : '');
         r.cena = int(o.cena_celkem) || modelPrice(r) || m.price; r.img = m.img || '';
@@ -690,6 +710,16 @@
         r2.ks = int(o.pocet_ks) || 1; st.rows.push(r2);
       }
       setDefaults();
+      if (o.ai) {
+        st.aiNavrh = o.ai_navrh || ''; if (!st.kat && KATS.indexOf(o.kategorie) >= 0) { st.kat = o.kategorie; setDefaults(); }
+        if (o.interni && form.elements.interni) form.elements.interni.value = o.interni;
+        var inf = $('#nbLoaded'), pzn = (o.ai_poznamky || []).map(String).filter(Boolean);
+        st.rows.forEach(function (rw, i) { (rw.ai || []).forEach(function (t) { pzn.push('Položka ' + (i + 1) + ': ' + t); }); });
+        inf.hidden = false; inf.style.background = '#fff7d6'; inf.style.borderColor = '#e0b100';
+        inf.innerHTML = '🤖 <b>Návrh nabídky připravil pomocník</b> z poptávky <b>' + esc(o.cislo || '') + '</b>. Nic se neodeslalo – vše zkontrolujte, doplňte a teprve pak odešlete.' +
+          (pzn.length ? '<br><b>Ověřte / doplňte:</b><ul style="margin:.3rem 0 0 1.2rem;padding:0">' + pzn.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' : '');
+        return;
+      }
       var info = $('#nbLoaded'); info.hidden = false; info.innerHTML = '✓ Načteno z ' + (o.typ === 'nabidka' ? 'nabídky' : 'poptávky') + ' <b>' + esc(o.cislo || '') + '</b>. ' + (st.rozp ? 'Předmět a cena jsou přenesené.' + (st.rozpNote || '') : 'Položky a ceny jsou přenesené; zkontrolujte je a doplňte, co chybí.');
     } catch (e) {}
   })();
