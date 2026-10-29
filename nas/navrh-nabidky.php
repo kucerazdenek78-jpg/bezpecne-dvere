@@ -22,7 +22,7 @@ if (isset($_GET['go'])) {
   header('Content-Type: application/json; charset=utf-8'); @set_time_limit(180);
   try { $r = nav_vytvor($pdo, $cfg, $DATA, $id, uziv_jmeno()); }
   catch (Throwable $ex) { $r = ['ok' => false, 'chyba' => 'Chyba: ' . $ex->getMessage()]; }
-  if (!empty($r['ok'])) $r = ['ok' => true, 'url' => bd_prod_url($r['url'])];
+  if (!empty($r['ok'])) $r = ['ok' => true, 'url' => bd_prod_url($r['url']), 'url2' => $r['url2'] ? bd_prod_url($r['url2']) : ''];
   else $r = ['ok' => false, 'chyba' => (string)($r['chyba'] ?? 'Neznámá chyba')];
   echo json_encode($r, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit;
 }
@@ -51,6 +51,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px 8px;b
   (function () {
     var box = document.getElementById('stav');
     fetch('navrh-nabidky.php?id=<?= $id ?>&go=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.ok && j.url && j.url2) {   // poptávka na dveře do bytu/domu + interiérové dveře → dvě samostatné nabídky
+        box.innerHTML = '<h2 style="margin-top:0">🤖 Návrh je hotový – dvě nabídky</h2><p>Zákazník chce dveře do bytu nebo domu a k tomu interiérové dveře. Každá nabídka se dělá zvlášť – otevřete první, odešlete ji a pak se vraťte pro druhou (tato stránka zůstane otevřená).</p>'
+          + '<p><a class="btn" target="_blank" rel="opener" href="' + j.url + '">1. Nabídka – vchodové dveře</a></p><p><a class="btn" target="_blank" rel="opener" href="' + j.url2 + '">2. Nabídka – interiérové dveře</a></p><p><a href="kartoteka.php?id=<?= $id ?>">← zpět na poptávku</a></p>';
+        return;
+      }
       if (j.ok && j.url) { location.href = j.url; return; }
       box.innerHTML = '<div class="err">' + String(j.chyba || 'Návrh se nepovedl.').replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }) + '</div><p><a class="btn" href="navrh-nabidky.php?id=<?= $id ?>">Zkusit znovu</a> <a href="kartoteka.php?id=<?= $id ?>">← zpět na poptávku</a></p>';
     }).catch(function () { box.innerHTML = '<div class="err">Spojení se nepovedlo.</div><p><a class="btn" href="navrh-nabidky.php?id=<?= $id ?>">Zkusit znovu</a> <a href="kartoteka.php?id=<?= $id ?>">← zpět na poptávku</a></p>'; });

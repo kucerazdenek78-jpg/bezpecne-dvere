@@ -14,7 +14,9 @@ const out = {
   interier: V.interier.map(c => {
     const e = INT_CENIK[c[0]];
     return { model: c[0], popis: c[2], skladem: !!c[4], odstiny: (c[5] || []).map(d => d[0]).concat(e && e.v ? Object.keys(e.v).filter(k => !(c[5] || []).some(d => d[0] === k)) : []),
-      tl_zarubne: e ? e.r : [], cena_z_ceniku: !!e };
+      tl_zarubne: e ? e.r : [], cena_z_ceniku: !!e,
+      // nejnižší ceníková cena (dveře + zárubeň, Kč bez DPH, bez montáže) – jen pro výběr „nejlevnějšího“ modelu, cenu do nabídky počítá formulář
+      cena_od_bez_dph: !e ? null : (e.v ? Object.fromEntries(Object.entries(e.v).map(([k, a]) => [k, Math.min(...a)])) : Math.min(...e.c)) };
   })
 };
 process.stdout.write(JSON.stringify(out, null, 1));

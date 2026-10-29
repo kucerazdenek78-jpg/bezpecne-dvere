@@ -137,7 +137,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 5450
   },
   {
    "model": "KAVALA",
@@ -152,7 +153,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 5450
   },
   {
    "model": "LARISA",
@@ -167,7 +169,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 4300
   },
   {
    "model": "FRÉZIA 1",
@@ -182,7 +185,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 7000
   },
   {
    "model": "FRÉZIA 9",
@@ -196,7 +200,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 8800
   },
   {
    "model": "NEMÉZIA 14",
@@ -210,7 +215,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 7050
   },
   {
    "model": "LAURENCIA 1",
@@ -225,7 +231,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 6850
   },
   {
    "model": "ALTAMURA 1",
@@ -236,7 +243,8 @@
     "80–195 mm",
     "195–315 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 8050
   },
   {
    "model": "ALTAMURA 1 – falcové",
@@ -251,7 +259,8 @@
     "80–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 4900
   },
   {
    "model": "LAURENCIA",
@@ -259,7 +268,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "DAGLÉZIA",
@@ -267,7 +277,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "MAGNÓLIA",
@@ -275,7 +286,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "FRÉZIA",
@@ -283,7 +295,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "ALTAMURA",
@@ -291,7 +304,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "ALTAMURA LUX",
@@ -299,7 +313,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "NEMÉZIA",
@@ -307,7 +322,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "MISKANT",
@@ -315,7 +331,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "LINEA FORTE 5",
@@ -332,7 +349,14 @@
     "75–179 mm",
     "180–299 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": {
+    "Dub evropský": 5650,
+    "Bílá": 5650,
+    "Dub popelavý": 5650,
+    "Kašmír matný": 6400,
+    "Světle šedá matná": 4900
+   }
   },
   {
    "model": "NORMA DECOR 1",
@@ -348,7 +372,13 @@
     "75–179 mm",
     "180–299 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": {
+    "Dub evropský": 3850,
+    "Dub popelavý": 3850,
+    "Bílá": 4650,
+    "Světle šedá matná": 3900
+   }
   },
   {
    "model": "AVERSA 1",
@@ -365,7 +395,14 @@
     "75–179 mm",
     "180–299 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": {
+    "Dub evropský": 5650,
+    "Bílá": 5650,
+    "Dub popelavý": 5650,
+    "Kašmír matný": 6400,
+    "Světle šedá matná": 4900
+   }
   },
   {
    "model": "DECORATO · BELGATTO",
@@ -373,7 +410,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "LINEA FORTE",
@@ -381,7 +419,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "NOGARO · TAMPARO",
@@ -389,7 +428,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "LIBRA · NORMA DECOR",
@@ -397,7 +437,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "CAPRIO · NIDA · ROMA",
@@ -405,7 +446,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "CPL 1.1",
@@ -416,7 +458,8 @@
     "75–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 5650
   },
   {
    "model": "DECOR P",
@@ -427,7 +470,8 @@
     "75–180 mm",
     "180–300 mm"
    ],
-   "cena_z_ceniku": true
+   "cena_z_ceniku": true,
+   "cena_od_bez_dph": 4750
   },
   {
    "model": "VECTOR",
@@ -435,7 +479,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "VERTE HOME G / H",
@@ -443,7 +488,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "VERTE PREMIUM A",
@@ -451,7 +497,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "VERTE PREMIUM E",
@@ -459,7 +506,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "HARMONY",
@@ -467,7 +515,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   },
   {
    "model": "CPL",
@@ -475,7 +524,8 @@
    "skladem": false,
    "odstiny": [],
    "tl_zarubne": [],
-   "cena_z_ceniku": false
+   "cena_z_ceniku": false,
+   "cena_od_bez_dph": null
   }
  ]
 }

@@ -107,7 +107,10 @@ function nav_nastroj(): array {
         'kov' => ['type' => 'string', 'description' => 'Kování, jen když ho zákazník uvedl'],
         'montaz' => ['type' => 'boolean', 'description' => 'Interiér: true, pokud zákazník chce montáž nebo to neuvedl; false jen když výslovně montáž nechce'],
         'popis' => ['type' => 'string', 'description' => 'Krátký doplňující popis položky do nabídky (volitelné)'],
-        'nejiste' => ['type' => 'array', 'items' => $str, 'description' => 'Co u této položky chybí nebo je potřeba ověřit']]]],
+        'nejiste' => ['type' => 'array', 'items' => $str, 'description' => 'Co u této položky chybí nebo je potřeba ověřit'],
+        'vychozi' => ['type' => 'boolean', 'description' => 'Interiér: true, když zákazník konkrétní model neuvedl – model pak vybere systém z ceníku (model nech prázdný)'],
+        'odstiny_podobne' => ['type' => 'array', 'items' => $str, 'description' => 'Při vychozi=true: přesné názvy dekorů z katalogu interiérů, které jsou nejpodobnější požadované barvě (nejpodobnější první)']]]],
+      'interier_dalsi' => ['type' => 'array', 'description' => 'Jen u kategorie byt nebo dum: interiérové dveře, které zákazník chce navíc (samostatná nabídka). Stejná pole jako polozky.', 'items' => ['type' => 'object']],
       'poznamka_zakaznik' => ['type' => 'string', 'description' => 'Krátká poznámka pro zákazníka do PDF (nejvýš 2 věty), nebo prázdné'],
       'otazky' => ['type' => 'array', 'items' => $str, 'description' => 'Na co se zeptat zákazníka, než se nabídka pošle'],
       'pro_prodejce' => ['type' => 'array', 'items' => $str, 'description' => 'Další poznámky pro prodavače (např. co je vidět na fotce)'],
@@ -122,11 +125,30 @@ function nav_system(array $n, array $priklady): string {
   . "- Dveře do bytu a do domu: na jednu adresu jedny dveře (1 položka, 1 kus). Interiérové dveře: libovolně položek a kusů; stejný model a odstín se stejnými parametry = jedna položka s počtem kusů.\n"
   . "- Interiéry: montáž (zárubeň, osazení křídla, kování do připraveného otvoru) se počítá ke každým dveřím, pokud zákazník výslovně neuvede, že montáž nechce. Vše ostatní (bourání, úprava otvoru) až po zaměření – to patří do otazky.\n"
   . "- Tloušťka zárubně u interiérů = tloušťka zdi; vyber rozsah z tl_zarubne jen když zákazník uvedl tloušťku zdi v mm/cm.\n"
+  . "- Interiérové dveře, u kterých zákazník neuvedl konkrétní model (např. jen počet kusů a barvu): dej vychozi=true, model nech prázdný a do odstiny_podobne vypiš dekory z katalogu interiérů nejpodobnější barvě, kterou chce – když barvu interiérů neuvedl, vezmi odstín jeho bezpečnostních / vchodových dveří. Model vybere systém (druhý nejlevnější z ceníku).\n"
+  . "- Když zákazník chce dveře do bytu nebo domu A K TOMU interiérové dveře (počet kusů), interiérové dej do interier_dalsi – budou v samostatné nabídce.\n"
   . "- Když poptávka vůbec není na dveře (např. servis oken), dej kategorii nejasne a vysvětli v otazky.\n- Piš česky, stručně. Kontaktní údaje patří jen do pole kontakt (a jen když je v zadání oddíl KONTAKT ZÁKAZNÍKA), nikam jinam.\n\n";
   $s .= "KATALOG (JSON):\n" . json_encode(nav_katalog(), JSON_UNESCAPED_UNICODE) . "\n";
   if ($priklady) $s .= "\nPŘÍKLADY Z MINULA – co jsi navrhl a co prodavač nakonec odeslal. Uč se z rozdílů (jak prodavač doplňuje a opravuje):\n" . json_encode($priklady, JSON_UNESCAPED_UNICODE) . "\n";
   if (trim((string)($n['pokyny'] ?? '')) !== '') $s .= "\nDOPLŇUJÍCÍ POKYNY OD ZDEŇKA (mají přednost):\n" . mb_substr(trim((string)$n['pokyny']), 0, 6000) . "\n";
   return $s;
+}
+
+// Výběr interiérových dveří, když zákazník model neuvedl: ze všech ceníkových modelů a dekorů z $podobne
+// se vezme druhá nejnižší cenová hladina (bez DPH, bez montáže); když je jen jedna hladina, ta nejlevnější. Vrací [model, dekor] nebo null.
+function nav_vyber_levny(array $podobne): ?array {
+  $k = nav_katalog(); $kand = [];
+  foreach ($podobne as $poradi => $dek) foreach ($k['interier'] as $m) {
+    if (empty($m['cena_z_ceniku']) || !in_array($dek, (array)$m['odstiny'], true)) continue;
+    $c = is_array($m['cena_od_bez_dph']) ? ($m['cena_od_bez_dph'][$dek] ?? null) : $m['cena_od_bez_dph']; if ($c === null) continue;
+    $kand[] = ['m' => $m['model'], 'd' => $dek, 'c' => (int)$c, 'p' => $poradi];
+  }
+  if (!$kand) return null;
+  usort($kand, fn($a, $b) => [$a['c'], $a['p']] <=> [$b['c'], $b['p']]);
+  $hladiny = array_values(array_unique(array_column($kand, 'c')));
+  $cil = $hladiny[count($hladiny) > 1 ? 1 : 0];
+  foreach ($kand as $x) if ($x['c'] === $cil) return [$x['m'], $x['d']];
+  return null;
 }
 
 // Kontrola výstupu proti katalogu (cokoli mimo katalog se přesune do „nejisté“).
@@ -145,17 +167,25 @@ function nav_kontrola(array $v): array {
     if (!is_array($p)) continue; $nej = array_values(array_filter(array_map('strval', (array)($p['nejiste'] ?? []))));
     $mod = (string)($p['model'] ?? '');
     if ($kat === 'interier') {
+      if (!empty($p['vychozi'])) {
+        $vyb = nav_vyber_levny(array_values(array_filter(array_map('strval', (array)($p['odstiny_podobne'] ?? [])))));
+        if ($vyb) { [$mod, $p['odstin']] = $vyb; $nej[] = 'Typ dveří vybrán orientačně (2. nejlevnější z ceníku v podobném odstínu) – zákazník si musí vybrat typ, cena se podle toho změní.'; }
+        else $nej[] = 'Podobný odstín v ceníku nenalezen – vyberte model a odstín.';
+        $p['vychozi'] = true;
+      } else $p['vychozi'] = false;
       $e = null; foreach ($k['interier'] as $x) if ($x['model'] === $mod) $e = $x;
       if ($mod !== '' && !$e) { $nej[] = 'Model „' . $mod . '“ v katalogu není.'; $p['nazev'] = $p['nazev'] ?? $mod; $mod = ''; }
       if ($e && ($p['odstin'] ?? '') !== '' && $e['odstiny'] && !in_array($p['odstin'], $e['odstiny'], true)) { $nej[] = 'Odstín „' . $p['odstin'] . '“ u tohoto modelu není – vyberte.'; $p['odstin'] = ''; }
       if (($p['tl'] ?? '') !== '' && (!$e || !in_array($p['tl'], $e['tl_zarubne'], true))) { $nej[] = 'Tloušťka zárubně „' . $p['tl'] . '“ – vyberte z nabídky.'; $p['tl'] = ''; }
-      if (($p['tl'] ?? '') === '' && $e && $e['tl_zarubne']) $nej[] = 'Chybí tloušťka zdi (zárubně).';
-      if (($p['sirka'] ?? '') === '') $nej[] = 'Chybí šířka dveří.';
+      if (($p['tl'] ?? '') === '' && $e && $e['tl_zarubne'] && !empty($p['vychozi'])) { $p['tl'] = $e['tl_zarubne'][0]; $nej[] = 'Cena je spočítaná pro zárubeň ' . $p['tl'] . ' – po zaměření upravte.'; }
+      elseif (($p['tl'] ?? '') === '' && $e && $e['tl_zarubne']) $nej[] = 'Chybí tloušťka zdi (zárubně).';
+      if (($p['sirka'] ?? '') === '') $nej[] = !empty($p['vychozi']) ? 'Rozměry dveří je nutné specifikovat (šířka, tloušťka zdi).' : 'Chybí šířka dveří.';
     } else {
       if ($mod !== '' && !in_array($mod, $k['dum'], true)) { $nej[] = 'Model „' . $mod . '“ v katalogu ERKADO není.'; $p['nazev'] = $p['nazev'] ?? $mod; $mod = ''; }
       $p['ks'] = 1;
     }
     $p['model'] = $mod; $p['ks'] = max(1, (int)($p['ks'] ?? 1)); $p['nejiste'] = array_values(array_unique($nej));
+    unset($p['odstiny_podobne']);
     foreach (['nazev', 'odstin', 'sirka', 'otev', 'zarub', 'tl', 'kov', 'popis'] as $f) $p[$f] = mb_substr(trim((string)($p[$f] ?? '')), 0, 200);
     if ($p['model'] === '' && $p['nazev'] === '') $p['nazev'] = $kat === 'dum' ? 'Vchodové dveře' : 'Interiérové dveře';
     $pol[] = $p; if ($kat === 'dum') break;
@@ -183,13 +213,16 @@ function nav_vytvor(PDO $pdo, array $cfg, string $DATA, int $id, string $uzivate
   $v = null; foreach ((array)($r['data']['content'] ?? []) as $b) if (($b['type'] ?? '') === 'tool_use') $v = (array)$b['input'];
   if (!$v) { pom_zapis($pdo, 'navrh', $model, $in, $out, 'bez návrhu'); return ['ok' => false, 'chyba' => 'Pomocník návrh nevrátil. Zkuste to znovu.']; }
   pom_zapis($pdo, 'navrh', $model, $in, $out);
-  $v = nav_kontrola($v);
+  $dalsi = (in_array($v['kategorie'] ?? '', ['byt', 'dum'], true) && !empty($v['interier_dalsi']) && is_array($v['interier_dalsi'])) ? $v['interier_dalsi'] : [];
+  $v = nav_kontrola($v); unset($v['interier_dalsi']);
+  if ($dalsi) $v['interier_dalsi'] = nav_kontrola(['kategorie' => 'interier', 'polozky' => $dalsi])['polozky'];
   $v['kontakt'] = ($kchybi && $kzdroj !== '' && is_array($v['kontakt'] ?? null)) ? nav_kontakt_over($v['kontakt'], $kzdroj) : [];
   $cislo = pom_cislo($z, $d);
   $pdo->prepare('INSERT INTO pomocnik_navrhy (cas, zadost_id, poptavka_cislo, uzivatel, model, navrh_json, vstup, vystup) VALUES (?,?,?,?,?,?,?,?)')
     ->execute([date('Y-m-d H:i:s'), $id, $cislo, $uzivatel, $model, json_encode($v, JSON_UNESCAPED_UNICODE), $in, $out]);
   $nid = (int)$pdo->lastInsertId();
-  return ['ok' => true, 'id' => $nid, 'navrh' => $v, 'url' => nav_url($cfg, $z, $d, $v, $nid)];
+  $url2 = !empty($v['interier_dalsi']) ? nav_url($cfg, $z, $d, ['kategorie' => 'interier', 'polozky' => $v['interier_dalsi'], 'shrnuti' => $v['shrnuti'] ?? '', 'otazky' => $v['otazky'] ?? [], 'kontakt' => $v['kontakt']], $nid) : '';
+  return ['ok' => true, 'id' => $nid, 'navrh' => $v, 'url' => nav_url($cfg, $z, $d, $v, $nid), 'url2' => $url2];
 }
 
 // Odkaz na formulář nabídky s předvyplněním (#d=base64url JSON). Kontakty bere z kartotéky, ne od Claude.
@@ -200,6 +233,8 @@ function nav_url(array $cfg, array $z, array $d, array $v, int $nid): string {
   $zText = [];   // kontakt vyčtený z textu poptávky (jen pole, která formulář poptávky nevyplnil)
   foreach ((array)($v['kontakt'] ?? []) as $k => $x) if (empty($o[$k]) && $x !== '') { $o[$k] = (string)$x; $zText[] = $k; }
   if (!empty($v['poznamka_zakaznik'])) $o['poznamka'] = mb_substr((string)$v['poznamka_zakaznik'], 0, 500);
+  if ($v['kategorie'] === 'interier' && array_filter((array)($v['polozky'] ?? []), fn($p) => !empty($p['vychozi'])))   // model vybraný orientačně (pravidlo Zdeňka 29. 10.)
+    $o['poznamka'] = trim(($o['poznamka'] ?? '') . "\nTyp interiérových dveří v nabídce je zatím orientační – vyberte si prosím konkrétní model, cena nabídky se podle výběru změní. Rozměry dveří (šířku a tloušťku zdi) je nutné upřesnit, nejlépe zaměřením.");
   $pozn = []; $otz = array_values(array_filter(array_map('strval', (array)($v['otazky'] ?? []))));
   foreach ($otz as $t) $pozn[] = 'Zeptat se: ' . $t;
   foreach ((array)($v['pro_prodejce'] ?? []) as $t) if ((string)$t !== '') $pozn[] = (string)$t;
@@ -214,7 +249,7 @@ function nav_url(array $cfg, array $z, array $d, array $v, int $nid): string {
     foreach ($v['byt']['nejiste'] as $t) $pozn[] = $t;
     $o['ai_poznamky'] = $pozn;
   } else { $o['polozky'] = $v['polozky']; $o['ai_poznamky'] = $pozn; }
-  $o['interni'] = mb_substr('Návrh pomocníka č. ' . $nid . ($v['shrnuti'] ? ' – ' . $v['shrnuti'] : '') . ($otz ? "\nZeptat se: " . implode('; ', $otz) : ''), 0, 1500);
+  $o['interni'] = mb_substr('Návrh pomocníka č. ' . $nid . (!empty($v['shrnuti']) ? ' – ' . $v['shrnuti'] : '') . ($otz ? "\nZeptat se: " . implode('; ', $otz) : ''), 0, 1500);
   $wu = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/');
   return $wu . '/nabidka-nova.html?sys=1#d=' . rtrim(strtr(base64_encode(json_encode($o, JSON_UNESCAPED_UNICODE)), '+/', '-_'), '=');
 }
