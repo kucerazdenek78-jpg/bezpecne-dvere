@@ -850,7 +850,7 @@
       var dalsi = st.autoQ[0], zbytek = st.autoQ.slice(1);
       kAutoStav(hl + ' Za 3 s další (' + st.autoQ.length + ' zbývá)…');
       setTimeout(function () { location.href = location.pathname + location.search + '#k=' + dalsi + '&test=' + encodeURIComponent(st.test) + (zbytek.length ? '&q=' + zbytek.join(',') : ''); location.reload(); }, 3000);
-    }).catch(function () { kAutoStav('Zkušební e-mail se nepodařilo odeslat (server / limit).' + kAutoZbyva(), true); });
+    }).catch(function (er) { var m = String((er && er.message) || ''); kAutoStav('Zkušební e-mail se nepodařilo odeslat – ' + (m === 'limit' ? 'server hlásí překročený limit odeslání, zkuste to za hodinu.' : m === 'email' ? 'neplatná adresa.' : m === 'velke' ? 'přílohy jsou moc velké.' : 'server neodpověděl (' + (m || 'neznámá chyba') + ').') + kAutoZbyva(), true); });
   }
   function kAutoDalsi(d) {
     if (!st.auto) return;
