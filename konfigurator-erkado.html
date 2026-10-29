@@ -381,10 +381,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
           <fieldset class="pq-block">
             <legend>Kontakt</legend>
             <div class="pq-grid2">
-              <label class="pq-f">Jméno a příjmení<input type="text" id="kfJmeno" autocomplete="name"></label>
-              <label class="pq-f">Telefon<input type="tel" id="kfTel" autocomplete="tel"></label>
+              <label class="pq-f">Jméno *<input type="text" id="kfJmeno" autocomplete="given-name" required></label>
+              <label class="pq-f">Příjmení *<input type="text" id="kfPrijmeni" autocomplete="family-name" required></label>
+              <label class="pq-f">Telefon *<input type="tel" id="kfTel" inputmode="tel" autocomplete="tel" placeholder="777 123 456" required></label>
               <label class="pq-f">E-mail<input type="email" id="kfEmail" autocomplete="email"></label>
-              <label class="pq-f">Obec<input type="text" id="kfObec" autocomplete="address-level2"></label>
+              <label class="pq-f">Obec *<input type="text" id="kfObec" autocomplete="address-level2" required></label>
             </div>
             <input type="text" id="kfHoney" class="pq-honey" tabindex="-1" autocomplete="off" aria-hidden="true">
             <label class="pq-f">Poznámka<textarea id="kfPozn" rows="3" placeholder="Např. odstín skla, termín, stavební připravenost"></textarea></label>
@@ -449,7 +450,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 
 <script src="formulare-klient.js?v=20261024a"></script>
 <script src="konfigurator-erkado/erkado-data.js?v=20261024g"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261025c"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261029a"></script>
 <script src="cookies.js?v=5" defer></script>
 </body>
 </html>

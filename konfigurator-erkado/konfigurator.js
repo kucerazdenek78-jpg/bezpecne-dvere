@@ -628,7 +628,7 @@
       polozky: r.lines.map(function (l) { return { co: l[0], volba: l[2] || '', priplatek: l[1] }; }),
       cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber, vizualizace: !!vizRes,
       doprava_km: r.dop ? r.dop.km : null, doprava_cena: r.dop ? r.dop.fee : null, cena_celkem: r.total,
-      jmeno: jm[0] || '', prijmeni: jm.slice(1).join(' '), telefon: $('kfTel').value.trim(), email: $('kfEmail').value.trim(),
+      jmeno: $('kfPrijmeni').value.trim() ? $('kfJmeno').value.trim() : (jm[0] || ''), prijmeni: $('kfPrijmeni').value.trim() || jm.slice(1).join(' '), telefon: $('kfTel').value.trim(), email: $('kfEmail').value.trim(),
       ulice: $('kfAdr').value.trim(), mesto: $('kfObec').value.trim(), poznamka: $('kfPozn').value.trim()
     };
   }
@@ -811,16 +811,16 @@
   function invalid() {
     var bad = [];
     function chk(el, ok) { el.classList.toggle('bad', !ok); if (!ok) bad.push(el); }
-    chk($('kfJmeno'), $('kfJmeno').value.trim().length >= 2);
-    var tel = $('kfTel').value.replace(/\s/g, ''), em = $('kfEmail').value.trim();
+    chk($('kfJmeno'), $('kfJmeno').value.trim().length >= 2); chk($('kfPrijmeni'), $('kfPrijmeni').value.trim().length >= 2);   /* jméno, příjmení a telefon povinné (Zdeněk 29. 10.) */
+    var tel = $('kfTel').value.replace(/[\s\/-]/g, ''), em = $('kfEmail').value.trim();
     var telOk = /^\+?\d{9,15}$/.test(tel), emOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em);
-    chk($('kfTel'), telOk || (!tel && emOk)); chk($('kfEmail'), emOk || (!em && telOk));
+    chk($('kfTel'), telOk); chk($('kfEmail'), !em || emOk);
     chk($('kfObec'), $('kfObec').value.trim().length >= 2);
     chk($('kfGdpr').closest('.pq-check'), $('kfGdpr').checked);
     if (!bad.length) return '';
     bad[0].focus && bad[0].focus();
     if (!$('kfGdpr').checked && bad.length === 1) return 'Pro odeslání prosím potvrďte souhlas se zpracováním osobních údajů.';
-    return 'Doplňte prosím jméno, obec a telefon nebo e-mail (označená pole).';
+    return 'Doplňte prosím jméno, příjmení, telefon a obec (označená pole).';
   }
   $('kfSendBtn').addEventListener('click', function () {
     var b = this, msg = $('kfMsg'), done = $('kfDone');
@@ -881,7 +881,7 @@
       });
     });
   }
-  function formVals() { var o = {}; ['kfJmeno', 'kfTel', 'kfEmail', 'kfObec', 'kfPozn', 'kfAdr'].forEach(function (id) { o[id] = $(id).value; }); o.gdpr = $('kfGdpr').checked; return o; }
+  function formVals() { var o = {}; ['kfJmeno', 'kfPrijmeni', 'kfTel', 'kfEmail', 'kfObec', 'kfPozn', 'kfAdr'].forEach(function (id) { o[id] = $(id).value; }); o.gdpr = $('kfGdpr').checked; return o; }
   function tryOnPhoto(b) {
     var t0 = b.textContent; b.disabled = true; b.textContent = 'Připravuji…';
     vizImage().then(function (img) {
