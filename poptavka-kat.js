@@ -53,7 +53,8 @@
     if (!document.getElementById('pqk-css')) { var st = document.createElement('style'); st.id = 'pqk-css'; st.textContent = CSS; document.head.appendChild(st); }
     el.setAttribute('data-poptavka-kat', kat);
     el.innerHTML = '<div class="pqk"><form novalidate><h2>' + K.h + '</h2><p class="pqk-sub">' + K.sub + '</p>' +
-      '<fieldset><legend>Které dveře vás zajímají?</legend><div data-rows>' + rowHtml(kat, K.multi) + '</div>' + (K.multi ? '<button type="button" class="pqk-btn pqk-ghost pqk-add" data-add>+ Přidat další model</button>' : '') + '</fieldset>' +
+      '<fieldset><legend>Které dveře vás zajímají?</legend><div data-rows>' + rowHtml(kat, K.multi) + '</div>' + (K.multi ? '<button type="button" class="pqk-btn pqk-ghost pqk-add" data-add>+ Přidat další model</button>' : '') +
+        (kat === 'interier' ? '<label class="pqk-chk" style="margin-top:.9rem"><input type="checkbox" name="bourani"> Vybourat stávající zárubně a připravit otvor (2 000 Kč bez DPH za kus včetně odvozu materiálu)</label>' : '') + '</fieldset>' +
       '<fieldset><legend>Na koho se máme obrátit?</legend><div class="pqk-g2">' +
       '<label class="pqk-f">Jméno *<input name="jmeno" autocomplete="given-name" required></label><label class="pqk-f">Příjmení *<input name="prijmeni" autocomplete="family-name" required></label>' +
       '<label class="pqk-f">Telefon *<input name="telefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="777 123 456" required></label><label class="pqk-f">E-mail' + (K.adr ? '' : ' *') + '<input name="email" type="email" autocomplete="email" placeholder="vas@email.cz"' + (K.adr ? '' : ' required') + '></label></div></fieldset>' +
@@ -102,9 +103,9 @@
         model: items.map(function (x) { return x.model; }).join(', '), model_kod: '', odstin: odTxt, pocet_ks: ksSum,
         polozky: items.map(function (x) { return { co: x.model, odstin: x.od, ks: x.ks, volba: (x.od ? x.od : '') + (K.multi ? (x.od ? ', ' : '') + x.ks + ' ks' : ''), priplatek: 0, info: '' }; }),
         jmeno: f.jmeno.value.trim(), prijmeni: f.prijmeni.value.trim(), telefon: f.telefon.value.trim(), email: f.email.value.trim(),
-        ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(), poznamka: f.poznamka.value.trim(), fotky: list.map(function (_, i) { return 'foto' + (i + 1); }) };
+        ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(), poznamka: f.poznamka.value.trim(), bourani: !!(f.bourani && f.bourani.checked), fotky: list.map(function (_, i) { return 'foto' + (i + 1); }) };
       var predmet = 'Poptávka ' + K.nazev.toLowerCase() + ' ' + ref + ' – ' + modelTxt + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '');
-      var telo = window.BDForm.bodyFromFields([['Číslo poptávky', ref], ['Kategorie', K.nazev], ['Dveře', modelTxt], ['Odstín', odTxt], ['Počet kusů', K.multi ? ksSum + ' ks' : ''], ['Jméno', d.jmeno + ' ' + d.prijmeni], ['Telefon', d.telefon], ['E-mail', d.email],
+      var telo = window.BDForm.bodyFromFields([['Číslo poptávky', ref], ['Kategorie', K.nazev], ['Dveře', modelTxt], ['Odstín', odTxt], ['Počet kusů', K.multi ? ksSum + ' ks' : ''], ['Vybourání zárubní', d.bourani ? 'Ano – vybourat stávající zárubně a připravit otvor (2 000 Kč bez DPH/ks vč. odvozu)' : ''], ['Jméno', d.jmeno + ' ' + d.prijmeni], ['Telefon', d.telefon], ['E-mail', d.email],
         ['Adresa montáže', [d.ulice, d.psc + ' ' + d.mesto].join(', ').replace(/^,\s*|\s+$/g, '')], ['Poznámka', d.poznamka], ['Fotky', list.length ? list.length + ' ks v příloze' : ''], ['Odesláno', new Date().toLocaleString('cs-CZ')]].filter(function (x) { return x[1]; }));
     });
     return el;

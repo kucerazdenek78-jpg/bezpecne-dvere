@@ -25,7 +25,7 @@
   var VIZ = window.VIZ_DATA || { domovni: [], interier: [] };
   var DEF_ZAHRNUJE = 'Montáž na klíč, odvoz starých dveří a hrubý úklid. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody.';
   /* interiérové dveře: akční ceník 10/2026 (akciovy-katalog.pdf, str. 4, 7–10), komplet dveře + zárubeň, Kč BEZ DPH; rozsahy = tloušťka zdi (zárubně). Cena platí pro šířky 60–90 cm. */
-  var INT_MONTAZ = 1800, INT_DPH_MONT = 12, INT_DPH_BEZ = 21;
+  var INT_MONTAZ = 1800, INT_BOURANI = 2000, INT_DPH_MONT = 12, INT_DPH_BEZ = 21;   /* vybourání stávající zárubně + příprava otvoru vč. odvozu materiálu: 2 000 Kč bez DPH / ks (Zdeněk 29. 10.) */
   var R1 = ['80–180 mm', '180–300 mm'], R2 = ['75–179 mm', '180–299 mm'];
   var LF = { r: R2, v: { 'Dub evropský': [5650, 6250], 'Bílá': [5650, 6250], 'Dub popelavý': [5650, 6250], 'Kašmír matný': [6400, 7150], 'Světle šedá matná': [4900, 5550] } };
   var INT_CENIK = {
@@ -36,7 +36,7 @@
     'NORMA DECOR 1': { r: R2, v: { 'Dub evropský': [3850, 4450], 'Dub popelavý': [3850, 4450], 'Bílá': [4650, 5300], 'Světle šedá matná': [3900, 4450] } },
     'CPL 1.1': { r: ['75–180 mm', '180–300 mm'], c: [5650, 6000] }, 'DECOR P': { r: ['75–180 mm', '180–300 mm'], c: [4750, 5200] }, 'VERTE HOME G.4': { r: ['75–180 mm', '180–300 mm'], c: [6300, 6800] }
   };
-  var INT_ZAHRNUJE = 'Montáž zárubně, osazení dveřního křídla a montáž kování do připraveného otvoru: ' + '1 800 Kč bez DPH za dveře, platí jen když dveře, zárubně i kování kupujete u nás. Vše ostatní se určí až po prohlídce a zaměření technikem. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody.';
+  var INT_ZAHRNUJE = 'Montáž zárubně, osazení dveřního křídla a montáž kování do připraveného otvoru: ' + '1 800 Kč bez DPH za dveře, platí jen když dveře, zárubně i kování kupujete u nás. Vše ostatní se určí až po prohlídce a zaměření technikem. Vybourání stávající zárubně a příprava otvoru včetně odvozu materiálu (na přání): 2 000 Kč bez DPH za kus. Doprava do 40 km zdarma, 41–80 km 1 200 Kč, dál dle dohody.';
   var DEF_PLATBA = 'Záloha se hradí po potvrzení objednávky, doplatek po montáži hotově.';
   var lastDef = { zahrnuje: '', platba: '' };
 
@@ -117,7 +117,7 @@
   }
 
   /* ── položky ── */
-  function newRow() { return { model: '', odstin: '', cfg: null, nazev: '', popis: '', ks: 1, cena: 0, sleva: 0, img: '', shadeImg: '', spec: [], cat: '', prov: '', hint: '', sirka: '', otev: '', zarub: '', tl: '', montaz: true, cenaRuc: false, calc: '', kov: '', imgData: '' }; }
+  function newRow() { return { model: '', odstin: '', cfg: null, nazev: '', popis: '', ks: 1, cena: 0, sleva: 0, img: '', shadeImg: '', spec: [], cat: '', prov: '', hint: '', sirka: '', otev: '', zarub: '', tl: '', montaz: true, bourani: false, cenaRuc: false, calc: '', kov: '', imgData: '' }; }
   function modelPrice(r) {
     var m = katMod(r.model); if (!m) return 0; var pl = 0; m.shades.forEach(function (s) { if (s.n === r.odstin) pl = s.pl; }); return m.price + pl;
   }
@@ -129,8 +129,8 @@
     r.calc = ''; var e = intZ(r); if (!e) return;
     var arr = e.v ? e.v[r.odstin] : e.c, ix = e.r.indexOf(r.tl);
     if (!arr || ix < 0) { r.calc = e.v && !r.odstin ? 'Vyberte odstín a tloušťku zárubně, cena se doplní z ceníku.' : 'Vyberte tloušťku zárubně, cena se doplní z ceníku.'; return; }
-    var base = arr[ix], bez = base + (r.montaz ? INT_MONTAZ : 0), sz = r.montaz ? INT_DPH_MONT : INT_DPH_BEZ, vc = Math.round(bez * (1 + sz / 100));
-    r.calc = 'Ceník: dveře se zárubní ' + kc(base) + ' bez DPH' + (r.montaz ? ' + montáž ' + kc(INT_MONTAZ) : '') + ' = ' + kc(bez) + ' bez DPH → ' + kc(vc) + ' vč. ' + sz + ' % DPH za kus.';
+    var base = arr[ix], bez = base + (r.montaz ? INT_MONTAZ : 0) + (r.bourani ? INT_BOURANI : 0), sz = r.montaz ? INT_DPH_MONT : INT_DPH_BEZ, vc = Math.round(bez * (1 + sz / 100));
+    r.calc = 'Ceník: dveře se zárubní ' + kc(base) + ' bez DPH' + (r.montaz ? ' + montáž ' + kc(INT_MONTAZ) : '') + (r.bourani ? ' + vybourání zárubně ' + kc(INT_BOURANI) : '') + ' = ' + kc(bez) + ' bez DPH → ' + kc(vc) + ' vč. ' + sz + ' % DPH za kus.';
     if (!r.cenaRuc) r.cena = vc;
   }
   function sirkaHtml(r, i) {
@@ -147,6 +147,7 @@
   function montHtml(r, i) {
     if (st.kat !== 'interier') return '';
     return '<p style="margin:.7rem 0 0"><label style="display:flex;gap:.5rem;align-items:flex-start"><input type="checkbox" data-i="' + i + '" data-f="montaz"' + (r.montaz ? ' checked' : '') + '> <span>Montáž zárubně, osazení křídla a montáž kování (+' + kc(INT_MONTAZ) + ' bez DPH za kus, do připraveného otvoru; jen když vše kupuje u nás)</span></label></p>' +
+      '<p style="margin:.4rem 0 0"><label style="display:flex;gap:.5rem;align-items:flex-start"><input type="checkbox" data-i="' + i + '" data-f="bourani"' + (r.bourani ? ' checked' : '') + '> <span>Vybourání stávající zárubně a příprava otvoru vč. odvozu materiálu (+' + kc(INT_BOURANI) + ' bez DPH za kus)' + (intZ(r) ? '' : ' – u ručně zadané ceny připočítejte') + '</span></label></p>' +
       (r.calc ? '<p class="pq-help" style="margin:.4rem 0 0">' + esc(r.calc) + (r.cenaRuc ? ' <button type="button" class="btn btn-outline" data-reprice="' + i + '" style="padding:.15rem .6rem">Použít cenu z ceníku</button>' : '') + '</p>' : '');
   }
   function applyCat(r, name) {
@@ -159,7 +160,7 @@
   }
   function rowSpec(r) {
     if (st.kat === 'byt') return r.spec || [];
-    return [['Provedení', r.prov], ['Odstín / dekor', r.odstin], ['Šířka křídla', r.sirka ? r.sirka + (/cm/i.test(r.sirka) ? '' : ' cm') : ''], ['Otevírání', r.otev], ['Zárubeň', r.zarub], ['Tloušťka zárubně', st.kat === 'interier' && r.tl ? r.tl : ''], ['Kování', r.kov], ['Montáž', st.kat === 'interier' && r.montaz ? 'zárubně, osazení křídla a kování do připraveného otvoru – ' + kc(INT_MONTAZ) + ' bez DPH za kus' : '']]
+    return [['Provedení', r.prov], ['Odstín / dekor', r.odstin], ['Šířka křídla', r.sirka ? r.sirka + (/cm/i.test(r.sirka) ? '' : ' cm') : ''], ['Otevírání', r.otev], ['Zárubeň', r.zarub], ['Tloušťka zárubně', st.kat === 'interier' && r.tl ? r.tl : ''], ['Kování', r.kov], ['Montáž', st.kat === 'interier' && r.montaz ? 'zárubně, osazení křídla a kování do připraveného otvoru – ' + kc(INT_MONTAZ) + ' bez DPH za kus' : ''], ['Vybourání zárubně', st.kat === 'interier' && r.bourani ? 'stávající zárubeň, příprava otvoru a odvoz materiálu – ' + kc(INT_BOURANI) + ' bez DPH za kus' : '']]
       .filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; });
   }
   function fixSpec(sp) { return (sp || []).map(function (x) { var v = String(x[1] || ''); if (x[0] === 'Záruka') v = v.replace(/^Ne,\s*stačí\s*/i, 'základní ').replace(/^Ano,\s*/i, 'prodloužená: '); return [x[0], v, x[2] || 0, x[3] || '']; }); }
@@ -242,8 +243,8 @@
       if (c && c[5]) c[5].forEach(function (d) { if (d[0] === t.value) { r2.shadeImg = 'aplikace/' + d[1]; r2.img = r2.shadeImg; } });
       autoPrice(r2); renderRows(); return;
     }
-    if (t.dataset && (t.dataset.f === 'tl' || t.dataset.f === 'montaz') && st.kat === 'interier') {
-      var r4 = st.rows[+t.dataset.i]; if (t.dataset.f === 'montaz') r4.montaz = t.checked; else r4.tl = t.value;
+    if (t.dataset && (t.dataset.f === 'tl' || t.dataset.f === 'montaz' || t.dataset.f === 'bourani') && st.kat === 'interier') {
+      var r4 = st.rows[+t.dataset.i]; if (t.dataset.f === 'montaz') r4.montaz = t.checked; else if (t.dataset.f === 'bourani') r4.bourani = t.checked; else r4.tl = t.value;
       autoPrice(r4); renderRows(); return;
     }
     if (t.dataset && t.dataset.f === 'imgfile' && t.files && t.files[0]) {
@@ -254,7 +255,7 @@
   });
   document.addEventListener('input', function (e) {
     var t = e.target;
-    if (t.dataset && t.dataset.f && ['model', 'cat', 'dekor', 'imgfile', 'montaz'].indexOf(t.dataset.f) < 0 && !(t.dataset.f === 'tl' && st.kat === 'interier')) {
+    if (t.dataset && t.dataset.f && ['model', 'cat', 'dekor', 'imgfile', 'montaz', 'bourani'].indexOf(t.dataset.f) < 0 && !(t.dataset.f === 'tl' && st.kat === 'interier')) {
       var r = st.rows[+t.dataset.i], f = t.dataset.f; r[f] = (f === 'ks' || f === 'cena' || f === 'sleva') ? int(t.value) : t.value; if (f === 'cena' && intZ(r)) { r.cenaRuc = true; autoPrice(r); } sums();
     } else if (t.name === 'sleva_kc' || t.name === 'rozp_cena') sums();
   });
@@ -648,7 +649,7 @@
         o.polozky.filter(function (p0) { return p0 && p0.ks != null; }).forEach(function (p0) {
           var r0 = newRow(); r0.nazev = p0.nazev || ''; r0.ks = int(p0.ks) || 1; r0.cena = int(p0.cena_ks); r0.sleva = int(p0.sleva); r0.popis = p0.popis || ''; r0.img = p0.obrazek || ''; r0.model = p0.model_kod || ''; r0.odstin = p0.odstin || ''; r0.cfg = p0.cfg || null;
           (p0.spec || []).forEach(function (x) { var v = String(x[1] || ''); if (x[0] === 'Provedení') r0.prov = v; else if (x[0] === 'Odstín / dekor') r0.odstin = v; else if (x[0] === 'Šířka křídla') r0.sirka = v.replace(/\s*cm$/i, ''); else if (x[0] === 'Otevírání') r0.otev = v; else if (x[0] === 'Zárubeň') r0.zarub = v; else if (x[0] === 'Tloušťka zárubně') r0.tl = v; else if (x[0] === 'Kování') r0.kov = v; });
-          r0.montaz = (p0.spec || []).some(function (x) { return x[0] === 'Montáž'; });
+          r0.montaz = (p0.spec || []).some(function (x) { return x[0] === 'Montáž'; }); r0.bourani = (p0.spec || []).some(function (x) { return x[0] === 'Vybourání zárubně'; });
           var hit = ''; catList().forEach(function (c) { if (!hit && r0.nazev.toUpperCase().indexOf(String(c[0]).toUpperCase()) >= 0) hit = c[0]; }); r0.cat = hit || '__jiny'; r0.cenaRuc = true; autoPrice(r0);
           st.rows.push(r0);
         });
@@ -674,7 +675,7 @@
           if (p2.sirka) rw.sirka = String(p2.sirka).replace(/\s*cm$/i, '');
           if (p2.otev) rw.otev = String(p2.otev); if (p2.zarub) rw.zarub = String(p2.zarub); if (p2.kov) rw.kov = String(p2.kov); if (p2.popis) rw.popis = String(p2.popis);
           if (p2.tl) rw.tl = String(p2.tl);
-          if (st.kat === 'interier') rw.montaz = p2.montaz !== false;
+          if (st.kat === 'interier') { rw.montaz = p2.montaz !== false; rw.bourani = !!p2.bourani; }
           rw.cenaRuc = false; autoPrice(rw);
           rw.ai = (p2.nejiste || []).map(String).filter(Boolean);
           if (!rw.cena) rw.ai.push(st.kat === 'dum' ? 'Cenu doplňte ručně (rozpočet ERKADO z jiného programu).' : 'Cena se z ceníku nedoplnila – zadejte ji ručně.');
@@ -698,7 +699,7 @@
           catList().forEach(function (c) { var n = String(c[0]).toUpperCase(); if (tx === n || (tx.indexOf(n) >= 0 && n.length > best && !ht)) { ht = c[0]; best = n.length; } });
           if (ht) applyCat(rw, ht); else { rw.cat = '__jiny'; rw.nazev = String(p1.co || ''); }
           var cx = catFind(ht); if (p1.odstin) { rw.odstin = p1.odstin; if (cx && cx[5]) cx[5].forEach(function (d1) { if (d1[0] === p1.odstin) { rw.shadeImg = 'aplikace/' + d1[1]; rw.img = rw.shadeImg; } }); }
-          rw.ks = int(p1.ks) || 1; autoPrice(rw); st.rows.push(rw);
+          rw.ks = int(p1.ks) || 1; rw.bourani = !!o.bourani; autoPrice(rw); st.rows.push(rw);
         });
       } else if (/interi/i.test(o.model || o.typ_dveri || '') || /dom|erkado/i.test((o.model || '') + ' ' + (o.typ_dveri || ''))) {
         st.kat = /interi/i.test((o.model || '') + ' ' + (o.typ_dveri || '')) ? 'interier' : 'dum';

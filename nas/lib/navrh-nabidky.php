@@ -106,6 +106,7 @@ function nav_nastroj(): array {
         'tl' => ['type' => 'string', 'description' => 'Interiér: rozsah tloušťky zárubně PŘESNĚ z tl_zarubne daného modelu, jen když zákazník uvedl tloušťku zdi'],
         'kov' => ['type' => 'string', 'description' => 'Kování, jen když ho zákazník uvedl'],
         'montaz' => ['type' => 'boolean', 'description' => 'Interiér: true, pokud zákazník chce montáž nebo to neuvedl; false jen když výslovně montáž nechce'],
+        'bourani' => ['type' => 'boolean', 'description' => 'Interiér: true, když zákazník chce vybourat stávající zárubně / připravit otvor'],
         'popis' => ['type' => 'string', 'description' => 'Krátký doplňující popis položky do nabídky (volitelné)'],
         'nejiste' => ['type' => 'array', 'items' => $str, 'description' => 'Co u této položky chybí nebo je potřeba ověřit'],
         'vychozi' => ['type' => 'boolean', 'description' => 'Interiér: true, když zákazník konkrétní model neuvedl – model pak vybere systém z ceníku (model nech prázdný)'],
@@ -123,7 +124,7 @@ function nav_system(array $n, array $priklady): string {
   . "PRAVIDLA:\n- Nic si nevymýšlej. Používej jen modely a odstíny z KATALOGU níže, s přesně stejným zápisem. Když zákazník napíše něco, co v katalogu není nebo to nejde jednoznačně určit, nech pole prázdné a napiš to do nejiste.\n"
   . "- Ceny nezadáváš vůbec – počítá je formulář z ceníku.\n- Rozměry, otevírání, tloušťku zdi a kování vyplň jen když je zákazník uvedl. Z fotky rozměry neodhaduj; co je na fotce vidět, napiš jen do pro_prodejce jako opatrný postřeh.\n"
   . "- Dveře do bytu a do domu: na jednu adresu jedny dveře (1 položka, 1 kus). Interiérové dveře: libovolně položek a kusů; stejný model a odstín se stejnými parametry = jedna položka s počtem kusů.\n"
-  . "- Interiéry: montáž (zárubeň, osazení křídla, kování do připraveného otvoru) se počítá ke každým dveřím, pokud zákazník výslovně neuvede, že montáž nechce. Vše ostatní (bourání, úprava otvoru) až po zaměření – to patří do otazky.\n"
+  . "- Interiéry: montáž (zárubeň, osazení křídla, kování do připraveného otvoru) se počítá ke každým dveřím, pokud zákazník výslovně neuvede, že montáž nechce. Když chce vybourat stávající zárubně a připravit otvor (nebo to je zaškrtnuté v poptávce – pole bourani), dej bourani=true: počítá se 2 000 Kč bez DPH za kus vč. odvozu materiálu (cenu přičte formulář). Jiné stavební úpravy až po zaměření – to patří do otazky.\n"
   . "- Tloušťka zárubně u interiérů = tloušťka zdi; vyber rozsah z tl_zarubne jen když zákazník uvedl tloušťku zdi v mm/cm.\n"
   . "- Interiérové dveře, u kterých zákazník neuvedl konkrétní model (např. jen počet kusů a barvu): dej vychozi=true, model nech prázdný a do odstiny_podobne vypiš dekory z katalogu interiérů nejpodobnější barvě, kterou chce – když barvu interiérů neuvedl, vezmi odstín jeho bezpečnostních / vchodových dveří. Model vybere systém (druhý nejlevnější z ceníku).\n"
   . "- Když zákazník chce dveře do bytu nebo domu A K TOMU interiérové dveře (počet kusů), interiérové dej do interier_dalsi – budou v samostatné nabídce.\n"
@@ -185,7 +186,7 @@ function nav_kontrola(array $v): array {
       $p['ks'] = 1;
     }
     $p['model'] = $mod; $p['ks'] = max(1, (int)($p['ks'] ?? 1)); $p['nejiste'] = array_values(array_unique($nej));
-    unset($p['odstiny_podobne']);
+    unset($p['odstiny_podobne']); if ($kat === 'interier') $p['bourani'] = !empty($p['bourani']);
     foreach (['nazev', 'odstin', 'sirka', 'otev', 'zarub', 'tl', 'kov', 'popis'] as $f) $p[$f] = mb_substr(trim((string)($p[$f] ?? '')), 0, 200);
     if ($p['model'] === '' && $p['nazev'] === '') $p['nazev'] = $kat === 'dum' ? 'Vchodové dveře' : 'Interiérové dveře';
     $pol[] = $p; if ($kat === 'dum') break;
