@@ -679,7 +679,12 @@
     var btn = $('#nbSubmit'); btn.disabled = true; btn.textContent = 'Připravuji PDF…';
     var pdf = null, extraFiles = [], custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
     var TYP = OBJ ? 'objednavka_interni' : 'nabidka';
-    buildPdf(d).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
+    var cisloZmena = '';
+    kOverCislo(d.obj_cislo).then(function (nove) {   /* číslo nesmí mít jiná odeslaná ani rozpracovaná nabídka – jinak přidělit další volné */
+      if (nove) { cisloZmena = d.obj_cislo + ' → ' + nove; form.obj_cislo.value = nove; d = collect(); fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf'; }
+      btn.textContent = 'Připravuji PDF…';
+      return buildPdf(d);
+    }).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
       pdf = b ? b.blob : null; window.__nbPages = b ? b.pages : 0; btn.textContent = 'Odesílám…';
       if (d.rozpocet && st.rozpBuf && !(b && b.merged)) extraFiles = [{ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) }];
       var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
@@ -701,6 +706,7 @@
         } catch (e) {}
       }
       if (!d.email) { w.textContent = 'Zákazník nemá vyplněný e-mail – nabídka odešla jen vám. PDF si vytiskněte a předejte mu ho.'; w.hidden = false; }
+      if (cisloZmena) { w.textContent = (w.hidden ? '' : w.textContent + ' ') + 'Číslo bylo mezitím obsazené jinou ' + (OBJ ? 'objednávkou' : 'nabídkou') + ', proto se změnilo: ' + cisloZmena + '.'; w.hidden = false; }
       else if (!custOk) { w.textContent = 'E-mail zákazníkovi odešel bez přiloženého PDF. Stáhněte si PDF a pošlete mu ho ručně.'; w.hidden = false; }
       if (pdf) { var u = URL.createObjectURL(pdf), a = $('#nbPdf'); a.href = u; a.download = fn; a.hidden = false; var pr = $('#nbPrint'); pr.hidden = false; pr.onclick = function () { var wn = window.open(u, '_blank'); if (wn) wn.focus(); }; }
       form.hidden = true; $('.pq-hero').hidden = true; $('#nbDone').hidden = false; window.scrollTo(0, 0);
@@ -713,6 +719,12 @@
 
   /* ── rozpracované: uložení bez odeslání (formulare.dvere.app/koncept.php, seznam v kartotéce → 📝 Rozpracované) ── */
   var KONC_URL = ((window.BDForm && window.BDForm.ENDPOINT) || 'https://formulare.dvere.app/odeslat.php').replace(/odeslat\.php.*$/, 'koncept.php');
+  /* Kontrola čísla před odesláním (cislo.php?over=…): vrátí nové volné číslo, když je to zadané obsazené; jinak '' (i když server neodpoví – odeslání se nezdrží). */
+  function kOverCislo(c) {
+    if (!c) return Promise.resolve('');
+    var u = KONC_URL.replace('koncept.php', 'cislo.php') + '?typ=' + (OBJ ? 'objednavka' : 'nabidka') + '&over=' + encodeURIComponent(c) + (st.konc ? '&konc=' + st.konc.id : '');
+    return fetch(u, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { return j && j.volne === false && j.cislo ? j.cislo : ''; }).catch(function () { return ''; });
+  }
   st.konc = null;
   function kSnap() {
     var f = {};
