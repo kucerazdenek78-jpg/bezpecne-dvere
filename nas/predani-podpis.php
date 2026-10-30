@@ -76,8 +76,9 @@ if ($z && $_SERVER['REQUEST_METHOD'] === 'POST') {
   // kopie podepsaného listu zákazníkovi e-mailem
   $mail = 'bez_emailu'; $email = trim((string)($d['email'] ?? ''));
   if ($rezim === 'podpis') {
-    if (($_POST['kopie'] ?? '') !== '1') $mail = 'nechtel';
-    elseif (filter_var($email, FILTER_VALIDATE_EMAIL)) $mail = posli_predani_kopii($cfg, $DATA, $email, (string)($d['obj_cislo'] ?? $z['cislo']), $cesta) ? (($cfg['mail_rezim'] ?? 'smtp') === 'soubor' ? 'zkusebni' : 'odeslano') : 'chyba';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $mail = 'bez_emailu';
+    elseif (($_POST['kopie'] ?? '') !== '1') $mail = 'nechtel';
+    else $mail = posli_predani_kopii($cfg, $DATA, $email, (string)($d['obj_cislo'] ?? $z['cislo']), $cesta) ? (($cfg['mail_rezim'] ?? 'smtp') === 'soubor' ? 'zkusebni' : 'odeslano') : 'chyba';
   } else $mail = 'papir';
   $z2 = $pdo->prepare('SELECT predano_dne, zaruka_do FROM zadosti WHERE id=?'); $z2->execute([$z['id']]); $zz = $z2->fetch(PDO::FETCH_ASSOC);
   json_ven(200, ['ok' => true, 'mail' => $mail, 'nove_predani' => $nove, 'predano' => $zz['predano_dne'] ?? '', 'zaruka_do' => $zz['zaruka_do'] ?? '', 'email' => $email]);
