@@ -77,3 +77,9 @@ Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF
 - Motivy: vanoce / narozeniny / darkovy / **vlastni** (zákazník nahraje fotku → `poukaz-api.php` akce=foto, uloží se `/data/poukazy/<id>_<token>_foto.jpg`; kartotéka ji načte přes `poukazy.php?foto=id`).
 - Prodej ve vzorkovně: hotově nebo **QR platbou** (kartou ne – kvůli provizím); QR se ukáže v detailu poukazu, platba se spáruje z banky.
 - Reel k poukazům: AI klip (Magnific, Seedance 2.0) + titulky v Magnific Move; záložní vlastní druhá část `tools/poukaz/reel.html` + `reel.py`.
+
+## Podpis na displeji (od 30. 10. 2026)
+- Sdílený modul `podpis/podpis.js` (`BDPodpis.volba` = volba „Na papíře / Na displeji“ + pole pro podpis prstem; `BDPodpis.pole`).
+- Objednávky (`objednavka-nova.html` → `poptavka-dvere-nova.js`, `objednavka-vice.html` → `nabidka.js`): při „Na displeji“ se podpis zákazníka (a nepovinně zhotovitele) vloží nad čáru v PDF objednávky (`BDPodpisPng` v `poptavka-pdf-nova.js`), do dat jen `podpis_rezim` / `podpis_cas`. Tisk na papír zůstává.
+- Předání: NAS `predani-podpis.php?t=…&rezim=podpis` – podpis na displeji HNED zapíše předání (záruka, sklad, poděkování), uloží podepsaný list do `/data/predani` a pošle ho zákazníkovi. Tisk předem + potvrzení QR (`predani.php`) zůstává.
+- Změna PDF/podpisu = zvýšit `?v=` u `podpis.js`, `poptavka-pdf-nova.js` (i v `predani-podpis.php` na NAS).
