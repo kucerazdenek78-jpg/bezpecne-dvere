@@ -179,6 +179,7 @@ h1{font-size:22px;margin:4px 0 12px}h3{margin:0 0 8px}
 a{color:#1f5fbf}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.fg label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#5a6676}.fg input{width:100%}
 details>summary{cursor:pointer;font-weight:600}
+@media(max-width:700px){.hide-m{display:none}}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('zakaznici'); ?><main>
 <?php if (isset($_GET['google'])): $gn = zk_google_nast();
   $feed = rtrim((string)($cfg['formulare_url'] ?? 'https://formulare.dvere.app'), '/') . '/kontakty-sync.php?t=' . ($gn['token'] ?? '');
@@ -279,9 +280,9 @@ details>summary{cursor:pointer;font-weight:600}
         <p class="mut">Úprava se ukáže tady v Zákaznících a v exportu do telefonu. Poptávky, nabídky a objednávky v kartotéce zůstanou, jak byly odeslané. Vymazáním pole se vrátí údaj ze záznamů.</p>
         <button>Uložit kontakt</button><?php if ($detail['upraveny']): ?> <span class="mut">obsahuje ruční úpravy</span><?php endif; ?></form></details></div>
   <div class="box" id="historie"><h3>Historie poptávek a objednávek (<?= count($zz) ?>)</h3><?php if (!$zz): ?><p class="mut">Zatím žádná poptávka, nabídka ani objednávka.</p><?php else: ?><div class="tw"><table>
-    <tr><th>Datum</th><th>Druh</th><th>Číslo</th><th>Předmět</th><th>Cena</th><th>Stav</th></tr>
-    <?php foreach ($zz as $x): ?><tr><td><?= $e($datum($x['datum'])) ?></td><td><?= $e($TYPY[$x['typ']] ?? $x['typ']) ?></td><td><?= $e($x['cislo']) ?></td>
-      <td><a href="kartoteka.php?id=<?= (int)$x['id'] ?>"><?= $e(mb_substr($x['predmet'], 0, 90)) ?></a></td><td><?= $e($kc($x['cena'])) ?></td>
+    <tr><th>Datum</th><th>Záznam</th><th class="hide-m">Předmět</th><th>Cena</th><th>Stav</th></tr>
+    <?php foreach ($zz as $x): ?><tr><td style="white-space:nowrap"><?= $e($datum($x['datum'])) ?></td><td><a href="kartoteka.php?id=<?= (int)$x['id'] ?>"><b><?= $e($TYPY[$x['typ']] ?? $x['typ']) ?></b> <span style="white-space:nowrap"><?= $e($x['cislo']) ?></span></a></td>
+      <td class="hide-m"><a href="kartoteka.php?id=<?= (int)$x['id'] ?>"><?= $e(mb_substr($x['predmet'], 0, 90)) ?></a></td><td style="white-space:nowrap"><?= $e($kc($x['cena'])) ?></td>
       <td><span class="chip"><?= $e($STAVY[$x['stav']] ?? $x['stav']) ?></span><?= $x['zaloha'] ? ' <span class="chip ok">záloha přijata</span>' : '' ?></td></tr><?php endforeach; ?></table></div><?php endif; ?></div>
   <?php
     $zar = array_values(array_filter($zz, fn($x) => !empty($x['predano']) || !empty($x['zaruka_do'])));
@@ -324,8 +325,9 @@ details>summary{cursor:pointer;font-weight:600}
     if ($q !== '' && mb_strpos($hay, $q) === false) continue;
     $stl = array_filter(array_map('trim', explode(',', (string)($i['stitky'] ?? ''))));
     if ($st !== '' && !in_array($st, $stl, true)) continue;
-    $obj = count(array_filter($zn, fn($x) => $x['typ'] !== 'poptavka'));
-    $rows[] = $c + ['posl' => $posl, 'pocet' => count($zn), 'obj' => $obj, 'stitky' => $stl, 'dk' => $i['dalsi_kontakt'] ?? ''];
+    $druhy = [];   // počty podle druhu záznamu (poptávka / nabídka / objednávka) – dřív se nabídky chybně počítaly jako objednávky
+    foreach ($zn as $x) { $dr = $x['typ'] === 'objednavka_interni' ? 'objednávka' : ($x['typ'] === 'nabidka' ? 'nabídka' : ($x['typ'] === 'poptavka' ? 'poptávka' : '')); if ($dr !== '') $druhy[$dr] = ($druhy[$dr] ?? 0) + 1; }
+    $rows[] = $c + ['posl' => $posl, 'pocet' => count($zn), 'druhy' => $druhy, 'stitky' => $stl, 'dk' => $i['dalsi_kontakt'] ?? ''];
   }
   usort($rows, fn($a, $b) => $ra === 'jmeno' ? strcoll($a['jmeno'], $b['jmeno']) : ($ra === 'pocet' ? $b['pocet'] <=> $a['pocet'] : strcmp((string)$b['posl'], (string)$a['posl'])));
   $vsechnyStitky = [];
@@ -352,7 +354,7 @@ details>summary{cursor:pointer;font-weight:600}
     <?php foreach ($rows as $c): ?><tr>
       <td><a href="zakaznici.php?k=<?= urlencode($c['klic']) ?>"><b><?= $e($c['jmeno'] ?: '(bez jména)') ?></b></a><?= $c['firma'] ? '<div class="mut">' . $e($c['firma']) . '</div>' : '' ?><?= $c['rucne'] ? ' <span class="chip tel">' . $e($c['zdroj'] === 'telefon' ? 'z telefonu' : 'ručně') . '</span>' : '' ?></td>
       <td><?= $e($c['telefon']) ?><?= $c['telefon'] && $c['email'] ? '<br>' : '' ?><span class="mut"><?= $e($c['email']) ?></span></td><td><?= $e($c['mesto']) ?></td>
-      <td><?= (int)$c['pocet'] ?><?= $c['obj'] ? ' <span class="chip ok">' . (int)$c['obj'] . '× objednávka</span>' : '' ?></td>
+      <td><?= (int)$c['pocet'] ?><?php foreach ($c['druhy'] as $dr => $n): ?> <span class="chip<?= $dr === 'objednávka' ? ' ok' : ($dr === 'nabídka' ? ' warn' : '') ?>"><?= (int)$n ?>× <?= $e($dr) ?></span><?php endforeach; ?></td>
       <td><?= $e($c['posl'] ? $datum($c['posl']) : '–') ?></td><td><?php foreach ($c['stitky'] as $s): ?><span class="chip"><?= $e($s) ?></span><?php endforeach; ?></td>
       <td><?= $c['dk'] ? ($c['dk'] <= date('Y-m-d') ? '<span class="chip warn">' . $e($datum($c['dk'])) . '</span>' : $e($datum($c['dk']))) : '' ?></td>
       <td style="white-space:nowrap"><a class="btn sec" style="padding:4px 9px;font-size:13px" href="zakaznici.php?k=<?= urlencode($c['klic']) ?>&upravit=1" title="Upravit kontakt">✏️</a>
