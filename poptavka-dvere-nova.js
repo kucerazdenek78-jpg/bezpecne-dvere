@@ -697,8 +697,13 @@
     btn.disabled = true; btn.textContent = 'Připravuji PDF…';
     var d = collect(), pdf = null, plist = null, voucher = null, custOk = true;
     d.odeslano = new Date().toISOString(); d.cislo = d.obj_cislo;
+    var px = pdfExtra(d);
+    if (podpisUI && podpisUI.rezim() === 'displej') {   /* podpis na displeji: obrázek jen do PDF, do dat režim a čas */
+      px.podpisZak = podpisUI.zakaznik(); px.podpisZhot = podpisUI.zhotovitel(); px.podpisCas = new Date().toLocaleString('cs-CZ');
+      d.podpis_rezim = 'displej'; d.podpis_cas = px.podpisCas;
+    } else if (podpisUI) d.podpis_rezim = 'papir';
     var P = window.PoptavkaPDF;
-    var pdfP = P ? P.buildOrder(d, pdfExtra(d)).catch(function () { return null; }) : Promise.resolve(null);
+    var pdfP = P ? P.buildOrder(d, px).catch(function () { return null; }) : Promise.resolve(null);
     var plP = P && P.buildHandover ? P.buildHandover(d).catch(function () { return null; }) : Promise.resolve(null);
     var vP = P && P.buildVoucher ? P.buildVoucher(d).catch(function () { return null; }) : Promise.resolve(null);
     Promise.all([pdfP, plP, vP]).then(function (res) {
@@ -760,10 +765,17 @@
     location.href = 'mailto:' + encodeURIComponent(d.email || '') + '?subject=' + encodeURIComponent('Objednávka ' + d.obj_cislo + ' – Bezpečné dveře') + '&body=' + encodeURIComponent(text + '\n\n(PDF se stáhlo do počítače – přiložte ho prosím k e-mailu.)');
   }
 
+  /* podpis objednávky: na papíře (tisk) nebo na displeji (BDPodpis, podpis se vloží do PDF) */
+  var podpisUI = (OBJ && window.BDPodpis && $('#pqConsent')) ? window.BDPodpis.volba($('#pqConsent').closest('label') || $('#pqConsent'), { nadpis: 'Podpis objednávky',
+    papirText: 'Objednávka odejde e-mailem, PDF vytisknete a zákazník ji podepíše na papíře.',
+    displejText: 'Zákazník se podepíše prstem do pole níže. Podpis se vloží do PDF objednávky, které odejde jemu i vám.',
+    zakaznik: 'Podpis zákazníka (objednatel)', zhotovitel: 'Podpis za zhotovitele (nepovinné)' }) : null;
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var msg = $('#pqMsg'); msg.hidden = true;
-    if (OBJ) { if (!$('#pqConsent').checked) { msg.innerHTML = 'Potvrďte prosím, že objednávka je zkontrolovaná.'; msg.hidden = false; return; } submitOrder(); return; }
+    if (OBJ) { if (!$('#pqConsent').checked) { msg.innerHTML = 'Potvrďte prosím, že objednávka je zkontrolovaná.'; msg.hidden = false; return; }
+      var pe = podpisUI ? podpisUI.chyba() : ''; if (pe) { msg.textContent = pe; msg.hidden = false; return; }
+      submitOrder(); return; }
     if (!$('#pqConsent').checked) { msg.innerHTML = 'Pro odeslání prosím potvrďte souhlas se zpracováním osobních údajů.'; msg.hidden = false; return; }
     if (form._honey.value) return;
     var btn = $('#pqSubmit'); btn.disabled = true; btn.textContent = 'Připravuji…';

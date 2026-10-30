@@ -201,6 +201,8 @@
           ensure(38); y += 6;
           font('normal', 9, MUTED); doc.text('Dne ' + (d.obj_datum ? new Date(d.obj_datum).toLocaleDateString('cs-CZ') : ''), M, y); y += 16;
           doc.setDrawColor(120, 140, 130); doc.setLineWidth(0.3);
+          podpisPng(doc, x.podpisZak, M, y, 75); podpisPng(doc, x.podpisZhot, W - M - 75, y, 75);   // podpis na displeji (BDPodpis)
+          if (x.podpisZak && x.podpisCas) { font('normal', 6.5, MUTED); doc.text('Podepsáno na displeji ' + x.podpisCas, M, y + 13.6); }
           doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
           font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
           font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
@@ -232,6 +234,13 @@
       });
     });
   }
+  /* podpis (PNG data URL z BDPodpis) nad čáru pro podpis: x = levý okraj čáry, yLine = výška čáry (mm), w = délka čáry */
+  function podpisPng(doc, url, x, yLine, w) {
+    if (!url) return;
+    try { var pr = doc.getImageProperties(url), mh = 13, mw = w - 4, sc = Math.min(mw / pr.width, mh / pr.height), iw = pr.width * sc, ih = pr.height * sc;
+      doc.addImage(url, 'PNG', x + 2, yLine - ih - 0.6, iw, ih); } catch (e) {}
+  }
+  window.BDPodpisPng = podpisPng;
   function fmt(n) { return Number(n || 0).toLocaleString('cs-CZ').replace(/ /g, ' ') + ' Kč'; }
 
   /* objednávka: vždy max. 2 strany – když se nevejde, zmenší fotky a písmo smluvních ujednání, nakonec fotky vynechá */

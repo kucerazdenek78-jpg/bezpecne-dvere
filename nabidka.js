@@ -616,7 +616,12 @@
         legal.forEach(function (par) { font('normal', 7.2, [40, 60, 50]); doc.splitTextToSize(par, CW).forEach(function (line) { ensure(3.2); doc.text(line, M, y); y += 3.0; }); y += 1.3; });
         ensure(30); y += 3;
         font('normal', 9, MUTED); doc.text('Dne ' + dt(d.obj_datum || d.odeslano), M, y); y += 12;
-        doc.setDrawColor(120, 140, 130); doc.setLineWidth(0.3); doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
+        doc.setDrawColor(120, 140, 130); doc.setLineWidth(0.3);
+        if (OBJ && st.podpis && window.BDPodpisPng) {   // podpis na displeji (BDPodpis)
+          window.BDPodpisPng(doc, st.podpis.zak, M, y, 75); window.BDPodpisPng(doc, st.podpis.zhot, W - M - 75, y, 75);
+          if (st.podpis.zak) { font('normal', 6.5, MUTED); doc.text('Podepsáno na displeji ' + st.podpis.cas, M, y + 13.6); }
+        }
+        doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
         font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
         font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
         doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235'], W - M - 75, y);
@@ -674,14 +679,17 @@
     e.preventDefault();
     var msg = $('#nbMsg'); msg.hidden = true;
     var d = collect(), err = validate(d);
+    if (!err && OBJ && st.podpisUI) err = st.podpisUI.chyba();
     if (err) { msg.textContent = err; msg.hidden = false; return; }
     if (form._honey.value) return;
+    st.podpis = OBJ && st.podpisUI ? { zak: st.podpisUI.zakaznik(), zhot: st.podpisUI.zhotovitel(), cas: new Date().toLocaleString('cs-CZ') } : null;
+    d = podpisDo(d);
     var btn = $('#nbSubmit'); btn.disabled = true; btn.textContent = 'Připravuji PDF…';
     var pdf = null, extraFiles = [], custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
     var TYP = OBJ ? 'objednavka_interni' : 'nabidka';
     var cisloZmena = '';
     kOverCislo(d.obj_cislo).then(function (nove) {   /* číslo nesmí mít jiná odeslaná ani rozpracovaná nabídka – jinak přidělit další volné */
-      if (nove) { cisloZmena = d.obj_cislo + ' → ' + nove; form.obj_cislo.value = nove; d = collect(); fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf'; }
+      if (nove) { cisloZmena = d.obj_cislo + ' → ' + nove; form.obj_cislo.value = nove; d = podpisDo(collect()); fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf'; }
       btn.textContent = 'Připravuji PDF…';
       return buildPdf(d);
     }).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
@@ -796,6 +804,18 @@
   function kHotovo(cislo) {
     if (!st.konc) return;
     try { fetch(KONC_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify({ akce: 'hotovo', id: st.konc.id, t: st.konc.t, cislo: cislo }) }); } catch (e) {}
+  }
+  /* ── podpis objednávky: na papíře (tisk) nebo na displeji (BDPodpis, podpis se vloží do PDF) ── */
+  if (OBJ && window.BDPodpis && $('#nbConsent')) {
+    st.podpisUI = window.BDPodpis.volba($('#nbConsent').closest('label') || $('#nbConsent'), { nadpis: 'Podpis objednávky',
+      papirText: 'Objednávka odejde e-mailem, PDF vytisknete a zákazník ji podepíše na papíře.',
+      displejText: 'Zákazník se podepíše prstem do pole níže. Podpis se vloží do PDF objednávky, které odejde jemu i vám.',
+      zakaznik: 'Podpis zákazníka (objednatel)', zhotovitel: 'Podpis za zhotovitele (nepovinné)' });
+  }
+  function podpisDo(d) {   /* do dat objednávky jen režim a čas (obrázek podpisu je jen v PDF) */
+    if (!st.podpis) return d;
+    d.podpis_rezim = st.podpis.zak ? 'displej' : 'papir'; if (st.podpis.zak) d.podpis_cas = st.podpis.cas;
+    return d;
   }
   /* ── hromadné odeslání vybraných rozpracovaných nabídek z kartotéky: #k=id.token&auto=1&q=id.token,id.token ── */
   st.auto = /[#&]auto=1(&|$)/.test(location.hash) && !OBJ;
