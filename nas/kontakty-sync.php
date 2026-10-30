@@ -2,7 +2,7 @@
 // Zákazníci z kartotéky pro synchronizaci do Google Kontaktů (skript Google Apps Script v Google účtu Zdeňka si je stahuje každých 30 min).
 // Veřejné na formulare.dvere.app, ale data vrací jen s tajným klíčem (?t=…, 40 hex znaků) uloženým v /data/kontakty-sync.json.
 // Klíč se zakládá / mění v kartotéce: Zákazníci → „Google Kontakty“ (zakaznici.php?google=1). Starý klíč po změně přestane platit.
-// Vrací jen kontaktní údaje (jméno, firma, telefon, e-mail, adresa, čísla posledních záznamů), žádné ceny.
+// Vrací jen kontaktní údaje (jméno, firma, telefon, e-mail, adresa, čísla posledních záznamů) a odkaz na kartu zákazníka v kartotéce, žádné ceny.
 // Patří na NAS do /docker/formulare/app/kontakty-sync.php.
 require __DIR__ . '/lib/start.php';
 require_once __DIR__ . '/lib/zakaznici.php';
@@ -34,7 +34,7 @@ foreach (zk_vsichni($pdo, zk_info($pdo)) as $k => $c) {
   $cisla = array_values(array_filter(array_unique(array_column($zn, 'cislo'))));
   if (count($cisla) > 1) $pozn .= ' Záznamy: ' . implode(', ', array_slice($cisla, 0, 10)) . '.';
   $out[] = ['klic' => $k, 'jmeno' => implode(' ', $cs), 'prijmeni' => $prij, 'firma' => $c['firma'], 'telefon' => $c['telefon'], 'email' => $c['email'],
-    'ulice' => $c['ulice'], 'mesto' => $c['mesto'], 'psc' => $c['psc'], 'poznamka' => $pozn];
+    'ulice' => $c['ulice'], 'mesto' => $c['mesto'], 'psc' => $c['psc'], 'poznamka' => $pozn, 'odkaz' => zk_odkaz($k)];
 }
 $nast['stazeno'] = date('Y-m-d H:i:s'); $nast['pocet'] = count($out);
 @file_put_contents($soubor, json_encode($nast, JSON_UNESCAPED_UNICODE), LOCK_EX);

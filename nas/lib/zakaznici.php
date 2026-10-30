@@ -68,3 +68,9 @@ function zk_vsichni(PDO $pdo, array $info, bool $vcSmazanych = false): array {
   unset($c);
   return $vse;
 }
+
+// Odkaz na kartu zákazníka v kartotéce (do Google Kontaktů – klik v telefonu otevře historii, poptávky, objednávky a servis).
+function zk_odkaz(string $k): string {
+  global $cfg;
+  return 'https://' . strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app')) . '/zakaznici.php?k=' . rawurlencode($k);
+}

@@ -3,6 +3,7 @@
    (skupina „Zákazníci Bezpečné dveře“). Telefon s tímto Google účtem pak při hovoru ukáže jméno zákazníka.
    - Zákazníka, kterého už v kontaktech máte se stejným číslem, nepřepisuje – jen ho přidá do skupiny.
    - Kontakty založené tímto skriptem aktualizuje, když se v kartotéce změní (jméno, telefon, e-mail, adresa).
+   - Ke každému kontaktu přidá odkaz „Kartotéka“ – klik v telefonu otevře kartu zákazníka (historie, poptávky, objednávky, servis).
    - Nic nemaže. Zákazníka smazaného v kartotéce smažte v Kontaktech ručně (pokud chcete).
    Nastavení: Služby (+) → „People API“ přidat, pak spustit funkci nastavit() a povolit přístup. */
 
@@ -26,7 +27,7 @@ function synchronizovat() {
 
   const vsechny = []; let pt = null;
   do {
-    const res = People.People.Connections.list('people/me', { personFields: 'names,phoneNumbers,emailAddresses,userDefined,memberships', pageSize: 1000, pageToken: pt });
+    const res = People.People.Connections.list('people/me', { personFields: 'names,phoneNumbers,emailAddresses,userDefined,memberships,urls', pageSize: 1000, pageToken: pt });
     (res.connections || []).forEach(function (p) { vsechny.push(p); });
     pt = res.nextPageToken;
   } while (pt);
@@ -44,7 +45,9 @@ function synchronizovat() {
     if (!p && tel9.length === 9 && podleTel[tel9]) {          // už ho máte v kontaktech → jen označit a dát do skupiny, nic nepřepisovat
       p = podleTel[tel9];
       const ud = (p.userDefined || []).filter(function (u) { return !/^bd-/.test(u.key); }).concat([{ key: 'bd-klic', value: z.klic }, { key: 'bd-hash', value: h }, { key: 'bd-vlastni', value: '1' }]);
-      People.People.updateContact({ etag: p.etag, userDefined: ud }, p.resourceName, { updatePersonFields: 'userDefined' });
+      const zm = { etag: p.etag, userDefined: ud }, uu = urly_(p, z), pole = ['userDefined'];
+      if (uu) { zm.urls = uu; pole.push('urls'); }
+      People.People.updateContact(zm, p.resourceName, { updatePersonFields: pole.join(',') });
       doSkupiny.push(p.resourceName); podleKlice[z.klic] = p; zapisu++; oznac++; continue;
     }
     if (!p) {                                                  // nový kontakt
@@ -55,9 +58,14 @@ function synchronizovat() {
     const stary = ud0.filter(function (u) { return u.key === 'bd-hash'; })[0];
     const vlastni = ud0.some(function (u) { return u.key === 'bd-vlastni'; });
     if (!(p.memberships || []).some(function (m) { return m.contactGroupMembership && m.contactGroupMembership.contactGroupResourceName === skupina; })) doSkupiny.push(p.resourceName);
-    if (vlastni || (stary && stary.value === h)) continue;     // beze změny / váš vlastní kontakt
+    if (vlastni) {                                             // váš vlastní kontakt: nic nepřepisovat, jen doplnit odkaz do kartotéky
+      const uu = urly_(p, z);
+      if (uu) { People.People.updateContact({ etag: p.etag, urls: uu }, p.resourceName, { updatePersonFields: 'urls' }); zapisu++; upr++; }
+      continue;
+    }
+    if (stary && stary.value === h) continue;                  // beze změny
     const o = osoba_(z, h); o.etag = p.etag;
-    People.People.updateContact(o, p.resourceName, { updatePersonFields: 'names,phoneNumbers,emailAddresses,addresses,organizations,biographies,userDefined' });
+    People.People.updateContact(o, p.resourceName, { updatePersonFields: 'names,phoneNumbers,emailAddresses,addresses,organizations,biographies,userDefined,urls' });
     zapisu++; upr++;
   }
   for (let j = 0; j < doSkupiny.length; j += 500) People.ContactGroups.Members.modify({ resourceNamesToAdd: doSkupiny.slice(j, j + 500) }, skupina);
@@ -72,12 +80,20 @@ function osoba_(z, h) {
     userDefined: [{ key: 'bd-klic', value: z.klic }, { key: 'bd-hash', value: h }]
   };
   if (z.telefon) o.phoneNumbers = [{ value: z.telefon, type: 'mobile' }];
+  if (z.odkaz) o.urls = [{ value: z.odkaz, type: 'Kartotéka' }];
   if (z.email) o.emailAddresses = [{ value: z.email, type: 'home' }];
   if (z.ulice || z.mesto || z.psc) o.addresses = [{ streetAddress: z.ulice || '', city: z.mesto || '', postalCode: z.psc || '', countryCode: 'CZ', type: 'home' }];
   return o;
 }
+// odkaz do kartotéky u kontaktu: null = už tam je správně, jinak nový seznam odkazů (vaše vlastní odkazy zůstanou)
+function urly_(p, z) {
+  if (!z.odkaz) return null;
+  const ur = p.urls || [];
+  if (ur.some(function (u) { return u.value === z.odkaz; })) return null;
+  return ur.filter(function (u) { return !/\/zakaznici\.php\?k=/.test(String(u.value || '')); }).concat([{ value: z.odkaz, type: 'Kartotéka' }]);
+}
 function otisk_(z) {
-  const b = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify([z.jmeno, z.prijmeni, z.firma, z.telefon, z.email, z.ulice, z.mesto, z.psc, z.poznamka, PRIPONA_JMENA]), Utilities.Charset.UTF_8);
+  const b = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify([z.jmeno, z.prijmeni, z.firma, z.telefon, z.email, z.ulice, z.mesto, z.psc, z.poznamka, PRIPONA_JMENA, z.odkaz || '']), Utilities.Charset.UTF_8);
   return b.map(function (x) { return ('0' + (x & 255).toString(16)).slice(-2); }).join('');
 }
 function najdiSkupinu_() {

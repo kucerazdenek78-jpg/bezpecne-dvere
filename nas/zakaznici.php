@@ -4,6 +4,8 @@
 // přidat štítky, poznámka a datum dalšího kontaktu. Stejná ochrana jako kartoteka.php.
 // 29. 10. 2026: úprava kontaktů (přepisuje jen zobrazení, záznamy v kartotéce zůstávají), smazání (skrytí ze seznamu – vrátí se,
 // když přijde nový záznam), ruční zákazník, export do telefonu (vCard .vcf) a import kontaktů z telefonu (.vcf, s výběrem).
+// 30. 10. 2026: karta zákazníka jako rozcestník (odkaz sem vede z Google Kontaktů v telefonu): rychlé akce (zavolat, nová nabídka
+// s vyplněným zákazníkem, servis), rozpracované nabídky zákazníka, servis u každé objednávky a rychlý zápis do poznámky s datem a jménem.
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -86,8 +88,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($akce === 'zk_uloz' && isset($vse[$k])) {   // štítky / poznámka / další kontakt
     $stitky = implode(', ', array_slice(array_values(array_unique(array_filter(array_map(fn($s) => mb_substr(trim($s), 0, 30), explode(',', (string)($_POST['stitky'] ?? '')))))), 0, 12));
     $dk = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_POST['dalsi_kontakt'] ?? '')) ? $_POST['dalsi_kontakt'] : '';
-    $zk_uloz_pole($k, ['stitky' => $stitky, 'poznamka' => mb_substr(trim((string)($_POST['poznamka'] ?? '')), 0, 2000), 'dalsi_kontakt' => $dk]);
+    $zk_uloz_pole($k, ['stitky' => $stitky, 'poznamka' => mb_substr(trim((string)($_POST['poznamka'] ?? '')), 0, 8000), 'dalsi_kontakt' => $dk]);
     header('Location: zakaznici.php?k=' . urlencode($k) . '&ulozeno=1'); exit;
+  }
+  if ($akce === 'zk_zapis' && isset($vse[$k])) {   // rychlý zápis (telefonát, servis…) – přidá se navrch poznámky s datem a jménem
+    $t = trim((string)($_POST['zapis'] ?? ''));
+    if ($t !== '') {
+      $kdo = function_exists('uziv_jmeno') ? trim((string)uziv_jmeno()) : '';
+      $druh = in_array($_POST['druh'] ?? '', ['Telefonát', 'Servis', 'Schůzka', 'Poznámka'], true) ? $_POST['druh'] : 'Poznámka';
+      $stara = (string)(zk_info($pdo)[$k]['poznamka'] ?? '');
+      $nova = date('j. n. Y H:i') . ($kdo !== '' ? ' ' . $kdo : '') . ' – ' . $druh . ': ' . mb_substr(preg_replace('/\s+/u', ' ', $t), 0, 1000);
+      $zk_uloz_pole($k, ['poznamka' => mb_substr($nova . ($stara !== '' ? "\n" . $stara : ''), 0, 8000)]);
+    }
+    header('Location: zakaznici.php?k=' . urlencode($k) . '&ulozeno=1#zapis'); exit;
   }
   if ($akce === 'zk_kontakt' && isset($vse[$k])) {   // úprava kontaktních údajů (ukládá se jen to, co se liší od záznamů)
     $zaklad = zk_vsichni($pdo, array_map(fn($i) => array_diff_key($i, $ZK_POLE), $info), true)[$k] ?? [];
@@ -217,6 +230,43 @@ details>summary{cursor:pointer;font-weight:600}
   <p><a href="zakaznici.php">← Všichni zákazníci</a></p>
   <h1><?= $e($detail['jmeno'] ?: '(bez jména)') ?><?= $detail['rucne'] ? ' <span class="chip tel">' . $e($detail['zdroj'] === 'telefon' ? 'z telefonu' : 'přidán ručně') . '</span>' : '' ?></h1>
   <?php if (isset($_GET['ulozeno'])): ?><div class="ok">Uloženo.</div><?php endif; ?>
+  <?php
+    $wu = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/');
+    $csj = preg_split('/\s+/u', trim($detail['jmeno'])); $prj = count($csj) > 1 ? array_pop($csj) : '';
+    $pre = array_filter(['jmeno' => implode(' ', $csj), 'prijmeni' => $prj, 'telefon' => $detail['telefon'], 'email' => $detail['email'], 'ulice' => $detail['ulice'], 'mesto' => $detail['mesto'], 'psc' => $detail['psc']], fn($v) => trim((string)$v) !== '');
+    $nabUrl = $wu . '/nabidka-nova.html?sys=1#d=' . rtrim(strtr(base64_encode(json_encode($pre, JSON_UNESCAPED_UNICODE)), '+/', '-_'), '=');
+    if (function_exists('bd_prod_url')) $nabUrl = bd_prod_url($nabUrl);
+    $objednavky = array_values(array_filter($zz, fn($x) => $x['typ'] === 'objednavka_interni'));
+    // rozpracované (neodeslané) nabídky a objednávky tohoto zákazníka – podle telefonu, e-mailu nebo jména
+    $konc = [];
+    if (is_file(__DIR__ . '/lib/koncepty.php')) { try {
+      require_once __DIR__ . '/lib/koncepty.php'; konc_tabulka($pdo);
+      $t9 = substr(preg_replace('/\D+/', '', $detail['telefon']), -9); $em = mb_strtolower(trim($detail['email'])); $jm = mb_strtolower(trim($detail['jmeno']));
+      foreach ($pdo->query("SELECT * FROM koncepty WHERE stav='rozpracovano' ORDER BY upraveno DESC LIMIT 500")->fetchAll(PDO::FETCH_ASSOC) as $kk) {
+        $f = (json_decode((string)$kk['data_json'], true) ?: [])['f'] ?? [];
+        $kt = substr(preg_replace('/\D+/', '', (string)($f['telefon'] ?? '')), -9); $ke = mb_strtolower(trim((string)($f['email'] ?? '')));
+        if ((strlen($t9) === 9 && $kt === $t9) || ($em !== '' && $ke === $em) || ($jm !== '' && mb_strtolower(trim((string)$kk['zakaznik'])) === $jm)) $konc[] = $kk;
+      }
+    } catch (Throwable $x) { $konc = []; } }
+  ?>
+  <div class="box" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <?php if ($detail['telefon']): ?><a class="btn" href="tel:<?= $e(preg_replace('/[^\d+]/', '', $detail['telefon'])) ?>">📞 Zavolat</a><?php endif; ?>
+    <a class="btn" href="<?= $e($nabUrl) ?>">➕ Nová nabídka</a>
+    <a class="btn sec" href="#zapis">📝 Zapsat telefonát / poznámku</a>
+    <a class="btn sec" href="#servis">🛠 Servis<?= $objednavky ? '' : ' (bez objednávky)' ?></a>
+    <a class="btn sec" href="#historie">📋 Poptávky a objednávky (<?= count($zz) ?>)</a>
+  </div>
+  <?php if ($konc): ?><div class="box" style="border:2px solid #e0b100;background:#fffbea"><h3 style="color:#7a5b00">📝 Rozpracované – neodeslané (<?= count($konc) ?>)</h3><div class="tw"><table>
+    <tr><th>Uloženo</th><th>Druh</th><th>Číslo</th><th>Cena</th><th></th></tr>
+    <?php foreach ($konc as $kk): $ku = konc_url($cfg, $kk); if (function_exists('bd_prod_url')) $ku = bd_prod_url($ku); ?><tr><td><?= $e(date('j. n. Y H:i', strtotime((string)$kk['upraveno']))) ?></td>
+      <td><?= $e($kk['druh'] === 'objednavka-vice' ? 'Objednávka' : 'Nabídka') ?><?= $kk['kategorie'] ? ' <span class="mut">' . $e($kk['kategorie']) . '</span>' : '' ?></td><td><?= $e($kk['cislo'] ?: '–') ?></td><td><?= $e($kc($kk['cena'])) ?></td>
+      <td style="white-space:nowrap"><a class="btn sec" style="padding:4px 9px;font-size:13px" href="<?= $e($ku) ?>">Otevřít</a> <a class="btn sec" style="padding:4px 9px;font-size:13px" href="<?= $e($ku) ?>&pdf=1" target="_blank">PDF</a></td></tr><?php endforeach; ?></table></div></div><?php endif; ?>
+  <div class="box" id="zapis"><h3>Rychlý zápis</h3>
+    <form method="post"><input type="hidden" name="akce" value="zk_zapis"><input type="hidden" name="klic" value="<?= $e($k) ?>">
+      <p class="row" style="display:flex;flex-wrap:wrap;gap:8px"><?php foreach (['Telefonát', 'Servis', 'Schůzka', 'Poznámka'] as $ix => $dr): ?><label><input type="radio" name="druh" value="<?= $e($dr) ?>"<?= $ix === 0 ? ' checked' : '' ?>> <?= $e($dr) ?></label><?php endforeach; ?></p>
+      <p><textarea name="zapis" rows="2" style="width:100%" placeholder="Co se domluvilo, co se opravilo…" required></textarea></p>
+      <button>Zapsat</button> <span class="mut">uloží se navrch poznámky zákazníka s datem a vaším jménem</span></form>
+    <?php if (trim((string)($i['poznamka'] ?? '')) !== ''): ?><div style="margin-top:10px;white-space:pre-wrap;font-size:14px;max-height:260px;overflow:auto;border-top:1px solid #e1e6ee;padding-top:8px"><?= $e($i['poznamka']) ?></div><?php endif; ?></div>
   <?php if ($detail['smazany']): ?><div class="err">Tento zákazník je smazaný ze seznamu (jeho záznamy v kartotéce zůstaly). <form method="post" style="display:inline"><input type="hidden" name="akce" value="zk_obnovit"><input type="hidden" name="klic" value="<?= $e($k) ?>"><button class="sec">Vrátit do seznamu</button></form></div><?php endif; ?>
   <div class="box"><h3>Kontakty a adresa</h3>
     <p>📞 <?= $detail['telefon'] ? '<a href="tel:' . $e(preg_replace('/[^\d+]/', '', $detail['telefon'])) . '">' . $e($detail['telefon']) . '</a>' : '–' ?> ·
@@ -228,7 +278,7 @@ details>summary{cursor:pointer;font-weight:600}
         <div class="fg"><?php foreach ($ZK_POLE as $f => $t): ?><label><?= $e($t) ?><input name="<?= $e($f) ?>" value="<?= $e($detail[$f]) ?>"<?= $f === 'email' ? ' type="email"' : ($f === 'telefon' ? ' type="tel"' : '') ?>></label><?php endforeach; ?></div>
         <p class="mut">Úprava se ukáže tady v Zákaznících a v exportu do telefonu. Poptávky, nabídky a objednávky v kartotéce zůstanou, jak byly odeslané. Vymazáním pole se vrátí údaj ze záznamů.</p>
         <button>Uložit kontakt</button><?php if ($detail['upraveny']): ?> <span class="mut">obsahuje ruční úpravy</span><?php endif; ?></form></details></div>
-  <div class="box"><h3>Historie poptávek a objednávek (<?= count($zz) ?>)</h3><?php if (!$zz): ?><p class="mut">Zatím žádná poptávka, nabídka ani objednávka.</p><?php else: ?><div class="tw"><table>
+  <div class="box" id="historie"><h3>Historie poptávek a objednávek (<?= count($zz) ?>)</h3><?php if (!$zz): ?><p class="mut">Zatím žádná poptávka, nabídka ani objednávka.</p><?php else: ?><div class="tw"><table>
     <tr><th>Datum</th><th>Druh</th><th>Číslo</th><th>Předmět</th><th>Cena</th><th>Stav</th></tr>
     <?php foreach ($zz as $x): ?><tr><td><?= $e($datum($x['datum'])) ?></td><td><?= $e($TYPY[$x['typ']] ?? $x['typ']) ?></td><td><?= $e($x['cislo']) ?></td>
       <td><a href="kartoteka.php?id=<?= (int)$x['id'] ?>"><?= $e(mb_substr($x['predmet'], 0, 90)) ?></a></td><td><?= $e($kc($x['cena'])) ?></td>
@@ -239,8 +289,10 @@ details>summary{cursor:pointer;font-weight:600}
     $sv = [];
     if ($ids) { $q = $pdo->prepare('SELECT zadost_id, datum, druh, poznamka, dalsi_kontrola FROM servis WHERE zadost_id IN (' . implode(',', array_fill(0, count($ids), '?')) . ') ORDER BY datum DESC'); $q->execute($ids); $sv = $q->fetchAll(PDO::FETCH_ASSOC); }
   ?>
-  <div class="box"><h3>Servis a záruka</h3>
+  <div class="box" id="servis"><h3>Servis a záruka</h3>
     <?php if (!$zar && !$sv): ?><p class="mut">Zatím žádné předání dveří ani servisní záznam.</p><?php endif; ?>
+    <?php if ($objednavky): ?><p style="display:flex;flex-wrap:wrap;gap:8px"><?php foreach ($objednavky as $x): ?><form method="post" action="kartoteka.php" style="display:inline"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><input type="hidden" name="akce" value="dvere_zaznam"><button class="sec">🛠 Zapsat servis – dveře z <?= $e($x['cislo'] ?: ('#' . $x['id'])) ?></button></form><?php endforeach; ?></p>
+    <?php else: ?><p class="mut">Zákazník u nás nemá objednávku dveří – servis zapište do Rychlého zápisu výše (druh „Servis“).</p><?php endif; ?>
     <?php foreach ($zar as $x): ?><p>Dveře z <b><?= $e($x['cislo'] ?: ('#' . $x['id'])) ?></b>: předáno <?= $e($datum($x['predano'])) ?> · záruka od <?= $e($datum($x['zaruka_od'])) ?> do <b><?= $e($datum($x['zaruka_do'])) ?></b></p><?php endforeach; ?>
     <?php if ($sv): ?><div class="tw"><table><tr><th>Datum</th><th>Druh</th><th>Poznámka</th><th>Další kontrola</th></tr>
       <?php foreach ($sv as $s): ?><tr><td><?= $e($datum($s['datum'])) ?></td><td><?= $e($s['druh']) ?></td><td><?= $e($s['poznamka']) ?></td><td><?= $e($datum($s['dalsi_kontrola'])) ?></td></tr><?php endforeach; ?></table></div><?php endif; ?></div>
