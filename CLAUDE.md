@@ -68,7 +68,7 @@ Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF
 - Samo se přestane zobrazovat **26. 10. 2026** (14 dní od spuštění domény bezpecne-dvere.cz dne 12. 10. 2026). Po tomto datu lze celý blok smazat.
 
 ## Dárkové poukazy (od 29. 10. 2026)
-- Web: `darkovy-poukaz.html` (objednávka; od 30. 10. 2026 veřejná – v menu „🎁 Poukaz“ před Kontaktem na všech stránkách, v patičce pod „Doporuč nás“, v sitemap), `poukaz-stav.html?t=…` (stav, QR platba, stažení PDF a potvrzení o platbě),
+- Web: `darkovy-poukaz.html` (objednávka; od 30. 10. 2026 veřejná – v menu „🎁 Poukaz“ za Kontaktem na všech stránkách, v patičce pod „Doporuč nás“, v sitemap), `poukaz-stav.html?t=…` (stav, QR platba, stažení PDF a potvrzení o platbě),
   `poukaz/poukaz.js` (grafika a PDF poukazu + potvrzení, jsPDF), `poukaz/poukaz-web.js`, pruh na úvodu `poukaz/poukaz-banner.js` (ZAPNUTO=true od 30. 10. 2026, vložen před sekci PREMIUM 60; vypnout = ZAPNUTO=false).
 - Písma Playfair Display a Caveat (OFL, z npm @fontsource, sloučeno latin + latin-ext) v `poukaz/`.
 - `VZOR_CENA` v `poukaz/poukaz.js` = akční cena PREMIUM 60 (38 890 Kč) pro ukazatel „kolik dveří je zaplaceno“ – při změně ceny upravit.
