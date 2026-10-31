@@ -3,6 +3,8 @@
 // Z internetu (přes tunel) JEN na hostiteli kartoteka_host a JEN po přihlášení Cloudflare Access
 // (hlavička Cf-Access-Jwt-Assertion); jinak 404. Heslo z config.php platí vždy navíc.
 // 30. 10. 2026: jméno zákazníka (v detailu i v seznamu) vede na jeho kartu v Zákaznících (zakaznici.php?k=…, klíč zk_klic).
+// 30. 10. 2026: ikona mapy 🗺️ u adresy montáže / fakturační adresy v detailu a u zákazníka v seznamu (bd_mapa v lib/menu.php).
+// 31. 10. 2026: stav Odeslána (nabídka poslaná zákazníkovi) – nastavuje se automaticky v lib/stav.php.
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -18,7 +20,7 @@ $pdo = db(); require_once __DIR__ . '/lib/stav.php'; bd_stavy_sync($pdo);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $kc = fn($n) => ($n === null || $n === '' || !is_numeric($n)) ? '–' : number_format((float)$n, 0, ',', ' ') . ' Kč';
 
-$STAVY = ['nove' => 'Nové', 'rozpracovano' => 'Rozpracováno', 'potvrzena' => 'Potvrzená', 'objednano' => 'Objednáno u výrobce', 'termin' => 'Domluven termín', 'skladem_bez' => 'Skladem – bez termínu', 'skladem_s' => 'Skladem – s termínem',
+$STAVY = ['nove' => 'Nové', 'rozpracovano' => 'Rozpracováno', 'odeslana' => 'Odeslána', 'potvrzena' => 'Potvrzená', 'objednano' => 'Objednáno u výrobce', 'termin' => 'Domluven termín', 'skladem_bez' => 'Skladem – bez termínu', 'skladem_s' => 'Skladem – s termínem',
   'namontovano' => 'Namontováno', 'vyrizeno' => 'Vyřízeno', 'storno' => 'Storno', 'chyba_mailu' => 'E-mail se neodeslal'];
 $TYPY = ['poptavka' => 'Poptávka', 'nabidka' => 'Nabídka', 'objednavka_interni' => 'Objednávka'];
 
@@ -133,7 +135,7 @@ input,select,textarea,button{font:inherit;padding:7px 9px;border:1px solid #c9d1
 .btn.sec{background:#fff;color:var(--acc)}textarea{width:100%}
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#eef2f8;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--mut)}tr:hover td{background:#fafcff}
 .num{text-align:right;white-space:nowrap}.mut{color:var(--mut);font-size:13px}.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#e6ebf3}
-.s-nove{background:#ffe8d1;color:#9a3b00}.s-rozpracovano{background:#fff3c4;color:#7a5b00}.s-potvrzena{background:#ede9fe;color:#5b21b6}.s-skladem_bez{background:#fef3c7;color:#92400e}.s-skladem_s{background:#d1fae5;color:#065f46}.s-objednano,.s-termin{background:#dbeafe;color:#1e40af}.s-namontovano,.s-vyrizeno{background:#d9f2e0;color:#14653a}.s-storno{background:#eee;color:#666}.s-chyba_mailu{background:#fde0e0;color:#a11}
+.s-nove{background:#ffe8d1;color:#9a3b00}.s-rozpracovano{background:#fff3c4;color:#7a5b00}.s-odeslana{background:#e0f2fe;color:#075985}.s-potvrzena{background:#ede9fe;color:#5b21b6}.s-skladem_bez{background:#fef3c7;color:#92400e}.s-skladem_s{background:#d1fae5;color:#065f46}.s-objednano,.s-termin{background:#dbeafe;color:#1e40af}.s-namontovano,.s-vyrizeno{background:#d9f2e0;color:#14653a}.s-storno{background:#eee;color:#666}.s-chyba_mailu{background:#fde0e0;color:#a11}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}dl{margin:0;display:grid;grid-template-columns:150px 1fr;gap:5px 12px}dt{color:var(--mut)}dd{margin:0}
 h2{margin:0 0 8px;font-size:19px}h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
 .err{background:#fde2e2;color:#9b1c1c;padding:8px 12px;border-radius:8px;margin-bottom:12px}
@@ -165,7 +167,7 @@ if (isset($_GET['id'])):
     $adresa = implode(', ', array_filter([$d['ulice'] ?? '', trim(($d['psc'] ?? '') . ' ' . ($d['mesto'] ?? ''))]));
     $patro = !isset($d['patro']) ? '' : ((int)$d['patro'] === 0 ? 'přízemí' : $d['patro'] . '. patro, ' . (($d['vytah'] ?? '') === 'Ano' ? 's výtahem' : 'bez výtahu'));
     $doprava = !isset($d['doprava_km']) ? '' : (str_replace('.', ',', (string)$d['doprava_km']) . ' km – ' . (($d['doprava_cena'] ?? null) === null ? 'upřesníme' : ($d['doprava_cena'] ? $kc($d['doprava_cena']) : 'zdarma')));
-    $dl = function (array $pary) use ($e) { echo '<dl>'; foreach ($pary as $k => $v) if ($v !== '' && $v !== null) echo '<dt>' . $e($k) . '</dt><dd>' . $e($v) . '</dd>'; echo '</dl>'; };
+    $dl = function (array $pary) use ($e, $d) { echo '<dl>'; foreach ($pary as $k => $v) if ($v !== '' && $v !== null) echo '<dt>' . $e($k) . '</dt><dd>' . $e($v) . ($k === 'Adresa montáže' ? bd_mapa_d($d) : ($k === 'Fakturační adresa' ? bd_mapa((string)$v) : '')) . '</dd>'; echo '</dl>'; };
 ?>
   <p><a href="kartoteka.php?typ=<?= $e($r['typ']) ?>">← zpět na seznam</a></p>
   <?php if (isset($_GET['ulozeno'])): ?><div class="ok">Uloženo.</div><?php endif; ?>
@@ -263,7 +265,7 @@ if (isset($_GET['id'])):
   <?php foreach ($rows as $r): $x = $r['x']; ?><tr>
     <td class="mut"><?= $e(substr($r['vytvoreno'], 0, 10)) ?></td>
     <td><a href="?id=<?= (int)$r['id'] ?>"><?= $e($x['cislo'] ?: '(bez čísla)') ?></a><?= $typ === '' ? '<div class="mut">' . $e($TYPY[$r['typ']] ?? '') . '</div>' : '' ?></td>
-    <td><?= $zkOdkaz($r, $x['d'], $x['jmeno'] ?: $r['predmet']) ?><div class="mut"><?= $e($x['telefon']) ?></div></td><td class="hide-m"><?= $e($x['mesto']) ?></td><td><?= $e($x['model']) ?></td>
+    <td><?= $zkOdkaz($r, $x['d'], $x['jmeno'] ?: $r['predmet']) ?><div class="mut"><?= $e($x['telefon']) ?><?= bd_mapa_d($x['d']) ?></div></td><td class="hide-m"><?= $e($x['mesto']) ?></td><td><?= $e($x['model']) ?></td>
     <td class="num"><?= $e($kc($x['cena'])) ?></td><td class="hide-m"><?= $e($x['prodavac']) ?></td><td><span class="chip s-<?= $e($r['stav']) ?>"><?= $e($STAVY[$r['stav']] ?? $r['stav']) ?></span></td><td style="white-space:nowrap"><?php if (in_array($r['typ'], ['poptavka','nabidka'], true)) { [$lo, $ln] = bd_odkazy($r, $x['d']); ?><a class="btn sec" style="padding:4px 8px;font-size:13px" href="<?= $e($lo) ?>">Objednávka</a><?php if ($r['typ'] === 'poptavka'): ?> <a class="btn sec" style="padding:4px 8px;font-size:13px" href="<?= $e($ln) ?>">Nabídka</a><?php endif; } ?></td></tr>
 <?php endforeach; if (!$rows): ?><tr><td colspan="9" class="mut">Nic nenalezeno.</td></tr><?php endif; ?></table>
 <?php endif; ?></main><div id="instalace" style="display:none;max-width:760px;margin:20px auto;padding:14px 16px;background:#fff;border:1px solid #dbe3ee;border-radius:12px;font-family:system-ui,Arial,sans-serif">

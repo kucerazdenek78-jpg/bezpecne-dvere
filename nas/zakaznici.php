@@ -6,6 +6,7 @@
 // když přijde nový záznam), ruční zákazník, export do telefonu (vCard .vcf) a import kontaktů z telefonu (.vcf, s výběrem).
 // 30. 10. 2026: karta zákazníka jako rozcestník (odkaz sem vede z Google Kontaktů v telefonu): rychlé akce (zavolat, nová nabídka
 // s vyplněným zákazníkem, servis), rozpracované nabídky zákazníka, servis u každé objednávky a rychlý zápis do poznámky s datem a jménem.
+// 30. 10. 2026: ikona mapy 🗺️ u adresy na kartě zákazníka a u města v seznamu (bd_mapa v lib/menu.php).
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -23,7 +24,7 @@ $kc = fn($n) => ($n === null || $n === '' || !is_numeric($n)) ? '–' : number_f
 require_once __DIR__ . '/lib/zakaznici.php'; zk_tabulka($pdo); $ZK_POLE = zk_pole();   // společné funkce (i pro synchronizaci s Google Kontakty)
 
 $TYPY = ['poptavka' => 'Poptávka', 'objednavka_interni' => 'Objednávka', 'objednavka_zakaznik' => 'Objednávka (zákazník)', 'nabidka' => 'Nabídka'];
-$STAVY = ['nove' => 'Nové', 'rozpracovano' => 'Rozpracováno', 'objednano' => 'Objednáno u výrobce', 'termin' => 'Domluven termín',
+$STAVY = ['nove' => 'Nové', 'rozpracovano' => 'Rozpracováno', 'odeslana' => 'Odeslána', 'potvrzena' => 'Potvrzená', 'objednano' => 'Objednáno u výrobce', 'termin' => 'Domluven termín', 'skladem_bez' => 'Skladem – bez termínu', 'skladem_s' => 'Skladem – s termínem',
   'namontovano' => 'Namontováno', 'vyrizeno' => 'Vyřízeno', 'storno' => 'Storno', 'chyba_mailu' => 'E-mail se neodeslal'];
 
 function zk_vcard(array $c): string {   // vCard 3.0 (Android i iPhone ji umí importovat)
@@ -272,7 +273,7 @@ details>summary{cursor:pointer;font-weight:600}
   <div class="box"><h3>Kontakty a adresa</h3>
     <p>📞 <?= $detail['telefon'] ? '<a href="tel:' . $e(preg_replace('/[^\d+]/', '', $detail['telefon'])) . '">' . $e($detail['telefon']) . '</a>' : '–' ?> ·
       ✉️ <?= $detail['email'] ? '<a href="mailto:' . $e($detail['email']) . '">' . $e($detail['email']) . '</a>' : '–' ?></p>
-    <p>📍 <?= $e(trim(implode(', ', array_filter([$detail['ulice'], trim($detail['psc'] . ' ' . $detail['mesto'])]))) ?: '–') ?><?= $detail['firma'] ? ' · 🏢 ' . $e($detail['firma']) : '' ?></p>
+    <p>📍 <?= $e(trim(implode(', ', array_filter([$detail['ulice'], trim($detail['psc'] . ' ' . $detail['mesto'])]))) ?: '–') ?><?= bd_mapa_d($detail) ?><?= $detail['firma'] ? ' · 🏢 ' . $e($detail['firma']) : '' ?></p>
     <p><a class="btn sec" href="zakaznici.php?vcf=<?= urlencode($k) ?>">📱 Uložit do telefonu (.vcf)</a></p>
     <details<?= isset($_GET['upravit']) ? ' open' : '' ?>><summary>✏️ Upravit kontakt</summary>
       <form method="post" style="margin-top:10px"><input type="hidden" name="akce" value="zk_kontakt"><input type="hidden" name="klic" value="<?= $e($k) ?>">
@@ -353,7 +354,7 @@ details>summary{cursor:pointer;font-weight:600}
   <div class="box tw"><table><tr><th>Zákazník</th><th>Kontakt</th><th>Město</th><th>Záznamy</th><th>Poslední</th><th>Štítky</th><th>Další kontakt</th><th></th></tr>
     <?php foreach ($rows as $c): ?><tr>
       <td><a href="zakaznici.php?k=<?= urlencode($c['klic']) ?>"><b><?= $e($c['jmeno'] ?: '(bez jména)') ?></b></a><?= $c['firma'] ? '<div class="mut">' . $e($c['firma']) . '</div>' : '' ?><?= $c['rucne'] ? ' <span class="chip tel">' . $e($c['zdroj'] === 'telefon' ? 'z telefonu' : 'ručně') . '</span>' : '' ?></td>
-      <td><?= $e($c['telefon']) ?><?= $c['telefon'] && $c['email'] ? '<br>' : '' ?><span class="mut"><?= $e($c['email']) ?></span></td><td><?= $e($c['mesto']) ?></td>
+      <td><?= $e($c['telefon']) ?><?= $c['telefon'] && $c['email'] ? '<br>' : '' ?><span class="mut"><?= $e($c['email']) ?></span></td><td><?= $e($c['mesto']) ?><?= bd_mapa_d($c) ?></td>
       <td><?= (int)$c['pocet'] ?><?php foreach ($c['druhy'] as $dr => $n): ?> <span class="chip<?= $dr === 'objednávka' ? ' ok' : ($dr === 'nabídka' ? ' warn' : '') ?>"><?= (int)$n ?>× <?= $e($dr) ?></span><?php endforeach; ?></td>
       <td><?= $e($c['posl'] ? $datum($c['posl']) : '–') ?></td><td><?php foreach ($c['stitky'] as $s): ?><span class="chip"><?= $e($s) ?></span><?php endforeach; ?></td>
       <td><?= $c['dk'] ? ($c['dk'] <= date('Y-m-d') ? '<span class="chip warn">' . $e($datum($c['dk'])) . '</span>' : $e($datum($c['dk']))) : '' ?></td>

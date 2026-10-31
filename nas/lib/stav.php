@@ -11,7 +11,8 @@
 //  - Domluven termín nebo Skladem – s termínem + datum montáže už minulo → Namontováno
 //  - zaznamenané předání dveří (predano_dne) → Vyřízeno
 //  - (30. 10. 2026) poptávka, ze které vznikla nabídka nebo objednávka, a nabídka, ze které vznikla objednávka → Vyřízeno
-//    (vazba podle čísla v z_poptavky / z_nabidky odeslané nabídky či objednávky; mění se jen Nové / Rozpracováno)
+//    (vazba podle čísla v z_poptavky / z_nabidky odeslané nabídky či objednávky; mění se jen Nové / Rozpracováno / Odeslána)
+//  - (31. 10. 2026) nabídka poslaná zákazníkovi (má e-mail) ve stavu Nové → Odeslána
 // Storno, E-mail se neodeslal a Vyřízeno se nikdy nepřepisují; stav se vrací zpět jen při vrácení zboží ze skladu.
 // Volá se při každém otevření kartotéky / stránky Dodavatel a po spárování platby (platby.php).
 function bd_stavy_sync(PDO $pdo, bool $znovu = false): void {
@@ -47,6 +48,11 @@ function bd_stavy_sync(PDO $pdo, bool $znovu = false): void {
         }
       }
     }
+    // nabídka poslaná zákazníkovi (zákazník má e-mail, odeslat.php mu ji poslal spolu s interním záznamem) → Odeslána
+    foreach ($pdo->query("SELECT id, data_json FROM zadosti WHERE typ='nabidka' AND stav='nove'")->fetchAll(PDO::FETCH_ASSOC) as $z) {
+      $d = json_decode((string)$z['data_json'], true);
+      if (is_array($d) && filter_var(trim((string)($d['email'] ?? '')), FILTER_VALIDATE_EMAIL)) $up->execute(['odeslana', $z['id']]);
+    }
     // poptávka → nabídka / objednávka a nabídka → objednávka: zdrojový záznam je vyřízený
     bd_stavy_navaznost($pdo, $up);
     // otevření detailu v kartotéce: Nové → Rozpracováno (jen poptávka a objednávka; až po výše uvedeném přepočtu, takže Potvrzená zůstane)
@@ -60,7 +66,7 @@ function bd_stavy_sync(PDO $pdo, bool $znovu = false): void {
 function bd_cislo_norm($c): string { return preg_replace('/\s+/', '', mb_strtolower(trim((string)$c))); }
 
 // Poptávka, ze které vznikla nabídka nebo objednávka (z_poptavky / z_nabidky = její číslo), a nabídka, ze které vznikla objednávka → Vyřízeno.
-// Mění se jen Nové / Rozpracováno (ručně nastavený jiný stav, Storno apod. zůstává).
+// Mění se jen Nové / Rozpracováno / Odeslána (ručně nastavený jiný stav, Storno apod. zůstává).
 function bd_stavy_navaznost(PDO $pdo, PDOStatement $up): void {
   $odkud = [];   // normalizované číslo zdroje → [druh, číslo] záznamu, který z něj vznikl
   foreach ($pdo->query("SELECT typ, cislo, data_json FROM zadosti WHERE typ IN ('nabidka','objednavka_interni')")->fetchAll(PDO::FETCH_ASSOC) as $r) {
@@ -72,7 +78,7 @@ function bd_stavy_navaznost(PDO $pdo, PDOStatement $up): void {
     }
   }
   if (!$odkud) return;
-  foreach ($pdo->query("SELECT id, typ, cislo, stav, data_json FROM zadosti WHERE typ IN ('poptavka','nabidka') AND stav IN ('nove','rozpracovano')")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+  foreach ($pdo->query("SELECT id, typ, cislo, stav, data_json FROM zadosti WHERE typ IN ('poptavka','nabidka') AND stav IN ('nove','rozpracovano','odeslana')")->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $d = json_decode((string)$r['data_json'], true); if (!is_array($d)) $d = [];
     $n = bd_cislo_norm($d['obj_cislo'] ?? $d['cislo'] ?? $r['cislo']); if ($n === '' || !isset($odkud[$n])) continue;
     [$druh, $cis] = $odkud[$n];
