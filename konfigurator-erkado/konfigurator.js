@@ -717,7 +717,7 @@
         y += 12;
         font('normal', 8, MUTED);
         var nt = doc.splitTextToSize((d.montaz ? 'Cena s montáží na klíč (DPH 12 % z celé zakázky). ' : st.odber === 'doprava' ? 'Cena bez montáže, DPH 21 %, doprava z Mostu ' + E.doprava.zaKm + ' Kč/km s DPH (jen cesta tam). ' : 'Cena bez montáže, DPH 21 %, odběr ve vzorkovně KK SYSTEM, Obchodní 36, Most. ') +
-          'Ceny dveří a příslušenství podle katalogu ERKADO Ocelové dveře 2026 (NETTO bez DPH). Orientační cena – závaznou nabídku pošleme po zaměření. ' + r.info.join(' '), cw);
+          'Ceny dveří a příslušenství podle katalogu ERKADO Ocelové dveře 2026 (NETTO bez DPH). Nabídka je orientační. Upřesňuje se po zaměření. ' + r.info.join(' '), cw);
         doc.text(nt, Mg, y); y += nt.length * 3.4 + 4;
         if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, Mg, y); y += pl.length * 4.4 + 3; }
         if (vizRes) {
