@@ -21,6 +21,8 @@
     '.pqk .pqk-kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;margin:.4rem 0 .8rem}.pqk .pqk-kc{border:1.5px solid var(--gray-200,#dde3df);border-radius:10px;background:#fff;padding:.4rem;cursor:pointer;text-align:left;font:inherit;font-size:.8rem;color:#222}' +
     '.pqk .pqk-kc img{display:block;width:100%;height:80px;object-fit:contain;background:#f4f6f5;border-radius:6px;margin-bottom:.3rem}.pqk .pqk-kc b{display:block;font-size:.9rem}.pqk .pqk-kc small{display:block;color:#666}' +
     '.pqk .pqk-kr{display:grid;grid-template-columns:48px 1fr 130px 70px 36px;gap:.5rem;align-items:center;margin-bottom:.5rem}.pqk .pqk-kr img{width:48px;height:48px;object-fit:contain;background:#f4f6f5;border-radius:6px}.pqk .pqk-kr select,.pqk .pqk-kr input{font:inherit;padding:.5rem;border:1px solid var(--gray-300,#c5cdc8);border-radius:8px;width:100%;box-sizing:border-box}' +
+    '.pqk .pqk-dh{margin:1rem 0 .2rem;font-size:1rem;color:var(--navy,#123d27)}.pqk .pqk-dg{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.pqk .pqk-dc img{height:170px;object-fit:contain}.pqk .pqk-dc.sel{border-color:var(--orange,#e8761a);box-shadow:0 0 0 2px var(--orange,#e8761a);background:#fff8f1}' +
+    '.pqk .pqk-dqi{display:flex;align-items:center;justify-content:center;width:100%;height:170px;background:#f4f6f5;border-radius:6px;margin-bottom:.3rem;color:#8a948f;font-weight:700;font-size:1.6rem}.pqk .pqk-dq .pqk-dqi{height:60px}' +
     '@media (hover:hover){.pqk .pqk-kc:hover{border-color:var(--orange,#e8761a)}}@media(max-width:560px){.pqk .pqk-kr{grid-template-columns:40px 1fr 36px}.pqk .pqk-kr select,.pqk .pqk-kr input{grid-column:2}}' +
     '@media(max-width:560px){.pqk .pqk-g2,.pqk .pqk-row.r1{grid-template-columns:1fr}.pqk .pqk-row{grid-template-columns:1fr 1fr 70px 36px}.pqk .pqk-row>label:first-child{grid-column:1/-1}}';
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -32,7 +34,25 @@
       var o = g[1].map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
       return g[0] ? '<optgroup label="' + esc(g[0]) + '">' + o + '</optgroup>' : o; }).join('');
   }
+  /* dům: výběr modelu kartami s obrázky (skrytý <select data-m> zůstává pro odeslání a PoptavkaKat.pick) */
+  var DUMIMG = { 'OPTIMAL 60': 'userFiles/dvere/img_0350.jpeg' };
+  function dumImg(v) { var m = /^ERKADO\s+(\S+)/.exec(v); if (m) return 'aplikace/img/domovni/' + m[1].toLowerCase() + '.jpg'; var k = v.split(' –')[0]; return DUMIMG[k] || ''; }
+  function dumCards() {
+    return MODELY.dum.map(function (g) {
+      var cards = g[1].map(function (x) {
+        var m = /^(.*?)\s*(?:–\s*hliníkové\s*)?\((.*)\)\s*$/.exec(x), nm = m ? m[1].trim() : x.replace(/\s*–.*$/, ''), pr = m ? m[2] : '', im = dumImg(x), q = /^Nevím/.test(x);
+        return '<button type="button" class="pqk-kc pqk-dc' + (q ? ' pqk-dq' : '') + '" data-dpick="' + esc(x) + '">' +
+          (q ? '<span class="pqk-dqi">?</span>' : im ? '<img src="' + esc(im) + '" alt="" loading="lazy">' : '<span class="pqk-dqi">hliník</span>') +
+          '<b>' + esc(nm) + '</b>' + (pr ? '<small>' + esc(pr) + '</small>' : '') + '</button>'; }).join('');
+      return (g[0] ? '<h3 class="pqk-dh">' + esc(g[0]) + '</h3>' : '') + '<div class="pqk-kg pqk-dg">' + cards + '</div>'; }).join('');
+  }
+  function rowHtmlDum() {
+    return '<div class="pqk-dum">' + dumCards() + '<div hidden><select data-m>' + options('dum') + '</select></div>' +
+      '<p class="pqk-help" data-dsel style="font-weight:700;color:var(--navy,#123d27)">Klepnutím vyberte model.</p>' +
+      '<div class="pqk-row r1" style="margin-top:.4rem"><label class="pqk-f">Odstín *<span data-od><input data-o placeholder="nejdřív vyberte model" disabled></span></label></div></div>';
+  }
   function rowHtml(kat, withKs) {
+    if (kat === 'dum') return rowHtmlDum();
     return '<div class="pqk-row' + (withKs ? '' : ' r1') + '"><label class="pqk-f">Model<select data-m>' + options(kat) + '</select></label>' +
       '<label class="pqk-f">Odstín *<span data-od><input data-o placeholder="nejdřív vyberte model" disabled></span></label>' +
       (withKs ? '<label class="pqk-f">Kusů<input data-ks type="number" min="1" max="99" value="1" inputmode="numeric"></label><button type="button" class="pqk-x" data-rm title="Odebrat" aria-label="Odebrat">×</button>' : '') + '</div>';
@@ -75,9 +95,12 @@
       '<div class="pqk-msg" data-msg hidden></div><button type="submit" class="pqk-btn pqk-send">Odeslat poptávku</button></form></div>';
     var form = $('form', el), rows = $('[data-rows]', el), msg = $('[data-msg]', el);
     function err(t) { msg.textContent = t; msg.hidden = false; msg.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    el.addEventListener('change', function (e) { var m = e.target.closest('[data-m]'); if (m) odstinCtl(m.closest('.pqk-row'), kat, m.value); });
+    function dumSync(v) { [].forEach.call(el.querySelectorAll('[data-dpick]'), function (b) { b.classList.toggle('sel', b.getAttribute('data-dpick') === v); });
+      var t = $('[data-dsel]', el); if (t) t.textContent = v ? 'Vybráno: ' + v : 'Klepnutím vyberte model.'; }
+    el.addEventListener('change', function (e) { var m = e.target.closest('[data-m]'); if (m) { odstinCtl(m.closest('.pqk-row') || m.closest('.pqk-dum'), kat, m.value); if (kat === 'dum') dumSync(m.value); } });
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-add]')) { rows.insertAdjacentHTML('beforeend', rowHtml(kat, true)); }
+      var dp = e.target.closest('[data-dpick]'); if (dp) { var sm = $('[data-m]', el); sm.value = dp.getAttribute('data-dpick'); sm.dispatchEvent(new Event('change', { bubbles: true })); sm.classList.remove('bad'); var od = $('[data-o]', el); if (od && !od.disabled) od.focus({ preventScroll: true }); }
       var rm = e.target.closest('[data-rm]'); if (rm && rows.children.length > 1) rm.closest('.pqk-row').remove();
       var ka = e.target.closest('[data-kadd]'); if (ka) kovRow(ka.getAttribute('data-kadd'));
       var kr = e.target.closest('[data-krm]'); if (kr) kr.closest('.pqk-kr').remove();
@@ -96,7 +119,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault(); msg.hidden = true;
       var bad = null, items = [];
-      [].forEach.call(rows.querySelectorAll('.pqk-row'), function (r) { var s = $('[data-m]', r), k = $('[data-ks]', r); s.classList.toggle('bad', !s.value); if (!s.value) { bad = bad || s; return; }
+      [].forEach.call(rows.querySelectorAll(kat === 'dum' ? '.pqk-dum' : '.pqk-row'), function (r) { var s = $('[data-m]', r), k = $('[data-ks]', r); s.classList.toggle('bad', !s.value); if (!s.value) { bad = bad || (kat === 'dum' ? $('[data-dsel]', r) : s); return; }
         var o = $('[data-o]', r), nev = /^Nevím/.test(s.value), ov = (o.value || '').trim(); o.classList.toggle('bad', !ov && !nev); if (!ov && !nev) { bad = bad || o; }
         items.push({ model: s.value, od: ov, ks: k ? Math.max(1, parseInt(k.value, 10) || 1) : 1 }); });
       ['jmeno', 'prijmeni', 'telefon'].concat(K.adr ? ['ulice', 'mesto'] : [], K.adr ? [] : ['email']).forEach(function (n) { var i = form.elements[n]; var b = !i.value.trim(); i.classList.toggle('bad', b); if (b) bad = bad || i; });
@@ -135,7 +158,7 @@
     [].forEach.call(s.options, function (o) { if (o.value && norm(o.value) === n) hit = hit || o; });
     if (!hit) [].forEach.call(s.options, function (o) { if (o.value && !hit && (norm(o.value).indexOf(n) === 0 || n.indexOf(norm(o.value)) === 0)) hit = o; });
     if (hit) { s.value = hit.value; s.dispatchEvent(new Event('change', { bubbles: true })); }
-    s.scrollIntoView({ behavior: 'smooth', block: 'center' }); return !!hit; }
+    (s.offsetParent ? s : (document.querySelector('[data-poptavka-kat] [data-dsel]') || s)).scrollIntoView({ behavior: 'smooth', block: 'center' }); return !!hit; }
   window.PoptavkaKat = { mount: mount, pick: pick };
   document.addEventListener('DOMContentLoaded', function () { [].forEach.call(document.querySelectorAll('[data-poptavka-kat]'), function (el) { if (!el.firstChild) mount(el, el.getAttribute('data-poptavka-kat')); }); });
 })();
