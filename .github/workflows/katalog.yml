@@ -1,7 +1,9 @@
 name: Aktualizace akčního katalogu
 
 on:
-  # automatické denní spouštění je vypnuté – katalog se aktualizuje ručně (příloha PDF)
+  # každý den v 5:23 (letní čas 6:23 / zimní 5:23 místního času) zkontroluje svetdveri.cz; 2. 11. 2026 znovu zapnuto
+  schedule:
+    - cron: '23 4 * * *'
   workflow_dispatch:
 
 permissions:
