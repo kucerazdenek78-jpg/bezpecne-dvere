@@ -185,6 +185,12 @@ if (isset($_GET['id'])):
         <a class="btn" href="<?= $e(bd_prod_url($u)) ?>">Objednávka: <?= $e($pl['co']) ?></a>
       <?php endforeach; endif; ?>
       <a class="btn sec" href="#puvodni">Původní zpráva</a> <?php if ($r['typ'] === 'objednavka_interni'): ?><form method="post" style="display:inline"><input type="hidden" name="id" value="<?= (int)$r['id'] ?>"><input type="hidden" name="akce" value="dvere_zaznam"><button class="btn sec">Záznam dveří / servis</button></form><?php endif; ?></p></div>
+  <?php if (trim((string)($d['poznamka'] ?? '')) !== '' && $r['typ'] === 'poptavka'): ?>
+  <div style="background:#fff4c2;border:2px solid #e0a800;border-left-width:8px;border-radius:10px;padding:12px 16px;margin:0 0 14px">
+    <div style="font-weight:700;color:#7a5200;margin-bottom:4px">💬 Poznámka od zákazníka</div>
+    <div style="font-size:1.1em;white-space:pre-wrap"><?= $e($d['poznamka']) ?></div>
+  </div>
+  <?php endif; ?>
   <?php // rozpočet z jiného programu (PDF) a návaznost nabídka ↔ objednávka (z_nabidky)
   $vazby = []; $rz = is_array($d['rozpocet'] ?? null) ? $d['rozpocet'] : null;
   $dd2 = fn($k) => !empty($r[$k]) ? date('j. n. Y', strtotime((string)$r[$k])) : '';   // objednávka u dodavatele (stránka Dodavatel)
@@ -227,7 +233,7 @@ if (isset($_GET['id'])):
         <label>Datum <input type="date" name="datum" value="<?= $e($r['zaloha_prijata_dne'] ?? date('Y-m-d')) ?>"></label></p>
         <p><label><input type="checkbox" name="poslat" value="1"<?= empty($r['zaloha_prijata_dne']) ? ' checked' : '' ?>> poslat zákazníkovi potvrzení e-mailem (<?= $e($x['email'] ?: 'e-mail chybí') ?>)</label></p>
         <button>Záloha přijata hotově</button> <?php if (!empty($r['zaloha_prijata_dne'])): ?><button name="zrusit" value="1" class="sec" onclick="return confirm('Zrušit evidenci přijaté zálohy?')">Zrušit evidenci</button><?php endif; ?></form></div><?php endif; ?>
-    <div class="box"><h3>Poznámky</h3><?php $dl(['Pro zákazníka' => $d['poznamka'] ?? '', 'Interní (z formuláře)' => $d['interni'] ?? '', 'Z poptávky' => $d['z_poptavky'] ?? '']); ?>
+    <div class="box"><h3>Poznámky</h3><?php $dl([$r['typ'] === 'poptavka' ? 'Od zákazníka' : 'Pro zákazníka' => $d['poznamka'] ?? '', 'Interní (z formuláře)' => $d['interni'] ?? '', 'Z poptávky' => $d['z_poptavky'] ?? '']); ?>
       <form method="post"><input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
         <p><label>Stav: <select name="stav"><?php foreach ($STAVY as $k => $v): ?><option value="<?= $e($k) ?>"<?= $r['stav'] === $k ? ' selected' : '' ?>><?= $e($v) ?></option><?php endforeach; ?></select></label></p>
         <p><textarea name="poznamka" rows="4" placeholder="Interní poznámka kartotéky (kdo volal, co se domluvilo…)"><?= $e($r['poznamka']) ?></textarea></p><button>Uložit</button></form></div>
