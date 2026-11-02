@@ -128,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $txt = (string)file_get_contents($_FILES['vcf']['tmp_name'], false, null, 0, 8 * 1048576);
     $GLOBALS['IMPORT'] = array_slice(zk_vcf_cti($txt), 0, 3000);
   }
+  if ($akce === 'google_klic' && !uziv_admin()) { header('Location: zakaznici.php?google=1'); exit; }   // klíč zakládá a mění jen administrátor
   if ($akce === 'google_klic') {   // Google Kontakty: založit / změnit tajný klíč (starý přestane platit)
     $nast = zk_google_nast(); $nast['token'] = bin2hex(random_bytes(20)); $nast['zalozeno'] = date('Y-m-d H:i'); unset($nast['stazeno'], $nast['pocet']);
     @file_put_contents($DATA . '/kontakty-sync.json', json_encode($nast, JSON_UNESCAPED_UNICODE), LOCK_EX);
@@ -188,12 +189,13 @@ details>summary{cursor:pointer;font-weight:600}
   $skript = str_replace('__FEED__', $feed, (string)@file_get_contents(__DIR__ . '/lib/kontakty-skript.gs')); ?>
   <p><a href="zakaznici.php">← Zákazníci</a></p>
   <h1>🔄 Zákazníci do Google Kontaktů</h1>
+  <p class="mut">Stačí jednou, asi 5 minut. Každý zaměstnanec si skript vloží do <b>svého</b> Google účtu – zákazníci se mu pak sami objevují v Kontaktech v telefonu. Všichni používají stejný skript.</p>
   <?php if (isset($_GET['novy_klic'])): ?><div class="ok">Nový klíč je založený<?= !empty($gn['stazeno']) ? '' : ' – teď vložte skript níže do Google (starý skript s předchozím klíčem už nefunguje)' ?>.</div><?php endif; ?>
   <div class="box"><h3>Stav</h3>
     <?php if (empty($gn['token'])): ?><p>Synchronizace zatím není zapnutá.</p>
-      <form method="post"><input type="hidden" name="akce" value="google_klic"><button>Zapnout – vytvořit tajný klíč</button></form>
+      <?php if (uziv_admin()): ?><form method="post"><input type="hidden" name="akce" value="google_klic"><button>Zapnout – vytvořit tajný klíč</button></form><?php else: ?><p class="mut">Zapnout ji může administrátor – požádejte ho.</p><?php endif; ?>
     <?php else: ?><p><?= !empty($gn['stazeno']) ? '✅ Google si zákazníky naposledy stáhl <b>' . $e(date('j. n. Y H:i', strtotime($gn['stazeno']))) . '</b> (' . (int)($gn['pocet'] ?? 0) . ' zákazníků s telefonem nebo e-mailem).' : '⏳ Google si zákazníky zatím nestáhl – vložte a spusťte skript podle návodu.' ?></p>
-      <form method="post" onsubmit="return confirm('Vytvořit nový klíč? Starý skript v Google přestane fungovat a bude potřeba vložit nový.')"><input type="hidden" name="akce" value="google_klic"><button class="sec">Vytvořit nový klíč (když unikl / pro jiný účet)</button> <span class="mut">klíč založen <?= $e($gn['zalozeno'] ?? '') ?></span></form><?php endif; ?></div>
+      <?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Vytvořit nový klíč? Starý skript v Google přestane fungovat a bude potřeba vložit nový.')"><input type="hidden" name="akce" value="google_klic"><button class="sec">Vytvořit nový klíč (když unikl / pro jiný účet)</button> <span class="mut">klíč založen <?= $e($gn['zalozeno'] ?? '') ?></span></form><?php endif; ?><?php endif; ?></div>
   <?php if (!empty($gn['token'])): ?>
   <div class="box"><h3>Návod (jednou, asi 5 minut, ideálně na počítači)</h3><ol>
     <li>Přihlaste se do Google účtu, který máte v telefonu, a otevřete <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com → Nový projekt</a>. Projekt pojmenujte např. „Bezpečné dveře – kontakty“.</li>
@@ -202,7 +204,7 @@ details>summary{cursor:pointer;font-weight:600}
     <li>Uložte (ikona diskety), nahoře vyberte funkci <b>nastavit</b> a klikněte <b>Spustit</b>.</li>
     <li>Google se zeptá na oprávnění: <b>Zkontrolovat oprávnění</b> → vyberte účet → „Google tuto aplikaci neověřil“ → <b>Rozšířené</b> → <b>Přejít na … (nebezpečné)</b> → <b>Povolit</b>. (Je to váš vlastní skript, proto ho Google neověřoval.)</li>
     <li>Hotovo – skript se teď spouští sám každých 30 minut. Zákazníci se objeví v Kontaktech ve skupině „Zákazníci Bezpečné dveře“ a do telefonu se dostanou běžnou synchronizací Google účtu.</li></ol>
-    <p class="mut">Zákazníka, kterého už v telefonu máte se stejným číslem, skript nepřepíše – jen ho zařadí do skupiny. Nic nemaže. Adresa ve skriptu obsahuje tajný klíč – nikomu ji neposílejte; při podezření dejte „Vytvořit nový klíč“.</p></div>
+    <p class="mut">Zákazníka, kterého už v telefonu máte se stejným číslem, skript nepřepíše – jen ho zařadí do skupiny. Nic nemaže. Adresa ve skriptu obsahuje tajný klíč – nikomu mimo firmu ji neposílejte; při podezření ať administrátor dá „Vytvořit nový klíč“.</p></div>
   <div class="box"><h3>Skript</h3><p><button type="button" id="gsKop">📋 Zkopírovat skript</button> <span class="mut" id="gsInfo"></span></p>
     <textarea id="gsKod" rows="16" readonly style="font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre"><?= $e($skript) ?></textarea></div>
   <script>document.getElementById('gsKop').addEventListener('click', function () { var t = document.getElementById('gsKod'), i = document.getElementById('gsInfo');
