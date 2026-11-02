@@ -3,13 +3,15 @@
 // jako kartotéka: Cloudflare Access + jméno a heslo), ale má VLASTNÍ databázi $DATA/okna.sqlite, vlastní zákazníky a vlastní menu.
 // Se systémem dveří sdílí jen přihlášení, odesílání e-mailů (lib/posta.php) a čtení poptávek „Servis oken“ z webu (jen ke převzetí).
 // Fotky, podpisy a protokoly: $DATA/okna/<id zápisu SVJ>/ a $DATA/okna/j<id servisu jednotlivce>/.
-require dirname(__DIR__) . '/lib/start.php';
+// OK_APP = složka aplikace kartotéky (/var/www/html); kód aplikace může ležet i v datech (stub v okna/ ho načte, viz okna/README)
+if (!defined('OK_APP')) define('OK_APP', dirname(__DIR__));
+require OK_APP . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
   $povolenyHost = strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app'));
   if ($host !== $povolenyHost || empty($_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'])) { http_response_code(404); exit('Not found'); }
 }
-require_once dirname(__DIR__) . '/lib/uzivatele.php'; $u = $_SERVER['PHP_AUTH_USER'] ?? ''; $pw = $_SERVER['PHP_AUTH_PW'] ?? '';
+require_once OK_APP . '/lib/uzivatele.php'; $u = $_SERVER['PHP_AUTH_USER'] ?? ''; $pw = $_SERVER['PHP_AUTH_PW'] ?? '';
 if (!($UZ = uziv_overit($u, $pw))) {
   header('WWW-Authenticate: Basic realm="Kartotéka"'); http_response_code(401); echo 'Přihlášení vyžadováno'; exit;
 }

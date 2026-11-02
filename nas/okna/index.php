@@ -123,7 +123,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!empty($_POST['poslat'])) {
       $em = trim((string)$r['email']);
       if (!filter_var($em, FILTER_VALIDATE_EMAIL)) sj_json(['ok' => false, 'zprava' => 'Zákazník nemá platný e-mail. PDF je uložené.']);
-      require_once dirname(__DIR__) . '/lib/posta.php';
+      require_once OK_APP . '/lib/posta.php';
       $kdy = so_datum($r['provedeno'] ?: $r['termin']);
       $telo = "Dobrý den,\n\nděkujeme, že jste využili náš servis oken. V příloze zasíláme protokol o provedeném servisu" . ($kdy ? " ze dne $kdy" : '') . ".\n"
         . (trim((string)$r['oprava']) !== '' ? "V protokolu najdete i zjištěné závady a návrh opravy s maximální cenou. Pokud máte o opravu zájem, stačí odpovědět na tento e-mail nebo zavolat.\n" : '')
