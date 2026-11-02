@@ -121,6 +121,16 @@ function zamek_smazat_box($pdo, $r) {
   document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(d)});if(document.readyState!=='loading')document.body.appendChild(d);})();</script><?php
 }
 
+// Okno „Původní zpráva“ (e-mail z formuláře) obsahuje obří odkazy pro vytvoření nabídky/objednávky. Dlouhé odkazy se nahradí
+// krátkým textem (tlačítka jsou nahoře) a celá zpráva se sbalí; rozbalí se klepnutím nebo tlačítkem „Původní zpráva“.
+function zamek_puvodni_skript() {
+  ?><script>document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('puvodni');if(!b)return;var p=b.querySelector('pre'),h=b.querySelector('h3');if(!p||!h)return;
+  p.textContent=p.textContent.replace(/https?:\/\/\S{60,}/g,'[dlouhý odkaz – použijte tlačítka nahoře]');
+  var d=document.createElement('details'),s=document.createElement('summary');s.textContent=h.textContent;s.style.cssText='cursor:pointer;font-weight:700;font-size:1.1em';
+  h.remove();b.appendChild(d);d.appendChild(s);d.appendChild(p);
+  function otevri(){if(location.hash==='#puvodni')d.open=true}window.addEventListener('hashchange',otevri);otevri();});</script><?php
+}
+
 // Okno „Zámek a historie“ do detailu záznamu.
 function zamek_box($pdo, $r) {
   $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -132,6 +142,7 @@ function zamek_box($pdo, $r) {
   $h = $st->fetchAll(PDO::FETCH_ASSOC);
   $hlidany = zamek_hlidany($pdo, $id); $do = $hlidany ? zamek_odemceno_do($pdo, $id) : 0;
   $adm = function_exists('uziv_admin') && uziv_admin();
+  zamek_puvodni_skript();
   zamek_smazat_box($pdo, $r);
   if (!$hlidany && !$h) return;
   ?><div class="box" id="zamek"><h3>Zámek a historie</h3>
