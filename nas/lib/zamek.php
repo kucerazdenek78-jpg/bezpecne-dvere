@@ -102,12 +102,10 @@ function zamek_smazat_box($pdo, $r) {
   $msg = ['smaz_potvrdit' => 'Zaškrtněte potvrzení, že záznam opravdu chcete smazat.', 'smaz_zaloha' => 'Záloha databáze se nepodařila uložit, nic se nesmazalo.', 'smaz_admin' => 'Záznam smí smazat jen administrátor.'];
   ?><div class="box" id="smazat"><h3>Smazat záznam</h3>
     <?php if (isset($msg[$zpr])): ?><div class="err"><?= $e($msg[$zpr]) ?></div><?php endif; ?>
-    <details<?= isset($msg[$zpr]) ? ' open' : '' ?>><summary style="cursor:pointer">🗑 Smazat tento záznam…</summary>
-      <form method="post" style="margin:.5rem 0"><input type="hidden" name="akce" value="smazat_zaznam"><input type="hidden" name="id" value="<?= $id ?>">
-        <p style="margin:.2rem 0">Smaže se záznam <b><?= $e($r['cislo']) ?></b> (<?= $e($r['typ']) ?>), i když je zamčený. Před smazáním se uloží záloha databáze a zapíše se do historie. Fotky, zaměření a PDF na disku zůstanou.</p>
-        <p style="margin:.4rem 0"><label><input type="checkbox" name="potvrdit" value="ano"> Ano, opravdu smazat</label></p>
-        <button style="background:#b42318;color:#fff;border:0;border-radius:8px;padding:.5rem 1rem;cursor:pointer">🗑 Smazat záznam</button></form>
-    </details></div><?php
+    <form method="post" style="margin:.5rem 0" onsubmit="return confirm('Opravdu smazat tento záznam? Uloží se záloha databáze.')"><input type="hidden" name="akce" value="smazat_zaznam"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="potvrdit" value="ano">
+      <p style="margin:.2rem 0 .6rem">Smaže se záznam <b><?= $e($r['cislo']) ?></b> (<?= $e($r['typ']) ?>), i když je zamčený. Před smazáním se uloží záloha databáze a zapíše se do historie. Fotky, zaměření a PDF na disku zůstanou.</p>
+      <button style="background:#b42318;color:#fff;border:0;border-radius:8px;padding:.6rem 1.2rem;cursor:pointer;font:inherit">🗑 Smazat záznam</button></form>
+  </div><?php
 }
 
 // Okno „Zámek a historie“ do detailu záznamu.
