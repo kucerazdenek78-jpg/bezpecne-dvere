@@ -39,7 +39,11 @@ function zamek_smazat($pdo) {
   if (!function_exists('uziv_admin') || !uziv_admin()) { header($zpet('smaz_admin')); exit; }
   $st = $pdo->prepare('SELECT * FROM zadosti WHERE id=?'); $st->execute([$id]); $z = $st->fetch(PDO::FETCH_ASSOC);
   if (!$z) { header('Location: kartoteka.php'); exit; }
-  if (($_POST['potvrdit'] ?? '') !== 'ano') { header($zpet('smaz_potvrdit')); exit; }
+  // před smazáním se znovu potvrdí heslem přihlášeného administrátora
+  if (!uziv_overit($GLOBALS['UZ']['login'] ?? '', (string)($_POST['heslo'] ?? ''))) {
+    hist_pis($pdo, $id, 'smazání zamítnuto', 'neplatné heslo');
+    sleep(2); header($zpet('smaz_heslo')); exit;
+  }
   $zaloha = $GLOBALS['DATA'] . '/zaloha-pred-smazanim-' . date('Ymd-His') . '.sqlite';
   try { $pdo->exec('VACUUM INTO ' . $pdo->quote($zaloha)); } catch (Throwable $x) { @copy($GLOBALS['DATA'] . '/formulare.sqlite', $zaloha); }
   if (!is_file($zaloha) || filesize($zaloha) < 1000) { header($zpet('smaz_zaloha')); exit; }
@@ -94,18 +98,27 @@ function zamek_hlidej($pdo) {
   hist_pis($pdo, $id, $popisy[$akce], $zam ? 'u zamčeného záznamu (administrátor)' : 'při odemčeném záznamu');
 }
 
-// Okno „Smazat záznam“ (jen administrátor, i u zamčeného záznamu).
+// Okno „Smazat záznam“ (jen administrátor, i u zamčeného záznamu). Malé červené tlačítko se přesune úplně dolů na stránku;
+// po kliknutí se objeví pole pro heslo a smazání se potvrdí heslem administrátora.
 function zamek_smazat_box($pdo, $r) {
   if (!function_exists('uziv_admin') || !uziv_admin()) return;
   $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   $id = (int)$r['id']; $zpr = $_GET['zprava'] ?? '';
-  $msg = ['smaz_potvrdit' => 'Zaškrtněte potvrzení, že záznam opravdu chcete smazat.', 'smaz_zaloha' => 'Záloha databáze se nepodařila uložit, nic se nesmazalo.', 'smaz_admin' => 'Záznam smí smazat jen administrátor.'];
-  ?><div class="box" id="smazat"><h3>Smazat záznam</h3>
-    <?php if (isset($msg[$zpr])): ?><div class="err"><?= $e($msg[$zpr]) ?></div><?php endif; ?>
-    <form method="post" style="margin:.5rem 0" onsubmit="return confirm('Opravdu smazat tento záznam? Uloží se záloha databáze.')"><input type="hidden" name="akce" value="smazat_zaznam"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="potvrdit" value="ano">
-      <p style="margin:.2rem 0 .6rem">Smaže se záznam <b><?= $e($r['cislo']) ?></b> (<?= $e($r['typ']) ?>), i když je zamčený. Před smazáním se uloží záloha databáze a zapíše se do historie. Fotky, zaměření a PDF na disku zůstanou.</p>
-      <button style="background:#b42318;color:#fff;border:0;border-radius:8px;padding:.6rem 1.2rem;cursor:pointer;font:inherit">🗑 Smazat záznam</button></form>
-  </div><?php
+  $msg = ['smaz_heslo' => 'Heslo nesouhlasí, nic se nesmazalo.', 'smaz_zaloha' => 'Záloha databáze se nepodařila uložit, nic se nesmazalo.', 'smaz_admin' => 'Záznam smí smazat jen administrátor.'];
+  $otevri = isset($msg[$zpr]);
+  ?><div id="smazat" style="max-width:1100px;margin:2.5rem auto 1.5rem;padding:0 12px;text-align:right">
+    <?php if ($otevri): ?><div class="err" style="text-align:left"><?= $e($msg[$zpr]) ?></div><?php endif; ?>
+    <button type="button" id="smazatOtevri" style="background:#b42318;color:#fff;border:0;border-radius:6px;padding:.25rem .7rem;font-size:.8em;cursor:pointer;<?= $otevri ? 'display:none' : '' ?>">🗑 Smazat záznam</button>
+    <form method="post" id="smazatForm" style="<?= $otevri ? '' : 'display:none;' ?>margin:.4rem 0 0" onsubmit="return confirm('Opravdu smazat záznam <?= $id ?>? Uloží se záloha databáze.')">
+      <input type="hidden" name="akce" value="smazat_zaznam"><input type="hidden" name="id" value="<?= $id ?>">
+      <span style="font-size:.85em;color:#555">Smaže se záznam <b><?= $e($r['cislo']) ?></b>, i když je zamčený. Potvrď heslem:</span>
+      <input type="password" name="heslo" autocomplete="current-password" required size="14" style="margin:0 .4rem">
+      <button style="background:#b42318;color:#fff;border:0;border-radius:6px;padding:.25rem .7rem;font-size:.8em;cursor:pointer">Smazat navždy</button>
+    </form>
+  </div>
+  <script>(function(){var d=document.getElementById('smazat'),b=document.getElementById('smazatOtevri'),f=document.getElementById('smazatForm');
+  b.addEventListener('click',function(){b.style.display='none';f.style.display='';f.heslo.focus()});
+  document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(d)});if(document.readyState!=='loading')document.body.appendChild(d);})();</script><?php
 }
 
 // Okno „Zámek a historie“ do detailu záznamu.
