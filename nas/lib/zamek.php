@@ -32,7 +32,7 @@ function zamek_odemceno_do($pdo, $id) {
 function zamceno($pdo, $id) { return zamek_hlidany($pdo, $id) && !zamek_odemceno_do($pdo, $id); }
 
 // Smazání celého záznamu (jen administrátor, i zamčeného). Před smazáním se uloží záloha databáze.
-// Přílohy na disku (fotky, zaměření, PDF) zůstávají, maže se jen záznam. Objednávka 82/2026 zůstává chráněná (stejně jako v úklidu).
+// Přílohy na disku (fotky, zaměření, PDF) zůstávají, maže se jen záznam.
 function zamek_smazat($pdo) {
   $id = (int)($_POST['id'] ?? 0);
   $zpet = fn($z) => 'Location: kartoteka.php?id=' . $id . '&zprava=' . $z . '#smazat';
@@ -40,9 +40,6 @@ function zamek_smazat($pdo) {
   $st = $pdo->prepare('SELECT * FROM zadosti WHERE id=?'); $st->execute([$id]); $z = $st->fetch(PDO::FETCH_ASSOC);
   if (!$z) { header('Location: kartoteka.php'); exit; }
   if (($_POST['potvrdit'] ?? '') !== 'ano') { header($zpet('smaz_potvrdit')); exit; }
-  $d = json_decode((string)$z['data_json'], true) ?: [];
-  $kl = ltrim(preg_replace('/\D+/', '', (string)($d['obj_cislo'] ?? $z['cislo'])), '0');
-  if ($z['typ'] === 'objednavka_interni' && $kl === '822026') { header($zpet('smaz_chranena')); exit; }
   $zaloha = $GLOBALS['DATA'] . '/zaloha-pred-smazanim-' . date('Ymd-His') . '.sqlite';
   try { $pdo->exec('VACUUM INTO ' . $pdo->quote($zaloha)); } catch (Throwable $x) { @copy($GLOBALS['DATA'] . '/formulare.sqlite', $zaloha); }
   if (!is_file($zaloha) || filesize($zaloha) < 1000) { header($zpet('smaz_zaloha')); exit; }
@@ -102,8 +99,7 @@ function zamek_smazat_box($pdo, $r) {
   if (!function_exists('uziv_admin') || !uziv_admin()) return;
   $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   $id = (int)$r['id']; $zpr = $_GET['zprava'] ?? '';
-  $msg = ['smaz_potvrdit' => 'Zaškrtněte potvrzení, že záznam opravdu chcete smazat.', 'smaz_chranena' => 'Objednávka 82/2026 je chráněná, smazat ji nejde.',
-          'smaz_zaloha' => 'Záloha databáze se nepodařila uložit, nic se nesmazalo.', 'smaz_admin' => 'Záznam smí smazat jen administrátor.'];
+  $msg = ['smaz_potvrdit' => 'Zaškrtněte potvrzení, že záznam opravdu chcete smazat.', 'smaz_zaloha' => 'Záloha databáze se nepodařila uložit, nic se nesmazalo.', 'smaz_admin' => 'Záznam smí smazat jen administrátor.'];
   ?><div class="box" id="smazat"><h3>Smazat záznam</h3>
     <?php if (isset($msg[$zpr])): ?><div class="err"><?= $e($msg[$zpr]) ?></div><?php endif; ?>
     <details<?= isset($msg[$zpr]) ? ' open' : '' ?>><summary style="cursor:pointer">🗑 Smazat tento záznam…</summary>
