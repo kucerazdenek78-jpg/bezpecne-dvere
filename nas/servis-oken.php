@@ -235,6 +235,7 @@ if ($svjId === null && !$servisId):
   $bezi = $pdo->query("SELECT s.*, j.nazev AS svj_nazev FROM so_servis s JOIN so_svj j ON j.id=s.svj_id WHERE s.stav='probiha' ORDER BY s.id DESC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <h1>🪟 Servis oken</h1>
+<?php if (is_file(__DIR__ . '/servis-oken-jednotlivci.php')): ?><div class="noprint" style="display:flex;gap:6px;margin:0 0 12px"><a href="servis-oken.php" style="padding:9px 14px;border-radius:10px;background:#1f5fbf;color:#fff;text-decoration:none;font-weight:600">SVJ a družstva</a><a href="servis-oken-jednotlivci.php" style="padding:9px 14px;border-radius:10px;background:#e6ebf3;color:#1b2430;text-decoration:none;font-weight:600">Jednotlivci</a></div><?php endif; ?>
 <?php if ($bezi): ?><div class="box"><h2 style="margin-top:0">Běžící servisy</h2>
 <?php foreach ($bezi as $s): $sh = so_souhrn($pdo, $s); $b = array_sum(array_column($sh, 'bytu')); $h = array_sum(array_column($sh, 'hotovo')); ?>
   <p><a class="btn" href="?servis=<?= (int)$s['id'] ?>"><?= $e($s['svj_nazev']) ?> – <?= $e($s['nazev']) ?></a> <span class="mut">hotovo <?= $h ?> z <?= $b ?> bytů</span></p>

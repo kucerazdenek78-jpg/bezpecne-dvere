@@ -1,0 +1,29 @@
+
+// Servis oken – jednotlivci (2. 11. 2026): u poptávky „Servis oken“ z webu tlačítko „🪟 Založit servis oken“ (nebo otevřít už založený).
+function bd_so_tlacitko(int $id): void {
+  if ($id <= 0 || !is_file(dirname(__DIR__) . '/servis-oken-jednotlivci.php')) return;
+  try {
+    $st = db()->prepare('SELECT typ, data_json FROM zadosti WHERE id=?'); $st->execute([$id]); $r = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$r || $r['typ'] !== 'poptavka') return;
+    $d = json_decode((string)$r['data_json'], true) ?: [];
+    if (($d['druh'] ?? '') !== 'servis_oken' && ($d['model_kod'] ?? '') !== 'servis-oken') return;
+    $sj = 0; try { $q = db()->prepare('SELECT id FROM so_jed WHERE zadost_id=?'); $q->execute([$id]); $sj = (int)$q->fetchColumn(); } catch (Throwable $x) {}
+  } catch (Throwable $x) { return; }
+  $url = $sj ? 'servis-oken-jednotlivci.php?id=' . $sj : 'servis-oken-jednotlivci.php?nove=1&z=' . $id;
+  $txt = $sj ? '🪟 Servis oken – otevřít' : '🪟 Založit servis oken';
+  echo '<script>document.addEventListener("DOMContentLoaded",function(){var a=[].slice.call(document.querySelectorAll("a.btn")).filter(function(x){return /Vytvořit objednávku z této poptávky/.test(x.textContent)})[0];if(!a)return;'
+     . 'var b=document.createElement("a");b.className="btn";b.href=' . json_encode($url) . ';b.textContent=' . json_encode($txt, JSON_UNESCAPED_UNICODE) . ';b.style.cssText="background:#0e7490;border-color:#0e7490";'
+     . 'a.parentNode.insertBefore(b,a);a.parentNode.insertBefore(document.createTextNode(" "),a)});</script>';
+}
+
+// Karta zákazníka: řádek „🪟 Servis oken“ se servisy u zákazníka a odkazem na nový servis (pod nadpisem karty).
+function bd_so_karta(string $k): void {
+  if ($k === '' || !is_file(dirname(__DIR__) . '/servis-oken-jednotlivci.php')) return;
+  $r = []; try { $st = db()->prepare('SELECT id, stav, termin, provedeno FROM so_jed WHERE klic=? ORDER BY COALESCE(provedeno, termin, vytvoreno) DESC LIMIT 10'); $st->execute([$k]); $r = $st->fetchAll(PDO::FETCH_ASSOC); } catch (Throwable $x) {}
+  $h = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+  $sz = ['nova' => 'k vyřízení', 'hotovo' => 'hotovo', 'zruseno' => 'zrušeno'];
+  $html = '<div style="background:#fff;border-radius:12px;padding:10px 14px;margin:10px 0;box-shadow:0 1px 3px #0002"><b>🪟 Servis oken</b>';
+  foreach ($r as $x) { $d = $x['provedeno'] ?: $x['termin']; $html .= ' · <a href="servis-oken-jednotlivci.php?id=' . (int)$x['id'] . '">' . $h($d ? date('j. n. Y', strtotime($d)) : 'bez termínu') . '</a> <span style="color:#5f6b7a;font-size:13px">(' . $h($sz[$x['stav']] ?? $x['stav']) . ')</span>'; }
+  $html .= ' · <a href="servis-oken-jednotlivci.php?nove=1&amp;k=' . $h(rawurlencode($k)) . '">+ nový servis oken</a></div>';
+  echo '<script>document.addEventListener("DOMContentLoaded",function(){var h=document.querySelector("main h1");if(!h)return;h.insertAdjacentHTML("afterend",' . json_encode($html, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) . ')});</script>';
+}
