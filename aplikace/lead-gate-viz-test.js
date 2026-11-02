@@ -1,5 +1,5 @@
-/* ZKUŠEBNÍ: kontakt při uložení / sdílení vizualizace (2. 11. 2026).
-   Kdo si chce vizualizaci uložit nebo poslat, dostane jednou za návštěvu nabídku: „pošleme vám obrázek i s cenou“ (telefon NEBO e-mail).
+/* ZKUŠEBNÍ: kontakt po nasazení dveří na fotku (2. 11. 2026).
+   Když se dveře nasadí na fotku (a záloha: při Uložit / Poslat), dostane zákazník jednou za návštěvu nabídku: „pošleme vám obrázek i s cenou“ (telefon NEBO e-mail).
    Kdo nechce, pokračuje bez uložení kontaktu. Údaje se jen zapíší do stejného místa v telefonu, ze kterého se předvyplňují formuláře aplikace
    (bd-app-kontakt). Zkušební stránka nic neodesílá: odeslání formulářů je zablokované. */
 (function () {
@@ -17,7 +17,7 @@
   document.head.appendChild(css);
   function open(done) {
     var bg = document.createElement('div'); bg.className = 'kfg-bg';
-    bg.innerHTML = '<div class="kfg" role="dialog" aria-modal="true" aria-labelledby="kfgH"><h2 id="kfgH">Pošleme vám obrázek i s cenou</h2>'
+    bg.innerHTML = '<div class="kfg" role="dialog" aria-modal="true" aria-labelledby="kfgH"><h2 id="kfgH">Líbí se vám? Pošleme vám obrázek i s cenou</h2>'
       + '<p>Uložíme vám tuto vizualizaci a poradíme s výběrem a termínem. Stačí telefon <b>nebo</b> e-mail.</p>'
       + '<label>Telefon<input type="tel" id="kfgTel" inputmode="tel" autocomplete="tel" placeholder="777 123 456"></label>'
       + '<label>E-mail<input type="email" id="kfgEm" autocomplete="email"></label>'
@@ -50,7 +50,15 @@
     } catch (e) {}
     try { console.log('[TEST] uložený kontakt (neodesláno):', c); } catch (e) {}
   }
-  /* uložení / sdílení: jednou za návštěvu nabídnout kontakt, pak akci provést */
+  /* hlavní moment: dveře jsou nasazené na fotku (tlačítko Uložit se odemkne) – po 2,5 s, aby si zákazník náhled prohlédl */
+  var saveBtn = document.getElementById('save');
+  if (saveBtn && window.MutationObserver) {
+    new MutationObserver(function () {
+      if (saveBtn.disabled || shown || document.querySelector('.kfg-bg')) return;
+      setTimeout(function () { if (!shown && !document.querySelector('.kfg-bg') && !saveBtn.disabled) open(function () {}); }, 2500);
+    }).observe(saveBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+  /* záloha: při uložení / sdílení, pokud se okno ještě neukázalo */
   ['save', 'share'].forEach(function (id) {
     var b = document.getElementById(id); if (!b) return;
     b.addEventListener('click', function (e) {
