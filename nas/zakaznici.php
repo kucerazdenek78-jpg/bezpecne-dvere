@@ -110,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $zk_uloz_pole($k, $pole);
     header('Location: zakaznici.php?k=' . urlencode($k) . '&ulozeno=1'); exit;
   }
+  if ($akce === 'zk_smazat' && !uziv_admin()) { header('Location: zakaznici.php?nesmi=1'); exit; }   // mazat zákazníky smí jen administrátor
   if ($akce === 'zk_smazat' && isset($vse[$k])) {
     if (!$vse[$k]['zaznamy']) $pdo->prepare('DELETE FROM zakaznik_info WHERE klic=?')->execute([$k]);   // ruční zákazník bez záznamů → pryč úplně
     else $zk_uloz_pole($k, ['smazano' => date('Y-m-d H:i:s')]);
@@ -304,7 +305,7 @@ details>summary{cursor:pointer;font-weight:600}
       <p><label>Další kontakt<br><input type="date" name="dalsi_kontakt" value="<?= $e($i['dalsi_kontakt'] ?? '') ?>"></label></p>
       <p><label>Poznámka<br><textarea name="poznamka" rows="4"><?= $e($i['poznamka'] ?? '') ?></textarea></label></p>
       <button>Uložit</button><?php if (!empty($i['upraveno'])): ?> <span class="mut">naposledy upraveno <?= $e($i['upraveno']) ?></span><?php endif; ?></form></div>
-  <?php if (!$detail['smazany']): ?><div class="box"><h3>Smazat zákazníka</h3>
+  <?php if (!$detail['smazany'] && uziv_admin()): ?><div class="box"><h3>Smazat zákazníka</h3>
     <form method="post" onsubmit="return confirm('<?= $zz ? 'Smazat zákazníka ze seznamu? Jeho poptávky, nabídky a objednávky v kartotéce zůstanou. Když od něj přijde nový záznam, objeví se zase.' : 'Smazat tohoto zákazníka? Nemá žádné záznamy v kartotéce, smaže se úplně.' ?>')">
       <input type="hidden" name="akce" value="zk_smazat"><input type="hidden" name="klic" value="<?= $e($k) ?>">
       <p class="mut"><?= $zz ? 'Zmizí jen ze seznamu Zákazníci – poptávky, nabídky a objednávky v kartotéce zůstanou beze změny.' : 'Zákazník nemá žádné záznamy v kartotéce – smaže se úplně.' ?></p>
@@ -337,6 +338,7 @@ details>summary{cursor:pointer;font-weight:600}
   [$impN, $impD] = array_map('intval', explode('-', (string)($_GET['import'] ?? '') . '-0'));
 ?>
   <h1>Zákazníci <span class="mut">(<?= count($rows) ?> z <?= count($vse) ?>)</span></h1>
+  <?php if (isset($_GET['nesmi'])): ?><div class="err">Zákazníka smí smazat jen administrátor.</div><?php endif; ?>
   <?php if (isset($_GET['smazano'])): ?><div class="ok">Zákazník byl smazán ze seznamu.</div><?php endif; ?>
   <?php if (isset($_GET['import'])): ?><div class="ok">Import hotový: <?= $impN ?> nových zákazníků, <?= $impD ?> doplněných.</div><?php endif; ?>
   <div class="box"><form method="get" class="row">
@@ -359,7 +361,7 @@ details>summary{cursor:pointer;font-weight:600}
       <td><?= $e($c['posl'] ? $datum($c['posl']) : '–') ?></td><td><?php foreach ($c['stitky'] as $s): ?><span class="chip"><?= $e($s) ?></span><?php endforeach; ?></td>
       <td><?= $c['dk'] ? ($c['dk'] <= date('Y-m-d') ? '<span class="chip warn">' . $e($datum($c['dk'])) . '</span>' : $e($datum($c['dk']))) : '' ?></td>
       <td style="white-space:nowrap"><a class="btn sec" style="padding:4px 9px;font-size:13px" href="zakaznici.php?k=<?= urlencode($c['klic']) ?>&upravit=1" title="Upravit kontakt">✏️</a>
-        <form method="post" style="display:inline" onsubmit="return confirm('<?= $c['zaznamy'] ? 'Smazat zákazníka ze seznamu? Jeho poptávky, nabídky a objednávky v kartotéce zůstanou.' : 'Smazat tohoto zákazníka? Nemá žádné záznamy, smaže se úplně.' ?>')"><input type="hidden" name="akce" value="zk_smazat"><input type="hidden" name="klic" value="<?= $e($c['klic']) ?>"><button class="del" style="padding:4px 9px;font-size:13px" title="Smazat">🗑</button></form></td></tr><?php endforeach; ?>
+        <?php if (uziv_admin()): ?><form method="post" style="display:inline" onsubmit="return confirm('<?= $c['zaznamy'] ? 'Smazat zákazníka ze seznamu? Jeho poptávky, nabídky a objednávky v kartotéce zůstanou.' : 'Smazat tohoto zákazníka? Nemá žádné záznamy, smaže se úplně.' ?>')"><input type="hidden" name="akce" value="zk_smazat"><input type="hidden" name="klic" value="<?= $e($c['klic']) ?>"><button class="del" style="padding:4px 9px;font-size:13px" title="Smazat">🗑</button></form><?php endif; ?></td></tr><?php endforeach; ?>
     <?php if (!$rows): ?><tr><td colspan="8" class="mut">Nic nenalezeno.</td></tr><?php endif; ?></table></div>
 <?php endif; ?>
 </main></body></html>
