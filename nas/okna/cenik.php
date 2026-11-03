@@ -48,8 +48,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $st = $pdo->prepare('INSERT INTO ok_nastaveni (klic, hodnota) VALUES (?,?) ON CONFLICT(klic) DO UPDATE SET hodnota=excluded.hodnota');
     foreach (OK_NAST_VYCHOZI as $k => $v) if (isset($_POST[$k])) $st->execute([$k, is_numeric($v) ? (string)($num($_POST[$k]) ?? $v) : $P($k, 3000)]);
     if (!empty($_POST['dph_prepocet'])) {   // nové DPH promítnout do položek
-      $pdo->prepare("UPDATE ok_cenik SET dph=? WHERE skupina IN ('byt','prace')")->execute([(float)($num($_POST['dph_byt']) ?? 12)]);
-      $pdo->prepare("UPDATE ok_cenik SET dph=? WHERE skupina IN ('okno','doprava')")->execute([(float)($num($_POST['dph_firma']) ?? 21)]);
+      $pdo->prepare("UPDATE ok_cenik SET dph=? WHERE skupina IN ('byt','prace') OR (skupina='okno' AND kod NOT LIKE 'F%')")->execute([(float)($num($_POST['dph_byt']) ?? 12)]);
+      $pdo->prepare("UPDATE ok_cenik SET dph=? WHERE skupina='doprava' OR (skupina='okno' AND kod LIKE 'F%')")->execute([(float)($num($_POST['dph_firma']) ?? 21)]);
     }
     header('Location: cenik.php?ok=1#nastaveni'); exit;
   }
@@ -117,8 +117,9 @@ ok_hlava('Ceník'); ok_bar('cen'); ?><main>
 <div class="ln"><label>Smlouva 3× opakovaný servis – sleva %<input name="sleva_sml3" value="<?= $e($n['sleva_sml3']) ?>" size="3"></label><label>Smlouva 5× – sleva %<input name="sleva_sml5" value="<?= $e($n['sleva_sml5']) ?>" size="3"></label></div>
 <div class="ln"><label>Příplatek po 18. hodině %<input name="priplatek_vecer" value="<?= $e($n['priplatek_vecer']) ?>" size="3"></label><label>Soboty, neděle, svátky %<input name="priplatek_vikend" value="<?= $e($n['priplatek_vikend']) ?>" size="3"></label><label>Expres (nástup do 4 h) %<input name="priplatek_expres" value="<?= $e($n['priplatek_expres']) ?>" size="3"></label></div>
 <div class="ln"><label>DPH byty a RD %<input name="dph_byt" value="<?= $e($n['dph_byt']) ?>" size="3"></label><label>DPH firmy a doprava %<input name="dph_firma" value="<?= $e($n['dph_firma']) ?>" size="3"></label>
-<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" name="dph_prepocet" value="1"> promítnout DPH do položek ceníku</label><label>Platnost nabídky (dní)<input name="platnost_dni" value="<?= $e($n['platnost_dni']) ?>" size="3"></label></div>
+<label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" name="dph_prepocet" value="1"> promítnout DPH do položek (byty, práce a okna v bytech / firmy F… a doprava)</label><label>Platnost nabídky (dní)<input name="platnost_dni" value="<?= $e($n['platnost_dni']) ?>" size="3"></label></div>
 <label class="mut">Rozsah servisu (tiskne se do nabídky)<textarea name="text_rozsah" rows="4"><?= $e($n['text_rozsah']) ?></textarea></label>
+<label class="mut">Jak u nás probíhá servis (druhá strana nabídky pro SVJ, každý odstavec na nový řádek)<textarea name="text_prubeh" rows="6"><?= $e($n['text_prubeh']) ?></textarea></label>
 <label class="mut">Podmínky (tiskne se do nabídky)<textarea name="text_podminky" rows="3"><?= $e($n['text_podminky']) ?></textarea></label>
 <?php if ($adm): ?><button>Uložit nastavení</button><?php endif; ?></form>
 

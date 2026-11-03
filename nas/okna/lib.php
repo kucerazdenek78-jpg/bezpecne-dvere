@@ -236,6 +236,7 @@ const OK_NAST_VYCHOZI = [
   'priplatek_vecer' => 50, 'priplatek_vikend' => 75, 'priplatek_expres' => 75,
   'platnost_dni' => 30, 'zaokrouhleni' => 1,
   'text_rozsah' => "kontrola rámů a křídel oken\nkontrola těsnících gum a jejich případné ošetření\nkontrola kování, jeho seřízení a promazání\nkontrola odtokových žlábků a jejich případné čištění",
+  'text_prubeh' => "Dle telefonické dohody Vám pošleme návrh termínů servisu oken. Poprosíme Vás jen o odsouhlasení zpět e-mailem.\nPo odsouhlasení termínů Vám do jednoho dne polepíme vchody vývěskami. Máte-li společnou nástěnku nebo web, požádáme Vás o umístění i tam.\nServisní technik nechá nájemníkům, které nezastihne doma, oznámenku, aby nás kontaktovali. Bude jim navržen jeden náhradní termín.\nServisní technik bude mít vizitku se jménem a razítkem firmy. Telefonní číslo pro ověření je stejné na vývěskách i oznámenkách. V době servisu bude na telefonu asistentka, která koordinuje celou akci.\nV případě dalších dotazů se na nás obraťte.",
   'text_podminky' => 'Slevy není možné sčítat ani kombinovat se slevovými kupóny – použije se vždy ta vyšší. Na dopravu se slevy nevztahují. Ceny opakovaného servisu platí po podpisu servisní smlouvy.',
 ];
 function ok_cenik_tabulky(PDO $pdo): void {
@@ -262,6 +263,25 @@ function ok_cenik_tabulky(PDO $pdo): void {
     foreach ($v as $i => $r) $st->execute([$r[0], $r[1], $r[2], $r[3], $r[4], OK_NAST_VYCHOZI[$r[5]], $r[6], $i, date('Y-m-d H:i:s')]);
     $pdo->prepare('INSERT INTO ok_cenik_historie (kdy, kdo, popis, data) VALUES (?,?,?,?)')->execute([date('Y-m-d H:i:s'), 'systém', 'Výchozí ceník podle „Servis 48 – ceník 2022 koncový zákazník“', json_encode(ok_cenik($pdo), JSON_UNESCAPED_UNICODE)]);
   }
+}
+// Úprava ceníku podle nabídek 2025 (Blok 8 – 25NA00007 z 9. 4. 2025, Blok 78 – 25NA00008 z 11. 8. 2025), schváleno 3. 11. 2026:
+// byty 1+1 660, 2+1 790, 3+1 890 (z nabídek), 4+1 1060, 5+1 1190, RD 1580 (dopočteno +20 %), okna a dveře z nabídek, nižší slevy.
+function ok_cenik_migrace(PDO $pdo): void {
+  $st = $pdo->prepare('SELECT hodnota FROM ok_nastaveni WHERE klic=?'); $st->execute(['cenik_verze']); if ((int)$st->fetchColumn() >= 2) return;
+  $ted = date('Y-m-d H:i:s');
+  $pdo->prepare('INSERT INTO ok_cenik_historie (kdy, kdo, popis, data) VALUES (?,?,?,?)')->execute([$ted, function_exists('uziv_jmeno') ? uziv_jmeno() : 'systém', 'Před úpravou podle nabídek 2025', json_encode(['cenik' => ok_cenik($pdo), 'nastaveni' => ok_nast($pdo)], JSON_UNESCAPED_UNICODE)]);
+  $pdo->beginTransaction();
+  $up = $pdo->prepare('UPDATE ok_cenik SET cena=?, nazev=?, upraveno=? WHERE kod=?');
+  foreach ([['B1', 660, 'Servis oken a dveří – byt 1+1 (0+2)'], ['B2', 790, 'Servis oken a dveří – byt 2+1 (2+kk)'], ['B3', 890, 'Servis oken a dveří – byt 3+1 (3+kk)'], ['B4', 1060, 'Servis oken a dveří – byt 4+1 (4+kk)'],
+    ['B5', 1190, 'Servis oken a dveří – byt 5+1 (5+kk)'], ['RD', 1580, 'Servis oken a dveří – rodinný dům'], ['F2', 220, 'Servis okna dvoukřídlého – firmy, společné prostory']] as [$k, $c, $n]) $up->execute([$c, $n, $ted, $k]);
+  $ins = $pdo->prepare('INSERT OR IGNORE INTO ok_cenik (kod, nazev, skupina, jednotka, cena, dph, velikost, poradi, upraveno) VALUES (?,?,?,?,?,?,?,?,?)');
+  $dph = (float)(ok_nast($pdo)['dph_byt'] ?? 12);
+  foreach ([['O1', 'Seřízení plastového okna 1křídlého, promazání kování', 120, 1], ['O2', 'Seřízení plastového okna 2křídlého, promazání kování', 181, 2], ['O3', 'Seřízení plastového okna 3křídlého, promazání kování', 211, 3],
+    ['DV1', 'Seřízení jednokřídlých dveří, promazání kování', 450, 4]] as [$k, $n, $c, $p]) $ins->execute([$k, $n, 'okno', 'ks', $c, $dph, '', $p, $ted]);
+  $s = $pdo->prepare('INSERT INTO ok_nastaveni (klic, hodnota) VALUES (?,?) ON CONFLICT(klic) DO UPDATE SET hodnota=excluded.hodnota');
+  foreach (['sleva_mn1' => 5, 'sleva_mn2' => 7, 'sleva_sml3' => 20, 'sleva_sml5' => 30, 'cenik_verze' => 2] as $k => $v) $s->execute([$k, (string)$v]);
+  $pdo->commit();
+  $pdo->prepare('INSERT INTO ok_cenik_historie (kdy, kdo, popis, data) VALUES (?,?,?,?)')->execute([$ted, 'systém', 'Ceník podle nabídek 2025: byty +15,6 až +20 %, okna a dveře, slevy 5 / 7 / 20 / 30 %', json_encode(['cenik' => ok_cenik($pdo), 'nastaveni' => ok_nast($pdo)], JSON_UNESCAPED_UNICODE)]);
 }
 function ok_nast(PDO $pdo): array {
   $o = OK_NAST_VYCHOZI;
@@ -313,4 +333,4 @@ function ok_nabidka_cislo(PDO $pdo): string {
   return $c;
 }
 
-$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo);
+$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo);

@@ -292,7 +292,7 @@ elseif ($id):
 <script>
 (function () {
   // cena z ceníku (cena s DPH × počet; u bytu počet 1)
-  document.getElementById('katCena').addEventListener('click', function () { var o = document.getElementById('kat').selectedOptions[0]; if (!o || !o.value) { alert('Vyberte byt / typ podle ceníku.'); return; } var n = /^F/.test(o.value) ? Math.max(1, +document.getElementById('katPocet').value || 1) : 1; document.querySelector('[name=cena]').value = Math.round(+o.dataset.s * n); });
+  document.getElementById('katCena').addEventListener('click', function () { var o = document.getElementById('kat').selectedOptions[0]; if (!o || !o.value) { alert('Vyberte byt / typ podle ceníku.'); return; } var n = /^(F|O|DV)/.test(o.value) ? Math.max(1, +document.getElementById('katPocet').value || 1) : 1; document.querySelector('[name=cena]').value = Math.round(+o.dataset.s * n); });
   // podpis prstem
   var c = document.getElementById('podpis'), x = c.getContext('2d'), kresli = false, neco = false, out = document.getElementById('podpisData');
   function velikost() { var r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1; c.width = r.width * d; c.height = r.height * d; x.scale(d, d); x.lineWidth = 2.5; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b2a6b'; neco = false; out.value = ''; }

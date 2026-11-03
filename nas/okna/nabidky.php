@@ -90,7 +90,7 @@ body{font:13px/1.45 Arial,sans-serif;color:#1b2430;margin:0}main{max-width:780px
 table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dee6;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eef4f6;font-size:12px}.r{text-align:right}.nowrap{white-space:nowrap}.mut{color:#5f6b7a}
 .hl{display:flex;justify-content:space-between;gap:12px;font-size:12px;border-bottom:3px solid #0e4f5c;padding-bottom:8px}.sum td{font-weight:700;border-top:2px solid #0e4f5c}.no{margin-top:14px}
 @media print{.noprint{display:none}main{padding:0}@page{margin:14mm}}</style></head><body><main>
-<p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button></p>
+<p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button> · <?php $pr = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : $nb['typ'] === 'svj'; ?><a href="?id=<?= $id ?>&amp;tisk=1&amp;prubeh=<?= $pr ? '0' : '1' ?>"><?= $pr ? 'bez přílohy „Jak u nás probíhá servis“' : 'přiložit „Jak u nás probíhá servis“' ?></a></p>
 <div class="hl"><div><b style="font-size:15px">KK SYSTEM – servis oken a dveří</b><br>Zdeněk Kučera · Zd. Štěpánka 2764/1, 434 01 Most<br>IČ 64682676, DIČ CZ7801242768</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz<br>www.bezpecne-dvere.cz</div></div>
 <h1>Cenová nabídka – servis oken a dveří</h1>
 <p>č. <b><?= $e($nb['cislo']) ?></b> · ze dne <?= $e(so_datum($nb['datum'])) ?><?= $nb['platnost'] ? ' · platnost do ' . $e(so_datum($nb['platnost'])) : '' ?></p>
@@ -106,6 +106,9 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dee6;
 <?php if (trim((string)$nb['poznamka']) !== ''): ?><h2>Poznámka</h2><p><?= nl2br($e($nb['poznamka'])) ?></p><?php endif; ?>
 <p class="mut"><?= $e($n['text_podminky']) ?></p>
 <p style="margin-top:26px">Vypracoval: <?= $e($nb['vytvoril'] ?: uziv_jmeno()) ?> · <?= $e(so_datum($nb['datum'])) ?></p>
+<?php $prubeh = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : $nb['typ'] === 'svj'; if ($prubeh && trim((string)$n['text_prubeh']) !== ''): ?>
+<div style="page-break-before:always;margin-top:30px"><div class="hl"><div><b style="font-size:15px">KK SYSTEM – servis oken a dveří</b><br>Zdeněk Kučera · Zd. Štěpánka 2764/1, 434 01 Most</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz</div></div>
+<h1>Jak u nás probíhá servis</h1><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_prubeh']))) as $t): ?><p><?= $e($t) ?></p><?php endforeach; ?></div><?php endif; ?>
 </main></body></html>
 <?php exit; endif;
 
