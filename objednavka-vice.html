@@ -254,6 +254,18 @@
   <fieldset class="pq-block"><legend>Položky</legend>
     <div id="nbRows"></div>
     <p style="margin:1rem 0 0"><button type="button" class="btn btn-outline" id="nbAdd">+ Přidat položku</button></p>
+  <div id="nbDopr" style="margin-top:1.2rem">
+    <h3 style="margin:0 0 .4rem;font-size:1.05rem">Doprava a schody</h3>
+    <p class="pq-help" style="margin:0 0 .6rem">Počítá se po silnici od vzorkovny (Obchodní 36, Most) k adrese zákazníka: do 40 km zdarma, 41–80 km 1&nbsp;200&nbsp;Kč, dál dle dohody. Schody 250&nbsp;Kč za patro bez výtahu. Částky jsou vč. DPH. U dveří ERKADO bez montáže (18&nbsp;Kč/km, jen cesta tam) zadejte cenu ručně.</p>
+    <div class="pq-grid2">
+      <label class="pq-f">Vzdálenost (km)<input name="dopr_km" inputmode="decimal" placeholder="spočítá se z adresy"></label>
+      <label class="pq-f">Cena dopravy ručně (Kč vč. DPH, volitelné)<input name="dopr_kc" inputmode="numeric" placeholder="podle km"></label>
+      <label class="pq-f">Patro (0 = přízemí)<input name="dopr_patro" inputmode="numeric" placeholder="0"></label>
+      <label class="pq-f">Výtah<select name="dopr_vytah"><option value="Ano">Ano</option><option value="Ne">Ne</option></select></label>
+    </div>
+    <p style="margin:.6rem 0 0"><button type="button" class="btn btn-outline" id="nbDoprCalc">🚚 Spočítat z adresy</button></p>
+    <div class="pq-trip" id="nbDoprInfo" style="margin-top:.6rem"></div>
+  </div>
     <div class="pq-grid2" style="margin-top:1.2rem">
       <label class="pq-f">Celková sleva na nabídku (Kč)<input name="sleva_kc" inputmode="numeric" placeholder="0"></label>
       <label class="pq-f">Popis slevy (volitelné)<input name="sleva_text" placeholder="např. množstevní sleva"></label>
@@ -396,7 +408,7 @@
 <script src="firma-ares.js?v=20261028a"></script>
 <script src="kovani-data.js?v=20261029a"></script>
 <script src="podpis/podpis.js?v=20261030a"></script>
-<script src="nabidka.js?v=20261030e"></script>
+<script src="nabidka.js?v=20261103a"></script>
 <script src="bonus.js?v=20261025c" defer></script>
 <script src="systembar.js?v=2"></script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>
