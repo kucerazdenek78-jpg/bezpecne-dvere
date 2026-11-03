@@ -28,12 +28,13 @@ function ok_db(): PDO {
 
 // horní lišta aplikace Servis oken (vlastní, bez menu dveří)
 function ok_bar(string $akt = ''): void {
-  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ a družstva', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨'], ['nabidky.php', 'Nabídky', 'nab', '📄'], ['cenik.php', 'Ceník', 'cen', '💰']];
+  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ, družstva a firmy', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨'], ['nabidky.php', 'Nabídky', 'nab', '📄'], ['cenik.php', 'Ceník', 'cen', '💰']];
   $n = 0; try { $n = count(ok_poptavky_nove()); } catch (Throwable $x) {}
+  $ns = 0; try { $ns = count(so_pripominky(ok_db())['termin']); } catch (Throwable $x) {}
   echo '<style>.okbar{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:#0e4f5c;padding:8px 12px}.okbar b.ap{color:#fff;font:700 16px system-ui,Arial,sans-serif;margin-right:10px}'
      . '.okbar a{color:#d8f0f3;text-decoration:none;font:600 14px/1 system-ui,Arial,sans-serif;padding:9px 12px;border-radius:8px}.okbar a:hover{background:#13697a}.okbar a.on{background:#0891b2;color:#fff}'
      . '.okbar i.n{font-style:normal;background:#e11d48;color:#fff;border-radius:999px;padding:1px 7px;margin-left:5px;font-size:12px}@media print{.okbar{display:none!important}}</style><nav class="okbar"><b class="ap">🪟 Servis oken</b>';
-  foreach ($pol as [$h, $t, $k, $ik]) echo '<a href="' . $h . '" class="' . ($k === $akt ? 'on' : '') . '">' . $ik . ' ' . htmlspecialchars($t) . ($k === 'popt' && $n ? '<i class="n">' . $n . '</i>' : '') . '</a>';
+  foreach ($pol as [$h, $t, $k, $ik]) echo '<a href="' . $h . '" class="' . ($k === $akt ? 'on' : '') . '">' . $ik . ' ' . htmlspecialchars($t) . ($k === 'popt' && $n ? '<i class="n">' . $n . '</i>' : '') . ($k === 'svj' && $ns ? '<i class="n" title="Servis podle smlouvy – blíží se nebo prošel termín">⏰ ' . $ns . '</i>' : '') . '</a>';
   if (function_exists('uziv_jmeno') && uziv_jmeno() !== '') echo '<span style="margin-left:auto;color:#a9d6dd;font:13px system-ui,Arial,sans-serif;padding:0 8px">👤 ' . htmlspecialchars(uziv_jmeno()) . '</span>';
   echo '</nav>';
 }
@@ -139,13 +140,53 @@ function so_byt_nazev(array $b): string {
 }
 
 // Stav smlouvy: kolikátý servis je další a do kdy (první do 6 měsíců od podpisu, další po intervalu let od data podpisu).
+// Počítají se servisy založené v aplikaci i servisy zapsané do historie (např. ze starších let podle dokumentů na NASu).
 function so_smlouva_stav(PDO $pdo, array $s): array {
   $st = $pdo->prepare('SELECT COUNT(*) FROM so_servis WHERE smlouva_id=?'); $st->execute([$s['id']]); $hotovo = (int)$st->fetchColumn();
+  $st = $pdo->prepare("SELECT COUNT(*) FROM so_historie WHERE smlouva_id=? AND druh='servis'"); $st->execute([$s['id']]); $hotovo += (int)$st->fetchColumn();
   $pocet = max(1, (int)$s['pocet']); $int = max(1, (int)$s['interval_let']);
-  if ($hotovo >= $pocet) return ['hotovo' => $hotovo, 'pocet' => $pocet, 'dalsi' => null, 'do' => '', 'konec' => true];
   $od = strtotime((string)$s['od']) ?: time();
+  $plat = trim((string)($s['platnost_do'] ?? '')) !== '' ? (string)$s['platnost_do'] : date('Y-m-d', strtotime('+' . ($pocet * $int) . ' years', $od));
+  $z = ['hotovo' => $hotovo, 'pocet' => $pocet, 'platnost_do' => $plat, 'vyprsela' => strtotime($plat) < strtotime('today'), 'podepsana' => ($s['stav_podpisu'] ?? 'podepsana') === 'podepsana'];
+  if ($hotovo >= $pocet) return $z + ['dalsi' => null, 'do' => '', 'konec' => true, 'dni' => null];
   $do = $hotovo === 0 ? strtotime('+6 months', $od) : strtotime('+' . ($hotovo * $int) . ' years', $od);
-  return ['hotovo' => $hotovo, 'pocet' => $pocet, 'dalsi' => $hotovo + 1, 'do' => date('Y-m-d', $do), 'konec' => false];
+  return $z + ['dalsi' => $hotovo + 1, 'do' => date('Y-m-d', $do), 'konec' => false, 'dni' => (int)floor(($do - strtotime('today')) / 86400)];
+}
+
+// ───── zákazníci (SVJ, družstva, firmy), stav smluv, historie servisů a připomínky ─────
+const SO_TYPY_ZAK = ['svj' => 'SVJ / společenství vlastníků', 'druzstvo' => 'Bytové družstvo', 'dum' => 'Dům / blok', 'firma' => 'Firma', 'instituce' => 'Úřad / instituce'];
+const SO_PODPIS = ['podepsana' => 'podepsaná', 'overit' => 'ověřit, zda je podepsaná', 'navrh' => 'jen návrh (nepodepsaná)'];
+const SO_HIST = ['servis' => '🛠 Servis proveden', 'smlouva' => '✍ Smlouva', 'nabidka' => '📄 Nabídka', 'faktura' => '🧾 Faktura / dodací list', 'zavady' => '🔍 Závady / návrh oprav', 'jine' => '📎 Jiné'];
+function so_rozsireni(PDO $pdo): void {
+  $sl = fn($t) => array_column($pdo->query("PRAGMA table_info($t)")->fetchAll(PDO::FETCH_ASSOC), 'name');
+  $s = $sl('so_svj'); foreach (['typ' => "TEXT DEFAULT 'svj'", 'slozka' => 'TEXT'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_svj ADD COLUMN $k $d");
+  $s = $sl('so_smlouva'); foreach (['stav_podpisu' => "TEXT DEFAULT 'podepsana'", 'platnost_do' => 'TEXT', 'dokument' => 'TEXT', 'pripomenout_dni' => 'INTEGER DEFAULT 60'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_smlouva ADD COLUMN $k $d");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS so_historie (id INTEGER PRIMARY KEY AUTOINCREMENT, svj_id INTEGER NOT NULL, smlouva_id INTEGER, datum TEXT, druh TEXT DEFAULT 'servis', popis TEXT, dokument TEXT, vytvoreno TEXT, kdo TEXT)");
+  $pdo->exec('CREATE INDEX IF NOT EXISTS so_historie_svj ON so_historie(svj_id)');
+}
+function so_historie(PDO $pdo, int $svj): array { $st = $pdo->prepare('SELECT * FROM so_historie WHERE svj_id=? ORDER BY datum DESC, id DESC'); $st->execute([$svj]); return $st->fetchAll(PDO::FETCH_ASSOC); }
+// poslední provedený servis: z historie nebo uzavřený servis v aplikaci
+function so_posledni_servis(PDO $pdo, int $svj): string {
+  $a = (string)$pdo->query("SELECT MAX(datum) FROM so_historie WHERE druh='servis' AND svj_id=" . $svj)->fetchColumn();
+  $b = (string)$pdo->query("SELECT MAX(substr(uzavreno,1,10)) FROM so_servis WHERE stav='uzavreno' AND svj_id=" . $svj)->fetchColumn();
+  return max($a, $b);
+}
+// odkaz do File Station v DSM na složku zákazníka na NASu
+function so_slozka_odkaz(string $cesta): string {
+  $cesta = trim($cesta); if ($cesta === '') return '';
+  return '<a href="https://kucerazdmost.quickconnect.to/?launchApp=SYNO.SDS.App.FileStation3.Instance&amp;launchParam=' . htmlspecialchars(rawurlencode('openfile=' . $cesta)) . '" target="_blank" rel="noopener" title="Otevřít ve File Station (DSM)">📂</a>';
+}
+// připomínky: podepsané platné smlouvy s blížícím se / prošlým termínem, splněné nebo vypršelé (nabídnout novou), návrhy k ověření
+function so_pripominky(PDO $pdo): array {
+  $o = ['termin' => [], 'nova' => [], 'overit' => []];
+  foreach ($pdo->query('SELECT m.*, j.nazev AS svj_nazev FROM so_smlouva m JOIN so_svj j ON j.id=m.svj_id WHERE m.aktivni=1 ORDER BY m.od')->fetchAll(PDO::FETCH_ASSOC) as $m) {
+    $ss = so_smlouva_stav($pdo, $m); $x = ['sm' => $m, 'ss' => $ss];
+    if (!$ss['podepsana']) { $o['overit'][] = $x; continue; }
+    if ($ss['konec'] || $ss['vyprsela']) { $o['nova'][] = $x; continue; }
+    if ($ss['dni'] !== null && $ss['dni'] <= max(1, (int)($m['pripomenout_dni'] ?? 60))) $o['termin'][] = $x;
+  }
+  usort($o['termin'], fn($a, $b) => $a['ss']['dni'] <=> $b['ss']['dni']);
+  return $o;
 }
 
 // Souhrn servisu po vchodech: počty bytů podle stavu, okna hotových bytů a chodeb (podle počtů u bytu), úspěšnost.
@@ -355,4 +396,6 @@ function ok_nabidka_cislo(PDO $pdo): string {
   return $c;
 }
 
-$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo); ok_cenik_migrace3($pdo);
+$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo); ok_cenik_migrace3($pdo); so_rozsireni($pdo);
+// jednorázový import zákazníků ze složek 7 SERVIS/ZÁKAZNÍCI na firemním NASu (3. 11. 2026)
+if (is_file(__DIR__ . '/import-nas.php')) { $st = $pdo->prepare('SELECT hodnota FROM ok_nastaveni WHERE klic=?'); $st->execute(['import_nas']); if (!$st->fetchColumn()) require __DIR__ . '/import-nas.php'; }
