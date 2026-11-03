@@ -28,7 +28,7 @@ function ok_db(): PDO {
 
 // horní lišta aplikace Servis oken (vlastní, bez menu dveří)
 function ok_bar(string $akt = ''): void {
-  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ a družstva', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨']];
+  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ a družstva', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨'], ['nabidky.php', 'Nabídky', 'nab', '📄'], ['cenik.php', 'Ceník', 'cen', '💰']];
   $n = 0; try { $n = count(ok_poptavky_nove()); } catch (Throwable $x) {}
   echo '<style>.okbar{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:#0e4f5c;padding:8px 12px}.okbar b.ap{color:#fff;font:700 16px system-ui,Arial,sans-serif;margin-right:10px}'
      . '.okbar a{color:#d8f0f3;text-decoration:none;font:600 14px/1 system-ui,Arial,sans-serif;padding:9px 12px;border-radius:8px}.okbar a:hover{background:#13697a}.okbar a.on{background:#0891b2;color:#fff}'
@@ -224,4 +224,93 @@ function ok_zakaznici(PDO $pdo): array {
   return $o;
 }
 
-$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo);
+
+// ───── ceník, slevy, příplatky, nabídky (3. 11. 2026) ─────
+// Ceník vychází z „Servis 48 – ceník 2022 koncový zákazník“ (NAS 7 SERVIS). Ceny se ukládají BEZ DPH, DPH podle položky.
+// Ceny 2022 byly s DPH 15 % (byty) – bez DPH: 550 / 660 / 770 / 880 / 990 / RD 1320, firmy 133 Kč za dvoukřídlé okno (21 %).
+const OK_SKUPINY = ['byt' => 'Servis bytu / domu (podle velikosti)', 'okno' => 'Servis po oknech (firmy, jednotlivá okna)', 'prace' => 'Hodinové sazby a práce', 'doprava' => 'Doprava', 'jine' => 'Ostatní'];
+const OK_NAST_VYCHOZI = [
+  'dph_byt' => 12, 'dph_firma' => 21,
+  'sleva_mn1_od' => 3, 'sleva_mn1' => 10, 'sleva_mn2_od' => 7, 'sleva_mn2' => 14,
+  'sleva_sml3' => 23, 'sleva_sml5' => 30,
+  'priplatek_vecer' => 50, 'priplatek_vikend' => 75, 'priplatek_expres' => 75,
+  'platnost_dni' => 30, 'zaokrouhleni' => 1,
+  'text_rozsah' => "kontrola rámů a křídel oken\nkontrola těsnících gum a jejich případné ošetření\nkontrola kování, jeho seřízení a promazání\nkontrola odtokových žlábků a jejich případné čištění",
+  'text_podminky' => 'Slevy není možné sčítat ani kombinovat se slevovými kupóny – použije se vždy ta vyšší. Na dopravu se slevy nevztahují. Ceny opakovaného servisu platí po podpisu servisní smlouvy.',
+];
+function ok_cenik_tabulky(PDO $pdo): void {
+  $pdo->exec("CREATE TABLE IF NOT EXISTS ok_cenik (id INTEGER PRIMARY KEY AUTOINCREMENT, kod TEXT UNIQUE, nazev TEXT NOT NULL, skupina TEXT DEFAULT 'jine', jednotka TEXT DEFAULT 'ks', cena REAL DEFAULT 0, dph REAL DEFAULT 21, velikost TEXT, poradi INTEGER DEFAULT 0, aktivni INTEGER DEFAULT 1, poznamka TEXT, upraveno TEXT)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS ok_nastaveni (klic TEXT PRIMARY KEY, hodnota TEXT)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS ok_cenik_historie (id INTEGER PRIMARY KEY AUTOINCREMENT, kdy TEXT, kdo TEXT, popis TEXT, data TEXT)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS ok_nabidka (id INTEGER PRIMARY KEY AUTOINCREMENT, cislo TEXT, typ TEXT, svj_id INTEGER, jed_id INTEGER, nazev TEXT, adresa TEXT, ic TEXT, kontakt TEXT, telefon TEXT, email TEXT,
+    datum TEXT, platnost TEXT, smlouva INTEGER DEFAULT 0, interval_let INTEGER DEFAULT 1, priplatek TEXT, sleva_rucne REAL, polozky TEXT, poznamka TEXT, stav TEXT DEFAULT 'koncept', vytvoril TEXT, vytvoreno TEXT, upraveno TEXT)");
+  $sl = array_column($pdo->query('PRAGMA table_info(so_jed)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+  if (!in_array('kategorie', $sl, true)) $pdo->exec('ALTER TABLE so_jed ADD COLUMN kategorie TEXT');
+  if ((int)$pdo->query('SELECT COUNT(*) FROM ok_cenik')->fetchColumn() === 0) {   // výchozí ceník 2022
+    $v = [
+      ['B1', 'Servis oken a dveří – byt 1+1 (0+2)', 'byt', 'byt', 550, 'dph_byt', '1+1'], ['B2', 'Servis oken a dveří – byt 2+1 (2+kk)', 'byt', 'byt', 660, 'dph_byt', '2+1'],
+      ['B3', 'Servis oken a dveří – byt 3+1 (3+kk)', 'byt', 'byt', 770, 'dph_byt', '3+1'], ['B4', 'Servis oken a dveří – byt 4+1 (4+kk)', 'byt', 'byt', 880, 'dph_byt', '4+1'],
+      ['B5', 'Servis oken a dveří – byt 5+1 (5+kk)', 'byt', 'byt', 990, 'dph_byt', '5+1'], ['RD', 'Servis oken a dveří – rodinný dům', 'byt', 'dům', 1320, 'dph_byt', 'RD'],
+      ['F2', 'Servis okna dvoukřídlého – firmy', 'okno', 'okno', 133, 'dph_firma', ''],
+      ['H2', 'Hodinová sazba – 2 servisní technici', 'prace', 'hod', 1000, 'dph_byt', ''], ['H1', 'Hodinová sazba – 1 servisní technik', 'prace', 'hod', 500, 'dph_byt', ''],
+      ['D0', 'Doprava – Most', 'doprava', 'paušál', 165.29, 'dph_firma', ''], ['D5', 'Doprava – do 5 km', 'doprava', 'paušál', 206.61, 'dph_firma', ''],
+      ['D10', 'Doprava – 6 až 10 km', 'doprava', 'paušál', 330.58, 'dph_firma', ''], ['D20', 'Doprava – 11 až 20 km', 'doprava', 'paušál', 413.22, 'dph_firma', ''],
+      ['D30', 'Doprava – 21 až 30 km', 'doprava', 'paušál', 661.16, 'dph_firma', ''], ['D40', 'Doprava – 31 až 40 km', 'doprava', 'paušál', 826.45, 'dph_firma', ''],
+      ['DKM', 'Doprava nad 40 km (tam i zpět)', 'doprava', 'km', 13.22, 'dph_firma', ''],
+    ];
+    $st = $pdo->prepare('INSERT INTO ok_cenik (kod, nazev, skupina, jednotka, cena, dph, velikost, poradi, upraveno) VALUES (?,?,?,?,?,?,?,?,?)');
+    foreach ($v as $i => $r) $st->execute([$r[0], $r[1], $r[2], $r[3], $r[4], OK_NAST_VYCHOZI[$r[5]], $r[6], $i, date('Y-m-d H:i:s')]);
+    $pdo->prepare('INSERT INTO ok_cenik_historie (kdy, kdo, popis, data) VALUES (?,?,?,?)')->execute([date('Y-m-d H:i:s'), 'systém', 'Výchozí ceník podle „Servis 48 – ceník 2022 koncový zákazník“', json_encode(ok_cenik($pdo), JSON_UNESCAPED_UNICODE)]);
+  }
+}
+function ok_nast(PDO $pdo): array {
+  $o = OK_NAST_VYCHOZI;
+  foreach ($pdo->query('SELECT klic, hodnota FROM ok_nastaveni')->fetchAll(PDO::FETCH_KEY_PAIR) as $k => $v) if (array_key_exists($k, $o)) $o[$k] = is_numeric($o[$k]) ? (float)$v : (string)$v;
+  return $o;
+}
+function ok_cenik(PDO $pdo, bool $jenAktivni = false): array {
+  return $pdo->query('SELECT * FROM ok_cenik' . ($jenAktivni ? ' WHERE aktivni=1' : '') . ' ORDER BY skupina, poradi, id')->fetchAll(PDO::FETCH_ASSOC);
+}
+function ok_kc($n, int $des = 0): string { return ($n === null || $n === '' || !is_numeric($n)) ? '' : number_format((float)$n, $des, ',', ' ') . ' Kč'; }
+function ok_zaokr(float $v, float $krok): float { return $krok > 0 ? round($v / $krok) * $krok : round($v, 2); }
+// velikost bytu z textu („2+1“, „3+kk“, „1:3“ …) → kód položky ceníku; vlastní převody (ok_nastaveni velikost:<text>) mají přednost
+function ok_velikost_kod(PDO $pdo, string $vel): string {
+  $t = mb_strtolower(trim(preg_replace('/\s+/u', '', $vel))); if ($t === '') return '';
+  $st = $pdo->prepare('SELECT hodnota FROM ok_nastaveni WHERE klic=?'); $st->execute(['velikost:' . $t]); $x = $st->fetchColumn(); if ($x !== false) return (string)$x;
+  if (preg_match('/^([1-5])\+(1|kk)$/', $t, $m)) return 'B' . $m[1];
+  if ($t === '0+2' || $t === '1+0' || $t === 'garsoniera') return 'B1';
+  if (preg_match('/^rd|dum|dům/u', $t)) return 'RD';
+  return '';   // neznámý zápis (např. „1:3“) – vybere se ručně a uloží se
+}
+// výpočet nabídky: položky [kod, nazev, jednotka, mnozstvi, cena (bez DPH), dph, slevy (0/1)] → řádky a součty
+function ok_spocitej(array $polozky, float $slevaPct, float $priplatekPct): array {
+  $r = []; $sum = ['bez' => 0, 'dph' => 0, 's' => 0, 'sleva' => 0];
+  foreach ($polozky as $p) {
+    $mn = (float)($p['mnozstvi'] ?? 0); if ($mn <= 0) continue;
+    $c = (float)($p['cena'] ?? 0); $slevaAno = !empty($p['slevy']);
+    $j = $c * (1 + ($slevaAno ? $priplatekPct : 0) / 100);          // příplatek jen na servis/práci, ne na dopravu
+    $jc = $slevaAno ? $j * (1 - $slevaPct / 100) : $j;
+    $bez = round($jc * $mn, 2); $dph = round($bez * (float)$p['dph'] / 100, 2);
+    $r[] = $p + ['jedn_po' => round($jc, 2), 'bez' => $bez, 'dph_kc' => $dph, 's' => round($bez + $dph, 2)];
+    $sum['bez'] += $bez; $sum['dph'] += $dph; $sum['s'] += $bez + $dph; $sum['sleva'] += $slevaAno ? round(($j - $jc) * $mn, 2) : 0;
+  }
+  return ['radky' => $r, 'sum' => array_map(fn($x) => round($x, 2), $sum)];
+}
+// sleva podle počtu bytů a smlouvy – slevy se nesčítají, platí vyšší
+function ok_sleva(array $n, int $pocetBytu, int $smlouva, ?float $rucne = null): array {
+  $kand = [];
+  if ($pocetBytu >= (int)$n['sleva_mn2_od']) $kand[] = [(float)$n['sleva_mn2'], 'množstevní sleva od ' . (int)$n['sleva_mn2_od'] . ' bytů'];
+  elseif ($pocetBytu >= (int)$n['sleva_mn1_od']) $kand[] = [(float)$n['sleva_mn1'], 'množstevní sleva ' . (int)$n['sleva_mn1_od'] . '–' . ((int)$n['sleva_mn2_od'] - 1) . ' bytů'];
+  if ($smlouva === 3) $kand[] = [(float)$n['sleva_sml3'], 'servisní smlouva – 3× opakovaný servis'];
+  if ($smlouva === 5) $kand[] = [(float)$n['sleva_sml5'], 'servisní smlouva – 5× opakovaný servis'];
+  if ($rucne !== null) return [$rucne, 'sleva podle dohody'];
+  usort($kand, fn($a, $b) => $b[0] <=> $a[0]);
+  return $kand[0] ?? [0.0, ''];
+}
+function ok_nabidka_cislo(PDO $pdo): string {
+  $r = date('Y'); $n = (int)$pdo->query("SELECT COUNT(*) FROM ok_nabidka WHERE cislo LIKE 'NO-$r-%'")->fetchColumn() + 1;
+  do { $c = sprintf('NO-%s-%03d', $r, $n++); $st = $pdo->prepare('SELECT 1 FROM ok_nabidka WHERE cislo=?'); $st->execute([$c]); } while ($st->fetchColumn());
+  return $c;
+}
+
+$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo);

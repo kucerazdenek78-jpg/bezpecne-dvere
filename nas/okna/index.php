@@ -86,10 +86,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $prov = preg_match('/^\d{4}-\d{2}-\d{2}$/', $P('provedeno', 10)) ? $P('provedeno', 10) : null;
     if ($stav === 'hotovo' && !$prov) $prov = $r['provedeno'] ?: $dnes;
     $okna = []; foreach (array_keys(SO_OKNA) as $k) $okna[] = max(0, (int)($_POST[$k] ?? 0));
-    $pdo->prepare('UPDATE so_jed SET stav=?, k_kovani=?, k_ramy=?, k_tesneni=?, k_zlabky=?, zkratky=?, o3=?, o2=?, o1=?, bd=?, vk=?, dv=?, zavada=?, oprava=?, max_cena=?, cena=?, opraveno_hned=?, podpis=?, podepsal=?, technik=?, provedeno=?, opakovat=?, upraveno=? WHERE id=?')
+    $pdo->prepare('UPDATE so_jed SET stav=?, k_kovani=?, k_ramy=?, k_tesneni=?, k_zlabky=?, zkratky=?, o3=?, o2=?, o1=?, bd=?, vk=?, dv=?, zavada=?, oprava=?, max_cena=?, cena=?, opraveno_hned=?, podpis=?, podepsal=?, technik=?, provedeno=?, opakovat=?, kategorie=?, upraveno=? WHERE id=?')
       ->execute(array_merge([$stav, empty($_POST['k_kovani']) ? 0 : 1, empty($_POST['k_ramy']) ? 0 : 1, empty($_POST['k_tesneni']) ? 0 : 1, empty($_POST['k_zlabky']) ? 0 : 1, implode(',', $zk)], $okna,
         [$P('zavada', 3000), $P('oprava', 3000), $cis($_POST['max_cena'] ?? ''), $cis($_POST['cena'] ?? ''), $P('opraveno_hned', 1000), $pod, $P('podepsal', 120),
-         $stav === 'hotovo' ? ($r['technik'] ?: uziv_jmeno()) : (string)$r['technik'], $prov, isset(SJ_OPAKOVAT[(int)($_POST['opakovat'] ?? 0)]) ? (int)$_POST['opakovat'] : 0, $ted, $id]));
+         $stav === 'hotovo' ? ($r['technik'] ?: uziv_jmeno()) : (string)$r['technik'], $prov, isset(SJ_OPAKOVAT[(int)($_POST['opakovat'] ?? 0)]) ? (int)$_POST['opakovat'] : 0, $P('kategorie', 20), $ted, $id]));
     if ($stav === 'hotovo') sj_poptavka_stav($pdo, $r['zadost_id'] ? (int)$r['zadost_id'] : null, 'vyrizeno');
     sj_jdi('index.php?id=' . $id . '&ok=ulozeno' . ($stav === 'hotovo' && $r['stav'] !== 'hotovo' ? '#protokol' : ''));
   }
@@ -253,7 +253,10 @@ elseif ($id):
 <label class="mut">Opraveno hned na místě<input name="opraveno_hned" value="<?= $e($r['opraveno_hned']) ?>" style="width:100%"></label>
 <label class="mut">Návrh opravy pro zákazníka<textarea name="oprava" placeholder="např. výměna převodu na křídle v ložnici"><?= $e($r['oprava']) ?></textarea></label>
 <div class="ln"><label>Maximální cena opravy (Kč s DPH)<input name="max_cena" value="<?= $e($r['max_cena']) ?>" inputmode="decimal" size="10"></label></div></div>
-<div class="box"><h3>Cena a další servis</h3><div class="ln"><label>Cena servisu (Kč s DPH)<input name="cena" value="<?= $e($r['cena']) ?>" inputmode="decimal" size="10"></label>
+<?php $cenKat = $pdo->query("SELECT kod, nazev, cena, dph FROM ok_cenik WHERE aktivni=1 AND skupina IN ('byt','okno') ORDER BY skupina, poradi")->fetchAll(PDO::FETCH_ASSOC); ?>
+<div class="box"><h3>Cena a další servis</h3><div class="ln"><label>Byt / typ podle ceníku<select name="kategorie" id="kat"><option value="">– vyberte –</option><?php foreach ($cenKat as $c): ?><option value="<?= $e($c['kod']) ?>" data-s="<?= round($c['cena'] * (1 + $c['dph'] / 100)) ?>"<?= ($r['kategorie'] ?? '') === $c['kod'] ? ' selected' : '' ?>><?= $e($c['nazev']) ?> – <?= ok_kc(round($c['cena'] * (1 + $c['dph'] / 100))) ?></option><?php endforeach; ?></select></label>
+<label>Počet oken (u položky po oknech)<input type="number" min="1" id="katPocet" value="1" style="width:90px"></label><button type="button" class="sec" id="katCena">Cena z ceníku</button></div>
+<div class="ln"><label>Cena servisu (Kč s DPH)<input name="cena" value="<?= $e($r['cena']) ?>" inputmode="decimal" size="10"></label>
 <label>Další servis<select name="opakovat"><?php foreach (SJ_OPAKOVAT as $k => $t): ?><option value="<?= $k ?>"<?= (int)$r['opakovat'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
 <?php if ($dl): ?><span class="mut">připomenout kolem <?= $e(so_datum($dl)) ?></span><?php endif; ?></div></div>
 <div class="box"><h3>Podpis zákazníka</h3><p class="mut" style="margin-top:0">Zákazník podpisem potvrzuje, že servis proběhl.</p>
@@ -271,6 +274,7 @@ elseif ($id):
 <?php if ($r['protokol']): ?><p class="mut">Poslední protokol: <a href="?pdf=<?= $id ?>&amp;t=<?= time() ?>" target="_blank">otevřít PDF</a><?= $r['protokol_poslan'] ? ' · posláno ' . $e(date('j. n. Y H:i', strtotime(substr((string)$r['protokol_poslan'], 0, 19))) . substr((string)$r['protokol_poslan'], 19)) : '' ?></p><?php endif; ?>
 <p><button type="button" class="sec" id="pdfOtevrit">📄 Protokol PDF (zobrazit / tisk)</button> <button type="button" id="pdfPoslat"<?= filter_var(trim((string)$r['email']), FILTER_VALIDATE_EMAIL) ? '' : ' disabled title="Zákazník nemá e-mail – doplňte ho v údajích"' ?>>📧 Poslat zákazníkovi e-mailem</button> <span id="pdfStav" class="mut"></span></p>
 <p class="mut">Protokol se sestaví z uloženého zápisu – nejdřív uložte změny.</p></div>
+<p><a class="btn sec" href="nabidky.php?nova=jed&amp;id=<?= $id ?>">📄 Nabídka z ceníku pro zákazníka</a></p>
 <?php if ($r['stav'] === 'hotovo' && (int)$r['opakovat'] > 0 && !$nasl): ?><form method="post" class="box"><input type="hidden" name="akce" value="dalsi_zalozit"><input type="hidden" name="id" value="<?= $id ?>"><b>Další servis</b> <?= $dl ? 'kolem ' . $e(so_datum($dl)) : '' ?> <button class="sec">Založit další servis</button></form>
 <?php elseif ($nasl): ?><p class="mut">Další servis: <a href="?id=<?= $nasl ?>">otevřít</a></p><?php endif; ?>
 <?php if ($hist): ?><div class="box"><h3>Další servisy oken u zákazníka</h3><?php foreach ($hist as $h): ?><div><a href="?id=<?= (int)$h['id'] ?>"><?= $e(so_datum($h['provedeno'] ?: $h['termin']) ?: 'bez termínu') ?></a> <span class="st st-<?= $e($h['stav']) ?>"><?= $e(SJ_STAVY[$h['stav']] ?? '') ?></span></div><?php endforeach; ?></div><?php endif; ?>
@@ -287,6 +291,8 @@ elseif ($id):
     'fotky' => array_map(fn($f) => '?foto=' . $id . '&f=' . $f, array_slice($fot, 0, 6))]; ?>
 <script>
 (function () {
+  // cena z ceníku (cena s DPH × počet; u bytu počet 1)
+  document.getElementById('katCena').addEventListener('click', function () { var o = document.getElementById('kat').selectedOptions[0]; if (!o || !o.value) { alert('Vyberte byt / typ podle ceníku.'); return; } var n = /^F/.test(o.value) ? Math.max(1, +document.getElementById('katPocet').value || 1) : 1; document.querySelector('[name=cena]').value = Math.round(+o.dataset.s * n); });
   // podpis prstem
   var c = document.getElementById('podpis'), x = c.getContext('2d'), kresli = false, neco = false, out = document.getElementById('podpisData');
   function velikost() { var r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1; c.width = r.width * d; c.height = r.height * d; x.scale(d, d); x.lineWidth = 2.5; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b2a6b'; neco = false; out.value = ''; }

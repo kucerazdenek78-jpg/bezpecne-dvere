@@ -271,6 +271,7 @@ elseif ($svjId !== null):
 <button>Uložit</button></form><?php if ($sid): ?></details><?php if ($j['kontakt'] || $j['telefon'] || $j['email']): ?><p class="mut"><?= $e($j['kontakt']) ?> <?= $j['telefon'] ? '· <a href="tel:' . $e(preg_replace('/\s+/', '', $j['telefon'])) . '">' . $e($j['telefon']) . '</a>' : '' ?> <?= $j['email'] ? '· ' . $e($j['email']) : '' ?></p><?php endif; ?><?php endif; ?></div>
 <?php if ($sid):
   $smlouvy = so_smlouvy($pdo, $sid); $vchody = so_vchody($pdo, $sid); $servisy = so_servisy($pdo, $sid); ?>
+<p class="noprint"><a class="btn sec" href="nabidky.php?nova=svj&amp;svj=<?= $sid ?>">📄 Nabídka z ceníku pro toto SVJ</a></p>
 <div class="box" id="servisy"><h2 style="margin-top:0">Servisy</h2>
 <?php foreach ($servisy as $s): $sh = so_souhrn($pdo, $s); $b = array_sum(array_column($sh, 'bytu')); $h = array_sum(array_column($sh, 'hotovo')); ?>
   <p><a href="?servis=<?= (int)$s['id'] ?>"><b><?= $e($s['nazev']) ?></b></a> <span class="st <?= $s['stav'] === 'uzavreno' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $s['stav'] === 'uzavreno' ? 'uzavřeno' : 'probíhá' ?></span> <span class="mut">hotovo <?= $h ?> z <?= $b ?> bytů · založeno <?= $e(so_datum($s['vytvoreno'])) ?></span></p>
