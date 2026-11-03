@@ -138,26 +138,27 @@
   function dopr() {
     var kmT = fv('dopr_km').replace(',', '.'), km = kmT === '' || isNaN(+kmT) ? null : +kmT, ov = fv('dopr_kc');
     var fee = ov !== '' ? Math.max(0, int(ov)) : (km == null ? null : doprFee(km));
-    var pat = Math.max(0, int(fv('dopr_patro'))), sch = pat > 0 && fv('dopr_vytah') === 'Ne' ? pat * SCHODY : 0;
-    return { km: km, fee: fee, override: ov !== '', patro: pat, vytah: pat > 0 ? fv('dopr_vytah') : '', schody: sch, total: (fee || 0) + sch };
+    var pat = Math.max(0, int(fv('dopr_patro'))), sov = fv('dopr_schody_kc'), sch = sov !== '' ? Math.max(0, int(sov)) : (pat > 0 && fv('dopr_vytah') === 'Ne' ? pat * SCHODY : 0);
+    return { km: km, fee: fee, override: ov !== '', patro: pat, vytah: pat > 0 ? fv('dopr_vytah') : '', schody: sch, schodyRucne: sov !== '', total: (fee || 0) + sch };
   }
   function doprInfo() {
     var el = $('#nbDoprInfo'); if (!el) return; var x = dopr();
     if (x.km == null && !x.override) { el.className = 'pq-trip'; el.innerHTML = '🚚 Vzdálenost zatím není spočítaná – doprava se do ceny nepřičítá. Doplňte adresu a klikněte na „Spočítat z adresy“, nebo zadejte km / cenu ručně.'; return; }
     el.className = 'pq-trip ' + (x.fee === 0 ? 'ok' : '');
-    el.innerHTML = '🚚 ' + (x.km != null ? 'Vzdálenost od vzorkovny: <b>' + String(x.km).replace('.', ',') + ' km</b> – ' : '') + 'doprava ' + (x.fee == null ? '<b>nad 80 km – cenu doplňte ručně</b>' : x.fee ? '<b>' + kc(x.fee) + '</b>' + (x.override ? ' (ručně)' : '') : '<b>zdarma</b>') + (x.schody ? ' · schody <b>' + kc(x.schody) + '</b>' : '');
+    el.innerHTML = '🚚 ' + (x.km != null ? 'Vzdálenost od vzorkovny: <b>' + String(x.km).replace('.', ',') + ' km</b> – ' : '') + 'doprava ' + (x.fee == null ? '<b>nad 80 km – cenu doplňte ručně</b>' : x.fee ? '<b>' + kc(x.fee) + '</b>' + (x.override ? ' (ručně)' : '') : '<b>zdarma</b>') + (x.schody ? ' · schody <b>' + kc(x.schody) + '</b>' + (x.schodyRucne ? ' (ručně)' : '') : '');
   }
   function mapyCall(path, params) {
     var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&'), ctrl = window.AbortController ? new AbortController() : null;
     var to = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
     return fetch(MAPY + path + '?' + q + '&apikey=' + MAPY_KEY, ctrl ? { signal: ctrl.signal } : {}).then(function (r) { clearTimeout(to); if (!r.ok) throw new Error('mapy ' + r.status); return r.json(); });
   }
-  function doprNastav(km, rucne, patro, vytah) {
+  function doprNastav(km, rucne, patro, vytah, schRucne) {
     var E = form.elements;
     if (km != null && km !== '' && E.dopr_km) E.dopr_km.value = String(km).replace('.', ',');
     if (rucne != null && rucne !== '' && E.dopr_kc) E.dopr_kc.value = rucne;
     if (patro != null && patro !== '' && E.dopr_patro) E.dopr_patro.value = patro;
     if (vytah && E.dopr_vytah) E.dopr_vytah.value = vytah;
+    if (schRucne != null && schRucne !== '' && E.dopr_schody_kc) E.dopr_schody_kc.value = schRucne;
   }
   function doprSpocitat(tiche) {
     var q = [fv('ulice'), fv('psc'), fv('mesto')].filter(Boolean).join(', '), el = $('#nbDoprInfo');
@@ -432,7 +433,7 @@
       sleva_celkem: t.sleva, sleva_text: fv('sleva_text'), mezisoucet: t.sub, cena_celkem: t.total,
       z_poptavky: st.fromRef || '', ai_navrh: st.aiNavrh || ''
     };
-    if (!st.rozp) { var dx = dopr(); d.doprava_km = dx.km; d.doprava_cena = dx.fee; d.doprava_rucne = dx.override ? dx.fee : ''; d.patro = dx.patro || null; d.vytah = dx.vytah; d.schody_kc = dx.schody; d.doprava_schody_kc = dx.total; }
+    if (!st.rozp) { var dx = dopr(); d.doprava_km = dx.km; d.doprava_cena = dx.fee; d.doprava_rucne = dx.override ? dx.fee : ''; d.patro = dx.patro || null; d.vytah = dx.vytah; d.schody_kc = dx.schody; d.schody_rucne = dx.schodyRucne ? dx.schody : ''; d.doprava_schody_kc = dx.total; }
     if (hasFak()) {
       var rz = dphRezim(), sz = rz === 'pdp' ? 0 : +rz, bez = rz === 'pdp' ? t.total : Math.round(t.total / (1 + sz / 100));
       d.dph_rezim = rz; d.dph_sazba = sz; d.cena_bez_dph = bez; d.dph_kc = t.total - bez;
@@ -466,7 +467,7 @@
     }
     if (d.doprava_schody_kc != null) {
       if (d.doprava_km != null || d.doprava_rucne !== '') d.polozky.push({ co: 'Doprava', volba: d.doprava_km != null ? String(d.doprava_km).replace('.', ',') + ' km od vzorkovny' + (d.doprava_cena ? '' : ' – zdarma') : 'dle dohody', priplatek: d.doprava_cena || 0 });
-      if (d.schody_kc) d.polozky.push({ co: 'Schody', volba: d.patro + '. patro bez výtahu', priplatek: d.schody_kc });
+      if (d.schody_kc) d.polozky.push({ co: 'Schody', volba: d.patro ? d.patro + '. patro bez výtahu' : 'dle dohody', priplatek: d.schody_kc });
     }
     if (t.sleva) d.polozky.push({ co: 'Celková sleva' + (d.sleva_text ? ': ' + d.sleva_text : ''), volba: '', priplatek: -t.sleva });
     if (!OBJ) d.objednavka_odkaz = orderLink(d);
@@ -629,7 +630,7 @@
       if (d.doprava_schody_kc != null && !d.rozpocet && (d.doprava_km != null || d.doprava_rucne !== '' || d.schody_kc)) {
         font('normal', 9.5);
         if (d.doprava_km != null || d.doprava_rucne !== '') { doc.text('Doprava' + (d.doprava_km != null ? ' (' + String(d.doprava_km).replace('.', ',') + ' km od vzorkovny)' : ''), W - M - 90, y); doc.text(d.doprava_cena ? money(d.doprava_cena) : 'zdarma', W - M - 1, y, { align: 'right' }); y += 5; }
-        if (d.schody_kc) { doc.text('Schody (' + d.patro + '. patro bez výtahu)', W - M - 90, y); doc.text(money(d.schody_kc), W - M - 1, y, { align: 'right' }); y += 5; }
+        if (d.schody_kc) { doc.text('Schody' + (d.patro ? ' (' + d.patro + '. patro bez výtahu)' : ''), W - M - 90, y); doc.text(money(d.schody_kc), W - M - 1, y, { align: 'right' }); y += 5; }
         y += 1;
       }
       if (d.sleva_celkem) {
@@ -995,7 +996,7 @@
           st.rows.push(r0);
         });
         if (o.sleva_celkem) { form.sleva_kc.value = o.sleva_celkem; form.sleva_text.value = o.sleva_text || ''; }
-        doprNastav(o.doprava_km, o.doprava_rucne, o.patro, o.vytah);
+        doprNastav(o.doprava_km, o.doprava_rucne, o.patro, o.vytah, o.schody_rucne);
         if (o.zahrnuje && form.zahrnuje) form.zahrnuje.value = o.zahrnuje;
         if (o.termin_text && form.termin_text) form.termin_text.value = o.termin_text;
         if (o.prodavac) { var pr0 = document.querySelector('input[name="prodavac"][value="' + o.prodavac + '"]'); if (pr0) pr0.checked = true; }
