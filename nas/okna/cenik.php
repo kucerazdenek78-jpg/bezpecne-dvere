@@ -119,7 +119,10 @@ ok_hlava('Ceník'); ok_bar('cen'); ?><main>
 <div class="ln"><label>DPH byty a RD %<input name="dph_byt" value="<?= $e($n['dph_byt']) ?>" size="3"></label><label>DPH firmy a doprava %<input name="dph_firma" value="<?= $e($n['dph_firma']) ?>" size="3"></label>
 <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" name="dph_prepocet" value="1"> promítnout DPH do položek (byty, práce a okna v bytech / firmy F… a doprava)</label><label>Platnost nabídky (dní)<input name="platnost_dni" value="<?= $e($n['platnost_dni']) ?>" size="3"></label></div>
 <label class="mut">Rozsah servisu (tiskne se do nabídky)<textarea name="text_rozsah" rows="4"><?= $e($n['text_rozsah']) ?></textarea></label>
-<label class="mut">Jak u nás probíhá servis (druhá strana nabídky pro SVJ, každý odstavec na nový řádek)<textarea name="text_prubeh" rows="6"><?= $e($n['text_prubeh']) ?></textarea></label>
+<p class="mut" style="margin-bottom:0">Kroky se píšou na řádky ve tvaru <b>Nadpis | popis</b> (na začátek nadpisu může být ikona). V nabídce se vykreslí jako očíslované bloky.</p>
+<label class="mut">Jak u nás probíhá servis (SVJ, domy)<textarea name="text_prubeh" rows="7"><?= $e($n['text_prubeh']) ?></textarea></label>
+<label class="mut">Když okno nejde seřídit – jak probíhá oprava<textarea name="text_oprava" rows="7"><?= $e($n['text_oprava']) ?></textarea></label>
+<label class="mut">Podmínky oprav (každá na řádek)<textarea name="text_podminky_oprava" rows="5"><?= $e($n['text_podminky_oprava']) ?></textarea></label>
 <label class="mut">Podmínky (tiskne se do nabídky)<textarea name="text_podminky" rows="3"><?= $e($n['text_podminky']) ?></textarea></label>
 <?php if ($adm): ?><button>Uložit nastavení</button><?php endif; ?></form>
 

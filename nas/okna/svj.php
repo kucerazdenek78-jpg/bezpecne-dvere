@@ -536,7 +536,7 @@ elseif ($servisId):
   <span><b><?= $x['hotovo'] ?> / <?= $x['bytu'] ?></b> hotovo · nebyl doma <?= $x['nebyl'] + $x['nahradni'] ?> · odmítl <?= $x['odmitl'] ?></span></div>
   <div class="bar" style="margin-top:8px"><i style="width:<?= $x['uspesnost'] ?>%"></i></div></div>
 <?php endforeach; ?>
-<p class="noprint"><a class="btn sec" href="?servis=<?= $servisId ?>&report=1">📄 Report pro SVJ</a> <a class="btn sec" href="?servis=<?= $servisId ?>&tisk=0" target="_blank">🖨 Papírové listy všech vchodů</a></p></div>
+<p class="noprint"><a class="btn sec" href="nabidky.php?nova=oprava&amp;servis=<?= $servisId ?>">🛠 Nabídka oprav z reportu</a> <a class="btn sec" href="?servis=<?= $servisId ?>&report=1">📄 Report pro SVJ</a> <a class="btn sec" href="?servis=<?= $servisId ?>&tisk=0" target="_blank">🖨 Papírové listy všech vchodů</a></p></div>
 <div class="box noprint"><h2 style="margin-top:0">Plán po vchodech</h2>
 <form method="post"><input type="hidden" name="akce" value="servis_ulozit"><input type="hidden" name="servis_id" value="<?= $servisId ?>">
 <div class="ln"><label class="w">Název servisu<input name="nazev" value="<?= $e($s['nazev']) ?>"></label></div>

@@ -236,7 +236,9 @@ const OK_NAST_VYCHOZI = [
   'priplatek_vecer' => 50, 'priplatek_vikend' => 75, 'priplatek_expres' => 75,
   'platnost_dni' => 30, 'zaokrouhleni' => 1,
   'text_rozsah' => "kontrola rámů a křídel oken\nkontrola těsnících gum a jejich případné ošetření\nkontrola kování, jeho seřízení a promazání\nkontrola odtokových žlábků a jejich případné čištění",
-  'text_prubeh' => "Dle telefonické dohody Vám pošleme návrh termínů servisu oken. Poprosíme Vás jen o odsouhlasení zpět e-mailem.\nPo odsouhlasení termínů Vám do jednoho dne polepíme vchody vývěskami. Máte-li společnou nástěnku nebo web, požádáme Vás o umístění i tam.\nServisní technik nechá nájemníkům, které nezastihne doma, oznámenku, aby nás kontaktovali. Bude jim navržen jeden náhradní termín.\nServisní technik bude mít vizitku se jménem a razítkem firmy. Telefonní číslo pro ověření je stejné na vývěskách i oznámenkách. V době servisu bude na telefonu asistentka, která koordinuje celou akci.\nV případě dalších dotazů se na nás obraťte.",
+  'text_prubeh' => "📅 Termíny | Podle telefonické dohody Vám pošleme návrh termínů servisu. Poprosíme Vás jen o odsouhlasení zpět e-mailem.\n📌 Vývěsky | Do jednoho dne po odsouhlasení polepíme vchody vývěskami. Máte-li společnou nástěnku nebo web, umístěte je prosím i tam.\n🔧 Servis v bytech | Servisní technik projde okna a dveře: seřízení a promazání kování, kontrola rámů, křídel, těsnění a odtokových žlábků.\n🚪 Nepřítomní | Kdo nebude doma, dostane oznámenku s kontaktem a nabídneme mu jeden náhradní termín.\n🪪 Ověření | Technik má vizitku se jménem a razítkem firmy. Telefon pro ověření je stejný na vývěskách i oznámenkách. Během servisu je na telefonu asistentka, která celou akci koordinuje.\n📋 Zápis a návrh oprav | Po servisu dostanete zápis: kde byl servis proveden, kdo nebyl doma a návrh oprav s maximální cenou.",
+  'text_oprava' => "🔧 Servis a prohlídka | Okno projdeme, zkusíme seřídit a prohlédneme – klasický servis. Většinu potíží vyřeší už seřízení a promazání kování.\n📝 Návrh opravy | Pokud okno nejde seřídit a některý díl okna nebo kování nefunguje, navrhneme zmapování závady.\n🔍 Zmapování závady (za příplatek) | Okno vysadíme, rozebereme a zjistíme příčinu. Často jde jen o zaseknutí, například nečistotou po zednických pracích – to odstraníme hned.\n🛠 Provizorní montáž | Okno provizorně smontujeme a vrátíme na místo, aby se dalo zavřít až do opravy.\n🏭 Poptávka dílu | Vadný díl přesně určíme a poptáme u výrobce.\n💰 Nabídka opravy | Pošleme Vám cenu opravy. Opravu provedeme až po Vašem odsouhlasení.",
+  'text_podminky_oprava' => "Zmapování závady provádíme jen se souhlasem zákazníka a účtujeme ho podle ceníku (za každé okno).\nProvizorní montáž slouží k uzavření okna do doby opravy a nenahrazuje funkci vadného dílu.\nCena dílů vychází z aktuální nabídky výrobce, dodací lhůta dílů se řídí výrobcem.\nOpravu provedeme až po odsouhlasení nabídky e-mailem nebo písemně.\nPokud je příčinou jen nečistota nebo zaseknutí, odstraníme ji v rámci zmapování a další oprava není potřeba.",
   'text_podminky' => 'Slevy není možné sčítat ani kombinovat se slevovými kupóny – použije se vždy ta vyšší. Na dopravu se slevy nevztahují. Ceny opakovaného servisu platí po podpisu servisní smlouvy.',
 ];
 function ok_cenik_tabulky(PDO $pdo): void {
@@ -282,6 +284,26 @@ function ok_cenik_migrace(PDO $pdo): void {
   foreach (['sleva_mn1' => 5, 'sleva_mn2' => 7, 'sleva_sml3' => 20, 'sleva_sml5' => 30, 'cenik_verze' => 2] as $k => $v) $s->execute([$k, (string)$v]);
   $pdo->commit();
   $pdo->prepare('INSERT INTO ok_cenik_historie (kdy, kdo, popis, data) VALUES (?,?,?,?)')->execute([$ted, 'systém', 'Ceník podle nabídek 2025: byty +15,6 až +20 %, okna a dveře, slevy 5 / 7 / 20 / 30 %', json_encode(['cenik' => ok_cenik($pdo), 'nastaveni' => ok_nast($pdo)], JSON_UNESCAPED_UNICODE)]);
+}
+function ok_cenik_migrace3(PDO $pdo): void {
+  $st = $pdo->prepare('SELECT hodnota FROM ok_nastaveni WHERE klic=?'); $st->execute(['cenik_verze']); if ((int)$st->fetchColumn() >= 3) return;
+  $ted = date('Y-m-d H:i:s');
+  $pdo->prepare('INSERT OR IGNORE INTO ok_cenik (kod, nazev, skupina, jednotka, cena, dph, velikost, poradi, aktivni, poznamka, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+    ->execute(['ZM', 'Zmapování závady – vysazení a rozebrání okna, zjištění příčiny, provizorní zpětná montáž', 'prace', 'okno', 0, (float)(ok_nast($pdo)['dph_byt'] ?? 12), '', 10, 0, 'Doplňte cenu a zapněte „Aktivní“.', $ted]);
+  $st->execute(['text_prubeh']); $t = $st->fetchColumn();
+  if ($t !== false && strpos((string)$t, '|') === false) $pdo->prepare('DELETE FROM ok_nastaveni WHERE klic=?')->execute(['text_prubeh']);   // starý odstavcový text → nové kroky
+  $pdo->prepare('INSERT INTO ok_nastaveni (klic, hodnota) VALUES (?,?) ON CONFLICT(klic) DO UPDATE SET hodnota=excluded.hodnota')->execute(['cenik_verze', '3']);
+}
+// kroky „Nadpis | popis“ (jeden na řádek) jako vizuální bloky s čísly – do tisku nabídky i do aplikace
+function ok_kroky(string $text, string $barva = '#0e7490'): string {
+  $o = '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'; $i = 0;
+  foreach (array_filter(array_map('trim', explode("\n", $text))) as $r) {
+    [$h, $p] = array_pad(array_map('trim', explode('|', $r, 2)), 2, '');
+    $i++; $o .= '<div style="border:1px solid #d6e3e7;border-left:5px solid ' . $barva . ';border-radius:10px;padding:9px 11px;break-inside:avoid;page-break-inside:avoid;background:#fbfdfd">'
+      . '<div style="display:flex;gap:8px;align-items:center;margin-bottom:3px"><span style="flex:0 0 24px;height:24px;border-radius:50%;background:' . $barva . ';color:#fff;font:700 13px/24px Arial,sans-serif;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact">' . $i . '</span>'
+      . '<b style="font-size:14px">' . htmlspecialchars($h) . '</b></div><div style="font-size:12.5px;color:#334">' . htmlspecialchars($p) . '</div></div>';
+  }
+  return $o . '</div>';
 }
 function ok_nast(PDO $pdo): array {
   $o = OK_NAST_VYCHOZI;
@@ -333,4 +355,4 @@ function ok_nabidka_cislo(PDO $pdo): string {
   return $c;
 }
 
-$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo);
+$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo); ok_cenik_migrace3($pdo);

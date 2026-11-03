@@ -46,11 +46,27 @@ if (isset($_GET['nova']) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   } elseif ($_GET['nova'] === 'jed' && ($r = sj_nacti($pdo, (int)($_GET['id'] ?? 0)))) {
     $nb = array_merge($nb, ['typ' => 'jed', 'jed_id' => (int)$r['id'], 'nazev' => $r['jmeno'], 'adresa' => sj_adresa($r), 'telefon' => $r['telefon'], 'email' => $r['email'], 'smlouva' => 0]);
     if (!empty($r['kategorie']) && isset($cen[$r['kategorie']])) $pol[] = $polozka($cen[$r['kategorie']], 1);
+  } elseif ($_GET['nova'] === 'oprava') {   // nabídka na opravu (po zmapování závady): z servisu jednotlivce, z reportu SVJ nebo prázdná
+    $nb['typ'] = 'oprava'; $dphB = (float)$n['dph_byt'];
+    if (($r = sj_nacti($pdo, (int)($_GET['jed'] ?? 0)))) {
+      $nb = array_merge($nb, ['jed_id' => (int)$r['id'], 'nazev' => $r['jmeno'], 'adresa' => sj_adresa($r), 'telefon' => $r['telefon'], 'email' => $r['email'],
+        'poznamka' => trim(($r['zavada'] ? 'Zjištěná závada: ' . $r['zavada'] . "\n" : '') . ($r['oprava'] ? 'Navržená oprava: ' . $r['oprava'] : ''))]);
+      if (trim((string)$r['oprava']) !== '') $pol[] = ['kod' => '', 'nazev' => 'Oprava: ' . mb_substr(trim($r['oprava']), 0, 180), 'jednotka' => 'ks', 'mnozstvi' => 1, 'cena' => $r['max_cena'] ? round((float)$r['max_cena'] / (1 + $dphB / 100), 2) : 0, 'dph' => $dphB, 'slevy' => 0];
+    } elseif (($s = $pdo->query('SELECT * FROM so_servis WHERE id=' . (int)($_GET['servis'] ?? 0))->fetch(PDO::FETCH_ASSOC)) && ($j = so_svj($pdo, (int)$s['svj_id']))) {
+      $nb = array_merge($nb, ['svj_id' => (int)$j['id'], 'nazev' => $j['nazev'], 'adresa' => $j['adresa'], 'ic' => $j['ic'], 'kontakt' => $j['kontakt'], 'telefon' => $j['telefon'], 'email' => $j['email'], 'poznamka' => 'Opravy podle zápisu ze servisu „' . $s['nazev'] . '“.']);
+      foreach (so_souhrn($pdo, $s) as $x) foreach ($x['zavady'] as $y) {
+        $z = $y['z']; $b = $y['byt']; if (trim((string)$z['oprava']) === '') continue;
+        $pol[] = ['kod' => '', 'nazev' => 'č. p. ' . $x['vchod']['cp'] . ', ' . so_byt_nazev($b) . ($b['typ'] === 'byt' && $b['jmeno'] ? ' (' . $b['jmeno'] . ')' : '') . ': ' . mb_substr(trim($z['oprava']), 0, 150), 'jednotka' => 'ks', 'mnozstvi' => 1,
+          'cena' => $z['max_cena'] ? round((float)$z['max_cena'] / (1 + $dphB / 100), 2) : 0, 'dph' => $dphB, 'slevy' => 0];
+      }
+    }
+    if (!empty($cen['ZM']) && (float)$cen['ZM']['cena'] > 0 && $cen['ZM']['aktivni']) { $zm = $polozka($cen['ZM'], 1); $zm['slevy'] = 0; $pol[] = $zm; }
+    if (!empty($cen['H1'])) { $h = $polozka($cen['H1'], 1); $h['slevy'] = 0; $pol[] = $h; }
   }
   if (!empty($cen['D0'])) $pol[] = $polozka($cen['D0'], 1);   // doprava – Most (upraví se v nabídce)
-  $pdo->prepare('INSERT INTO ok_nabidka (cislo, typ, svj_id, jed_id, nazev, adresa, ic, kontakt, telefon, email, datum, platnost, smlouva, interval_let, priplatek, polozky, stav, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+  $pdo->prepare('INSERT INTO ok_nabidka (cislo, typ, svj_id, jed_id, nazev, adresa, ic, kontakt, telefon, email, datum, platnost, smlouva, interval_let, priplatek, polozky, poznamka, stav, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
     ->execute([ok_nabidka_cislo($pdo), $nb['typ'], $nb['svj_id'], $nb['jed_id'], $nb['nazev'], $nb['adresa'], $nb['ic'], $nb['kontakt'], $nb['telefon'], $nb['email'], date('Y-m-d'), date('Y-m-d', strtotime('+' . (int)$n['platnost_dni'] . ' days')),
-      $nb['smlouva'], $nb['interval_let'], '', json_encode($pol, JSON_UNESCAPED_UNICODE), 'koncept', uziv_jmeno(), $ted, $ted]);
+      $nb['typ'] === 'oprava' ? 0 : $nb['smlouva'], $nb['interval_let'], '', json_encode($pol, JSON_UNESCAPED_UNICODE), $nb['poznamka'] ?? '', 'koncept', uziv_jmeno(), $ted, $ted]);
   header('Location: nabidky.php?id=' . (int)$pdo->lastInsertId() . '&upravit=1'); exit;
 }
 
@@ -90,9 +106,9 @@ body{font:13px/1.45 Arial,sans-serif;color:#1b2430;margin:0}main{max-width:780px
 table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dee6;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eef4f6;font-size:12px}.r{text-align:right}.nowrap{white-space:nowrap}.mut{color:#5f6b7a}
 .hl{display:flex;justify-content:space-between;gap:12px;font-size:12px;border-bottom:3px solid #0e4f5c;padding-bottom:8px}.sum td{font-weight:700;border-top:2px solid #0e4f5c}.no{margin-top:14px}
 @media print{.noprint{display:none}main{padding:0}@page{margin:14mm}}</style></head><body><main>
-<p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button> · <?php $pr = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : $nb['typ'] === 'svj'; ?><a href="?id=<?= $id ?>&amp;tisk=1&amp;prubeh=<?= $pr ? '0' : '1' ?>"><?= $pr ? 'bez přílohy „Jak u nás probíhá servis“' : 'přiložit „Jak u nás probíhá servis“' ?></a></p>
+<p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button> · <?php $pr = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : in_array($nb['typ'], ['svj', 'oprava'], true); ?><a href="?id=<?= $id ?>&amp;tisk=1&amp;prubeh=<?= $pr ? '0' : '1' ?>"><?= $pr ? 'bez přílohy „Jak u nás probíhá servis a oprava“' : 'přiložit „Jak u nás probíhá servis a oprava“' ?></a></p>
 <div class="hl"><div><b style="font-size:15px">KK SYSTEM – servis oken a dveří</b><br>Zdeněk Kučera · Zd. Štěpánka 2764/1, 434 01 Most<br>IČ 64682676, DIČ CZ7801242768</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz<br>www.bezpecne-dvere.cz</div></div>
-<h1>Cenová nabídka – servis oken a dveří</h1>
+<h1><?= $nb['typ'] === 'oprava' ? 'Cenová nabídka – oprava oken a dveří' : 'Cenová nabídka – servis oken a dveří' ?></h1>
 <p>č. <b><?= $e($nb['cislo']) ?></b> · ze dne <?= $e(so_datum($nb['datum'])) ?><?= $nb['platnost'] ? ' · platnost do ' . $e(so_datum($nb['platnost'])) : '' ?></p>
 <p><b>Pro:</b> <?= $e($nb['nazev']) ?><?= $nb['ic'] ? ', IČ ' . $e($nb['ic']) : '' ?><?= $nb['adresa'] ? '<br>' . $e($nb['adresa']) : '' ?><?= $nb['kontakt'] ? '<br>' . $e($nb['kontakt']) : '' ?><?= ($nb['telefon'] || $nb['email']) ? '<br>' . $e(implode(' · ', array_filter([$nb['telefon'], $nb['email']]))) : '' ?></p>
 <h2>Položky<?= (int)$nb['smlouva'] ? ' – cena za jeden servis' : '' ?></h2>
@@ -102,13 +118,17 @@ table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dee6;
 <?php if ($v['sleva'] > 0): ?><p>V cenách je započtena <b>sleva <?= $e(str_replace('.', ',', (string)$v['sleva'])) ?> %</b> (<?= $e($v['sleva_txt']) ?>) – celkem <?= $e(ok_kc($v['sum']['sleva'] * 1, 2)) ?> bez DPH.</p><?php endif; ?>
 <?php if ($v['priplatek'] > 0): ?><p>Ceny obsahují příplatek <?= $e(str_replace('.', ',', (string)$v['priplatek'])) ?> % – <?= $e(NB_PRIPLATKY[$nb['priplatek']]) ?>.</p><?php endif; ?>
 <?php if ((int)$nb['smlouva']): ?><p class="no"><b>Servisní smlouva:</b> <?= (int)$nb['smlouva'] ?>× opakovaný servis, <?= (int)$nb['interval_let'] === 1 ? 'jednou ročně' : 'jednou za ' . (int)$nb['interval_let'] . ' roky' ?>. Cena za všechny servisy po dobu smlouvy celkem <b><?= $e(ok_kc($s * (int)$nb['smlouva'], 2)) ?></b> s DPH (při nezměněném počtu bytů a ceně dopravy).</p><?php endif; ?>
-<h2>Rozsah servisu</h2><ul><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_rozsah']))) as $t): ?><li><?= $e($t) ?></li><?php endforeach; ?></ul>
+<?php if ($nb['typ'] !== 'oprava'): ?><h2>Rozsah servisu</h2><ul><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_rozsah']))) as $t): ?><li><?= $e($t) ?></li><?php endforeach; ?></ul><?php endif; ?>
 <?php if (trim((string)$nb['poznamka']) !== ''): ?><h2>Poznámka</h2><p><?= nl2br($e($nb['poznamka'])) ?></p><?php endif; ?>
-<p class="mut"><?= $e($n['text_podminky']) ?></p>
+<p class="mut"><?= $nb['typ'] === 'oprava' ? '' : $e($n['text_podminky']) ?></p>
+<?php if ($nb['typ'] === 'oprava'): ?><h2>Podmínky opravy</h2><ul class="mut"><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_podminky_oprava']))) as $t): ?><li><?= $e($t) ?></li><?php endforeach; ?></ul><?php endif; ?>
 <p style="margin-top:26px">Vypracoval: <?= $e($nb['vytvoril'] ?: uziv_jmeno()) ?> · <?= $e(so_datum($nb['datum'])) ?></p>
-<?php $prubeh = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : $nb['typ'] === 'svj'; if ($prubeh && trim((string)$n['text_prubeh']) !== ''): ?>
+<?php $prubeh = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : in_array($nb['typ'], ['svj', 'oprava'], true); if ($prubeh): ?>
 <div style="page-break-before:always;margin-top:30px"><div class="hl"><div><b style="font-size:15px">KK SYSTEM – servis oken a dveří</b><br>Zdeněk Kučera · Zd. Štěpánka 2764/1, 434 01 Most</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz</div></div>
-<h1>Jak u nás probíhá servis</h1><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_prubeh']))) as $t): ?><p><?= $e($t) ?></p><?php endforeach; ?></div><?php endif; ?>
+<?php if ($nb['typ'] !== 'oprava' && trim((string)$n['text_prubeh']) !== ''): ?><h1>Jak u nás probíhá servis</h1><?= ok_kroky((string)$n['text_prubeh'], '#0e7490') ?><?php endif; ?>
+<h1 style="margin-top:22px">Když okno nejde seřídit – jak probíhá oprava</h1><?= ok_kroky((string)$n['text_oprava'], '#c2410c') ?>
+<?php if ($nb['typ'] !== 'oprava'): ?><h2>Podmínky opravy</h2><ul class="mut"><?php foreach (array_filter(array_map('trim', explode("\n", (string)$n['text_podminky_oprava']))) as $t): ?><li><?= $e($t) ?></li><?php endforeach; ?></ul><?php endif; ?>
+<p class="mut" style="margin-top:14px">V případě dalších dotazů se na nás obraťte: +420 725 559 235, info@kksystem.cz</p></div><?php endif; ?>
 </main></body></html>
 <?php exit; endif;
 
@@ -165,12 +185,12 @@ else:
   $vse = $pdo->query('SELECT * FROM ok_nabidka ORDER BY id DESC LIMIT 200')->fetchAll(PDO::FETCH_ASSOC);
   $svjs = $pdo->query('SELECT id, nazev FROM so_svj ORDER BY nazev')->fetchAll(PDO::FETCH_ASSOC); ?>
 <h1>📄 Nabídky</h1>
-<div class="box ln"><a class="btn ok" href="?nova=jine">+ Nová nabídka (prázdná)</a>
+<div class="box ln"><a class="btn ok" href="?nova=jine">+ Nová nabídka servisu</a> <a class="btn" href="?nova=oprava" style="background:#c2410c">+ Nová nabídka na opravu</a>
 <?php if ($svjs): ?><form class="ln" style="margin:0"><input type="hidden" name="nova" value="svj"><select name="svj"><?php foreach ($svjs as $j): ?><option value="<?= (int)$j['id'] ?>"><?= $e($j['nazev']) ?></option><?php endforeach; ?></select><button class="sec">Nabídka pro SVJ podle seznamu bytů</button></form><?php endif; ?>
-<span class="mut">Pro jednotlivce: v jeho servisu tlačítko „📄 Nabídka z ceníku“.</span></div>
+<span class="mut">Pro jednotlivce: v jeho servisu tlačítka „📄 Nabídka z ceníku“ a „🛠 Nabídka na opravu“. Pro SVJ: v servisu „🛠 Nabídka oprav z reportu“.</span></div>
 <div class="box"><?php if (!$vse): ?><p class="mut">Zatím žádné nabídky.</p><?php else: ?>
 <table><tr><th>Číslo</th><th>Pro</th><th>Datum</th><th class="r">Celkem s DPH</th><th>Stav</th></tr>
-<?php foreach ($vse as $x): $v = $vypocet($x); ?><tr><td><a href="?id=<?= (int)$x['id'] ?>"><?= $e($x['cislo']) ?></a></td><td><?= $e($x['nazev']) ?><div class="mut"><?= $x['typ'] === 'svj' ? 'SVJ' : ($x['typ'] === 'jed' ? 'jednotlivec' : '') ?><?= (int)$x['smlouva'] ? ' · smlouva ' . (int)$x['smlouva'] . '×' : '' ?></div></td>
+<?php foreach ($vse as $x): $v = $vypocet($x); ?><tr><td><a href="?id=<?= (int)$x['id'] ?>"><?= $e($x['cislo']) ?></a></td><td><?= $e($x['nazev']) ?><div class="mut"><?= $x['typ'] === 'svj' ? 'SVJ' : ($x['typ'] === 'jed' ? 'jednotlivec' : ($x['typ'] === 'oprava' ? '🛠 oprava' : '')) ?><?= (int)$x['smlouva'] ? ' · smlouva ' . (int)$x['smlouva'] . '×' : '' ?></div></td>
 <td class="nowrap"><?= $e(so_datum($x['datum'])) ?></td><td class="r nowrap"><?= $e(ok_kc($v['sum']['s'])) ?></td><td><span class="st"><?= $e(NB_STAVY[$x['stav']] ?? '') ?></span></td></tr><?php endforeach; ?></table><?php endif; ?></div>
 <?php endif; ?>
 </main></body></html>
