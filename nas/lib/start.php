@@ -34,3 +34,13 @@ if (pres_tunel() && empty($_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'])
     && strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]) === strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app'))) {
   $_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'] = 'prihlaseni-formularem';
 }
+// 3. 11. 2026: oprava mobilního zobrazení – široké tabulky (příjemci na úvodu, seznamy) už nerozšíří celou stránku, ale posouvají se do strany.
+// Vloží krátké CSS do HTML stránek (jen při běžném otevření v prohlížeči; JSON, PDF, videa a ostatní odpovědi se nemění).
+if (PHP_SAPI !== 'cli' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && !isset($_SERVER['HTTP_RANGE']) && stripos((string)($_SERVER['HTTP_ACCEPT'] ?? ''), 'text/html') !== false) {
+  ob_start(function ($html) {
+    if (strlen($html) > 3000000 || stripos($html, '</head>') === false) return false;
+    foreach (headers_list() as $h) if (stripos($h, 'content-type:') === 0 && stripos($h, 'text/html') === false) return false;
+    $css = '<style>/*bd-mobil*/@media (max-width:700px){table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}code,pre{overflow-wrap:anywhere}img{max-width:100%;height:auto}}</style>';
+    return preg_replace('~</head>~i', $css . '</head>', $html, 1);
+  });
+}
