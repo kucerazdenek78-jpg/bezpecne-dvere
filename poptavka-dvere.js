@@ -176,6 +176,17 @@
   var form = $('#pq');
   var MODE = form.getAttribute('data-mode') === 'objednavka' ? 'objednavka' : 'poptavka';
   var OBJ = MODE === 'objednavka';
+  /* odkaz ze zaměření v kartotéce (?zam=<id>-<8 hex>): rozměry už máme → adresa nepovinná, poptávka se v kartotéce sama připojí ke zaměření */
+  var ZAM = (function () { if (OBJ) return ''; try { var v = new URLSearchParams(location.search).get('zam') || ''; return /^\d{1,9}-[0-9a-f]{8}$/.test(v) ? v : ''; } catch (e) { return ''; } })();
+  if (ZAM) {
+    (function () {
+      var p = document.createElement('p'); p.className = 'pq-zam';
+      p.style.cssText = 'margin:0 0 1rem;padding:.8rem 1rem;border-radius:10px;background:#e8f0fb;color:#123d27;border-left:5px solid #123d27';
+      p.innerHTML = '📐 <b>Navazujete na zaměření u vás doma.</b> Rozměry otvoru už máme, stačí vybrat dveře, barvu a vyplnit kontakt. Pak vám připravíme nabídku.';
+      form.parentNode.insertBefore(p, form);
+      ['ulice', 'mesto'].forEach(function (n) { var i = form.elements[n]; if (!i) return; i.required = false; var l = i.closest('label'); if (l && l.firstChild && l.firstChild.nodeType === 3) l.firstChild.nodeValue = l.firstChild.nodeValue.replace(' *', ''); });
+    })();
+  }
   function fv(n) { var el = form.elements[n]; return el && el.value != null ? String(el.value).trim() : ''; }
   function num(n) { var x = parseInt(fv(n).replace(/\s/g, ''), 10); return isNaN(x) ? 0 : x; }
   var state = { model: null, step: 1, photos: {}, thumbs: {}, addr: null, trip: null };
@@ -500,6 +511,7 @@
       zed: val('zed'), vyska_cm: fv('vyska_cm'), poznamka: fv('poznamka'),
       fotky: Object.keys(state.photos)
     };
+    if (ZAM) d.z_zamereni = ZAM;
     if (OBJ) {
       d.zdroj = 'web-objednavka'; d.typ = 'objednavka';
       d.z_poptavky = state.fromRef || '';
@@ -597,11 +609,12 @@
   }
   function fields(d) {
     var f = [
-      ['_subject', 'Poptávka dveří ' + d.cislo + ' – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto],
+      ['_subject', 'Poptávka dveří ' + d.cislo + ' – ' + d.model + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')],
       ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC], ['_honey', form._honey.value]
     ];
     if (d.email) f.push(['_replyto', d.email]);
     f.push(['Číslo poptávky', d.cislo]);
+    if (d.z_zamereni) f.push(['Navazuje na zaměření', 'ano – rozměry jsou v kartotéce u zaměření']);
     reviewRows(d).forEach(function (r) { f.push([r[0], r[1]]); });
     if (!OBJ) f.push(['Vytvořit objednávku', orderLink(d)]);
     f.push(['Odesláno', new Date(d.odeslano).toLocaleString('cs-CZ')], ['data_json', JSON.stringify(d)]);
@@ -663,7 +676,7 @@
     var vP = P && P.buildVoucher ? P.buildVoucher(d).catch(function () { return null; }) : Promise.resolve(null);
     Promise.all([pdfP, plP, vP]).then(function (res) {
       pdf = res[0]; plist = res[1]; voucher = res[2]; btn.textContent = 'Odesílám…';
-      var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + ', ' + d.mesto], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
+      var internal = [['_subject', 'Objednávka ' + d.obj_cislo + ' (interní) – ' + d.model + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')], ['_template', 'table'], ['_captcha', 'false'], ['_cc', CC_OBJ],
         ['Číslo objednávky', d.obj_cislo], ['Prodavač', d.prodavac], ['Z poptávky', d.z_poptavky || '–'], ['Číslo OP', d.op || '–'], ['Interní poznámka', d.interni || '–'],
         ['Cena celkem', kc(d.cena_celkem)], ['Záloha / doplatek', kc(d.zaloha) + ' / ' + kc(d.doplatek)],
         ['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – použijte prázdný z panelu'],
