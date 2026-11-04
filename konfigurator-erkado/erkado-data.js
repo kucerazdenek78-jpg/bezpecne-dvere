@@ -23,6 +23,8 @@ window.ERKADO = {
   naMiru: { sMin: 770, sMax: 1210, hMin: 1800, hMax: 2480, krok: 10 },
   ctvrtyPant: { 'h88-hlinik': 2251, 'h78-hlinik': 2251, 't78-hlinik': 2256, 't64-hlinik': 2256, 't78-ocel': 2245, 't64-ocel': 2245 },
   /* str. 23–57 (PŘÍPLATKY) – stejné u všech řad */
+  /* počet klíčů: v základu 3; 5 ks = +253 Kč (systém ERKADO, nabídka 2600292019 ze 4. 11. 2026; jiné počty zatím neznáme) */
+  klice: { '5': 253 },
   priplatky: { sirka100: 1530, nestdSirka: 1862, vyssi: 7382, nizsi: 1862, dvoubarevneKridlo: 665, dvoubarevneKomplet: 3658, odkap: 798, cerneKovaniStd: 399 },
   /* str. 4 */
   dekory: [

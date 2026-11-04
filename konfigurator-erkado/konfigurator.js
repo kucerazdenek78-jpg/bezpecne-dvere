@@ -15,8 +15,8 @@
   var TLC = { h88: '#b91c2c', h78: '#d4600f', t78: '#a8860b', t64: '#13684a' };
   var SKLO = [['std', 'Standardní soustava skel', 'v ceně'], ['benat', 'Benátské zrcadlo (polopropustné)', 1], ['bila', 'Matné bílé / průhledné sklo', 2], ['seda', 'Matné šedé / průhledné sklo', 3]];
   var KOV = {
-    B: { n: 'Klika – klika + horní zámek', d: 'Klika a rozeta CERTUS RC2, druhý (horní) zámek, vložky v systému 1 klíče. V ceně kompletu.' },
-    A: { n: 'Klika – klika', d: 'Jeden zámek, vložka klíč–knoflík, klika CERTUS RC2.' },
+    B: { n: 'Klika – klika + horní zámek', d: 'Klika HAGA RC2, druhý (horní) zámek, vložky v systému 1 klíče. V ceně kompletu.' },
+    A: { n: 'Klika – klika', d: 'Jeden zámek, vložka klíč–knoflík, klika HAGA RC2.' },
     C: { n: 'Madlo – klika', d: 'Madlo zvenku, klika zevnitř, vložka klíč–knoflík. Madlo vyberte níže.' },
     D: { n: 'Madlo – klika + horní zámek', d: 'Madlo zvenku, klika zevnitř, horní zámek, vložky v systému 1 klíče. Madlo vyberte níže.' },
     E: { n: 'Madlo – madlo', d: 'Madlo z obou stran, otevírání tlačítkem, elektromechanický zámek, samozavírač. Jen s hliníkovou zárubní.' },
@@ -27,7 +27,7 @@
   var st = {
     step: 1, model: 'horn', typ: 1, prov: 'PLAIN GLASS', kon: 't64', zar: 'ocel', smer: 'ven', strana: 'P',
     sirka: '90', sc: '', vyska: 'std', hc: '', dekor: 'dub-surovy', dvou: 'ne', dekor2: 'bily-mat', sklo: 'std', rc2: false,
-    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
+    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, klice: '3', odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
   };
 
   /* ── pomocné ── */
@@ -213,7 +213,6 @@
     var pp = m.provPriplatek && m.provPriplatek[st.prov];
     if (pp) L.push(['Provedení ' + st.prov, pp]);
     if (KON[k].zarubenStd === 'ocel' && st.zar === 'hlinik') L.push(['Hliníková zárubeň', KON[k].alu]);
-    if (st.zar === 'rohova') { L.push(['Rohová ocelová zárubeň', 0]); info.push('Rohová ocelová zárubeň: příplatek katalog neuvádí (str. 61), potřebné kování pro objímky pantů – ověří prodejce.'); }
     if (st.sirka === '100') L.push(['Křídlo šířky „100“', P.sirka100]);
     if (st.sirka === 'miru') {
       L.push(['Nestandardní šířka Sc ' + (st.sc || '?') + ' mm', P.nestdSirka]);
@@ -237,7 +236,7 @@
     if (st.kov === 'B') { if (c) L.push(['Černé základní kování (černé vložky)', cerneB(k)]); }
     else if (st.kov === 'A') {
       L.push(['Sada vložek pro otevírání A (' + cn + ')', E.sady.A[k][c]]);
-      L.push(['Klika Erkado CERTUS RC2 (' + (c ? 'černá' : 'inox') + ')', E.certus.klika]);
+      L.push(['Klika HAGA RC2 (' + (c ? 'černá' : 'inox') + ')', E.certus.klika]);
     } else if (st.kov === 'C' || st.kov === 'D') {
       L.push(['Sada vložek pro otevírání ' + st.kov + ' (' + cn + ')', E.sady[st.kov][k][c]]);
       L.push(['Erkado CERTUS set madlo + štíhlá deska (' + (c ? 'černá' : 'inox') + ')', E.certus.setMadlo]);
@@ -255,6 +254,7 @@
       var V = E.vlozky, one = st.kov === 'A' || st.kov === 'C' || st.kov === 'E';
       L.push(['Vložky třídy C místo B' + (one ? ' (klíč–knoflík)' : ' (sada v systému 1 klíče)'), one ? V.knoflikC[k][c] - V.knoflikB[k][c] : V.sadaC[k][c] - V.sadaB[k][c]]);
     }
+    if (st.kov !== 'X' && E.klice[st.klice]) L.push(['Počet klíčů ' + st.klice + ' ks (v základu 3)', E.klice[st.klice]]);
     var md = E.madla.filter(function (x) { return x.id === st.madlo; })[0];
     if (md) { var nM = madloMadlo() ? 2 : 1; L.push([(nM > 1 ? '2× ' : '') + md.nazev + ' ' + st.madloD + ' cm, ' + (st.madloB === 'cerna' ? 'černé' : 'inox'), nM * md.d[st.madloD][st.madloB === 'cerna' ? 1 : 0]]); }
     ['h', 'l', 'p'].forEach(function (s) { if (st.rozs[s]) L.push(['Rozšíření rámu ' + { h: 'nahoře', l: 'vpravo', p: 'vlevo' }[s] + ' (' + (k === 'h88' ? 30 : 28) + ' mm)', E.rozsireniRamu]); });
@@ -327,7 +327,7 @@
       ? '<label class="pq-opt pq-chip">' + radio('zar', 'hlinik', true) + 'Hliníková s tepelnou přepážkou <small>ve standardu</small></label>'
       : '<label class="pq-opt pq-chip">' + radio('zar', 'ocel', st.zar === 'ocel') + 'Ocelová pozinkovaná <small>ve standardu</small></label>' +
         '<label class="pq-opt pq-chip">' + radio('zar', 'hlinik', st.zar === 'hlinik') + 'Hliníková s tepelnou přepážkou <em>+ ' + kc(K.alu) + '</em></label>' +
-        '<label class="pq-opt pq-chip">' + radio('zar', 'rohova', st.zar === 'rohova', needsAlu()) + 'Rohová ocelová <small>příplatek upřesníme</small></label>' +
+        '<label class="pq-opt pq-chip">' + radio('zar', 'rohova', st.zar === 'rohova', needsAlu()) + 'Rohová ocelová <small>stejná cena jako ocelová</small></label>' +
         (needsAlu() ? '<p class="pq-help" style="margin:.5rem 0 0;width:100%">Světlíky a madlo – madlo jdou jen s hliníkovou zárubní.</p>' : '');
     var opts = [['ven', 'P', 'Levé, otevírané ven'], ['ven', 'L', 'Pravé, otevírané ven'], ['dovnitr', 'P', 'Levé, otevírané dovnitř'], ['dovnitr', 'L', 'Pravé, otevírané dovnitř']];
     $('kfOpen').innerHTML = opts.map(function (o) {
@@ -419,6 +419,9 @@
     $('kfTrida').innerHTML = st.kov === 'X' ? '' : '<label class="pq-opt pq-chip">' + radio('trida', 'B', !st.tridaC) + 'Třída B <small>ve standardu, splňuje RC2</small></label>' +
       '<label class="pq-opt pq-chip">' + radio('trida', 'C', st.tridaC) + 'Třída C <em>+ ' + kc(dC) + '</em> <small>vyšší ochrana</small></label>';
     $('kfTrida').previousElementSibling.hidden = st.kov === 'X';
+    $('kfKlice').innerHTML = st.kov === 'X' ? '' : '<label class="pq-opt pq-chip">' + radio('klice', '3', st.klice === '3') + '3 klíče <small>v základu</small></label>' +
+      Object.keys(E.klice).map(function (n) { return '<label class="pq-opt pq-chip">' + radio('klice', n, st.klice === n) + n + ' klíčů <em>+ ' + kc(E.klice[n]) + '</em></label>'; }).join('');
+    $('kfKlice').previousElementSibling.hidden = st.kov === 'X';
     var kn = [];
     if (st.kov !== 'B' && st.kov !== 'X') kn.push('Komplet bez kování (cena *) + díly podle ceníku příslušenství str. 65–69.');
     if (st.kov === 'X') kn.push('Cena kompletu nezahrnuje kování (kliky, madla, vložky).');
@@ -505,7 +508,7 @@
   }
   function kovText() {
     if (st.kov === 'X') return 'bez kování';
-    var t = KOV[st.kov].n + ', ' + (st.kovB === 'cerna' ? 'černé' : 'inox / nikl') + ', vložky třídy ' + (st.tridaC ? 'C' : 'B');
+    var t = KOV[st.kov].n + ', ' + (st.kovB === 'cerna' ? 'černé' : 'inox / nikl') + ', vložky třídy ' + (st.tridaC ? 'C' : 'B') + (st.kov !== 'X' ? ', ' + st.klice + (st.klice === '3' ? ' klíče' : ' klíčů') : '');
     return t;
   }
   function madloText() {
@@ -624,7 +627,7 @@
         otevirani: (st.strana === 'P' ? 'levé' : 'pravé') + ', ' + (st.smer === 'ven' ? 'ven' : 'dovnitř') + ' (pohled zevnitř)',
         sirka: st.sirka, sc_mm: curSc() || null, hc_mm: curHc() || null, rozmer: sizeText(),
         dekor: DEK[st.dekor][1], dekor_zevnitr: st.dvou !== 'ne' ? DEK[st.dekor2][1] : '', dvoubarevne: st.dvou,
-        zaskleni: zasklTyp() ? st.sklo : '', zaskleni_rc2: st.rc2, kovani: kovText(), madlo: madloText(), vlozky_trida: st.tridaC ? 'C' : 'B', odstin_skla: st.odstin, svetliky: svText(), rozsireni_ramu: Object.keys(st.rozs), vybava: Object.keys(st.vyb), katalog: E.katalog, strana_katalogu: m.str
+        zaskleni: zasklTyp() ? st.sklo : '', zaskleni_rc2: st.rc2, kovani: kovText(), madlo: madloText(), vlozky_trida: st.tridaC ? 'C' : 'B', pocet_klicu: st.kov !== 'X' ? +st.klice : null, odstin_skla: st.odstin, svetliky: svText(), rozsireni_ramu: Object.keys(st.rozs), vybava: Object.keys(st.vyb), katalog: E.katalog, strana_katalogu: m.str
       },
       polozky: r.lines.map(function (l) { return { co: l[0], volba: l[2] || '', priplatek: l[1] }; }),
       cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber, vizualizace: !!vizRes,
@@ -742,6 +745,7 @@
     else if (t.id === 'kfOdstin') st.odstin = t.value;
     else if (n === 'svSklo') st.sv.sklo = v;
     else if (n === 'trida') st.tridaC = v === 'C';
+    else if (n === 'klice') st.klice = v;
     else if (t.matches('[data-vyb]')) { if (t.checked) st.vyb[t.getAttribute('data-vyb')] = true; else delete st.vyb[t.getAttribute('data-vyb')]; }
     else if (t.id === 'kfRc2c') st.rc2 = t.checked;
     else if (n === 'model') { st.model = v; st.typ = MOD[v].typy[0]; st.prov = MOD[v].provedeni[0]; }
