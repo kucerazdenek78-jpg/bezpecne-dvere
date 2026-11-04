@@ -214,7 +214,7 @@
       cyl(10, 0) + cyl(50, k2) + keyIco(104, 22, 0) + keyIco(104, 60, k2) + (unified ? '<text x="98" y="45" font-size="11" font-weight="700" fill="#123d27">=</text>' : ''));
   }
   function svgOpening(left) {
-    // pohled zvenku: pantem na jedné straně, klika na druhé, šipka dovnitř
+    // pohled zevnitř (z bytu/domu): pantem na jedné straně, klika na druhé, šipka dovnitř
     var hx = left ? 34 : 106, kx = left ? 96 : 44;
     return svg('<rect x="0" y="0" width="140" height="84" fill="#f2f5f3" rx="8"/><rect x="28" y="6" width="84" height="74" fill="#fff" stroke="#123d27" stroke-width="2.5"/>' +
       '<rect x="' + (hx - 3) + '" y="16" width="6" height="10" fill="#123d27"/><rect x="' + (hx - 3) + '" y="58" width="6" height="10" fill="#123d27"/>' +
