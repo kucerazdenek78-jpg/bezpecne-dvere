@@ -615,12 +615,22 @@
     }).then(function () { $('kfTrip').disabled = false; $('kfTrip').textContent = 'Spočítat dopravu'; render(); });
   }
 
+  /* odkaz ze zaměření (?zam=<id>-<8 hex>, 4. 11. 2026): pamatuje se i po návratu z aplikace; do kartotéky jde jako z_zamereni a poptávka se sama připojí ke zaměření */
+  var ZAM = (function () {
+    var re = /^\d{1,9}-[0-9a-f]{8}$/, v = '';
+    try { v = new URLSearchParams(location.search).get('zam') || ''; } catch (e) {}
+    if (re.test(v)) { try { localStorage.setItem('bd-zam', JSON.stringify({ v: v, t: Date.now() })); } catch (e) {} return v; }
+    try { var o = JSON.parse(localStorage.getItem('bd-zam') || 'null'); if (o && re.test(o.v) && Date.now() - o.t < 7 * 864e5) return o.v; } catch (e) {}
+    return '';
+  })();
+  if (ZAM) { var zw = document.querySelector('.kf-wrap'); if (zw) { var zb = document.createElement('div'); zb.style.cssText = 'margin:0 0 1rem;padding:.8rem 1rem;border-radius:10px;background:#e8f0fb;color:#123d27;border-left:5px solid #123d27'; zb.innerHTML = '📐 <b>Navazujete na zaměření u vás doma.</b> Rozměry otvoru už máme. Vyberte vzhled a výbavu, vyplňte kontakt a odešlete. Pak vám připravíme nabídku.'; zw.insertBefore(zb, zw.firstChild); } }
+
   /* ── data pro kartotéku (stejná pole jako poptávka z webu) ── */
   function ref() { var d = new Date(), p = function (n) { return ('0' + n).slice(-2); }; return 'KONF-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()); }
   function collect() {
     var r = calc(), m = M(), jm = $('kfJmeno').value.trim().split(/\s+/);
     return {
-      verze: 1, zdroj: 'web-konfigurator-erkado', typ: 'poptavka', kategorie: 'dum', kategorie_nazev: 'Dveře do domu', cislo: st.ref || (st.ref = ref()), odeslano: new Date().toISOString(),
+      verze: 1, zdroj: 'web-konfigurator-erkado', typ: 'poptavka', kategorie: 'dum', kategorie_nazev: 'Dveře do domu', cislo: st.ref || (st.ref = ref()), odeslano: new Date().toISOString(), z_zamereni: ZAM || undefined,
       model: 'ERKADO ' + typName(m, st.typ), model_kod: 'erkado-' + slug(m, st.typ), odstin: DEK[st.dekor][1], provedeni: st.prov,
       konfigurace: {
         rada: m.nazev, vzor: st.typ, provedeni: st.prov, konstrukce: KON[st.kon].nazev, zarubne: zarText(),
@@ -809,6 +819,7 @@
     d.polozky.forEach(function (p) { rows.push(['· ' + p.co, (p.volba ? p.volba + ' – ' : '') + (p.priplatek ? kc(p.priplatek) : 'upřesníme')]); });
     rows.push(['Cena bez DPH', kc(d.cena_bez_dph)], ['DPH ' + d.dph_sazba + ' %', kc(d.dph)], ['Montáž', d.montaz ? 'ano' : 'ne'],
       ['Doprava', d.doprava === 'odber' ? 'osobní odběr ve vzorkovně' : (d.montaz ? 's montáží' : 'bez montáže, ' + E.doprava.zaKm + ' Kč/km s DPH') + ' – ' + (d.doprava_km == null ? 'km nespočítány' : d.doprava_km + ' km – ' + (d.doprava_cena == null ? 'upřesníme' : kc(d.doprava_cena)))],
+      ['Navazuje na zaměření', d.z_zamereni ? 'ano – rozměry jsou v kartotéce u zaměření' : ''],
       ['Cena celkem s DPH', kc(d.cena_celkem)], ['Jméno', (d.jmeno + ' ' + d.prijmeni).trim()], ['Telefon', d.telefon], ['E-mail', d.email],
       ['Adresa montáže', d.ulice], ['Obec', d.mesto], ['Poznámka', d.poznamka || '–'], ['Odesláno', new Date(d.odeslano).toLocaleString('cs-CZ')]);
     return rows;

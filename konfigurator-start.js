@@ -8,7 +8,8 @@
     if (localStorage.getItem('bd-bonus') === '1') on = true;
   } catch (e) {}
   if (!on) return;
-  var URL0 = 'konfigurator-erkado.html';
+  var ZQ = ''; try { var zv = new URLSearchParams(location.search).get('zam') || ''; if (/^\d{1,9}-[0-9a-f]{8}$/.test(zv)) ZQ = '?zam=' + zv; } catch (e) {}
+  var URL0 = 'konfigurator-erkado.html' + ZQ;
   function model(el) { var m = /ERKADO ([A-ZÁ-Ž]+)/.exec(el.getAttribute('onclick') || ''); return m ? m[1].toLowerCase() : ''; }
   /* banner nad doporučenými modely */
   var feat = document.querySelector('.erkado-featured');
@@ -30,4 +31,5 @@
     var k = document.createElement('a'); k.className = 'e-mini-btn konf-go'; k.href = URL0 + '#' + m; k.textContent = 'Konfigurátor →';
     a.parentNode.insertBefore(k, a); a.style.paddingTop = '.25rem';
   });
+  if (ZQ) document.querySelectorAll('a[href="konfigurator-erkado.html"]').forEach(function (a) { a.href = URL0; });
 })();

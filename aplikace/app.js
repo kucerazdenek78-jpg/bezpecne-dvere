@@ -524,7 +524,7 @@
   /* dveře do domu → konfigurátor ERKADO (stejné názvy řad); fotka a rohy se uloží, ať je po návratu nemusí zákazník dělat znovu */
   /* odkaz do konfigurátoru z aplikace: od 1. 11. 2026 (dřív jen s přepínačem bd-bonus, stejně jako Moje dveře) */
   function konfOn() { var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} return on; }
-  function konfUrl(n) { return '../konfigurator-erkado.html#' + String(n).toLowerCase(); }
+  function konfUrl(n) { var q = ''; try { var o = JSON.parse(localStorage.getItem('bd-zam') || 'null'); if (o && /^\d{1,9}-[0-9a-f]{8}$/.test(o.v) && Date.now() - o.t < 7 * 864e5) q = '?zam=' + o.v; } catch (e) {} return '../konfigurator-erkado.html' + q + '#' + String(n).toLowerCase(); }
   function savePhoto() {
     if (!photo) return;
     try {
