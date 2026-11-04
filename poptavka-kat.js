@@ -1,8 +1,11 @@
 /* Poptávka dveří do domu a interiérových dveří – jeden společný formulář (stejná pole a stejná data do kartotéky jako průvodce u dveří do bytu).
-   Použití: <div data-poptavka-kat="dum|interier"></div> + formulare-klient.js; PoptavkaKat.mount(el, kat) a PoptavkaKat.pick(model) předvybere model. */
+   Použití: <div data-poptavka-kat="dum|interier"></div> + formulare-klient.js; PoptavkaKat.mount(el, kat) a PoptavkaKat.pick(model) předvybere model.
+   4. 11. 2026: odkaz ze zaměření (?zam=<id>-<8 hex>, posílá ho technik z kartotéky) → pruh „navazujete na zaměření“, adresa nepovinná
+   a do dat jde z_zamereni; kartotéka poptávku sama připojí ke zaměření. V odkazu nejsou osobní údaje. */
 (function () {
   'use strict';
   var CC = 'chci@bezpecne-dvere.cz';
+  var ZAM = (function () { try { var v = new URLSearchParams(location.search).get('zam') || ''; return /^\d{1,9}-[0-9a-f]{8}$/.test(v) ? v : ''; } catch (e) { return ''; } })();
   var KAT = { dum: { nazev: 'Dveře do domu', h: 'Poptávka dveří do domu', sub: 'Vyberte model a pošlete poptávku. Ozveme se s nabídkou včetně montáže do 24 hodin.', adr: true, multi: false },
               interier: { nazev: 'Interiérové dveře', h: 'Poptávka interiérových dveří', sub: 'Vyberte modely a počty kusů. Ozveme se s nabídkou do 24 hodin.', adr: false, multi: true } };
   var MODELY = {"dum": [["Hliníkové dveře", ["OPTIMAL 60 – hliníkové (akce od 27 500 Kč)", "OPTIMAL 75 – hliníkové (akce od 34 500 Kč)"]], ["Ocelové dveře ERKADO — Doporučené", ["ERKADO ARENDAL (od 52 269 Kč)", "ERKADO LAHTI (od 44 821 Kč)", "ERKADO TREBUR (od 38 304 Kč)", "ERKADO LANGEN (od 37 041 Kč)", "ERKADO ALTA (od 34 846 Kč)", "ERKADO UTRECHT (od 41 629 Kč)", "ERKADO ROTTERDAM (od 45 819 Kč)", "ERKADO SOLID (od 23 940 Kč)"]], ["Ocelové dveře ERKADO — Ostatní modely", ["ERKADO HORN", "ERKADO WELS", "ERKADO BAZYLEA", "ERKADO HELMOND", "ERKADO FRYBURG", "ERKADO LEIMEN", "ERKADO AMBERG", "ERKADO LINDEN", "ERKADO MURTER", "ERKADO EBERN", "ERKADO WIENER", "ERKADO SION", "ERKADO SINGEN", "ERKADO SELTERS", "ERKADO SAMEDAN", "ERKADO RODING", "ERKADO MELK", "ERKADO LUCERNA", "ERKADO KREBEN", "ERKADO LEOBEN", "ERKADO LUTTER", "ERKADO BIENE", "ERKADO KELLA"]], ["", ["Nevím — chci poradit"]]], "interier": [["Skladem", ["PATRAS", "KAVALA", "LARISA", "FRÉZIA 1", "FRÉZIA 9", "NEMÉZIA 14", "LAURENCIA 1", "ALTAMURA 1", "ALTAMURA 1 – falcové", "LINEA FORTE 5", "NORMA DECOR 1", "AVERSA 1", "VERTE HOME G.4", "CPL 1.1", "DECOR P"]], ["Na objednávku", ["ALTAMURA", "NEMÉZIA", "MISKANT", "LAURENCIA", "MAGNÓLIA", "FRÉZIA", "DAGLÉZIA", "ALTAMURA LUX", "LIBRA · NORMA DECOR", "DECORATO · BELGATTO", "LINEA FORTE", "NOGARO · TAMPARO", "CAPRIO · NIDA · ROMA", "VECTOR", "VERTE HOME G / H", "VERTE PREMIUM A", "VERTE PREMIUM E", "HARMONY", "CPL"]], ["", ["Nevím — chci poradit"]]]};
@@ -15,7 +18,7 @@
     '.pqk textarea{min-height:96px}.pqk .bad{border-color:#c0392b!important;background:#fdf1ef}.pqk .pqk-row{display:grid;grid-template-columns:1fr 1fr 80px 36px;gap:.6rem;align-items:end;margin-bottom:.6rem}.pqk .pqk-row.r1{grid-template-columns:1fr 1fr}' +
     '.pqk .pqk-x{height:42px;border:1px solid var(--gray-300,#c5cdc8);background:#fff;border-radius:8px;cursor:pointer;font-size:1.1rem}.pqk .pqk-add{margin-top:.2rem}' +
     '.pqk .pqk-gdpr{font-size:.82rem;margin:0 0 .6rem}.pqk .pqk-chk{display:flex;gap:.5rem;align-items:flex-start;font-size:.92rem;margin-bottom:1rem}.pqk .pqk-msg{margin:0 0 1rem;padding:.8rem 1rem;border-radius:10px;background:#fdecea;color:#7a1c12}' +
-    '.pqk .pqk-done{padding:1.4rem;border-radius:14px;background:#e8f5ee;color:#123d27}.pqk .pqk-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.pqk .pqk-help{font-size:.82rem;color:var(--gray-600,#555);margin:.4rem 0 0}' +
+    '.pqk .pqk-zam{margin:0 0 1rem;padding:.8rem 1rem;border-radius:10px;background:#e8f0fb;color:#123d27;border-left:5px solid var(--navy,#123d27)}.pqk .pqk-done{padding:1.4rem;border-radius:14px;background:#e8f5ee;color:#123d27}.pqk .pqk-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.pqk .pqk-help{font-size:.82rem;color:var(--gray-600,#555);margin:.4rem 0 0}' +
     '.pqk .pqk-ph{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}.pqk .pqk-ph img{height:64px;border-radius:6px}.pqk .pqk-btn{display:inline-block;border:0;border-radius:10px;padding:.9rem 1.4rem;font:inherit;font-weight:700;cursor:pointer}' +
     '.pqk .pqk-send{background:var(--orange,#e8761a);color:#fff;width:100%;font-size:1.05rem}.pqk .pqk-send[disabled]{opacity:.6}.pqk .pqk-ghost{background:#fff;border:1px solid var(--gray-300,#c5cdc8);padding:.55rem 1rem}' +
     '.pqk .pqk-kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;margin:.4rem 0 .8rem}.pqk .pqk-kc{border:1.5px solid var(--gray-200,#dde3df);border-radius:10px;background:#fff;padding:.4rem;cursor:pointer;text-align:left;font:inherit;font-size:.8rem;color:#222}' +
@@ -73,10 +76,11 @@
     });
   }
   function mount(el, kat) {
-    if (!KAT[kat]) return; var K = KAT[kat];
+    if (!KAT[kat]) return; var K = KAT[kat], adr = K.adr && !ZAM;   // po zaměření adresu už máme
     if (!document.getElementById('pqk-css')) { var st = document.createElement('style'); st.id = 'pqk-css'; st.textContent = CSS; document.head.appendChild(st); }
     el.setAttribute('data-poptavka-kat', kat);
     el.innerHTML = '<div class="pqk"><form novalidate><h2>' + K.h + '</h2><p class="pqk-sub">' + K.sub + '</p>' +
+      (ZAM ? '<p class="pqk-zam">📐 <b>Navazujete na zaměření u vás doma.</b> Rozměry otvoru už máme, stačí vybrat model a barvu a vyplnit kontakt. Pak vám připravíme nabídku.</p>' : '') +
       '<fieldset><legend>Které dveře vás zajímají?</legend><div data-rows>' + rowHtml(kat, K.multi) + '</div>' + (K.multi ? '<button type="button" class="pqk-btn pqk-ghost pqk-add" data-add>+ Přidat další model</button>' : '') +
         (kat === 'interier' ? '<label class="pqk-chk" style="margin-top:.9rem"><input type="checkbox" name="bourani"> Vybourat stávající zárubně a připravit otvor (2 000 Kč bez DPH za kus včetně odvozu materiálu)</label>' : '') + '</fieldset>' +
         (kat === 'interier' && window.BD_KOVANI ? '<fieldset><legend>Kování – kliky (nepovinné)</legend><p class="pqk-help" style="margin:0 0 .3rem">Klepnutím kliku přidáte. Ceny jsou bez DPH za kus. Rozeta: ' + esc(window.BD_ROZETY['BB / PZ']) + '; WC pro koupelnu a toaletu.</p>' +
@@ -84,8 +88,8 @@
       '<fieldset><legend>Na koho se máme obrátit?</legend><div class="pqk-g2">' +
       '<label class="pqk-f">Jméno *<input name="jmeno" autocomplete="given-name" required></label><label class="pqk-f">Příjmení *<input name="prijmeni" autocomplete="family-name" required></label>' +
       '<label class="pqk-f">Telefon *<input name="telefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="777 123 456" required></label><label class="pqk-f">E-mail' + (K.adr ? '' : ' *') + '<input name="email" type="email" autocomplete="email" placeholder="vas@email.cz"' + (K.adr ? '' : ' required') + '></label></div></fieldset>' +
-      '<fieldset><legend>' + (K.adr ? 'Kde budeme dveře montovat? *' : 'Kde budeme dveře montovat? (nepovinné)') + '</legend><div class="pqk-g2">' +
-      '<label class="pqk-f">Ulice a číslo popisné' + (K.adr ? ' *' : '') + '<input name="ulice" autocomplete="street-address"' + (K.adr ? ' required' : '') + '></label><label class="pqk-f">Město' + (K.adr ? ' *' : '') + '<input name="mesto" autocomplete="address-level2"' + (K.adr ? ' required' : '') + '></label>' +
+      '<fieldset><legend>' + (adr ? 'Kde budeme dveře montovat? *' : 'Kde budeme dveře montovat? (nepovinné)') + '</legend><div class="pqk-g2">' +
+      '<label class="pqk-f">Ulice a číslo popisné' + (adr ? ' *' : '') + '<input name="ulice" autocomplete="street-address"' + (adr ? ' required' : '') + '></label><label class="pqk-f">Město' + (adr ? ' *' : '') + '<input name="mesto" autocomplete="address-level2"' + (adr ? ' required' : '') + '></label>' +
       '<label class="pqk-f">PSČ<input name="psc" autocomplete="postal-code" inputmode="numeric"></label></div></fieldset>' +
       '<fieldset><legend>Doplnit</legend><label class="pqk-f">Poznámka<textarea name="poznamka" placeholder="' + (K.adr ? 'Např. rozměr 90 × 210 cm, stávající zárubeň, otevírání dovnitř / ven, barva…' : 'Např. bílá, šířka 70/80/90, zárubeň 110–135 mm, s montáží…') + '"></textarea></label>' +
       '<label class="pqk-f" style="margin-top:.8rem">Fotky (až 3, nepovinné)<input type="file" name="fotky" accept="image/*" multiple></label><p class="pqk-help">Fotka otvoru nebo stávajících dveří nám pomůže připravit přesnější nabídku.</p></fieldset>' +
@@ -122,7 +126,7 @@
       [].forEach.call(rows.querySelectorAll(kat === 'dum' ? '.pqk-dum' : '.pqk-row'), function (r) { var s = $('[data-m]', r), k = $('[data-ks]', r); s.classList.toggle('bad', !s.value); if (!s.value) { bad = bad || (kat === 'dum' ? $('[data-dsel]', r) : s); return; }
         var o = $('[data-o]', r), nev = /^Nevím/.test(s.value), ov = (o.value || '').trim(); o.classList.toggle('bad', !ov && !nev); if (!ov && !nev) { bad = bad || o; }
         items.push({ model: s.value, od: ov, ks: k ? Math.max(1, parseInt(k.value, 10) || 1) : 1 }); });
-      ['jmeno', 'prijmeni', 'telefon'].concat(K.adr ? ['ulice', 'mesto'] : [], K.adr ? [] : ['email']).forEach(function (n) { var i = form.elements[n]; var b = !i.value.trim(); i.classList.toggle('bad', b); if (b) bad = bad || i; });
+      ['jmeno', 'prijmeni', 'telefon'].concat(adr ? ['ulice', 'mesto'] : [], K.adr ? [] : ['email']).forEach(function (n) { var i = form.elements[n]; var b = !i.value.trim(); i.classList.toggle('bad', b); if (b) bad = bad || i; });
       var tel = form.elements.telefon.value.replace(/\D/g, ''); if (tel.length < 9) { form.elements.telefon.classList.add('bad'); bad = bad || form.elements.telefon; }
       var em = form.elements.email; if (em.value.trim() && !em.checkValidity()) { em.classList.add('bad'); bad = bad || em; }
       if (bad) { bad.scrollIntoView({ behavior: 'smooth', block: 'center' }); err('Vyplňte prosím označená pole.'); return; }
@@ -146,8 +150,9 @@
         polozky: items.map(function (x) { return { co: x.model, odstin: x.od, ks: x.ks, volba: (x.od ? x.od : '') + (K.multi ? (x.od ? ', ' : '') + x.ks + ' ks' : ''), priplatek: 0, info: '' }; }),
         jmeno: f.jmeno.value.trim(), prijmeni: f.prijmeni.value.trim(), telefon: f.telefon.value.trim(), email: f.email.value.trim(),
         ulice: f.ulice.value.trim(), mesto: f.mesto.value.trim(), psc: f.psc.value.trim(), poznamka: f.poznamka.value.trim(), bourani: !!(f.bourani && f.bourani.checked), kovani: kat === 'interier' ? kovItems() : [], fotky: list.map(function (_, i) { return 'foto' + (i + 1); }) };
+      if (ZAM) d.z_zamereni = ZAM;
       var predmet = 'Poptávka ' + K.nazev.toLowerCase() + ' ' + ref + ' – ' + modelTxt + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '');
-      var telo = window.BDForm.bodyFromFields([['Číslo poptávky', ref], ['Kategorie', K.nazev], ['Dveře', modelTxt], ['Odstín', odTxt], ['Počet kusů', K.multi ? ksSum + ' ks' : ''], ['Kování', d.kovani && d.kovani.length ? d.kovani.map(function (x) { return x.ks + '× ' + x.nazev + ' ' + x.povrch + ' (' + x.rozeta + ', ' + x.cena_bez_dph + ' Kč/ks bez DPH)'; }).join('; ') : ''], ['Vybourání zárubní', d.bourani ? 'Ano – vybourat stávající zárubně a připravit otvor (2 000 Kč bez DPH/ks vč. odvozu)' : ''], ['Jméno', d.jmeno + ' ' + d.prijmeni], ['Telefon', d.telefon], ['E-mail', d.email],
+      var telo = window.BDForm.bodyFromFields([['Číslo poptávky', ref], ['Navazuje na zaměření', ZAM ? 'ano – rozměry jsou v kartotéce u zaměření' : ''], ['Kategorie', K.nazev], ['Dveře', modelTxt], ['Odstín', odTxt], ['Počet kusů', K.multi ? ksSum + ' ks' : ''], ['Kování', d.kovani && d.kovani.length ? d.kovani.map(function (x) { return x.ks + '× ' + x.nazev + ' ' + x.povrch + ' (' + x.rozeta + ', ' + x.cena_bez_dph + ' Kč/ks bez DPH)'; }).join('; ') : ''], ['Vybourání zárubní', d.bourani ? 'Ano – vybourat stávající zárubně a připravit otvor (2 000 Kč bez DPH/ks vč. odvozu)' : ''], ['Jméno', d.jmeno + ' ' + d.prijmeni], ['Telefon', d.telefon], ['E-mail', d.email],
         ['Adresa montáže', [d.ulice, d.psc + ' ' + d.mesto].join(', ').replace(/^,\s*|\s+$/g, '')], ['Poznámka', d.poznamka], ['Fotky', list.length ? list.length + ' ks v příloze' : ''], ['Odesláno', new Date().toLocaleString('cs-CZ')]].filter(function (x) { return x[1]; }));
     });
     return el;
