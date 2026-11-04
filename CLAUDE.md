@@ -60,8 +60,9 @@ ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
   a FormSubmit) a commit + push do `main`.
 
 ## Ceník pro prodejce (pokaždé, když se změní ceny/akce vchodových dveří)
-`cenik-prodejce.html` (+ PDF `prodejce/cenik-bezpecnostni-dvere.pdf`, odkazy v `panel.html`) je statický výtah z webu (`dvere-do-bytu.html`, `MODELS` v `poptavka-dvere.js`).
-Při změně cen, příplatků nebo akcí upravit ceník a znovu vygenerovat PDF (Playwright `page.pdf`, A4, okraje 12 mm); datum „stav k" aktualizovat.
+Od 4. 11. 2026 **není na webu**: leží na NAS `cenik.php` (za přihlášením do kartotéky, odkaz z `nastroje.php`) jako statický výtah z webu (`dvere-do-bytu.html`, `MODELS` v `poptavka-dvere.js`).
+Panel prodejce `panel.html` jen přesměruje na `https://kartoteka.dvere.app/nastroje.php`; zámek 🔒 v patičkách vede tamtéž. PDF předlohy (`prodejce-soubor.php`) se berou z NAS `data/prodejce-soubory` (pod stejným názvem se dají nahradit).
+Při změně cen, příplatků nebo akcí upravit `cenik.php` na NAS a PDF ceníku znovu vygenerovat (Playwright `page.pdf`, A4, okraje 12 mm) a nahrát do `data/prodejce-soubory`; datum „stav k" aktualizovat.
 
 ## Uvítací antré k novému webu (dočasné)
 - Na `index.html` je dole blok mezi komentáři `VITEJ-ANTRE:start` a `VITEJ-ANTRE:end` (okno „Vítejte na našem novém webu“ s jemnou animací, zavíratelné, jednou za návštěvníka přes localStorage `bd-vitej-2026`, respektuje `prefers-reduced-motion`).
