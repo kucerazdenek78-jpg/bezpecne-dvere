@@ -1,6 +1,7 @@
 <?php
 // Příjem formulářů z webu: uloží do databáze, uloží přílohy, pošle český e-mail přes SMTP.
 // E-maily zákazníkům (typ objednavka_zakaznik – nabídky a objednávky) dostanou podpis: jméno prodavače (pole prodavac), logo a firemní údaje (lib/podpis.php).
+// E-maily zákazníkům mají od 4. 11. 2026 skrytou kopii (BCC) na chci@bezpecne-dvere.cz a v obyčejné kopii (CC) už není kucerazd@kksystem.cz ani chci@ (viz $bccZakaznik níže).
 require __DIR__ . '/lib/start.php';
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -33,6 +34,15 @@ if ($predmet === '' || $telo === '') konec(400, false, 'prazdne');
 
 $to = $p['to'];
 if ($typ === 'objednavka_zakaznik') { if (!$emailZak) konec(400, false, 'email'); $to = [$emailZak]; }
+
+// kopie e-mailu zákazníkovi: skrytá kopie (BCC) pro firmu, z obyčejné kopie (CC) se tyto adresy vyřadí
+$cc = $p['cc']; $bcc = [];
+if ($typ === 'objednavka_zakaznik') {
+  $bccZakaznik = ['chci@bezpecne-dvere.cz'];
+  $bezCc = ['kucerazd@kksystem.cz', 'chci@bezpecne-dvere.cz'];
+  $cc = array_values(array_filter((array)$p['cc'], function ($a) use ($bezCc) { return !in_array(strtolower(trim((string)$a)), $bezCc, true); }));
+  $bcc = array_values(array_filter($bccZakaznik, function ($a) use ($emailZak) { return strtolower($a) !== strtolower($emailZak); }));
+}
 
 // databáze + omezení počtu odeslání (ochrana proti zneužití)
 $pdo = null; $ip = klient_ip();
@@ -95,7 +105,7 @@ try {
   if (($cfg['mail_rezim'] ?? 'smtp') === 'soubor') { // zkušební režim: nic se neposílá, zapíše se do /data/odeslano-test
     @mkdir($DATA . '/odeslano-test', 0775, true);
     file_put_contents($DATA . '/odeslano-test/' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.json',
-      json_encode(['to' => $to, 'cc' => $p['cc'], 'reply_to' => $reply, 'predmet' => $predmet, 'telo' => $teloMail,
+      json_encode(['to' => $to, 'cc' => $cc, 'bcc' => $bcc, 'reply_to' => $reply, 'predmet' => $predmet, 'telo' => $teloMail,
         'prilohy' => array_column($prilohy, 'nazev')], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
     $odeslano = true;
   } else {
@@ -108,7 +118,8 @@ try {
     $m->SMTPSecure = ($cfg['smtp_secure'] ?? 'tls') === 'ssl' ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
     $m->setFrom($cfg['from'], 'Bezpečné dveře');
     foreach ($to as $a) $m->addAddress($a);
-    foreach ($p['cc'] as $a) $m->addCC($a);
+    foreach ($cc as $a) $m->addCC($a);
+    foreach ($bcc as $a) $m->addBCC($a);
     $m->addReplyTo($reply);
     $m->isHTML(true); $m->Subject = $predmet; $m->Body = $html; $m->AltBody = $teloMail;
     foreach ($prilohy as $a) $m->addAttachment($a['cesta'], $a['nazev']);
