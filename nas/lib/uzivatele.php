@@ -2,7 +2,8 @@
 // Uživatelé kartotéky: každý zaměstnanec má vlastní přihlášení a roli.
 //   admin = vše včetně správy uživatelů, odemykání záznamů a mazání; zam = běžná práce bez mazání a odemykání.
 // Přihlášení (od 3. 11. 2026): přihlašovací formulář + cookie (platí 30 dní), místo okna prohlížeče (HTTP Basic). Basic zůstává pro skripty.
-//   Zámek proti hádání hesla: 5 špatných pokusů (stejná IP + stejný login) = blokace na 10 minut; celkem 15 špatných z jedné IP za 10 minut = blokace IP.
+//   Zámek proti hádání hesla: 5 špatných pokusů (stejná IP + stejný login) = blokace na 2 minuty; celkem 15 špatných z jedné IP za 2 minuty = blokace IP.
+//   Země (od 4. 11. 2026): zadat login (formulář i Basic) jde jen z České republiky – přes Cloudflare podle hlavičky CF-IPCountry (musí být CZ). Z interní sítě (bez Cloudflare) bez omezení; už přihlášená cookie platí dál.
 //   Odhlášení: ke kterékoli stránce kartotéky připsat ?odhlasit=1.
 // Při prvním použití se tabulka založí a admin „Kučera Zd.“ převezme dosavadní přihlašovací údaje z config.php
 // (prehled_user / prehled_hash), takže se nic nemění. Zaměstnanci se přidávají na stránce uzivatele.php.
@@ -18,7 +19,14 @@ function uziv_init($pdo) {
 }
 
 // ── zámek proti hádání hesla (tabulka pokusy z lib/start.php: ip, typ, cas) ──
-if (!defined("UZ_POKUSU")) { define("UZ_POKUSU", 5); define("UZ_OKNO", 600); define("UZ_POKUSU_IP", 15); }
+if (!defined("UZ_POKUSU")) { define("UZ_POKUSU", 5); define("UZ_OKNO", 120); define("UZ_POKUSU_IP", 15); }
+// Zadání loginu jen z ČR: přes Cloudflare (tunel) musí hlavička CF-IPCountry být CZ; bez Cloudflare (interní síť) se neomezuje.
+function uziv_jen_cz() {
+  if (!pres_tunel()) return;
+  $zeme = strtoupper(trim((string)($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+  if ($zeme === '' || $zeme === 'CZ') return;   // hlavička chybí = zemi nelze zjistit, nezamykáme
+  http_response_code(403); header('Content-Type: text/plain; charset=utf-8'); exit('Přihlášení je možné jen z České republiky.');
+}
 function uziv_zamek_sekund($login) { // kolik sekund ještě trvá blokace (0 = neblokováno)
   try {
     $pdo = db(); $ip = klient_ip(); $od = time() - UZ_OKNO;
@@ -104,6 +112,7 @@ function uziv_overit($login = '', $heslo = '') {
   if (isset($_GET['odhlasit'])) { uziv_cookie_smazat(); unset($_COOKIE['bd_prihlaseni']); $login = ''; $heslo = ''; }
   // 1) skriptové přihlášení Basic
   if ((string)$login !== '') {
+    uziv_jen_cz();
     if (($t = uziv_zamek_sekund($login)) > 0) { http_response_code(429); header('Retry-After: ' . $t); exit('Příliš mnoho pokusů, zkuste to za ' . ceil($t / 60) . ' min.'); }
     $u = uziv_najit_a_overit($login, $heslo);
     if ($u) { uziv_zapsat_uspech($login); unset($u['hash']); return $u; }
@@ -111,13 +120,14 @@ function uziv_overit($login = '', $heslo = '') {
   }
   // 2) odeslaný přihlašovací formulář
   if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['bd_login_user'], $_POST['bd_login_pass'])) {
+    uziv_jen_cz();
     $lg = trim((string)$_POST['bd_login_user']); $pw = (string)$_POST['bd_login_pass'];
     if (($t = uziv_zamek_sekund($lg)) > 0) uziv_prihlasovaci_stranka('Příliš mnoho nesprávných pokusů. Zkuste to znovu za ' . max(1, (int)ceil($t / 60)) . ' min.', $lg);
     $u = uziv_najit_a_overit($lg, $pw);
     if (!$u) {
       uziv_zapsat_chybu($lg);
       $t = uziv_zamek_sekund($lg);
-      uziv_prihlasovaci_stranka($t > 0 ? 'Příliš mnoho nesprávných pokusů. Přihlášení je na 10 minut zablokované.' : 'Nesprávné jméno nebo heslo.', $lg);
+      uziv_prihlasovaci_stranka($t > 0 ? 'Příliš mnoho nesprávných pokusů. Přihlášení je na 2 minuty zablokované.' : 'Nesprávné jméno nebo heslo.', $lg);
     }
     uziv_zapsat_uspech($lg); uziv_cookie_nastavit($u);
     $to = (string)($_SERVER['REQUEST_URI'] ?? '/'); $to = preg_replace('/([?&])odhlasit(=[^&]*)?/', '$1', $to); if ($to === '' || $to[0] !== '/' || strpos($to, '//') === 0) $to = '/';
@@ -126,7 +136,7 @@ function uziv_overit($login = '', $heslo = '') {
   // 3) platná cookie
   if (($u = uziv_z_cookie())) { unset($u['hash']); return $u; }
   // 4) nepřihlášen: stránka v prohlížeči dostane formulář, ostatní (fetch apod.) čisté 401 bez okna prohlížeče
-  if (stripos((string)($_SERVER['HTTP_ACCEPT'] ?? ''), 'text/html') !== false && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === '') uziv_prihlasovaci_stranka();
+  if (stripos((string)($_SERVER['HTTP_ACCEPT'] ?? ''), 'text/html') !== false && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === '') { uziv_jen_cz(); uziv_prihlasovaci_stranka(); }
   http_response_code(401); header('Content-Type: text/plain; charset=utf-8'); exit('Přihlášení vypršelo – obnovte stránku a přihlaste se znovu.');
 }
 

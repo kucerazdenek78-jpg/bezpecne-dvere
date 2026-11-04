@@ -28,7 +28,7 @@ function db() {
 // požadavek přišel přes veřejný tunel (Cloudflare přidává tyto hlavičky; z vnitřní sítě je nemá)
 function pres_tunel() { return isset($_SERVER['HTTP_CF_CONNECTING_IP']) || isset($_SERVER['HTTP_CF_RAY']); }
 function klient_ip() { return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? ''; }
-// Od 3. 11. 2026 běží kartotéka bez Cloudflare Access: přihlašuje se formulářem (lib/uzivatele.php, zámek po 5 chybách na 10 minut).
+// Od 3. 11. 2026 běží kartotéka bez Cloudflare Access: přihlašuje se formulářem (lib/uzivatele.php, zámek po 5 chybách na 2 minuty).
 // Stránky přes tunel dál kontrolují přítomnost hlavičky Cf-Access-Jwt-Assertion, proto ji pro hostitele kartotéky doplníme (funguje s Access i bez něj).
 if (pres_tunel() && empty($_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'])
     && strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]) === strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app'))) {
