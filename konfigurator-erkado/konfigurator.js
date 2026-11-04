@@ -186,8 +186,8 @@
       if (nstd) out.push({ label: 'Rozměrově nestandardní světlík ' + name, cena: S.nestd });
       area += w * z.hc;
     }
-    if (st.sv.l) side('vlevo', z.l);
-    if (st.sv.p) side('vpravo', z.p);
+    if (st.sv.p) side('vlevo', z.p);   /* texty: pohled zevnitř (l/p = zvenku) */
+    if (st.sv.l) side('vpravo', z.l);
     if (st.sv.h) {
       var T = S.horni[k], w = z.sc + z.l + z.p, ci = pick(T.w, w), ri = pick(S.horniVysky, z.hv);
       if (ci < 0 || ri < 0 || z.hv < 100) out.push({ label: 'Horní světlík ' + w + ' × ' + z.hv + ' mm', cena: 0, pozn: 'Horní světlík ' + w + ' × ' + z.hv + ' mm je mimo ceník (šířka do ' + T.w[T.w.length - 1] + ', výška 200–500 mm) – cenu upřesníme.' });
@@ -257,7 +257,7 @@
     }
     var md = E.madla.filter(function (x) { return x.id === st.madlo; })[0];
     if (md) { var nM = madloMadlo() ? 2 : 1; L.push([(nM > 1 ? '2× ' : '') + md.nazev + ' ' + st.madloD + ' cm, ' + (st.madloB === 'cerna' ? 'černé' : 'inox'), nM * md.d[st.madloD][st.madloB === 'cerna' ? 1 : 0]]); }
-    ['h', 'l', 'p'].forEach(function (s) { if (st.rozs[s]) L.push(['Rozšíření rámu ' + { h: 'nahoře', l: 'vlevo', p: 'vpravo' }[s] + ' (' + (k === 'h88' ? 30 : 28) + ' mm)', E.rozsireniRamu]); });
+    ['h', 'l', 'p'].forEach(function (s) { if (st.rozs[s]) L.push(['Rozšíření rámu ' + { h: 'nahoře', l: 'vpravo', p: 'vlevo' }[s] + ' (' + (k === 'h88' ? 30 : 28) + ' mm)', E.rozsireniRamu]); });
     svetliky().forEach(function (x) { L.push([x.label, x.cena]); if (x.pozn) info.push(x.pozn); });
     E.vybava.forEach(function (v) { if (st.vyb[v.id]) L.push([v.nazev, v.cena]); });
     var dvere = L.reduce(function (a, l) { return a + l[1]; }, 0);
@@ -389,10 +389,10 @@
     var chk = function (id, on, t, sub) { return '<label class="pq-check"><input type="checkbox" data-sv="' + id + '"' + (on ? ' checked' : '') + '><span><b>' + t + '</b><small>' + sub + '</small></span></label>'; };
     var h = chk('h', st.sv.h, 'Horní světlík', 'Šířka = zárubeň + boční světlíky (' + (z.sc + z.l + z.p) + ' mm), výška 200–500 mm.') +
       (st.sv.h ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Výška horního světlíku (mm)<input type="number" id="kfSvHv" min="200" max="500" step="10" value="' + esc(st.sv.hv) + '"><small>Ceník: 200, 300, 400, 500 mm</small></label></div>' : '') +
-      chk('l', st.sv.l, 'Boční světlík vlevo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
-      (st.sv.l ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka levého světlíku (mm)<input type="number" id="kfSvLw" min="200" max="800" step="10" value="' + esc(st.sv.lw) + '"><small>Ceník po 100 mm</small></label></div>' : '') +
-      chk('p', st.sv.p, 'Boční světlík vpravo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
-      (st.sv.p ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka pravého světlíku (mm)<input type="number" id="kfSvPw" min="200" max="800" step="10" value="' + esc(st.sv.pw) + '"><small>Ceník po 100 mm</small></label></div>' : '');
+      chk('p', st.sv.p, 'Boční světlík vlevo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
+      (st.sv.p ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka levého světlíku (mm)<input type="number" id="kfSvPw" min="200" max="800" step="10" value="' + esc(st.sv.pw) + '"><small>Ceník po 100 mm</small></label></div>' : '') +
+      chk('l', st.sv.l, 'Boční světlík vpravo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
+      (st.sv.l ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka pravého světlíku (mm)<input type="number" id="kfSvLw" min="200" max="800" step="10" value="' + esc(st.sv.lw) + '"><small>Ceník po 100 mm</small></label></div>' : '');
     if (anySv()) h += '<div class="kf-sub">Sklo ve světlících</div><div class="pq-chips">' + [['std', 'Standardní', ''], ['p4', 'Bezpečnostní P4', S.m2.p4], ['zrcadlo', 'Polopropustné zrcadlo', S.m2.zrcadlo], ['bila', 'Matné bílé / průhledné', S.m2.bila], ['seda', 'Matné šedé / průhledné', S.m2.seda]].map(function (o) {
       return '<label class="pq-opt pq-chip">' + radio('svSklo', o[0], st.sv.sklo === o[0]) + o[1] + (o[2] ? ' <em>+ ' + kc(o[2]) + '/m²</em>' : '') + '</label>';
     }).join('') + '</div><div class="pq-note">Světlíky jen s hliníkovou zárubní (zapne se sama). Cena je za nejbližší vyšší rozměr z ceníku, u nestandardního rozměru + 665 Kč. Dveře se světlíky nemají zkoušku RC2. Rozměry jsou vně rámu (str. 62–63).</div>';
@@ -451,7 +451,7 @@
       var lock = v.id === 'samozavirac' && (st.vyb.elektro || madloMadlo());
       return '<label class="pq-check' + (why ? ' off' : '') + '"><input type="checkbox" data-vyb="' + v.id + '"' + (st.vyb[v.id] ? ' checked' : '') + (why || lock ? ' disabled' : '') + '><span><b>' + v.nazev + '</b><small>' + (why ? 'Nejde: ' + why + '. ' : '') + (lock ? 'Nutný k elektromechanickému zámku. ' : '') + (v.info ? esc(v.info) + ' ' : '') + 'Str. ' + v.str + '.</small></span><em>+ ' + kc(v.cena) + '</em></label>';
     }).join('') + '<div class="kf-sub" style="margin-top:1rem">Rozšíření rámu <small style="font-weight:500;color:var(--text-muted)">' + (st.kon === 'h88' ? '30' : '28') + ' mm, ' + kc(E.rozsireniRamu) + ' za kus (str. 70)</small></div>' +
-      [['h', 'Nahoře'], ['l', 'Vlevo'], ['p', 'Vpravo']].map(function (o) { return '<label class="pq-check"><input type="checkbox" data-rozs="' + o[0] + '"' + (st.rozs[o[0]] ? ' checked' : '') + '><span><b>Rozšíření rámu ' + o[1].toLowerCase() + '</b></span><em>+ ' + kc(E.rozsireniRamu) + '</em></label>'; }).join('');
+      [['h', 'Nahoře'], ['p', 'Vlevo'], ['l', 'Vpravo']].map(function (o) { return '<label class="pq-check"><input type="checkbox" data-rozs="' + o[0] + '"' + (st.rozs[o[0]] ? ' checked' : '') + '><span><b>Rozšíření rámu ' + o[1].toLowerCase() + '</b></span><em>+ ' + kc(E.rozsireniRamu) + '</em></label>'; }).join('');
   }
   /* doprava se počítá s montáží, nebo bez montáže při volbě „doprava na adresu“ */
   function doruc() { return st.montaz || st.odber === 'doprava'; }
@@ -494,7 +494,7 @@
   function svText() {
     if (!anySv()) return 'bez světlíků';
     var z = svSize(), a = [];
-    if (st.sv.l) a.push('vlevo ' + z.l + ' mm'); if (st.sv.p) a.push('vpravo ' + z.p + ' mm'); if (st.sv.h) a.push('nahoře výška ' + z.hv + ' mm');
+    if (st.sv.p) a.push('vlevo ' + z.p + ' mm'); if (st.sv.l) a.push('vpravo ' + z.l + ' mm'); if (st.sv.h) a.push('nahoře výška ' + z.hv + ' mm');
     return a.join(', ') + (st.sv.sklo !== 'std' ? ', sklo ' + { p4: 'P4', zrcadlo: 'polopropustné zrcadlo', bila: 'matné bílé', seda: 'matné šedé' }[st.sv.sklo] : '');
   }
   function sizeText() {

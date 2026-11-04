@@ -473,12 +473,17 @@
     if (!OBJ) d.objednavka_odkaz = orderLink(d);
     return d;
   }
-  /* odkaz „Vytvořit objednávku“: byt → objednavka-nova.html (jedny dveře, plná konfigurace), dům a interiér → objednavka-vice.html (víc položek) */
+  /* odkaz „Vytvořit objednávku“: koncový zákazník (byt, dům i interiér) → objednavka-nova.html (jedny dveře); firma / OSVČ na dům a interiér → objednavka-vice.html (víc položek) */
   function orderLink(d) {
     var o;
     if (d.kategorie === 'byt' && d.polozky[0] && d.polozky[0].cfg) {
       var c = d.polozky[0].cfg; o = { cislo: d.obj_cislo, jmeno: d.jmeno, prijmeni: d.prijmeni, telefon: d.telefon, email: d.email, ulice: d.ulice, mesto: d.mesto, psc: d.psc, poznamka: d.poznamka };
       ['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'].forEach(function (k) { if (c[k]) o[k] = c[k]; });
+      return new URL('objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
+    }
+    if (!(d.ic || /firma|OSVČ/i.test(d.fakturace || ''))) {   /* koncový zákazník (ne firma / OSVČ) → vždy objednávka jedněch dveří */
+      o = { cislo: d.obj_cislo, jmeno: d.jmeno, prijmeni: d.prijmeni, telefon: d.telefon, email: d.email, ulice: d.ulice, mesto: d.mesto, psc: d.psc, poznamka: d.poznamka };
+      Object.keys(o).forEach(function (k) { if (!o[k]) delete o[k]; });
       return new URL('objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
     }
     o = JSON.parse(JSON.stringify(d)); delete o.objednavka_odkaz;
@@ -982,6 +987,12 @@
       var t = h.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '=';
       var bin = atob(t), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
       var o = JSON.parse(new TextDecoder().decode(u));
+      if (OBJ && !(o.ic || /firma|OSVČ/i.test(o.fakturace || ''))) {   /* koncový zákazník (ne firma / OSVČ) → objednávka jedněch dveří, i když odkaz vedl sem (poptávka, nabídka, kartotéka) */
+        var o1 = { cislo: o.obj_cislo || o.cislo };
+        ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka'].forEach(function (n) { if (o[n]) o1[n] = o[n]; });
+        location.replace(new URL('objednavka-nova.html', location.href).href + location.search + '#d=' + b64u(JSON.stringify(o1)));
+        return;
+      }
       ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka'].forEach(function (n) { if (o[n] && form.elements[n]) form.elements[n].value = o[n]; });
       st.fromRef = o.cislo || '';
       var m = katMod(o.model_kod);
@@ -1082,6 +1093,7 @@
     kMsg('Načítám rozpracovanou nabídku…');
     fetch(KONC_URL + '?id=' + m[1] + '&t=' + m[2], { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j.ok || !j.data) throw new Error('x');
+      if (j.data.radios && j.data.fields) { location.replace(new URL('objednavka-nova.html', location.href).href + location.search + location.hash); return; }   /* rozpracovaná objednávka jedněch dveří (objednavka-nova.html) uložená do stejného seznamu */
       st.konc = { id: +m[1], t: m[2] }; kRestore(j.data);
       var pdfOk = j.rozpocet_pdf > 0 ? kNactiPdf(j.data).then(function () { return true; }).catch(function () { return false; }) : Promise.resolve(null);
       pdfOk.then(function (ok) {
