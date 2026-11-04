@@ -478,7 +478,7 @@
     var m = M(), rows = [
       ['Dveře', 'ERKADO ' + typName(m, st.typ) + ' · ' + st.prov],
       ['Konstrukce', KON[st.kon].nazev + ', ' + zarText() + ' zárubeň'],
-      ['Otevírání', (st.strana === 'P' ? 'levé' : 'pravé') + ', ' + (st.smer === 'ven' ? 'ven' : 'dovnitř')],
+      ['Otevírání', (st.strana === 'P' ? 'levé' : 'pravé') + ', ' + (st.smer === 'ven' ? 'ven' : 'dovnitř') + ' (pohled zevnitř)'],
       ['Rozměr', sizeText()],
       ['Dekor', DEK[st.dekor][1] + (st.dvou !== 'ne' ? ', zevnitř ' + DEK[st.dekor2][1] + (st.dvou === 'komplet' ? ' (křídlo i rám)' : ' (křídlo)') : '')],
       ['Zasklení', zasklTyp() ? SKLO.filter(function (s) { return s[0] === st.sklo; })[0][1] + (st.rc2 ? ', RC2' : '') : 'bez zasklení / dle vzoru'],
@@ -621,7 +621,7 @@
       model: 'ERKADO ' + typName(m, st.typ), model_kod: 'erkado-' + slug(m, st.typ), odstin: DEK[st.dekor][1], provedeni: st.prov,
       konfigurace: {
         rada: m.nazev, vzor: st.typ, provedeni: st.prov, konstrukce: KON[st.kon].nazev, zarubne: zarText(),
-        otevirani: (st.strana === 'P' ? 'levé' : 'pravé') + ', ' + (st.smer === 'ven' ? 'ven' : 'dovnitř'),
+        otevirani: (st.strana === 'P' ? 'levé' : 'pravé') + ', ' + (st.smer === 'ven' ? 'ven' : 'dovnitř') + ' (pohled zevnitř)',
         sirka: st.sirka, sc_mm: curSc() || null, hc_mm: curHc() || null, rozmer: sizeText(),
         dekor: DEK[st.dekor][1], dekor_zevnitr: st.dvou !== 'ne' ? DEK[st.dekor2][1] : '', dvoubarevne: st.dvou,
         zaskleni: zasklTyp() ? st.sklo : '', zaskleni_rc2: st.rc2, kovani: kovText(), madlo: madloText(), vlozky_trida: st.tridaC ? 'C' : 'B', odstin_skla: st.odstin, svetliky: svText(), rozsireni_ramu: Object.keys(st.rozs), vybava: Object.keys(st.vyb), katalog: E.katalog, strana_katalogu: m.str
@@ -887,7 +887,7 @@
     var t0 = b.textContent; b.disabled = true; b.textContent = 'Připravuji…';
     vizImage().then(function (img) {
       var m = M(), r = calc();
-      var ok = lsSet(VIZ_KEY, { img: img, nazev: 'ERKADO ' + typName(m, st.typ), popis: [PROV[st.prov] ? PROV[st.prov][1].split('|')[0] : st.prov, DEK[st.dekor][1], KON[st.kon].nazev, (st.strana === 'P' ? 'levé' : 'pravé') + ' ' + (st.smer === 'ven' ? 'ven' : 'dovnitř')].join(' · '),
+      var ok = lsSet(VIZ_KEY, { img: img, nazev: 'ERKADO ' + typName(m, st.typ), popis: [PROV[st.prov] ? PROV[st.prov][1].split('|')[0] : st.prov, DEK[st.dekor][1], KON[st.kon].nazev, (st.strana === 'P' ? 'levé' : 'pravé') + ' ' + (st.smer === 'ven' ? 'ven' : 'dovnitř') + ' (zevnitř)'].join(' · '),
         cena: kc(r.total) + ' s DPH', svetliky: anySv(), zpet: new URL('konfigurator-erkado.html#viz-zpet', location.href).href, ts: Date.now() }) &&
         lsSet(VIZ_ST, { st: st, form: formVals(), ts: Date.now() });
       if (!ok) throw new Error('storage');
