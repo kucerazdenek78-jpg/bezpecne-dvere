@@ -61,7 +61,7 @@ ať je všechno aktuální** (pravidlo od Zdenka 11. 10. 2026):
 
 ## Ceník pro prodejce (pokaždé, když se změní ceny/akce vchodových dveří)
 Od 4. 11. 2026 **není na webu**: leží na NAS `cenik.php` (za přihlášením do kartotéky, odkaz z `nastroje.php`) jako statický výtah z webu (`dvere-do-bytu.html`, `MODELS` v `poptavka-dvere.js`).
-Panel prodejce `panel.html` jen přesměruje na `https://kartoteka.dvere.app/nastroje.php`; zámek 🔒 v patičkách vede tamtéž. PDF předlohy (`prodejce-soubor.php`) se berou z NAS `data/prodejce-soubory` (pod stejným názvem se dají nahradit).
+Panel prodejce `panel.html` jen přesměruje na `https://kartoteka.dvere.app/nastroje.php`; zámek 🔒 v patičkách vede rovnou do kartotéky (kartoteka.dvere.app, Úvod; Nástroje jsou v jejím menu). PDF předlohy (`prodejce-soubor.php`) se berou z NAS `data/prodejce-soubory` (pod stejným názvem se dají nahradit).
 Při změně cen, příplatků nebo akcí upravit `cenik.php` na NAS a PDF ceníku znovu vygenerovat (Playwright `page.pdf`, A4, okraje 12 mm) a nahrát do `data/prodejce-soubory`; datum „stav k" aktualizovat.
 
 ## Uvítací antré k novému webu (dočasné)
