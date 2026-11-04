@@ -205,12 +205,41 @@
   </div>
 </div>
 
+<style>
+.nd-box{background:var(--bg-alt);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:3rem}
+.nd-box h2{margin:0 0 .4rem}
+.nd-form{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;margin:1rem 0}
+.nd-form label{display:flex;flex-direction:column;gap:.3rem;font-weight:600;color:var(--head);font-size:.9rem}
+.nd-form input{padding:.7rem .8rem;border:1px solid var(--gray-400);border-radius:var(--radius);font-size:1.05rem;width:11rem;max-width:100%;background:#fff;color:var(--text)}
+.nd-h{margin:1.25rem 0 .5rem;color:var(--head)}
+.nd-mrizka{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.nd-karta{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;min-width:0}
+.nd-karta h3{margin:0 0 .4rem;font-size:1.05rem;color:var(--head)}
+.nd-karta ul{margin:0;padding-left:1.1rem}
+.nd-ok{border:2px solid #15803d}
+.nd-ne,.nd-vstup{color:var(--text-muted);font-size:.9rem}
+</style>
+<!-- HLEDAČ DVEŘÍ PODLE ROZMĚRU OTVORU (najdi-dvere.js) -->
+<section id="najdi-dvere" style="padding:2.5rem 0 0;">
+  <div class="container">
+    <div class="nd-box">
+      <h2>Jaké dveře se vám do otvoru vejdou?</h2>
+      <p class="nd-ne" style="margin:0;">Zadejte rozměr otvoru, do kterého dveře půjdou, a ukážeme vám vyhovující dveře. Rozměr můžete napsat v centimetrech (např. 110) nebo v milimetrech (1100). Výšku měřte od podlahy.</p>
+      <form class="nd-form" id="ndForm" novalidate>
+        <label>Šířka otvoru<input id="ndSirka" inputmode="decimal" placeholder="např. 110 cm" autocomplete="off"></label>
+        <label>Výška otvoru od podlahy<input id="ndVyska" inputmode="decimal" placeholder="např. 215 cm" autocomplete="off"></label>
+      </form>
+      <div id="ndVysledek" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
 <!-- OBSAH -->
 <section>
   <div class="container">
 
     <!-- OPTIMAL 60 -->
-    <div style="margin-bottom:4rem;">
+    <div style="margin-bottom:4rem;" id="optimal-60">
       <span class="section-label">Celohliníkové dveře</span>
       <h2 style="margin-bottom:0.5rem;">OPTIMAL 60</h2>
       <span class="stock-tag">✓ Skladem – expedice druhý den</span>
@@ -275,7 +304,7 @@
     <hr style="border:none;border-top:1px solid var(--gray-200);margin:3rem 0;">
 
     <!-- OPTIMAL 75 -->
-    <div style="margin-bottom:4rem;">
+    <div style="margin-bottom:4rem;" id="optimal-75">
       <span class="section-label">Celohliníkové dveře</span>
       <h2 style="margin-bottom:0.5rem;">OPTIMAL 75</h2>
       <span class="stock-tag">✓ Skladem – expedice druhý den</span>
@@ -682,6 +711,8 @@
 <script src="form-submit.js?v=20261024a"></script>
 <script src="cookies.js?v=5" defer></script>
 <script src="bonus.js?v=20261025c" defer></script>
+<script src="konfigurator-erkado/erkado-data.js?v=20261024g"></script>
+<script src="najdi-dvere.js?v=20261104a" defer></script>
 <script src="konfigurator-start.js?v=20261025c" defer></script>
 <script src="servisni-knizka.js?v=20261025c"></script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>
