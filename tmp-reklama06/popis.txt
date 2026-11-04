@@ -1,0 +1,2 @@
+Katalog A4 – konfigurátor a objednávka
+Strana A4 do tištěného katalogu: konfigurátor dveří do bytu, konfigurátor ERKADO, aplikace na vyzkoušení dveří na fotce a postup objednávky (6 kroků). QR kódy vedou na poptavka-dvere.html, konfigurator-erkado.html a aplikace/. Do tiskárny posílejte verzi se spadávkou 3 mm.

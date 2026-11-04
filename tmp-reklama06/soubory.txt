@@ -1,0 +1,3 @@
+konfigurator-objednavka-a4-spadavka-3mm.pdf | Pro tiskárnu – A4 se spadávkou 3 mm (216 × 303 mm)
+konfigurator-objednavka-a4.pdf | A4 bez spadávky (210 × 297 mm) – pro tisk v kanceláři a e-mail
+nahled-a4.png | Náhled strany (obrázek)
