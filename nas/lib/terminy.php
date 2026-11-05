@@ -157,6 +157,7 @@ function terminy_akce(PDO $pdo): string {
 
 // pruh pod horní lištou na úvodní stránce (jen když je co hlídat)
 function terminy_banner(): void {
+  if (is_file(__DIR__ . '/navaznost.php')) { try { require_once __DIR__ . '/navaznost.php'; vz_box(0); } catch (Throwable $e) {} }   // 5. 11. 2026: dotaz, které poptávky uzavřít (lib/navaznost.php)
   try {
     $pdo = db(); terminy_tabulky($pdo);
     $zprava = terminy_akce($pdo);

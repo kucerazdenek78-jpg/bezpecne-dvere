@@ -12,8 +12,8 @@
 //  - zaznamenané předání dveří (predano_dne) → Vyřízeno
 //  - (30. 10. 2026) poptávka, ze které vznikla nabídka nebo objednávka, a nabídka, ze které vznikla objednávka → Vyřízeno
 //    (vazba podle čísla v z_poptavky / z_nabidky odeslané nabídky či objednávky; mění se jen Nové / Rozpracováno / Odeslána)
-//  - (5. 11. 2026) navíc vazba podle zákazníka (telefon – posledních 9 číslic – nebo e-mail), když objednávka / nabídka nemá číslo zdroje:
-//    1 : 1, každá uzavře jen nejbližší starší poptávku (nabídku) vzniklou po předchozí nabídce / objednávce téhož zákazníka
+//  - (5. 11. 2026) když objednávka / nabídka nemá číslo zdroje, NEuzavírá se nic samo: lib/navaznost.php se na úvodní stránce zeptá,
+//    které otevřené poptávky (nabídky) téhož zákazníka (telefon / e-mail) uzavřít – odpověď zpracuje navaznost.php
 //  - (31. 10. 2026) nabídka poslaná zákazníkovi (má e-mail) ve stavu Nové → Odeslána
 // Storno a Vyřízeno se nikdy nepřepisují; E-mail se neodeslal jen přijatou zálohou; stav se vrací zpět jen při vrácení zboží ze skladu.
 // Volá se při každém otevření kartotéky / stránky Dodavatel a po spárování platby (platby.php).
@@ -80,9 +80,7 @@ function bd_zak_klice(array $d, string $email = ''): array {
 }
 
 // Poptávka, ze které vznikla nabídka nebo objednávka (z_poptavky / z_nabidky = její číslo), a nabídka, ze které vznikla objednávka → Vyřízeno.
-// Když číslo chybí (nabídka / objednávka nevznikla tlačítkem ze zdroje), páruje se podle zákazníka (telefon / e-mail) 1 : 1:
-// každá nabídka / objednávka uzavře nejvýš JEDEN zdroj – ten nejbližší starší, který vznikl až po předchozí nabídce / objednávce téhož zákazníka.
-// Starší poptávky téhož zákazníka se tak nikdy hromadně neuzavřou (5. 11. 2026, upřesnění od Zdeňka).
+// Bez čísla se nic samo neuzavírá – dotaz s potvrzením je v lib/navaznost.php (5. 11. 2026, přání Zdeňka).
 // Mění se jen Nové / Rozpracováno / Odeslána (ručně nastavený jiný stav, Storno apod. zůstává).
 function bd_stavy_navaznost(PDO $pdo, PDOStatement $up): void {
   $vse = $pdo->query("SELECT id, typ, cislo, email, stav, vytvoreno, data_json FROM zadosti WHERE typ IN ('poptavka','nabidka','objednavka_interni') ORDER BY vytvoreno, id")->fetchAll(PDO::FETCH_ASSOC);
@@ -105,26 +103,6 @@ function bd_stavy_navaznost(PDO $pdo, PDOStatement $up): void {
     [$druh, $cis] = $odkud[$r['n']];
     if ($r['typ'] === 'nabidka' && $druh !== 'objednávka') continue;   // nabídka je vyřízená až objednávkou
     $vazby[$r['id']] = [$druh, $cis, ''];
-  }
-  // 2) vazba podle zákazníka 1 : 1 (jen nabídky / objednávky bez čísla zdroje)
-  //    poptávky: uzavírá je nabídka i objednávka; nabídky: uzavírá je jen objednávka
-  foreach ([['poptavka', ['nabidka', 'objednavka_interni']], ['nabidka', ['objednavka_interni']]] as [$zdrojTyp, $cilTypy]) {
-    $pouzite = [];
-    foreach ($zaznamy as $i => $c) {
-      if (!in_array($c['typ'], $cilTypy, true) || $c['stav'] === 'storno' || !$c['klice']) continue;
-      // předchozí nabídka / objednávka téhož zákazníka (hranice okna)
-      $od = '';
-      for ($j = $i - 1; $j >= 0; $j--) { $p = $zaznamy[$j]; if (in_array($p['typ'], $cilTypy, true) && $p['stav'] !== 'storno' && array_intersect($p['klice'], $c['klice'])) { $od = (string)$p['vytvoreno']; break; } }
-      if ($c['odkaz']) continue;   // má číslo zdroje → vazba podle čísla, podle zákazníka nic dalšího neuzavírá
-      for ($j = $i - 1; $j >= 0; $j--) {
-        $z = $zaznamy[$j];
-        if ($od !== '' && strcmp((string)$z['vytvoreno'], $od) < 0) break;   // starší než předchozí nabídka / objednávka – už ne
-        if ($z['typ'] !== $zdrojTyp || isset($pouzite[$z['id']]) || !array_intersect($z['klice'], $c['klice'])) continue;
-        $pouzite[$z['id']] = true;
-        if (!isset($vazby[$z['id']])) { $spol = array_values(array_intersect($z['klice'], $c['klice']))[0]; $vazby[$z['id']] = [$c['typ'] === 'nabidka' ? 'nabídka' : 'objednávka', $c['cis'], ' (stejný zákazník – ' . ($spol[0] === 't' ? 'telefon' : 'e-mail') . ')']; }
-        break;   // jen jeden zdroj
-      }
-    }
   }
   foreach ($zaznamy as $r) {
     if (!isset($vazby[$r['id']]) || !in_array($r['stav'], ['nove', 'rozpracovano', 'odeslana'], true) || !in_array($r['typ'], ['poptavka', 'nabidka'], true)) continue;
