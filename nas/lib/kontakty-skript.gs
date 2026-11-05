@@ -14,6 +14,9 @@ const SKUPINA = 'Zákazníci Bezpečné dveře';
 const PRIPONA_JMENA = '';                   // např. ' (BD)' – přidá se za příjmení u nově založených kontaktů; prázdné = nic
 const MAX_ZAPISU = 120;                     // zápisů za jedno spuštění (Google omezuje rychlost), zbytek se dodělá příště
 
+// spusťte, když Google hlásí chybějící oprávnění (např. ke kalendáři) – vyvolá znovu okno s povolením
+function povolit() { ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL); console.log('Oprávnění v pořádku.'); }
+
 function nastavit() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'synchronizovat') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('synchronizovat').timeBased().everyMinutes(30).create();
