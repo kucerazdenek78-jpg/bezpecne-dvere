@@ -440,6 +440,7 @@
     $$('#vizCat .cat').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-c') === V.cat); });
   }
   function setModel(m) {
+    if (m === 'domovni') { location.href = konfUrl('foto'); return; }   // dveře do domu: všechny dekory jsou v konfigurátoru (krok Konečný vzhled)
     if (!VIZ[m]) return; vizModel = m; shadeIdx = VIZ[m].def; decIdx = 0; frameIdx = 0;
     $$('#vizModel .b').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-m') === m); });
     buildShades(); setLock(locked); loadDoor(shadeIdx, function () { render(); });

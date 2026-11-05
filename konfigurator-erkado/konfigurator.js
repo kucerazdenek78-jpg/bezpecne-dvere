@@ -932,6 +932,7 @@
   /* předvolba z odkazu: #horn-4 */
   var h = (location.hash || '').replace('#', '').toLowerCase().split('-');
   if (h[0] && MOD[h[0]]) { st.model = h[0]; st.typ = +h[1] || MOD[h[0]].typy[0]; st.prov = MOD[h[0]].provedeni[0]; }
+  if (h[0] === 'foto') { st.step = 5; }   // „Vyzkoušet na fotce“ ze stránky Dveře do domu: rovnou konečný vzhled, kde jsou všechny dekory
   window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf, vizImage: vizImage };
   render(); showVizRes();
   if (st.step === 5 && vizRes) setTimeout(function () { var e = $('kfVizRes'); if (e) e.scrollIntoView({ block: 'center' }); }, 300);
