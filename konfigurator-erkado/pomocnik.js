@@ -127,6 +127,8 @@
     var KF = window.KF, s = KF.state, r = KF.calc(), o = {
       rada: s.model, vzor: s.typ, provedeni: s.prov, konstrukce: s.kon, zarubne: s.zar, otevirani: (s.strana === 'P' ? 'levé' : 'pravé') + ', ' + (s.smer === 'ven' ? 'ven' : 'dovnitř') + ' (pohled zevnitř)',
       sirka: s.sirka, dekor: s.dekor, dvoubarevne: s.dvou, dekor_zevnitr: s.dvou === 'ne' ? undefined : s.dekor2, sklo: s.sklo, rc2: s.rc2, kovani: s.kov, kovani_povrch: s.kovB, madlo: s.madlo, madlo_delka: s.madloD, madlo_povrch: s.madloB,
+      vyska_mm: s.vyska === 'miru' ? s.hc : 'standardní', sirka_mm: s.sirka === 'miru' ? s.sc : undefined,
+      svetlik_horni_mm: s.sv.h ? s.sv.hv : 0, svetlik_vlevo_mm: s.sv.p ? s.sv.pw : 0, svetlik_vpravo_mm: s.sv.l ? s.sv.lw : 0,
       montaz: s.montaz, odber: s.odber, cena_s_dph: r && r.sDph, cena_celkem_s_dopravou_a_montazi: r && r.total
     };
     if (lastNote) o.upraveno_konfiguratorem = lastNote;
@@ -143,11 +145,20 @@
       if (k === 'model' && n.model !== s.model) { s.typ = 1; s.prov = ''; }   // normalize() doplní platný vzor a provedení
       s[k] = k === 'typ' ? +n[k] : n[k]; chtene[k] = s[k];
     });
+    // rozměry na míru a světlíky (mm); u světlíků 0 = zrušit
+    var rozm = [];
+    if ('vyska_mm' in n) { s.vyska = 'miru'; s.hc = String(n.vyska_mm); chtene.vyska = 'miru'; rozm.push(['hc', String(n.vyska_mm)]); }
+    if ('sirka_mm' in n) { s.sirka = 'miru'; s.sc = String(n.sirka_mm); chtene.sirka = 'miru'; rozm.push(['sc', String(n.sirka_mm)]); }
+    [['sv_h', 'h', 'hv'], ['sv_p', 'p', 'pw'], ['sv_l', 'l', 'lw']].forEach(function (x) {
+      if (!(x[0] in n)) return;
+      if (n[x[0]] > 0) { s.sv[x[1]] = true; s.sv[x[2]] = String(n[x[0]]); chtene['sv.' + x[1]] = true; } else { s.sv[x[1]] = false; }
+    });
     if (n.dvou && n.dvou !== 'ne' && !n.dekor2) { s.dekor2 = s.dekor2 === s.dekor ? 'bily-mat' : s.dekor2; }
     s.step = Math.min(s.step, 2);
     KF.render();
     var zm = [];
-    Object.keys(chtene).forEach(function (k) { if (String(s[k]) !== String(chtene[k])) zm.push(k + ': chtěl jsem ' + chtene[k] + ', konfigurátor nastavil ' + s[k]); });
+    rozm.forEach(function (r) { if (String(s[r[0]]) !== r[1]) zm.push(r[0] + ': chtěl jsem ' + r[1] + ', konfigurátor má ' + s[r[0]]); });
+    Object.keys(chtene).forEach(function (k) { if (k.indexOf('sv.') === 0) { if (!s.sv[k.slice(3)]) zm.push(k + ': světlík se nepodařilo zapnout'); return; } if (String(s[k]) !== String(chtene[k])) zm.push(k + ': chtěl jsem ' + chtene[k] + ', konfigurátor nastavil ' + s[k]); });
     lastNote = zm.join('; ');
     try { var kf = document.querySelector('.kf-prev, #kfPrev'); if (kf && kf.scrollIntoView && window.innerWidth > 980) kf.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
   }
