@@ -1,0 +1,491 @@
+{
+ "modely": [
+  {
+   "id": "horn",
+   "typy": [
+    1,
+    2,
+    4,
+    5
+   ],
+   "provedeni": [
+    "PLAIN GLASS",
+    "PLAIN LACOBEL GLASS",
+    "PLAIN LACOBEL DUO GLASS"
+   ]
+  },
+  {
+   "id": "langen",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "trebur",
+   "typy": [
+    1,
+    2,
+    4,
+    7,
+    8,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "arendal",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "provedeni": [
+    "FRAME",
+    "FRAME BLACK STR"
+   ]
+  },
+  {
+   "id": "wels",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "bazylea",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "lahti",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "helmond",
+   "typy": [
+    1,
+    2,
+    3
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX",
+    "LABEL DIAMOND GLASS"
+   ]
+  },
+  {
+   "id": "utrecht",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "fryburg",
+   "typy": [
+    3,
+    4,
+    5,
+    6
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "leimen",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "amberg",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "linden",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "murter",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "rotterdam",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "ebern",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "wiener",
+   "typy": [
+    1,
+    2,
+    3
+   ],
+   "provedeni": [
+    "PLAIN GLASS",
+    "LABEL DIAMOND GLASS",
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "sion",
+   "typy": [
+    1,
+    2
+   ],
+   "provedeni": [
+    "LABEL DIAMOND GLASS"
+   ]
+  },
+  {
+   "id": "singen",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "selters",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "samedan",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "roding",
+   "typy": [
+    1,
+    2
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "melk",
+   "typy": [
+    1,
+    2
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "lucerna",
+   "typy": [
+    1,
+    2
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "kreben",
+   "typy": [
+    1,
+    2
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "leoben",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "alta",
+   "typy": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "provedeni": [
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "lutter",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "STAMP ROLLER"
+   ]
+  },
+  {
+   "id": "biene",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "STAMP BLACK STR",
+    "STAMP INOX",
+    "LABEL BLACK STR",
+    "LABEL INOX"
+   ]
+  },
+  {
+   "id": "kella",
+   "typy": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "provedeni": [
+    "STAMP"
+   ]
+  },
+  {
+   "id": "solid",
+   "typy": [
+    0
+   ],
+   "provedeni": [
+    "SOLID"
+   ]
+  }
+ ],
+ "dekory": [
+  "bily-mat",
+  "dub-turner",
+  "hedvabny-antracit",
+  "hladky-antracit",
+  "strukturovany-antracit",
+  "cerna",
+  "dub-antracit",
+  "seda",
+  "bahenni-dub",
+  "dub-stredne-hnedy",
+  "orech",
+  "dub-zlaty",
+  "winchester",
+  "borovice-horska",
+  "borovice-bila",
+  "dub-prirodni",
+  "dub-prirodni-pricny",
+  "dub-surovy"
+ ],
+ "konstrukce": [
+  "h88",
+  "h78",
+  "t78",
+  "t64"
+ ],
+ "sirky": [
+  "80N",
+  "80",
+  "90N",
+  "90",
+  "100"
+ ],
+ "madla": [
+  "K35",
+  "KK35",
+  "KP",
+  "KPL2",
+  "OP",
+  "P6K"
+ ],
+ "skla": [
+  "std",
+  "benat",
+  "bila",
+  "seda"
+ ],
+ "text": "ŘADY (id | název | čísla vzorů | provedení):\nhorn | HORN | vzory: 1,2,4,5 | provedení: PLAIN GLASS / PLAIN LACOBEL GLASS / PLAIN LACOBEL DUO GLASS\nlangen | LANGEN | vzory: 1,2,3,4,5,6,7,8,9,10,11,12 | provedení: LABEL BLACK STR / LABEL INOX\ntrebur | TREBUR | vzory: 1,2,4,7,8,10,11,12,13,14 | provedení: LABEL BLACK STR / LABEL INOX\narendal | ARENDAL | vzory: 1,2,3,4,5,6,7,8,9,10,11 | provedení: FRAME / FRAME BLACK STR\nwels | WELS | vzory: 1,2,3,4,5,7 | provedení: LABEL BLACK STR / LABEL INOX\nbazylea | BAZYLEA | vzory: 1,2,3,4,5 | provedení: LABEL BLACK STR / LABEL INOX\nlahti | LAHTI | vzory: 1,2,3,4,5,6 | provedení: LABEL BLACK STR / LABEL INOX\nhelmond | HELMOND | vzory: 1,2,3 | provedení: LABEL BLACK STR / LABEL INOX / LABEL DIAMOND GLASS\nutrecht | UTRECHT | vzory: 1,2,3,4,5 | provedení: LABEL BLACK STR / LABEL INOX\nfryburg | FRYBURG | vzory: 3,4,5,6 | provedení: LABEL BLACK STR / LABEL INOX\nleimen | LEIMEN | vzory: 1,2,3,4,5 | provedení: LABEL BLACK STR / LABEL INOX\namberg | AMBERG | vzory: 1,2,3,4 | provedení: LABEL BLACK STR / LABEL INOX\nlinden | LINDEN | vzory: 1,2,3,4,5,6 | provedení: LABEL BLACK STR / LABEL INOX\nmurter | MURTER | vzory: 1,2,3,4,5,6 | provedení: LABEL BLACK STR / LABEL INOX\nrotterdam | ROTTERDAM | vzory: 1,2,3,4 | provedení: LABEL BLACK STR / LABEL INOX\nebern | EBERN | vzory: 1,2,3,4,5 | provedení: LABEL BLACK STR / LABEL INOX\nwiener | WIENER | vzory: 1,2,3 | provedení: PLAIN GLASS / LABEL DIAMOND GLASS / LABEL BLACK STR / LABEL INOX\nsion | SION | vzory: 1,2 | provedení: LABEL DIAMOND GLASS\nsingen | SINGEN | vzory: 1,2,3,4,5,6 | provedení: LABEL BLACK STR / LABEL INOX\nselters | SELTERS | vzory: 1,2,3,4,5,6,7 | provedení: LABEL BLACK STR / LABEL INOX\nsamedan | SAMEDAN | vzory: 1,2,3,4,5 | provedení: LABEL BLACK STR / LABEL INOX\nroding | RODING | vzory: 1,2 | provedení: LABEL BLACK STR / LABEL INOX\nmelk | MELK | vzory: 1,2 | provedení: LABEL BLACK STR / LABEL INOX\nlucerna | LUCERNA | vzory: 1,2 | provedení: LABEL BLACK STR / LABEL INOX\nkreben | KREBEN | vzory: 1,2 | provedení: LABEL BLACK STR / LABEL INOX\nleoben | LEOBEN | vzory: 1,2,3,4 | provedení: LABEL BLACK STR / LABEL INOX\nalta | ALTA | vzory: 1,2,3,4,5,6,7,8,9,10,11,12,13,14 | provedení: LABEL BLACK STR / LABEL INOX\nlutter | LUTTER | vzory: 1,2,3,4 | provedení: STAMP ROLLER\nbiene | BIENE | vzory: 1,2,3,4 | provedení: STAMP BLACK STR / STAMP INOX / LABEL BLACK STR / LABEL INOX\nkella | KELLA | vzory: 1,2,3,4 | provedení: STAMP\nsolid | SOLID | vzory: 0 | provedení: SOLID\n\nKONSTRUKCE (id):\nh88 = THERMO HOT 88 (88 mm, Ud 0,60; Nejvyšší tepelná izolace, hliníková zárubeň ve standardu)\nh78 = THERMO HOT 78 (78 mm, Ud 0,63; Hliníková zárubeň s tepelnou přepážkou ve standardu)\nt78 = THERMO 78 (78 mm, Ud 0,80; Ocelová zárubeň, hliníková za příplatek)\nt64 = THERMO 64 (64 mm, Ud 0,88; Ocelová zárubeň, hliníková za příplatek)\n\nZÁRUBNĚ (zarubne): ocel = ocelová (standard u THERMO 78 a 64), hlinik = hliníková (standard u HOT 88 a HOT 78, u THERMO za příplatek; nutná pro světlíky a madlo–madlo), rohova = ocelová rohová (THERMO 78 a 64).\n\nŠÍŘKY (sirka): 80N, 80, 90N, 90, 100 (označení z katalogu, číslo = zhruba šířka průchodu v cm, N = užší varianta). Výška: std, nebo na míru (nenastavuj).\n\nDEKORY (id = název):\nbily-mat = Bílý mat\ndub-turner = Dub turner\nhedvabny-antracit = Hedvábný antracit\nhladky-antracit = Hladký antracit\nstrukturovany-antracit = Strukturovaný antracit\ncerna = Černá\ndub-antracit = Dub antracit\nseda = Šedá\nbahenni-dub = Bahenní dub\ndub-stredne-hnedy = Dub středně hnědý\norech = Ořech\ndub-zlaty = Dub zlatý\nwinchester = Winchester\nborovice-horska = Borovice horská\nborovice-bila = Borovice bílá\ndub-prirodni = Dub přírodní\ndub-prirodni-pricny = Dub přírodní příčný\ndub-surovy = Dub surový\n\nKOVÁNÍ (kovani): A klika–klika (1 zámek), B klika–klika + horní zámek (výchozí), C madlo–klika, D madlo–klika + horní zámek, E madlo–madlo (jen hliníková zárubeň), F madlo–madlo + horní zámek (jen hliníková zárubeň), X bez kování. Povrch kování (kovani_povrch): nikl (inox/nikl, v ceně) nebo cerna (příplatek).\n\nMADLA (madlo, jen u C–F): K35 = Madlo K35; KK35 = Madlo KK35; KP = Madlo KP; KPL2 = Madlo KPL2; OP = Madlo OP; P6K = Madlo P6K. Délka madla (madlo_delka): 60, 120, 160, 180 cm (ne každé madlo má všechny délky, konfigurátor to dorovná). Povrch madla (madlo_povrch): inox nebo cerna.\n\nSKLO (sklo, jen u řad se zasklením): std (standardní soustava), benat (benátské zrcadlo), bila (matné bílé), seda (matné šedé).\n\nOTEVÍRÁNÍ: smer = ven nebo dovnitr; strana = leve nebo prave, vždy při pohledu ZEVNITŘ z bytu/domu (kde jsou panty). Při otevírání dovnitř nejde HOT 88 a HOT 78.\n\nDVOUBARVENÉ DVEŘE: dvoubarevne = ne (výchozí) / kridlo (jiný dekor zevnitř, příplatek) / komplet (křídlo i rám, příplatek); dekor_zevnitr = id dekoru zevnitř.\n\nSVĚTLÍKY pomocník nenastavuje (zákazník je přidá sám v kroku Vybavení); řekni mu to, když o ně stojí.\n\nMONTÁŽ: montaz true = montáž na klíč, false = bez montáže (osobní odběr nebo doprava)."
+}
