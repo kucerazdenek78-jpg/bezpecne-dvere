@@ -388,11 +388,11 @@
     var S = E.svetliky, z = svSize(), ok = KON[st.kon].zarubenStd === 'hlinik' || true;
     var chk = function (id, on, t, sub) { return '<label class="pq-check"><input type="checkbox" data-sv="' + id + '"' + (on ? ' checked' : '') + '><span><b>' + t + '</b><small>' + sub + '</small></span></label>'; };
     var h = chk('h', st.sv.h, 'Horní světlík', 'Šířka = zárubeň + boční světlíky (' + (z.sc + z.l + z.p) + ' mm), výška 200–500 mm.') +
-      (st.sv.h ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Výška horního světlíku (mm)<input type="number" id="kfSvHv" min="200" max="500" step="10" value="' + esc(st.sv.hv) + '"><small>Ceník: 200, 300, 400, 500 mm</small></label></div>' : '') +
+      (st.sv.h ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Výška horního světlíku (mm)<input type="number" id="kfSvHv" min="200" max="500" step="1" value="' + esc(st.sv.hv) + '"><small>Ceník: 200, 300, 400, 500 mm</small></label></div>' : '') +
       chk('p', st.sv.p, 'Boční světlík vlevo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
-      (st.sv.p ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka levého světlíku (mm)<input type="number" id="kfSvPw" min="200" max="800" step="10" value="' + esc(st.sv.pw) + '"><small>Ceník po 100 mm</small></label></div>' : '') +
+      (st.sv.p ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka levého světlíku (mm)<input type="number" id="kfSvPw" min="200" max="800" step="1" value="' + esc(st.sv.pw) + '"><small>Ceník po 100 mm</small></label></div>' : '') +
       chk('l', st.sv.l, 'Boční světlík vpravo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
-      (st.sv.l ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka pravého světlíku (mm)<input type="number" id="kfSvLw" min="200" max="800" step="10" value="' + esc(st.sv.lw) + '"><small>Ceník po 100 mm</small></label></div>' : '');
+      (st.sv.l ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka pravého světlíku (mm)<input type="number" id="kfSvLw" min="200" max="800" step="1" value="' + esc(st.sv.lw) + '"><small>Ceník po 100 mm</small></label></div>' : '');
     if (anySv()) h += '<div class="kf-sub">Sklo ve světlících</div><div class="pq-chips">' + [['std', 'Standardní', ''], ['p4', 'Bezpečnostní P4', S.m2.p4], ['zrcadlo', 'Polopropustné zrcadlo', S.m2.zrcadlo], ['bila', 'Matné bílé / průhledné', S.m2.bila], ['seda', 'Matné šedé / průhledné', S.m2.seda]].map(function (o) {
       return '<label class="pq-opt pq-chip">' + radio('svSklo', o[0], st.sv.sklo === o[0]) + o[1] + (o[2] ? ' <em>+ ' + kc(o[2]) + '/m²</em>' : '') + '</label>';
     }).join('') + '</div><div class="pq-note">Světlíky jen s hliníkovou zárubní (zapne se sama). Cena je za nejbližší vyšší rozměr z ceníku, u nestandardního rozměru + 665 Kč. Dveře se světlíky nemají zkoušku RC2. Rozměry jsou vně rámu (str. 62–63).</div>';
