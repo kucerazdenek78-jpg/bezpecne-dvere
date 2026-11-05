@@ -12,8 +12,8 @@
 //  - zaznamenané předání dveří (predano_dne) → Vyřízeno
 //  - (30. 10. 2026) poptávka, ze které vznikla nabídka nebo objednávka, a nabídka, ze které vznikla objednávka → Vyřízeno
 //    (vazba podle čísla v z_poptavky / z_nabidky odeslané nabídky či objednávky; mění se jen Nové / Rozpracováno / Odeslána)
-//  - (5. 11. 2026) navíc vazba podle zákazníka: když objednávka / nabídka nemá číslo poptávky (vznikla ručně, ne tlačítkem z poptávky),
-//    stačí stejný telefon (posledních 9 číslic) nebo e-mail a novější datum vzniku než poptávka / nabídka
+//  - (5. 11. 2026) navíc vazba podle zákazníka (telefon – posledních 9 číslic – nebo e-mail), když objednávka / nabídka nemá číslo zdroje:
+//    1 : 1, každá uzavře jen nejbližší starší poptávku (nabídku) vzniklou po předchozí nabídce / objednávce téhož zákazníka
 //  - (31. 10. 2026) nabídka poslaná zákazníkovi (má e-mail) ve stavu Nové → Odeslána
 // Storno a Vyřízeno se nikdy nepřepisují; E-mail se neodeslal jen přijatou zálohou; stav se vrací zpět jen při vrácení zboží ze skladu.
 // Volá se při každém otevření kartotéky / stránky Dodavatel a po spárování platby (platby.php).
@@ -80,41 +80,55 @@ function bd_zak_klice(array $d, string $email = ''): array {
 }
 
 // Poptávka, ze které vznikla nabídka nebo objednávka (z_poptavky / z_nabidky = její číslo), a nabídka, ze které vznikla objednávka → Vyřízeno.
-// Když číslo chybí, stačí stejný zákazník (telefon / e-mail) a novější nabídka či objednávka (5. 11. 2026).
+// Když číslo chybí (nabídka / objednávka nevznikla tlačítkem ze zdroje), páruje se podle zákazníka (telefon / e-mail) 1 : 1:
+// každá nabídka / objednávka uzavře nejvýš JEDEN zdroj – ten nejbližší starší, který vznikl až po předchozí nabídce / objednávce téhož zákazníka.
+// Starší poptávky téhož zákazníka se tak nikdy hromadně neuzavřou (5. 11. 2026, upřesnění od Zdeňka).
 // Mění se jen Nové / Rozpracováno / Odeslána (ručně nastavený jiný stav, Storno apod. zůstává).
 function bd_stavy_navaznost(PDO $pdo, PDOStatement $up): void {
-  $odkud = [];   // normalizované číslo zdroje → [druh, číslo] záznamu, který z něj vznikl
-  $zak = [];     // klíč zákazníka → [[typ, číslo, vytvořeno], …] nabídek a objednávek (bez storna)
-  foreach ($pdo->query("SELECT typ, cislo, email, stav, vytvoreno, data_json FROM zadosti WHERE typ IN ('nabidka','objednavka_interni')")->fetchAll(PDO::FETCH_ASSOC) as $r) {
-    $d = json_decode((string)$r['data_json'], true); if (!is_array($d)) continue;
-    $cis = (string)($d['obj_cislo'] ?? $d['cislo'] ?? $r['cislo']);
-    foreach (['z_poptavky', 'z_nabidky'] as $k) {
-      $n = bd_cislo_norm($d[$k] ?? ''); if ($n === '') continue;
-      if (!isset($odkud[$n]) || $r['typ'] === 'objednavka_interni') $odkud[$n] = [$r['typ'] === 'nabidka' ? 'nabídka' : 'objednávka', $cis];
-    }
-    if ($r['stav'] !== 'storno') foreach (bd_zak_klice($d, (string)$r['email']) as $k) $zak[$k][] = [$r['typ'], $cis, (string)$r['vytvoreno']];
-  }
-  if (!$odkud && !$zak) return;
-  foreach ($pdo->query("SELECT id, typ, cislo, email, stav, vytvoreno, data_json FROM zadosti WHERE typ IN ('poptavka','nabidka') AND stav IN ('nove','rozpracovano','odeslana')")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+  $vse = $pdo->query("SELECT id, typ, cislo, email, stav, vytvoreno, data_json FROM zadosti WHERE typ IN ('poptavka','nabidka','objednavka_interni') ORDER BY vytvoreno, id")->fetchAll(PDO::FETCH_ASSOC);
+  $odkud = []; $zaznamy = [];
+  foreach ($vse as $r) {
     $d = json_decode((string)$r['data_json'], true); if (!is_array($d)) $d = [];
-    $n = bd_cislo_norm($d['obj_cislo'] ?? $d['cislo'] ?? $r['cislo']);
-    $vazba = null; $jak = '';
-    if ($n !== '' && isset($odkud[$n])) {
-      [$druh, $cis] = $odkud[$n];
-      if ($r['typ'] === 'poptavka' || $druh === 'objednávka') { $vazba = [$druh, $cis]; }   // nabídka je vyřízená až objednávkou
+    $r['cis'] = (string)($d['obj_cislo'] ?? $d['cislo'] ?? $r['cislo']); $r['n'] = bd_cislo_norm($r['cis']);
+    $r['klice'] = bd_zak_klice($d, (string)$r['email']); $r['odkaz'] = false;
+    if ($r['typ'] !== 'poptavka') foreach (['z_poptavky', 'z_nabidky'] as $k) {
+      $n = bd_cislo_norm($d[$k] ?? ''); if ($n === '') continue;
+      $r['odkaz'] = true;
+      if (!isset($odkud[$n]) || $r['typ'] === 'objednavka_interni') $odkud[$n] = [$r['typ'] === 'nabidka' ? 'nabídka' : 'objednávka', $r['cis']];
     }
-    if (!$vazba) {   // vazba podle zákazníka: novější nabídka / objednávka se stejným telefonem nebo e-mailem
-      foreach (bd_zak_klice($d, (string)$r['email']) as $k) {
-        foreach ($zak[$k] ?? [] as [$typ, $cis, $kdy]) {
-          if ($r['typ'] === 'nabidka' && $typ !== 'objednavka_interni') continue;
-          if (strcmp($kdy, (string)$r['vytvoreno']) < 0) continue;   // jen záznam vzniklý po poptávce / nabídce
-          $vazba = [$typ === 'nabidka' ? 'nabídka' : 'objednávka', $cis]; $jak = ' (stejný zákazník – ' . ($k[0] === 't' ? 'telefon' : 'e-mail') . ')';
-          if ($typ === 'objednavka_interni') break 2;   // objednávka má přednost před nabídkou
-        }
+    $zaznamy[] = $r;
+  }
+  $vazby = [];   // id zdroje → [druh, číslo, jak]
+  // 1) vazba podle čísla
+  foreach ($zaznamy as $r) {
+    if (!in_array($r['typ'], ['poptavka', 'nabidka'], true) || $r['n'] === '' || !isset($odkud[$r['n']])) continue;
+    [$druh, $cis] = $odkud[$r['n']];
+    if ($r['typ'] === 'nabidka' && $druh !== 'objednávka') continue;   // nabídka je vyřízená až objednávkou
+    $vazby[$r['id']] = [$druh, $cis, ''];
+  }
+  // 2) vazba podle zákazníka 1 : 1 (jen nabídky / objednávky bez čísla zdroje)
+  //    poptávky: uzavírá je nabídka i objednávka; nabídky: uzavírá je jen objednávka
+  foreach ([['poptavka', ['nabidka', 'objednavka_interni']], ['nabidka', ['objednavka_interni']]] as [$zdrojTyp, $cilTypy]) {
+    $pouzite = [];
+    foreach ($zaznamy as $i => $c) {
+      if (!in_array($c['typ'], $cilTypy, true) || $c['stav'] === 'storno' || !$c['klice']) continue;
+      // předchozí nabídka / objednávka téhož zákazníka (hranice okna)
+      $od = '';
+      for ($j = $i - 1; $j >= 0; $j--) { $p = $zaznamy[$j]; if (in_array($p['typ'], $cilTypy, true) && $p['stav'] !== 'storno' && array_intersect($p['klice'], $c['klice'])) { $od = (string)$p['vytvoreno']; break; } }
+      if ($c['odkaz']) continue;   // má číslo zdroje → vazba podle čísla, podle zákazníka nic dalšího neuzavírá
+      for ($j = $i - 1; $j >= 0; $j--) {
+        $z = $zaznamy[$j];
+        if ($od !== '' && strcmp((string)$z['vytvoreno'], $od) < 0) break;   // starší než předchozí nabídka / objednávka – už ne
+        if ($z['typ'] !== $zdrojTyp || isset($pouzite[$z['id']]) || !array_intersect($z['klice'], $c['klice'])) continue;
+        $pouzite[$z['id']] = true;
+        if (!isset($vazby[$z['id']])) { $spol = array_values(array_intersect($z['klice'], $c['klice']))[0]; $vazby[$z['id']] = [$c['typ'] === 'nabidka' ? 'nabídka' : 'objednávka', $c['cis'], ' (stejný zákazník – ' . ($spol[0] === 't' ? 'telefon' : 'e-mail') . ')']; }
+        break;   // jen jeden zdroj
       }
     }
-    if (!$vazba) continue;
-    [$druh, $cis] = $vazba;
+  }
+  foreach ($zaznamy as $r) {
+    if (!isset($vazby[$r['id']]) || !in_array($r['stav'], ['nove', 'rozpracovano', 'odeslana'], true) || !in_array($r['typ'], ['poptavka', 'nabidka'], true)) continue;
+    [$druh, $cis, $jak] = $vazby[$r['id']];
     $up->execute(['vyrizeno', $r['id']]);
     if (function_exists('hist_pis')) { try { hist_pis($pdo, (int)$r['id'], 'stav automaticky změněn na Vyřízeno', 'vznikla z ní ' . $druh . ' ' . $cis . $jak); } catch (Throwable $e) {} }
   }
