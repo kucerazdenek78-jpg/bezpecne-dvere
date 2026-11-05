@@ -234,17 +234,25 @@
 </div></div></section>
 
 <!-- HLEDAČ DVEŘÍ PODLE ROZMĚRU OTVORU (najdi-dvere.js) -->
-<section id="najdi-dvere" style="padding:2.5rem 0 0;">
+<section id="najdi-dvere" style="padding:.8rem 0 0;">
   <div class="container">
-    <div class="nd-box">
-      <h2>Jaké dveře se vám do otvoru vejdou?</h2>
-      <p class="nd-ne" style="margin:0;">Zadejte rozměr otvoru, do kterého dveře půjdou, a ukážeme vám vyhovující dveře. Rozměr můžete napsat v centimetrech (např. 110) nebo v milimetrech (1100). Výšku měřte od podlahy.</p>
-      <form class="nd-form" id="ndForm" novalidate>
-        <label>Šířka otvoru<input id="ndSirka" inputmode="decimal" placeholder="např. 110 cm" autocomplete="off"></label>
-        <label>Výška otvoru od podlahy<input id="ndVyska" inputmode="decimal" placeholder="např. 215 cm" autocomplete="off"></label>
-      </form>
-      <div id="ndVysledek" aria-live="polite"></div>
-    </div>
+    <details class="nd-mini" id="ndMini">
+      <summary>📏 Vejdou se mi dveře do otvoru?</summary>
+      <div class="nd-box">
+        <p class="nd-ne" style="margin:0;">Zadejte rozměr otvoru (v cm, např. 110, nebo v mm, 1100). Výšku měřte od podlahy. Ukážeme vyhovující dveře.</p>
+        <form class="nd-form" id="ndForm" novalidate>
+          <label>Šířka otvoru<input id="ndSirka" inputmode="decimal" placeholder="např. 110 cm" autocomplete="off"></label>
+          <label>Výška otvoru od podlahy<input id="ndVyska" inputmode="decimal" placeholder="např. 215 cm" autocomplete="off"></label>
+        </form>
+        <div id="ndVysledek" aria-live="polite"></div>
+      </div>
+    </details>
+    <style>
+    .nd-mini{margin:0 0 1.2rem auto;max-width:21rem;font-size:.9rem}.nd-mini[open]{max-width:none}
+    .nd-mini>summary{cursor:pointer;list-style:none;display:inline-block;float:right;padding:.4rem .8rem;border:1px solid var(--gray-200);border-radius:999px;background:#fff;color:var(--head);font-weight:600;font-size:.85rem}
+    .nd-mini>summary::-webkit-details-marker{display:none}.nd-mini[open]>summary{float:none;margin-bottom:.6rem}
+    .nd-mini .nd-box{margin:0;padding:1rem;clear:both}.nd-mini:not([open]){height:2.2rem}
+    </style>
   </div>
 </section>
 
