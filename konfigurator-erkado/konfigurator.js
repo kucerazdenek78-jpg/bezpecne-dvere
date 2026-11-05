@@ -932,6 +932,8 @@
   /* předvolba z odkazu: #horn-4 */
   var h = (location.hash || '').replace('#', '').toLowerCase().split('-');
   if (h[0] && MOD[h[0]]) { st.model = h[0]; st.typ = +h[1] || MOD[h[0]].typy[0]; st.prov = MOD[h[0]].provedeni[0]; }
+  var hd = /^#d=([a-z0-9-]+)$/i.exec(location.hash || '');   /* #d=orech: předvolba dekoru z ukázky dekorů na stránce Dveře do domu */
+  if (hd && DEK[hd[1]]) st.dekor = hd[1];
   if (h[0] === 'foto') { st.step = 5; }   // „Vyzkoušet na fotce“ ze stránky Dveře do domu: rovnou konečný vzhled, kde jsou všechny dekory
   window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf, vizImage: vizImage };
   render(); showVizRes();
