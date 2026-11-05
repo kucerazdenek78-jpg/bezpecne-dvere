@@ -54,8 +54,26 @@ if ($z && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $cas = preg_match('/^\d{2}:\d{2}$/', $_POST['montaz_cas'] ?? '') ? $_POST['montaz_cas'] : '';
     $dl = max(0.5, min(24, (float)str_replace(',', '.', (string)($_POST['montaz_delka'] ?? '3'))));
     $d0['montaz_dne'] = $dne; $d0['montaz_cas'] = $cas; $d0['montaz_delka'] = $dl; $d0['montaz_pozn'] = mb_substr(trim((string)($_POST['montaz_pozn'] ?? '')), 0, 500);
+    if (isset($_POST['montaz_vzd'])) $d0['montaz_vzd'] = in_array($_POST['montaz_vzd'], ['do', 'nad'], true) ? $_POST['montaz_vzd'] : '';   // ruční volba, když v objednávce chybí doprava_km
     $pdo->prepare('UPDATE zadosti SET data_json=? WHERE id=?')->execute([json_encode($d0, JSON_UNESCAPED_UNICODE), $z['id']]);
     header('Location: predani.php?t=' . $t . '&hotovo=montaz'); exit;
+  }
+  if (($_POST['akce'] ?? '') === 'montaz_mail' && empty($z['predano_dne'])) {   // e-mail zákazníkovi: potvrzení / změna / zrušení termínu (až po telefonické domluvě)
+    $typ = in_array($_POST['typ'] ?? '', ['potvrdit', 'zmena', 'zrusit'], true) ? $_POST['typ'] : '';
+    if ($typ === '' || empty($_POST['telefonem'])) { header('Location: predani.php?t=' . $t . '&mailchyba=' . rawurlencode('Nejdřív potvrďte, že termín byl domluven telefonicky.')); exit; }
+    require_once __DIR__ . '/lib/montaz-mail.php';
+    $d1 = json_decode((string)$z['data_json'], true) ?: [];
+    $o = $d1['montaz_odeslano'] ?? null;
+    $u1 = $typ === 'zrusit' ? null : montaz_udaje($z, $d1);
+    if ($typ !== 'zrusit' && is_array($o) && empty($o['zruseno']) && $u1 && montaz_shoduje_se($o, $u1)) {   // dvojklik: stejný termín už zákazník dostal
+      header('Location: predani.php?t=' . $t . '&mailchyba=' . rawurlencode('Tento termín už zákazníkovi byl odeslán.')); exit;
+    }
+    $r = montaz_posli($cfg, $DATA, $z, $d1, $typ, function_exists('uziv_jmeno') ? (string)uziv_jmeno() : '');
+    if (!$r['ok']) { header('Location: predani.php?t=' . $t . '&mailchyba=' . rawurlencode($r['chyba'])); exit; }
+    $d1['montaz_odeslano'] = $r['odeslano'];
+    $hist = is_array($d1['montaz_odeslano_historie'] ?? null) ? $d1['montaz_odeslano_historie'] : []; $hist[] = $r['odeslano']; $d1['montaz_odeslano_historie'] = array_slice($hist, -20);
+    $pdo->prepare('UPDATE zadosti SET data_json=? WHERE id=?')->execute([json_encode($d1, JSON_UNESCAPED_UNICODE), $z['id']]);
+    header('Location: predani.php?t=' . $t . '&hotovo=mail' . $typ); exit;
   }
   if (($_POST['akce'] ?? '') === 'prodlouzit') {
     $ri = registrace_info($pdo, $z, $d);
@@ -99,7 +117,8 @@ input[type=date]{font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius
 <?php else:
   $jmeno = trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')); $adresa = implode(', ', array_filter([$d['ulice'] ?? '', trim(($d['psc'] ?? '') . ' ' . ($d['mesto'] ?? ''))]));
   $roky = roky_zaruky($d); $predano = !empty($z['predano_dne']); ?>
-  <?php if (isset($_GET['hotovo'])): ?><div class="ok"><?= ($_GET['hotovo'] ?? '') === 'montaz' ? 'Termín montáže uložen.' : (($_GET['hotovo'] ?? '') === 'servis' ? 'Servisní záznam uložen.' : (($_GET['hotovo'] ?? '') === 'prodlouzeno' ? 'Záruka prodloužena o 12 měsíců.' : ($predano ? 'Předání zapsáno, dveře odepsány ze skladu.' : 'Předání zrušeno.'))) ?></div><?php endif; ?>
+  <?php if (!empty($_GET['mailchyba'])): ?><div class="warn" style="margin:0 0 12px"><?= $e(mb_substr((string)$_GET['mailchyba'], 0, 200)) ?></div><?php endif; ?>
+  <?php if (isset($_GET['hotovo'])): ?><div class="ok"><?= ['mailpotvrdit' => 'Potvrzení termínu bylo odesláno zákazníkovi e-mailem.', 'mailzmena' => 'Změna termínu byla odeslána zákazníkovi e-mailem.', 'mailzrusit' => 'Zrušení termínu bylo odesláno zákazníkovi e-mailem.'][$_GET['hotovo']] ?? (($_GET['hotovo'] ?? '') === 'montaz' ? 'Termín montáže uložen.' : (($_GET['hotovo'] ?? '') === 'servis' ? 'Servisní záznam uložen.' : (($_GET['hotovo'] ?? '') === 'prodlouzeno' ? 'Záruka prodloužena o 12 měsíců.' : ($predano ? 'Předání zapsáno, dveře odepsány ze skladu.' : 'Předání zrušeno.')))) ?></div><?php endif; ?>
   <div class="box"><h1>Předání díla – objednávka <?= $e($d['obj_cislo'] ?? $z['cislo']) ?></h1>
     <div class="mut"><?= $e($jmeno) ?><?= $adresa ? ' · ' . $e($adresa) : '' ?></div>
     <dl><dt>Dveře</dt><dd><?= $e(implode(' · ', array_filter([$d['model'] ?? '', $d['odstin'] ?? '', $d['kovani'] ?? '', $d['otevirani'] ?? '']))) ?></dd>
@@ -147,7 +166,33 @@ input[type=date]{font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius
       <form method="post"><input type="hidden" name="t" value="<?= $e($t) ?>"><input type="hidden" name="akce" value="montaz">
       <p><label>Datum <input type="date" name="montaz_dne" value="<?= $e($mD) ?>"></label> <label>od <input type="time" name="montaz_cas" value="<?= $e($d['montaz_cas'] ?? '') ?>" style="font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius:8px"></label> <label>trvá (h) <input type="number" step="0.5" min="0.5" max="24" name="montaz_delka" value="<?= $e($d['montaz_delka'] ?? 3) ?>" style="width:70px;font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius:8px"></label></p>
       <p><input name="montaz_pozn" value="<?= $e($d['montaz_pozn'] ?? '') ?>" placeholder="Poznámka (parkování, klíče, patro…)" style="width:100%;box-sizing:border-box;font:inherit;padding:8px"></p>
+      <?php require_once __DIR__ . '/lib/montaz-mail.php'; $kmOk = isset($d['doprava_km']) && is_numeric($d['doprava_km']); if (!$kmOk): ?>
+      <p class="mut" style="margin:0 0 6px">V objednávce chybí vzdálenost od pobočky (km). Vyberte ručně: <select name="montaz_vzd" style="font:inherit;padding:6px"><option value="">– nevybráno –</option><option value="do"<?= ($d['montaz_vzd'] ?? '') === 'do' ? ' selected' : '' ?>>do 40 km od pobočky</option><option value="nad"<?= ($d['montaz_vzd'] ?? '') === 'nad' ? ' selected' : '' ?>>nad 40 km od pobočky</option></select></p><?php endif; ?>
       <button class="sec" style="margin-top:0">Uložit termín</button> <a href="montaze.php" class="mut">Kalendář montáží →</a></form></div>
+    <?php // ── E-mail zákazníkovi s termínem: potvrzení / změna / zrušení (až po telefonické domluvě) ──
+      $uMz = montaz_udaje($z, $d); $okMz = montaz_okno($d); $odMz = is_array($d['montaz_odeslano'] ?? null) ? $d['montaz_odeslano'] : null;
+      $platne = $odMz && empty($odMz['zruseno']); $emMz = trim((string)($d['email'] ?? '')); $emOk = $emMz !== '' && filter_var($emMz, FILTER_VALIDATE_EMAIL);
+      $stejny = $platne && $uMz && montaz_shoduje_se($odMz, $uMz); ?>
+    <div class="box"><b>✉️ Termín zákazníkovi e-mailem</b>
+      <?php if ($okMz): ?><p class="mut" style="margin:4px 0 6px">Okno příjezdu: <b><?= $e(montaz_hm($okMz['od'])) ?>–<?= $e(montaz_hm($okMz['do'])) ?></b> (<?= $okMz['zdroj'] === 'km' ? $e(number_format((float)$okMz['km'], 1, ',', ' ')) . ' km od pobočky' : 'vzdálenost zadána ručně' ?>; nad 40 km je okno o 30 minut později).</p>
+      <?php else: ?><p class="warn" style="margin:6px 0">Nelze určit okno příjezdu – chybí vzdálenost od pobočky. Vyberte ji výše a uložte termín.</p><?php endif; ?>
+      <?php if (!$uMz): ?><p class="mut">Nejdřív uložte datum montáže.</p>
+      <?php elseif (!$emOk): ?><p class="warn">Zákazník nemá v objednávce platný e-mail. Termín mu oznamte telefonicky nebo SMS (okno příjezdu: <?= $e(montaz_hm($uMz['od'])) ?>–<?= $e(montaz_hm($uMz['do'])) ?>).</p>
+      <?php else: ?>
+        <?php if ($platne): ?><p class="mut" style="margin:0 0 6px">Odesláno <?= $e(date('j. n. Y H:i', strtotime((string)$odMz['cas']))) ?> na <?= $e($odMz['komu'] ?? $emMz) ?>: <?= $e(montaz_den_cs($odMz['dne'])) ?>, <?= $e(montaz_hm($odMz['od'])) ?>–<?= $e(montaz_hm($odMz['do'])) ?><?= !empty($odMz['kdo']) ? ' (' . $e($odMz['kdo']) . ')' : '' ?>.</p>
+          <?php if ($stejny): ?><div class="ok" style="margin:0 0 6px">Zákazník má aktuální termín.</div><?php else: ?><div class="warn">Uložený termín se liší od toho, který zákazník dostal e-mailem. Po telefonické domluvě mu pošlete změnu.</div><?php endif; ?>
+        <?php elseif ($odMz && !empty($odMz['zruseno'])): ?><p class="mut" style="margin:0 0 6px">Zrušení termínu odesláno <?= $e(date('j. n. Y H:i', strtotime((string)$odMz['cas']))) ?>. Nový termín můžete poslat jako potvrzení.</p>
+        <?php else: ?><p class="mut" style="margin:0 0 6px">Zákazník zatím nedostal termín e-mailem. Nejdřív mu termín domluvte telefonicky, e-mail je až potvrzení.</p><?php endif; ?>
+        <?php if (!$stejny && $okMz): ?>
+        <form method="post" onsubmit="return confirm('Odeslat zákazníkovi e-mail na <?= $e($emMz) ?>?')"><input type="hidden" name="t" value="<?= $e($t) ?>"><input type="hidden" name="akce" value="montaz_mail"><input type="hidden" name="typ" value="<?= $platne ? 'zmena' : 'potvrdit' ?>">
+          <p style="margin:6px 0"><label><input type="checkbox" name="telefonem" value="1" required> Termín jsem se zákazníkem domluvil telefonicky</label></p>
+          <button><?= $platne ? 'Odeslat změnu termínu' : 'Odeslat potvrzení termínu' ?></button></form><?php endif; ?>
+        <?php if ($platne): ?>
+        <form method="post" onsubmit="return confirm('Opravdu zrušit termín? Zákazníkovi odejde e-mail o zrušení.')" style="margin-top:8px"><input type="hidden" name="t" value="<?= $e($t) ?>"><input type="hidden" name="akce" value="montaz_mail"><input type="hidden" name="typ" value="zrusit">
+          <p style="margin:6px 0"><label><input type="checkbox" name="telefonem" value="1" required> Zrušení jsem se zákazníkem domluvil telefonicky</label></p>
+          <button class="sec" style="margin-top:0">Odeslat zrušení termínu</button></form><?php endif; ?>
+      <?php endif; ?>
+    </div>
   <?php endif; ?>
   <div class="box"><span class="mut">Odkaz pro zákazníka (záruka, servis):</span><br><a href="<?= $e('https://formulare.dvere.app/moje.php?t=' . $d['zakaznik_token']) ?>" style="word-break:break-all"><?= $e('https://formulare.dvere.app/moje.php?t=' . $d['zakaznik_token']) ?></a></div>
 <?php endif; ?></main></body></html>

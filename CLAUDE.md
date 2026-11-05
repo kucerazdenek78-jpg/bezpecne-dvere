@@ -91,3 +91,10 @@ Při změně cen, příplatků nebo akcí upravit `cenik.php` na NAS a PDF cení
 - Box na úvodu kartotéky: stav připomínek, tlačítka „📨 Připomenout teď“ / „Nepřipomínat“, úkoly „📞 Zákazníci čekají na naši reakci“ (✓ Vyřízeno), hodnocení nabídek i montáží.
 - `hodnoceni.php?t=` (nabídka: rozmýšlím / upravit / zavolat / nemám zájem + důvod → Storno) a `?m=` (montáž 1–5, 4–5 → recenze Google).
 - Poptávky z e-mailu: přeposlat na `poptavky-ai@bezpecne-dvere.cz` (alias do schránky kartoteka-dvere@) → CLI `poptavky-z-mailu.php` (Plánovač každých 15 min) + `lib/poptavky-mail.php` → poptávka P …/RRRR (zdroj email-ai), potvrzení zákazníkovi, odpověď prodejci. Povolení odesílatelé: kucerazd@kksystem.cz, chci@bezpecne-dvere.cz (přepsat jde v config.php `poptavky_ai.povoleni`).
+
+## Termín montáže zákazníkovi e-mailem (od 5. 11. 2026)
+- NAS `predani.php` (box „✉️ Termín zákazníkovi e-mailem“ pod termínem montáže) + `lib/montaz-mail.php`: potvrzení, změna a zrušení termínu. **Odesílá obchodník ručně** až po zaškrtnutí „domluveno telefonicky“ (nic nechodí samo při uložení termínu).
+- Okno příjezdu: **do 40 km od pobočky 8:30–9:15, nad 40 km 9:00–9:45** (rozhodnutí Zdeňka). Vzdálenost = `doprava_km` v objednávce (Mapy.com, od Obchodní 36, Most); když chybí, ruční volba `montaz_vzd` (do/nad). Hranice: přesně 40 km = kratší okno. Při změně limitu upravit `MONTAZ_LIMIT_KM` a texty v `montaz_okno`, `priprava-na-montaz.html`.
+- E-mail: odhad 4–6 h, tlačítka Google Kalendář / Outlook.com, příloha `.ics` (UID `montaz-zakaznik-<id>`, SEQUENCE roste → změna přepíše událost, zrušení = METHOD:CANCEL), příprava, sousedé, odkaz na web `priprava-na-montaz.html` (cedulka k tisku), podpis obchodníka. Jméno montéra se neuvádí.
+- Co a komu se odeslalo: `data_json.montaz_odeslano` (poslední) + `montaz_odeslano_historie` (20 posledních). Odlišný uložený termín = žlutý pruh „Po telefonické domluvě pošlete změnu“.
+- Text přípravy je ve dvou místech: `montaz_priprava()` v `lib/montaz-mail.php` a `priprava-na-montaz.html` – při změně upravit obojí.
