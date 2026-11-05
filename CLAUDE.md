@@ -85,3 +85,9 @@ Při změně cen, příplatků nebo akcí upravit `cenik.php` na NAS a PDF cení
 - Objednávky (`objednavka-nova.html` → `poptavka-dvere-nova.js`, `objednavka-vice.html` → `nabidka.js`): při „Na displeji“ se podpis zákazníka (a nepovinně zhotovitele) vloží nad čáru v PDF objednávky (`BDPodpisPng` v `poptavka-pdf-nova.js`), do dat jen `podpis_rezim` / `podpis_cas`. Tisk na papír zůstává.
 - Předání: NAS `predani-podpis.php?t=…&rezim=podpis` – podpis na displeji HNED zapíše předání (záruka, sklad, poděkování), uloží podepsaný list do `/data/predani` a pošle ho zákazníkovi. Tisk předem + potvrzení QR (`predani.php`) zůstává.
 - Změna PDF/podpisu = zvýšit `?v=` u `podpis.js`, `poptavka-pdf-nova.js` (i v `predani-podpis.php` na NAS).
+
+## Připomínky nabídek, hodnocení a poptávky z e-mailu (od 5. 11. 2026)
+- NAS `lib/terminy.php` + CLI `terminy-pripominky.php` (Plánovač každou hodinu 7–20 h): nabídka ve stavu Odeslána → připomínka po 3 dnech, 2 dny před koncem platnosti, poslední zpráva 1–7 dní po konci; duplicitní záznamy (stejný e-mail + číslo) = jeden e-mail; 5–30 dní po předání (od 1. 11. 2026) dotaz na spokojenost s montáží.
+- Box na úvodu kartotéky: stav připomínek, tlačítka „📨 Připomenout teď“ / „Nepřipomínat“, úkoly „📞 Zákazníci čekají na naši reakci“ (✓ Vyřízeno), hodnocení nabídek i montáží.
+- `hodnoceni.php?t=` (nabídka: rozmýšlím / upravit / zavolat / nemám zájem + důvod → Storno) a `?m=` (montáž 1–5, 4–5 → recenze Google).
+- Poptávky z e-mailu: přeposlat na `poptavky-ai@bezpecne-dvere.cz` (alias do schránky kartoteka-dvere@) → CLI `poptavky-z-mailu.php` (Plánovač každých 15 min) + `lib/poptavky-mail.php` → poptávka P …/RRRR (zdroj email-ai), potvrzení zákazníkovi, odpověď prodejci. Povolení odesílatelé: kucerazd@kksystem.cz, chci@bezpecne-dvere.cz (přepsat jde v config.php `poptavky_ai.povoleni`).
