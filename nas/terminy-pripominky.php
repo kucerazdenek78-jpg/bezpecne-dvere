@@ -3,7 +3,8 @@
 //   docker exec formulare-web php /var/www/html/terminy-pripominky.php          (ostrý běh)
 //   docker exec formulare-web php /var/www/html/terminy-pripominky.php --suchy  (jen vypíše, nic neposílá ani nezapisuje)
 // 1) poptávka bez vyřízení: když do 48 h od přijetí zbývá 12 h nebo už termín uplynul → jeden souhrnný e-mail firmě (příjemci poptávek z config.php)
-// 1b) termín 48 h uplynul a z poptávky nevznikla nabídka ani objednávka → jednou omluvný e-mail zákazníkovi („stále pracujeme“), kopie firmě
+// 1b) termín 48 h uplynul a z poptávky nevznikla nabídka ani objednávka → jednou omluvný e-mail zákazníkovi („stále pracujeme“), kopie firmě;
+//     zároveň se v Google Kalendáři Zdeňka objeví upozornění na 19:30 (kontakty-sync.php → Apps Script, viz lib/kontakty-skript.gs)
 // 2) nabídka (stav Odeslána) bez odezvy → zákazníkovi: a) po 3 dnech od odeslání, b) 2 dny před koncem platnosti nabídky (pole „Nabídka platí do“),
 //    c) (5. 11. 2026) poslední zpráva 1–7 dní po skončení platnosti („co rozhodlo?“), u nabídky bez data platnosti 14 dní po odeslání.
 //    V e-mailu jsou odkazy jedním klikem (chci upravit / zavolejte mi / nemám zájem) a hodnocení nabídky (hodnoceni.php).
@@ -39,9 +40,10 @@ foreach (terminy_poptavky($pdo, $ted) as $p) {
   $d = json_decode((string)$r['data_json'], true) ?: [];
   $em = filter_var(trim((string)($d['email'] ?? $r['email'])), FILTER_VALIDATE_EMAIL); if (!$em) continue;
   $cis = $p['cislo'] !== '' ? ' č. ' . $p['cislo'] : '';
-  $telo = "Dobrý den,\n\nslíbili jsme Vám, že se k Vaší poptávce$cis ozveme včas, a termín se nám bohužel prodloužil. Za zdržení se Vám omlouváme.\n\n"
-    . "Na Vaší poptávce stále pracujeme a ozveme se Vám, jakmile budeme mít připravenou nabídku. Kdybyste cokoli potřebovali upřesnit nebo Vám jde o čas, stačí odpovědět na tento e-mail nebo zavolat na +420 725 559 235, rádi se tomu věnujeme hned.\n\nDěkujeme za trpělivost.";
-  $ok = $suchy ? true : posli_mail($cfg, $DATA, [$em], $komu, $cfg['from'], 'Pracujeme na Vaší poptávce' . $cis . ' – omlouváme se za zdržení', $telo);
+  // 5. 11. 2026: text varianta B (vybral Zdeněk)
+  $telo = "Dobrý den,\n\ntento týden jako by se všichni rozhodli vyměnit dveře najednou. Máme radost, ale nabídka k Vaší poptávce$cis se kvůli tomu trochu zdržela a nestihli jsme slíbené dva dny. Omlouváme se.\n\n"
+    . "Nezapadla, je rozpracovaná na stole a dostanete ji co nejdřív. Kdybyste chtěli něco doplnit nebo upřesnit, odpovězte na tento e-mail nebo volejte +420 725 559 235.\n\nDíky, že to s námi vydržíte.";
+  $ok = $suchy ? true : posli_mail($cfg, $DATA, [$em], $komu, $cfg['from'], 'Vaše nabídka se trochu zdržela' . ($cis !== '' ? ' (poptávka' . $cis . ')' : ''), $telo);
   $log("poptávka " . ($p['cislo'] !== '' ? $p['cislo'] : '#' . $p['id']) . ": omluva zákazníkovi → $em: " . ($ok ? 'odesláno' : 'SELHALO'));
   if ($ok && !$suchy) $pdo->prepare('UPDATE zadosti SET term_omluva_dne=? WHERE id=?')->execute([date('Y-m-d H:i:s'), $p['id']]);
 }

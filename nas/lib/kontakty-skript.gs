@@ -5,6 +5,8 @@
    - Kontakty založené tímto skriptem aktualizuje, když se v kartotéce změní (jméno, telefon, e-mail, adresa).
    - Ke každému kontaktu přidá odkaz „Kartotéka“ – klik v telefonu otevře kartu zákazníka (historie, poptávky, objednávky, servis).
    - Nic nemaže. Zákazníka smazaného v kartotéce smažte v Kontaktech ručně (pokud chcete).
+   - (5. 11. 2026) Prošvihnutou poptávku (48 h bez nabídky) založí v hlavním Google Kalendáři jako událost v 19:30 s upozorněním;
+     když poptávka mezitím zmizí ze seznamu (vznikla nabídka / objednávka, Vyřízeno, Storno), budoucí událost sám smaže.
    Nastavení: Služby (+) → „People API“ přidat, pak spustit funkci nastavit() a povolit přístup. */
 
 const ADRESA = '__FEED__';                  // adresa z kartotéky i s tajným klíčem – nikomu ji neposílejte
@@ -23,6 +25,7 @@ function synchronizovat() {
   if (r.getResponseCode() !== 200) throw new Error('Kartotéka odpověděla ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200));
   const data = JSON.parse(r.getContentText());
   if (!data.ok || !Array.isArray(data.zakaznici)) throw new Error('Neplatná data z kartotéky');
+  try { kalendar_(data.kalendar); } catch (e) { console.log('Kalendář: ' + e); }   // prošvihnuté poptávky → upozornění v Google Kalendáři v 19:30
   const skupina = najdiSkupinu_();
 
   const vsechny = []; let pt = null;
@@ -100,4 +103,31 @@ function najdiSkupinu_() {
   const res = People.ContactGroups.list({ pageSize: 1000 });
   const g = (res.contactGroups || []).filter(function (x) { return x.name === SKUPINA; })[0];
   return g ? g.resourceName : People.ContactGroups.create({ contactGroup: { name: SKUPINA } }).resourceName;
+}
+
+// Upozornění na prošvihnuté poptávky v hlavním kalendáři (událost s označením bd-uid; upozornění přímo v čas začátku = 19:30)
+function kalendar_(polozky) {
+  if (!Array.isArray(polozky)) return;
+  const cal = CalendarApp.getDefaultCalendar();
+  const ted = new Date(), od = new Date(ted.getTime() - 14 * 864e5), az = new Date(ted.getTime() + 3 * 864e5);
+  const mame = {};
+  cal.getEvents(od, az).forEach(function (e) { const u = e.getTag('bd-uid'); if (u) mame[u] = e; });
+  const chci = {};
+  polozky.forEach(function (p) {
+    chci[p.uid] = true;
+    const z = new Date(p.zacatek), k = new Date(p.konec);
+    let e = mame[p.uid];
+    if (!e) {
+      e = cal.createEvent(p.nazev, z, k, { description: p.popis });
+      e.setTag('bd-uid', p.uid); e.removeAllReminders(); e.addPopupReminder(0);
+      return;
+    }
+    if (e.getTitle() !== p.nazev) e.setTitle(p.nazev);
+    if (e.getDescription() !== p.popis) e.setDescription(p.popis);
+    if (e.getStartTime().getTime() !== z.getTime()) e.setTime(z, k);
+  });
+  // poptávka je vyřízená → smazat jen budoucí / dnešní upozornění (staré nechat jako historii)
+  Object.keys(mame).forEach(function (u) {
+    if (u.indexOf('bd-pop-') === 0 && !chci[u] && mame[u].getEndTime().getTime() > ted.getTime() - 864e5) mame[u].deleteEvent();
+  });
 }

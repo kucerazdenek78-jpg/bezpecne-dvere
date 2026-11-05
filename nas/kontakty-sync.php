@@ -36,6 +36,25 @@ foreach (zk_vsichni($pdo, zk_info($pdo)) as $k => $c) {
   $out[] = ['klic' => $k, 'jmeno' => implode(' ', $cs), 'prijmeni' => $prij, 'firma' => $c['firma'], 'telefon' => $c['telefon'], 'email' => $c['email'],
     'ulice' => $c['ulice'], 'mesto' => $c['mesto'], 'psc' => $c['psc'], 'poznamka' => $pozn, 'odkaz' => zk_odkaz($k)];
 }
+// 5. 11. 2026: prošvihnuté poptávky (48 h bez nabídky / objednávky) → událost v Google Kalendáři Zdeňka v 19:30 (ten den; když termín vypršel po 19:30, tak další den)
+// Skript událost sám smaže, jakmile poptávka z tohoto seznamu zmizí (vznikla nabídka / objednávka, Vyřízeno, Storno). Bere jen posledních 7 dní.
+$kal = [];
+if (is_file(__DIR__ . '/lib/terminy.php')) {
+  require_once __DIR__ . '/lib/terminy.php';
+  try {
+    terminy_tabulky($pdo);
+    foreach (terminy_poptavky($pdo) as $p) {
+      if ($p['zbyva'] >= 0 || $p['zbyva'] < -7 * 86400) continue;
+      $den = date('Y-m-d', $p['termin']); if (date('H:i', $p['termin']) > '19:30') $den = date('Y-m-d', $p['termin'] + 86400);
+      $r = $pdo->query('SELECT data_json FROM zadosti WHERE id=' . (int)$p['id'])->fetchColumn(); $d = json_decode((string)$r, true) ?: [];
+      $c = $p['cislo'] !== '' ? $p['cislo'] : '#' . $p['id'];
+      $kal[] = ['uid' => 'bd-pop-' . $p['id'], 'nazev' => '⚠ Nestihli jsme nabídku ' . $c . ($p['jmeno'] !== '' ? ' – ' . $p['jmeno'] : '') . (!empty($d['mesto']) ? ', ' . $d['mesto'] : ''),
+        'zacatek' => date('c', strtotime($den . ' 19:30')), 'konec' => date('c', strtotime($den . ' 19:45')),
+        'popis' => 'Termín reakce do 48 h vypršel ' . date('j. n. H:i', $p['termin']) . ".\n" . ($p['telefon'] !== '' ? 'Telefon: ' . $p['telefon'] . "\n" : '') . (!empty($d['model']) ? 'Poptává: ' . $d['model'] . "\n" : '')
+          . 'Zákazník dostal omluvný e-mail (pokud má e-mail).' . "\n" . terminy_base($cfg) . '/kartoteka.php?id=' . $p['id']];
+    }
+  } catch (Throwable $e) { error_log('kontakty-sync kalendar: ' . $e->getMessage()); }
+}
 $nast['stazeno'] = date('Y-m-d H:i:s'); $nast['pocet'] = count($out);
 @file_put_contents($soubor, json_encode($nast, JSON_UNESCAPED_UNICODE), LOCK_EX);
-ks_konec(200, ['ok' => true, 'cas' => date('c'), 'zakaznici' => $out]);
+ks_konec(200, ['ok' => true, 'cas' => date('c'), 'zakaznici' => $out, 'kalendar' => $kal]);
