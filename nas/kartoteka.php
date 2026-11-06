@@ -7,6 +7,7 @@
 // 31. 10. 2026: stav Odeslána (nabídka poslaná zákazníkovi) – nastavuje se automaticky v lib/stav.php.
 // 5. 11. 2026: ruční evidence zálohy má dvě tlačítka – „hotově“ a „převodem“ (když se platba z banky sama nespáruje); způsob se ukládá do data_json (zaloha_zpusob)
 //              a po zaevidování zálohy se objednávka sama přepne na Potvrzená (lib/stav.php, nově i ze stavu „E-mail se neodeslal“).
+// 6. 11. 2026: tlačítka a záložky chronologicky – poptávka → nabídka → objednávka (přání Zdeňka).
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -269,8 +270,8 @@ if (isset($_GET['id'])):
   $suma = 0; foreach ($rows as $r) if (is_numeric($r['x']['cena'])) $suma += $r['x']['cena'];
   $qs = fn($a) => '?' . http_build_query(array_filter(array_merge(['typ' => $typ, 'stav' => $fStav, 'model' => $fModel, 'prodavac' => $fProd, 'q' => $q, 'od' => $od, 'do' => $do], $a), fn($v) => $v !== ''));
 ?>
-  <?php $webU = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/'); ?><p class="nove" style="display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .8rem"><a class="btn" href="<?= $e($webU) ?>/objednavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat objednávku</a><a class="btn" href="<?= $e($webU) ?>/poptavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat poptávku</a><a class="btn" href="<?= $e($webU) ?>/nabidka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat nabídku</a></p>
-  <div class="tabs"><a class="<?= $typ === 'objednavka_interni' ? 'on' : '' ?>" href="kartoteka.php?typ=objednavka_interni">Objednávky</a><a class="<?= $typ === 'poptavka' ? 'on' : '' ?>" href="kartoteka.php?typ=poptavka">Poptávky</a><a class="<?= $typ === 'nabidka' ? 'on' : '' ?>" href="kartoteka.php?typ=nabidka">Nabídky</a><a class="<?= $typ === '' ? 'on' : '' ?>" href="kartoteka.php?typ=">Vše</a></div>
+  <?php $webU = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/'); ?><p class="nove" style="display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .8rem"><a class="btn" href="<?= $e($webU) ?>/poptavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat poptávku</a><a class="btn" href="<?= $e($webU) ?>/nabidka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat nabídku</a><a class="btn" href="<?= $e($webU) ?>/objednavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat objednávku</a></p>
+  <div class="tabs"><a class="<?= $typ === 'poptavka' ? 'on' : '' ?>" href="kartoteka.php?typ=poptavka">Poptávky</a><a class="<?= $typ === 'nabidka' ? 'on' : '' ?>" href="kartoteka.php?typ=nabidka">Nabídky</a><a class="<?= $typ === 'objednavka_interni' ? 'on' : '' ?>" href="kartoteka.php?typ=objednavka_interni">Objednávky</a><a class="<?= $typ === '' ? 'on' : '' ?>" href="kartoteka.php?typ=">Vše</a></div>
   <form class="box f" method="get"><input type="hidden" name="typ" value="<?= $e($typ) ?>">
     <label>Hledat<input name="q" value="<?= $e($q) ?>" placeholder="jméno, město, telefon, číslo…" size="28"></label>
     <label>Stav<select name="stav"><option value="">všechny</option><?php foreach ($STAVY as $k => $v): ?><option value="<?= $e($k) ?>"<?= $fStav === $k ? ' selected' : '' ?>><?= $e($v) ?></option><?php endforeach; ?></select></label>
