@@ -5,6 +5,8 @@
 // 30. 10. 2026: jméno zákazníka (v detailu i v seznamu) vede na jeho kartu v Zákaznících (zakaznici.php?k=…, klíč zk_klic).
 // 30. 10. 2026: ikona mapy 🗺️ u adresy montáže / fakturační adresy v detailu a u zákazníka v seznamu (bd_mapa v lib/menu.php).
 // 31. 10. 2026: stav Odeslána (nabídka poslaná zákazníkovi) – nastavuje se automaticky v lib/stav.php.
+// 5. 11. 2026: ruční evidence zálohy má dvě tlačítka – „hotově“ a „převodem“ (když se platba z banky sama nespáruje); způsob se ukládá do data_json (zaloha_zpusob)
+//              a po zaevidování zálohy se objednávka sama přepne na Potvrzená (lib/stav.php, nově i ze stavu „E-mail se neodeslal“).
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -56,7 +58,7 @@ if (isset($_GET['soubor'])) {
   http_response_code(404); exit('Nenalezeno');
 }
 
-// ── potvrzení přijaté zálohy ──
+// ── potvrzení přijaté zálohy (hotově nebo převodem, který se sám nespároval) ──
 $zpr = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['akce'] ?? '') === 'zaloha' && isset($_POST['id'])) {
   require_once __DIR__ . '/lib/posta.php';
@@ -64,13 +66,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['akce'] ?? '') === 'zaloha'
   $st = $pdo->prepare('SELECT * FROM zadosti WHERE id=?'); $st->execute([$idz]); $rz = $st->fetch(PDO::FETCH_ASSOC);
   if ($rz) {
     if (zamceno($pdo, $idz)) { header('Location: kartoteka.php?id=' . $idz . '&zprava=zamceno'); exit; }
-    if (isset($_POST['zrusit'])) hist_pis($pdo, $idz, 'evidence zálohy zrušena', '');
-    if (isset($_POST['zrusit'])) { $pdo->prepare('UPDATE zadosti SET zaloha_prijata_dne=NULL, zaloha_prijata_kc=NULL WHERE id=?')->execute([$idz]); header('Location: kartoteka.php?id=' . $idz . '&ulozeno=1'); exit; }
+    $dz = json_decode((string)$rz['data_json'], true) ?: [];
+    if (isset($_POST['zrusit'])) {
+      hist_pis($pdo, $idz, 'evidence zálohy zrušena', '');
+      unset($dz['zaloha_zpusob']);
+      $pdo->prepare('UPDATE zadosti SET zaloha_prijata_dne=NULL, zaloha_prijata_kc=NULL, data_json=? WHERE id=?')->execute([json_encode($dz, JSON_UNESCAPED_UNICODE), $idz]);
+      header('Location: kartoteka.php?id=' . $idz . '&ulozeno=1'); exit;
+    }
     $kcz = (float)str_replace([' ', ','], ['', '.'], (string)($_POST['castka'] ?? '0'));
     $dne = preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['datum'] ?? '') ? $_POST['datum'] : date('Y-m-d');
     if ($kcz <= 0) { header('Location: kartoteka.php?id=' . $idz . '&zprava=castka'); exit; }
-    $pdo->prepare('UPDATE zadosti SET zaloha_prijata_dne=?, zaloha_prijata_kc=? WHERE id=?')->execute([$dne, $kcz, $idz]); hist_pis($pdo, $idz, 'záloha přijata', number_format($kcz, 0, ',', ' ') . ' Kč, ' . $dne);
-    bd_stavy_sync($pdo, true);   // Nové / Rozpracováno → Potvrzená
+    $zpusob = (($_POST['zpusob'] ?? '') === 'prevodem') ? 'převodem' : 'hotově';   // které tlačítko bylo stisknuto
+    $dz['zaloha_zpusob'] = $zpusob; $rz['data_json'] = json_encode($dz, JSON_UNESCAPED_UNICODE);
+    $pdo->prepare('UPDATE zadosti SET zaloha_prijata_dne=?, zaloha_prijata_kc=?, data_json=? WHERE id=?')->execute([$dne, $kcz, $rz['data_json'], $idz]);
+    hist_pis($pdo, $idz, 'záloha přijata ' . $zpusob, number_format($kcz, 0, ',', ' ') . ' Kč, ' . $dne);
+    // Nové / Rozpracováno / E-mail se neodeslal → Potvrzená (jistota i pro případ, že by automat stavů selhal)
+    $pdo->prepare("UPDATE zadosti SET stav='potvrzena' WHERE id=? AND stav IN ('nove','rozpracovano','chyba_mailu')")->execute([$idz]);
+    bd_stavy_sync($pdo, true);
     $xz = radek($rz); $vysl = 'ulozeno';
     if (!empty($_POST['poslat'])) {
       $em = filter_var(trim((string)$xz['email']), FILTER_VALIDATE_EMAIL);
@@ -225,14 +237,14 @@ if (isset($_GET['id'])):
     <?php if (!empty($r['predano_dne'])): require_once __DIR__ . '/lib/bonus.php'; bonus_tabulky($pdo); $r = bonus_zadost($pdo, (int)$r['id']) ?: $r; $zefDo = zaruka_efektivni_do($pdo, $r); $bUd = bonus_udrzba($pdo, $r); $bMes = bonus_mesicu_celkem($r); ?><div class="box"><h3>Předání a záruka</h3><p><span class="chip s-vyrizeno">Předáno</span> <?= $e(date('j. n. Y', strtotime($r['predano_dne']))) ?></p><p>Záruka od <?= $e(date('j. n. Y', strtotime($r['zaruka_od']))) ?><?= !empty($zefDo) ? ' do ' . $e(date('j. n. Y', strtotime($zefDo))) : ' (délka záruky neurčena)' ?></p>
       <?php if ($bMes > 0 && empty($r['zaruka_prodl_let'])): ?><p class="mut">Bonus +<?= (int)$bMes ?> měs. (registrace<?= !empty($r['bonus_rec_schv_dne']) ? ' + recenze' : '' ?>): <?php if ($bUd['aktivni']): ?><b style="color:#14653a">platí</b> – další zápis o údržbě nejpozději do <?= $e(date('j. n. Y', strtotime($bUd['do']))) ?><?php else: ?><b style="color:#a11">ZANIKL</b> – zápis o údržbě nebyl proveden do <?= $e(date('j. n. Y', strtotime($bUd['do']))) ?>; bonusové měsíce (<?= (int)$bMes ?>) se do konce záruky už nezapočítávají<?php endif; ?><?= $bUd['posledni'] ? ' · poslední zápis ' . $e(date('j. n. Y', strtotime($bUd['posledni']))) : ' · zatím bez zápisu o údržbě' ?></p><?php endif; ?></div><?php endif; ?>
     <?php if ($r['typ'] === 'objednavka_interni'): ?><div class="box"><h3>Platba zálohy</h3>
-      <p style="font-size:.9em;color:#555;margin:.2em 0 .6em">Platba převodem se spáruje sama podle VS <?= $e(preg_replace('/\D+/', '', (string)$x['cislo'])) ?>. Tady potvrzuj jen hotovost nebo ruční platbu.</p>
-      <?php if (!empty($r['zaloha_prijata_dne'])): ?><p><span class="chip s-vyrizeno">Záloha přijata</span> <?= $e($kc($r['zaloha_prijata_kc'])) ?> · <?= $e(date('j. n. Y', strtotime($r['zaloha_prijata_dne']))) ?></p>
+      <p style="font-size:.9em;color:#555;margin:.2em 0 .6em">Platba převodem se spáruje sama podle VS <?= $e(preg_replace('/\D+/', '', (string)$x['cislo'])) ?>. Tady potvrzuj hotovost, nebo převod, který se sám nespároval. Po zaevidování zálohy se objednávka sama přepne na <b>Potvrzená</b>.</p>
+      <?php $zpusobZ = (string)($d['zaloha_zpusob'] ?? ''); if (!empty($r['zaloha_prijata_dne'])): ?><p><span class="chip s-vyrizeno">Záloha přijata<?= $zpusobZ !== '' ? ' ' . $e($zpusobZ) : '' ?></span> <?= $e($kc($r['zaloha_prijata_kc'])) ?> · <?= $e(date('j. n. Y', strtotime($r['zaloha_prijata_dne']))) ?></p>
       <?php else: ?><p><span class="chip s-nove">Záloha nezaplacena</span><?= $x['zaloha'] ? ' · požadováno ' . $e($kc($x['zaloha'])) . ', VS ' . $e(preg_replace('/\D+/', '', (string)$x['cislo'])) : '' ?></p><?php endif; ?>
       <form method="post"><input type="hidden" name="id" value="<?= (int)$r['id'] ?>"><input type="hidden" name="akce" value="zaloha">
         <p><label>Přijatá částka (Kč) <input name="castka" size="9" value="<?= $e($r['zaloha_prijata_kc'] ?? $x['zaloha'] ?? '') ?>"></label>
         <label>Datum <input type="date" name="datum" value="<?= $e($r['zaloha_prijata_dne'] ?? date('Y-m-d')) ?>"></label></p>
         <p><label><input type="checkbox" name="poslat" value="1"<?= empty($r['zaloha_prijata_dne']) ? ' checked' : '' ?>> poslat zákazníkovi potvrzení e-mailem (<?= $e($x['email'] ?: 'e-mail chybí') ?>)</label></p>
-        <button>Záloha přijata hotově</button> <?php if (!empty($r['zaloha_prijata_dne'])): ?><button name="zrusit" value="1" class="sec" onclick="return confirm('Zrušit evidenci přijaté zálohy?')">Zrušit evidenci</button><?php endif; ?></form></div><?php endif; ?>
+        <button name="zpusob" value="hotove">💵 Záloha přijata hotově</button> <button name="zpusob" value="prevodem">🏦 Záloha přijata převodem</button> <?php if (!empty($r['zaloha_prijata_dne'])): ?><button name="zrusit" value="1" class="sec" onclick="return confirm('Zrušit evidenci přijaté zálohy?')">Zrušit evidenci</button><?php endif; ?></form></div><?php endif; ?>
     <div class="box"><h3>Poznámky</h3><?php $dl([$r['typ'] === 'poptavka' ? 'Od zákazníka' : 'Pro zákazníka' => $d['poznamka'] ?? '', 'Interní (z formuláře)' => $d['interni'] ?? '', 'Z poptávky' => $d['z_poptavky'] ?? '']); ?>
       <form method="post"><input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
         <p><label>Stav: <select name="stav"><?php foreach ($STAVY as $k => $v): ?><option value="<?= $e($k) ?>"<?= $r['stav'] === $k ? ' selected' : '' ?>><?= $e($v) ?></option><?php endforeach; ?></select></label></p>
