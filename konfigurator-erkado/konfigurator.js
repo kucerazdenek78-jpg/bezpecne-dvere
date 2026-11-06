@@ -642,6 +642,7 @@
       polozky: r.lines.map(function (l) { return { co: l[0], volba: l[2] || '', priplatek: l[1] }; }),
       cena_bez_dph: r.bez, dph_sazba: r.rate, dph: r.dph, cena_s_dph: r.sDph, montaz: st.montaz, doprava: st.montaz ? 'montaz' : st.odber, vizualizace: !!vizRes,
       doprava_km: r.dop ? r.dop.km : null, doprava_cena: r.dop ? r.dop.fee : null, cena_celkem: r.total,
+      kf_stav: (function () { var o = {}; Object.keys(st).forEach(function (k) { if (['step', 'tripMsg', 'trip', 'ref', 'km', 'odber'].indexOf(k) < 0) o[k] = st[k]; }); return o; })(),   /* pro převzetí do nabídky prodejce (nabidka.js) */
       jmeno: $('kfPrijmeni').value.trim() ? $('kfJmeno').value.trim() : (jm[0] || ''), prijmeni: $('kfPrijmeni').value.trim() || jm.slice(1).join(' '), telefon: $('kfTel').value.trim(), email: $('kfEmail').value.trim(),
       ulice: $('kfAdr').value.trim(), mesto: $('kfObec').value.trim(), poznamka: $('kfPozn').value.trim()
     };

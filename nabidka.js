@@ -65,7 +65,7 @@
     }).join('');
     $('#nbKatHint').textContent = (limited() ? 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře patří do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '. ' : '') + (st.rows.length ? 'Kategorii nelze změnit, dokud jsou v nabídce položky. Pro jinou kategorii vytvořte samostatnou ' + (OBJ ? 'objednávku' : 'nabídku') + '.' :
       (st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
-        st.kat ? 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.' : 'Nejdřív vyberte kategorii.'));
+        st.kat ? (st.kat === 'dum' ? 'Vyberte model ERKADO a dekor, pak „🧮 Spočítat cenu v konfigurátoru“: vzor, konstrukce, rozměr, kování a montáž se nastaví v konfigurátoru a cena (podle katalogu ERKADO 2026) se doplní sama. Jiné dveře zadáte ručně.' : 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.') : 'Nejdřív vyberte kategorii.'));
     $('#nbAdd').disabled = !st.kat || (limited() && st.rows.length >= 1);
     var kb = $('#nbAddKov');
     if (!kb && KOV.length) { kb = document.createElement('button'); kb.type = 'button'; kb.id = 'nbAddKov'; kb.className = 'btn btn-outline'; kb.style.marginLeft = '.5rem'; kb.textContent = '+ Přidat kování (kliky)'; $('#nbAdd').parentNode.appendChild(kb); }
@@ -195,7 +195,7 @@
     if (!r.cenaRuc) r.cena = vc;
   }
   function sirkaHtml(r, i) {
-    if (st.kat !== 'interier') return '<label class="pq-f">Šířka křídla (cm)<input data-i="' + i + '" data-f="sirka" value="' + esc(r.sirka) + '" placeholder="např. 80"></label>';
+    if (st.kat !== 'interier') return '<label class="pq-f">' + (erkCfg(r) ? 'Rozměr' : 'Šířka křídla (cm)') + '<input data-i="' + i + '" data-f="sirka" value="' + esc(r.sirka) + '" placeholder="např. 80"></label>';
     var o = ['60', '70', '80', '90']; if (r.sirka && o.indexOf(r.sirka) < 0) o.push(r.sirka);
     return '<label class="pq-f">Šířka křídla (cm)<select data-i="' + i + '" data-f="sirka"><option value="">– vybrat –</option>' + o.map(function (x) { return '<option' + (x === r.sirka ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></label>';
   }
@@ -217,12 +217,72 @@
     var c = catFind(name); if (!c) return;
     r.img = 'aplikace/' + c[1];
     if (st.kat === 'interier') { r.nazev = 'Interiérové dveře ' + c[0]; r.prov = c[2]; r.hint = 'Orientační cena z webu: ' + c[3] + ' (komplet se zárubní, bez kování, bez DPH).'; autoPrice(r); }
-    else { r.nazev = c[2] || ('Vchodové dveře ' + c[0]); r.hint = 'Orientační cena z webu: ' + c[3] + '. Konečnou cenu vč. DPH doplňte níže.'; }
+    else { r.nazev = c[2] || ('Vchodové dveře ' + c[0]); r.cfg = null; r.hint = 'Orientační cena z webu: ' + c[3] + '. Přesnou cenu spočítáte tlačítkem „Spočítat cenu v konfigurátoru“ níže (nebo ji zadejte ručně).'; }
   }
+  /* ── dveře do domu ERKADO: cena z konfigurátoru (konfigurator-erkado.html?nabidka=1, most konfigurator-erkado/nabidka-most.js; 6. 11. 2026)
+       Konfigurátor se otevře v okně nad nabídkou s předvybranou řadou a dekorem, prodejce doladí vzor, konstrukci, rozměr, kování a montáž
+       a tlačítkem „Převzít do nabídky“ se do položky doplní název, parametry a cena vč. DPH (stejný výpočet jako konfigurátor pro zákazníky). ── */
+  function erkCfg(r) { return st.kat === 'dum' && r.cfg && r.cfg.erkado ? r.cfg.erkado : null; }
+  function erkDekId(n) { var x = ''; ERK_DEKORY.forEach(function (d) { if (d[1] === n || d[0] === n) x = d[0]; }); return x; }
+  function erkSpec(r) {
+    var e = erkCfg(r), k = e.konfigurace || {};
+    return [['Řada a vzor', e.model + (e.provedeni ? ', provedení ' + e.provedeni : '')], ['Dekor', r.odstin + (k.dekor_zevnitr ? ' (zevnitř ' + k.dekor_zevnitr + ')' : '')],
+      ['Konstrukce', k.konstrukce], ['Zárubeň', r.zarub || k.zarubne], ['Rozměr', r.sirka || k.rozmer], ['Otevírání', r.otev || k.otevirani],
+      ['Zasklení', k.zaskleni && k.zaskleni !== 'std' ? k.zaskleni : (k.odstin_skla && k.odstin_skla !== 'Dle vzoru v katalogu' ? 'odstín skla ' + k.odstin_skla : '')],
+      ['Kování', r.kov || [k.kovani, k.madlo && k.madlo !== 'bez madla' ? k.madlo : ''].filter(Boolean).join('; ')], ['Světlíky', k.svetliky && k.svetliky !== 'bez světlíků' ? k.svetliky : ''],
+      ['Montáž', e.montaz ? 'na klíč (' + kc(10000) + ' bez DPH, v ceně)' : '']]
+      .filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; });
+  }
+  function erkHtml(r, i) {
+    if (st.kat !== 'dum' || !r.cat || r.cat === '__jiny') return '';
+    var e = erkCfg(r);
+    if (!e) return '<p style="margin:.3rem 0 .7rem"><button type="button" class="btn btn-primary" data-erk="' + i + '">🧮 Spočítat cenu v konfigurátoru</button> <small>vzor, konstrukce, rozměr, kování a montáž – cena podle katalogu ERKADO 2026</small></p>';
+    var bez = e.polozky.map(function (l) { return l[0] + ' ' + kc(l[1]); }).join(' + ');
+    return '<div style="margin:.3rem 0 .8rem;padding:.6rem .8rem;background:#eef7f1;border:1px solid #b7dcc4;border-radius:10px;font-size:.9rem">' +
+      '<b>Cena z konfigurátoru: ' + kc(e.cena_s_dph) + ' vč. ' + e.dph_sazba + ' % DPH</b> (' + kc(e.cena_bez_dph) + ' bez DPH' + (e.montaz ? ', s montáží' : ', bez montáže') + ')' +
+      '<br><small>' + esc(bez) + '</small>' +
+      (r.cena !== e.cena_s_dph ? '<br><small style="color:#9a3412">Cena položky je upravená ručně (' + kc(r.cena) + '). <button type="button" class="btn btn-outline" data-erkcena="' + i + '" style="padding:.1rem .5rem">Použít cenu z konfigurátoru</button></small>' : '') +
+      (e.info && e.info.length ? '<br><small>' + e.info.map(esc).join(' ') + '</small>' : '') +
+      '<br><button type="button" class="btn btn-outline" data-erk="' + i + '" style="padding:.2rem .7rem;margin-top:.35rem">✏️ Upravit výpočet v konfigurátoru</button></div>';
+  }
+  function b64enc(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function openErk(i) {
+    var r = st.rows[i], e = erkCfg(r), u = 'konfigurator-erkado.html?nabidka=1&i=' + i;
+    if (e && e.stav) { var s0 = JSON.parse(JSON.stringify(e.stav)), dk = erkDekId(r.odstin); if (dk) s0.dekor = dk; u += '&s=' + b64enc(s0); }
+    else u += '&m=' + encodeURIComponent(String(r.cat).toLowerCase()) + (erkDekId(r.odstin) ? '&d=' + erkDekId(r.odstin) : '');
+    var ov = document.createElement('div'); ov.id = 'nbErk';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(15,39,71,.6);display:flex;flex-direction:column;padding:10px';
+    ov.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;color:#fff;padding:0 4px 8px;font:600 15px system-ui,Arial,sans-serif"><span>🧮 Výpočet ceny ERKADO – po nastavení klikněte dole na „Převzít výpočet“</span>' +
+      '<button type="button" id="nbErkX" class="btn btn-outline" style="background:#fff;padding:.3rem .9rem">✕ Zavřít</button></div>' +
+      '<iframe src="' + esc(u) + '" title="Konfigurátor ERKADO" style="flex:1;width:100%;border:0;border-radius:12px;background:#fff"></iframe>';
+    document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    ov.querySelector('#nbErkX').addEventListener('click', closeErk);
+  }
+  function closeErk() { var ov = document.getElementById('nbErk'); if (ov) ov.remove(); document.body.style.overflow = ''; }
+  function applyErk(r, d) {
+    var k = d.konfigurace || {};
+    r.cfg = { erkado: d }; r.cenaRuc = false; r.cena = d.cena_s_dph; r.ks = 1;
+    r.nazev = 'Vchodové dveře ' + d.model; r.odstin = d.odstin || r.odstin; r.prov = d.provedeni || '';
+    r.sirka = k.rozmer || ''; r.otev = k.otevirani || ''; r.zarub = k.zarubne ? k.zarubne + ' zárubeň' : ''; r.kov = [k.kovani, k.madlo && k.madlo !== 'bez madla' ? k.madlo : ''].filter(Boolean).join('; ');
+    r.img = d.obrazek || r.img; r.hint = ''; r.ai = null;
+  }
+  window.addEventListener('message', function (ev) {
+    if (ev.origin !== location.origin || !ev.data || ev.data.typ !== 'bd-erkado-nabidka') return;
+    var i = +ev.data.idx, r = st.rows[i]; if (!r || st.kat !== 'dum') return;
+    applyErk(r, ev.data.data); closeErk();
+    /* objednávka: sazba DPH podle výpočtu (s montáží 12 %, bez montáže 21 %), pokud není přenesená daňová povinnost */
+    if (hasFak() && dphRezim() !== 'pdp') { var rb = form.querySelector('input[name="dph_rezim"][value="' + ev.data.data.dph_sazba + '"]'); if (rb) { rb.checked = true; fakToggle(); } }
+    renderRows();
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-erk]'); if (b) { openErk(+b.getAttribute('data-erk')); return; }
+    var c = e.target.closest('[data-erkcena]'); if (c) { var r = st.rows[+c.getAttribute('data-erkcena')], x = erkCfg(r); if (x) { r.cena = x.cena_s_dph; r.cenaRuc = false; renderRows(); } }
+  });
   function rowSpec(r) {
     if (r.typ === 'kovani') { var kk = kovNajdi(r.kid); return [['Klika', kk ? kk.nazev + ' – ' + kk.povrch : r.nazev], ['Rozeta', r.rozeta], ['Cena bez DPH', kk && kk.ceny[r.rozeta] ? kc(kk.ceny[r.rozeta]) + ' za kus' : '']].filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; }); }
     if (st.kat === 'byt') return r.spec || [];
-    return [['Provedení', r.prov], ['Odstín / dekor', r.odstin], ['Šířka křídla', r.sirka ? r.sirka + (/cm/i.test(r.sirka) ? '' : ' cm') : ''], ['Otevírání', r.otev], ['Zárubeň', r.zarub], ['Tloušťka zárubně', st.kat === 'interier' && r.tl ? r.tl : ''], ['Kování', r.kov], ['Montáž', st.kat === 'interier' && r.montaz ? 'zárubně, osazení křídla a kování do připraveného otvoru – ' + kc(INT_MONTAZ) + ' bez DPH za kus' : ''], ['Vybourání zárubně', st.kat === 'interier' && r.bourani ? 'stávající zárubeň, příprava otvoru a odvoz materiálu – ' + kc(INT_BOURANI) + ' bez DPH za kus' : '']]
+    if (erkCfg(r)) return erkSpec(r);
+    return [['Provedení', r.prov], ['Odstín / dekor', r.odstin], ['Šířka křídla', r.sirka ? r.sirka + (/^\d+([.,]\d+)?$/.test(r.sirka) ? ' cm' : '') : ''], ['Otevírání', r.otev], ['Zárubeň', r.zarub], ['Tloušťka zárubně', st.kat === 'interier' && r.tl ? r.tl : ''], ['Kování', r.kov], ['Montáž', st.kat === 'interier' && r.montaz ? 'zárubně, osazení křídla a kování do připraveného otvoru – ' + kc(INT_MONTAZ) + ' bez DPH za kus' : ''], ['Vybourání zárubně', st.kat === 'interier' && r.bourani ? 'stávající zárubeň, příprava otvoru a odvoz materiálu – ' + kc(INT_BOURANI) + ' bez DPH za kus' : '']]
       .filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; });
   }
   function fixSpec(sp) { return (sp || []).map(function (x) { var v = String(x[1] || ''); if (x[0] === 'Záruka') v = v.replace(/^Ne,\s*stačí\s*/i, 'základní ').replace(/^Ano,\s*/i, 'prodloužená: '); return [x[0], v, x[2] || 0, x[3] || '']; }); }
@@ -273,7 +333,7 @@
         var curHtml = cobj ? '<div class="nb-cur"><img src="' + esc(r.img || ('aplikace/' + cobj[1])) + '" alt=""><div><b>' + esc(cobj[0]) + '</b>' + (st.kat === 'interier' ? ' ' + (cobj[4] ? '<span class="nb-sk">SKLADEM</span>' : '<span class="nb-ob">na objednávku</span>') : '') + '<br><small>' + esc(st.kat === 'interier' ? cobj[2] + ' · ' + cobj[3] : cobj[3]) + '</small><br><button type="button" class="btn btn-outline" data-catpick="' + i + '" style="padding:.25rem .8rem;margin-top:.3rem">🖼 Změnit model</button></div></div>'
           : '<p style="margin:.4rem 0 .6rem"><button type="button" class="btn btn-primary" data-catpick="' + i + '">🖼 Vybrat model podle obrázků</button> <small>nebo ze seznamu:</small></p>';
         sel = curHtml + '<label class="pq-f">' + (cobj ? 'Model (seznam)' : 'Model z katalogu') + '<select data-i="' + i + '" data-f="cat"><option value="">– vybrat model –</option>' + groups + '<option value="__jiny"' + (r.cat === '__jiny' ? ' selected' : '') + '>Jiné dveře (vyplním ručně)</option></select></label>' +
-          (r.hint ? '<p class="pq-help" style="margin:.2rem 0 .6rem">' + esc(r.hint) + '</p>' : '') +
+          (r.hint && !erkCfg(r) ? '<p class="pq-help" style="margin:.2rem 0 .6rem">' + esc(r.hint) + '</p>' : '') + erkHtml(r, i) +
           swHtml + '<div class="pq-grid2">' + dek +
           sirkaHtml(r, i) +
           '<label class="pq-f">Otevírání<input data-i="' + i + '" data-f="otev" value="' + esc(r.otev) + '" placeholder="např. levé"></label>' +
@@ -1060,6 +1120,15 @@
           rw.ks = int(p1.ks) || 1; rw.bourani = !!o.bourani; autoPrice(rw); st.rows.push(rw);
         });
         if (o.kategorie === 'interier') (o.kovani || []).forEach(function (k1) { if (kovNajdi(k1.id)) st.rows.push(kovRow(k1.id, k1.rozeta, int(k1.ks) || 1)); });
+      } else if (o.zdroj === 'web-konfigurator-erkado' && o.konfigurace && KATS.indexOf('dum') >= 0 && isFinite(+o.cena_s_dph)) {
+        /* poptávka z konfigurátoru ERKADO: převezme konfiguraci i cenu (bez dopravy – ta se počítá v nabídce) */
+        st.kat = 'dum'; var re = newRow(), rk = String(o.konfigurace.rada || '').toUpperCase();
+        if (catFind(rk)) applyCat(re, rk); else re.cat = '__jiny';
+        applyErk(re, { model: o.model, model_kod: o.model_kod, odstin: o.odstin, provedeni: o.provedeni, konfigurace: o.konfigurace,
+          polozky: (o.polozky || []).map(function (p3) { return [p3.co, int(p3.priplatek)]; }), cena_bez_dph: int(o.cena_bez_dph), dph_sazba: int(o.dph_sazba), cena_s_dph: int(o.cena_s_dph),
+          montaz: !!o.montaz, info: [], obrazek: 'konfigurator-erkado/img/typy/' + String(o.model_kod || '').replace(/^erkado-/, '') + '.jpg', stav: o.kf_stav || null });
+        st.rows.push(re);
+        if (o.doprava_km != null) doprNastav(o.doprava_km, '');
       } else if (/interi/i.test(o.model || o.typ_dveri || '') || /dom|erkado/i.test((o.model || '') + ' ' + (o.typ_dveri || ''))) {
         st.kat = /interi/i.test((o.model || '') + ' ' + (o.typ_dveri || '')) ? 'interier' : 'dum';
         var r2 = newRow(), txt = String(o.model || '').toUpperCase(), hit = '';
