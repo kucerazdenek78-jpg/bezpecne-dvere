@@ -8,6 +8,8 @@
 // 5. 11. 2026: ruční evidence zálohy má dvě tlačítka – „hotově“ a „převodem“ (když se platba z banky sama nespáruje); způsob se ukládá do data_json (zaloha_zpusob)
 //              a po zaevidování zálohy se objednávka sama přepne na Potvrzená (lib/stav.php, nově i ze stavu „E-mail se neodeslal“).
 // 6. 11. 2026: tlačítka a záložky chronologicky – poptávka → nabídka → objednávka (přání Zdeňka).
+// 6. 11. 2026: rychlé filtry – u poptávek a nabídek zaškrtávátko „Zobrazit vyřízené“ (bez něj se Vyřízeno a Storno skryjí);
+//              u objednávek dlaždice stavů s počty (klik = jen ten stav), záloha zaplacená / nezaplacená a „skrýt dokončené“.
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -121,6 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
 // ── načtení + filtry ──
 $typ = $_GET['typ'] ?? 'objednavka_interni'; if ($typ !== '' && !isset($TYPY[$typ])) $typ = '';
 $fStav = $_GET['stav'] ?? ''; $fModel = $_GET['model'] ?? ''; $fProd = $_GET['prodavac'] ?? '';
+$fVyr = ($_GET['vyr'] ?? '') === '1';                                       // poptávky / nabídky: zobrazit i Vyřízeno a Storno
+$fZal = in_array($_GET['zal'] ?? '', ['ano', 'ne'], true) ? $_GET['zal'] : ''; // objednávky: záloha zaplacená / nezaplacená
+$fSkr = ($_GET['skr'] ?? '') === '1';                                       // objednávky: skrýt dokončené (Vyřízeno, Storno)
+$HOTOVE = ['vyrizeno', 'storno'];
+// rychlé filtry nad načtenými řádky ($bezStavu = pro počty u dlaždic stavů)
+function rychly_filtr(array $r, string $typ, string $fStav, bool $fVyr, string $fZal, bool $fSkr, array $HOTOVE, bool $bezStavu = false): bool {
+  if (!$bezStavu && $fStav !== '' && $r['stav'] !== $fStav) return false;
+  $hot = in_array($r['stav'], $HOTOVE, true);
+  if ($r['typ'] !== 'objednavka_interni') { if ($typ !== 'objednavka_interni' && !$fVyr && $hot && $fStav === '') return false; return true; }
+  if ($fSkr && $hot && ($bezStavu || $fStav === '')) return false;
+  $zapl = !empty($r['zaloha_prijata_dne']);
+  if ($fZal === 'ano' && !$zapl) return false;
+  if ($fZal === 'ne' && ($zapl || $r['stav'] === 'storno')) return false;
+  return true;
+}
 $q = trim($_GET['q'] ?? '');
 $od = preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['od'] ?? '') ? $_GET['od'] : ''; $do = preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['do'] ?? '') ? $_GET['do'] : '';
 
@@ -158,7 +175,7 @@ CSS; }
 
 // ── export CSV (Excel, česky: středník + BOM) ──
 if (isset($_GET['export'])) {
-  $rows = nacti($pdo, $typ, $fStav, $od, $do);
+  $rows = array_filter(nacti($pdo, $typ, '', $od, $do), fn($r) => rychly_filtr($r, $typ, $fStav, $fVyr, $fZal, $fSkr, $HOTOVE));
   header('Content-Type: text/csv; charset=utf-8'); header('Content-Disposition: attachment; filename="kartoteka-' . date('Y-m-d') . '.csv"');
   echo "\xEF\xBB\xBF"; $o = fopen('php://output', 'w');
   fputcsv($o, ['Vytvořeno', 'Typ', 'Číslo', 'Stav', 'Jméno', 'Telefon', 'E-mail', 'Město', 'Model', 'Cena celkem', 'Záloha', 'Prodavač', 'Termín', 'Poznámka'], ';');
@@ -259,7 +276,9 @@ if (isset($_GET['id'])):
   <div class="box" id="puvodni"><h3>Původní zpráva (<?= $e($r['predmet']) ?>)</h3><pre style="white-space:pre-wrap;font-family:inherit;margin:0"><?= $e(preg_replace('~\ndata_json[^\n]*~u', '', (string)$r['telo'])) ?></pre></div>
 <?php } else:
 // ══════════ SEZNAM ══════════
-  $vse = nacti($pdo, $typ, $fStav, $od, $do);
+  $vse0 = nacti($pdo, $typ, '', $od, $do);
+  $vse = array_values(array_filter($vse0, fn($r) => rychly_filtr($r, $typ, $fStav, $fVyr, $fZal, $fSkr, $HOTOVE)));
+  $skryto = count(array_filter($vse0, fn($r) => $r['typ'] !== 'objednavka_interni' && in_array($r['stav'], $HOTOVE, true)));
   $modely = $prodavaci = [];
   foreach ($vse as $r) { if ($r['x']['model'] !== '') $modely[$r['x']['model']] = 1; if ($r['x']['prodavac'] !== '') $prodavaci[$r['x']['prodavac']] = 1; }
   $qn = odstran_diakritiku(mb_strtolower($q)); $rows = [];
@@ -268,7 +287,7 @@ if (isset($_GET['id'])):
     if ($qn !== '' && mb_strpos(odstran_diakritiku(hledany_text($r, $x)), $qn) === false) continue;
     $rows[] = $r; }
   $suma = 0; foreach ($rows as $r) if (is_numeric($r['x']['cena'])) $suma += $r['x']['cena'];
-  $qs = fn($a) => '?' . http_build_query(array_filter(array_merge(['typ' => $typ, 'stav' => $fStav, 'model' => $fModel, 'prodavac' => $fProd, 'q' => $q, 'od' => $od, 'do' => $do], $a), fn($v) => $v !== ''));
+  $qs = fn($a) => '?' . http_build_query(array_filter(array_merge(['typ' => $typ, 'stav' => $fStav, 'model' => $fModel, 'prodavac' => $fProd, 'q' => $q, 'od' => $od, 'do' => $do, 'vyr' => $fVyr ? '1' : '', 'zal' => $fZal, 'skr' => $fSkr ? '1' : ''], $a), fn($v) => $v !== ''));
 ?>
   <?php $webU = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/'); ?><p class="nove" style="display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .8rem"><a class="btn" href="<?= $e($webU) ?>/poptavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat poptávku</a><a class="btn" href="<?= $e($webU) ?>/nabidka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat nabídku</a><a class="btn" href="<?= $e($webU) ?>/objednavka-nova.html?sys=1<?= $e(bd_prod_p()) ?>">➕ Přidat objednávku</a></p>
   <div class="tabs"><a class="<?= $typ === 'poptavka' ? 'on' : '' ?>" href="kartoteka.php?typ=poptavka">Poptávky</a><a class="<?= $typ === 'nabidka' ? 'on' : '' ?>" href="kartoteka.php?typ=nabidka">Nabídky</a><a class="<?= $typ === 'objednavka_interni' ? 'on' : '' ?>" href="kartoteka.php?typ=objednavka_interni">Objednávky</a><a class="<?= $typ === '' ? 'on' : '' ?>" href="kartoteka.php?typ=">Vše</a></div>
@@ -278,7 +297,13 @@ if (isset($_GET['id'])):
     <label>Model<select name="model"><option value="">všechny</option><?php foreach (array_keys($modely) as $m): ?><option<?= $fModel === $m ? ' selected' : '' ?>><?= $e($m) ?></option><?php endforeach; ?></select></label>
     <label>Prodavač<select name="prodavac"><option value="">všichni</option><?php foreach (array_keys($prodavaci) as $m): ?><option<?= $fProd === $m ? ' selected' : '' ?>><?= $e($m) ?></option><?php endforeach; ?></select></label>
     <label>Od<input type="date" name="od" value="<?= $e($od) ?>"></label><label>Do<input type="date" name="do" value="<?= $e($do) ?>"></label>
+    <?php if ($typ !== 'objednavka_interni'): ?><label style="flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--ink);padding:8px 4px"><input type="checkbox" name="vyr" value="1"<?= $fVyr ? ' checked' : '' ?> onchange="this.form.submit()" style="width:18px;height:18px"> Zobrazit vyřízené<?= !$fVyr && $skryto ? ' <span class="mut">(' . $skryto . ' skryto)</span>' : '' ?></label><?php endif; ?>
+    <?php if ($typ === 'objednavka_interni'): ?><label>Záloha<select name="zal" onchange="this.form.submit()"><option value="">vše</option><option value="ne"<?= $fZal === 'ne' ? ' selected' : '' ?>>nezaplacená</option><option value="ano"<?= $fZal === 'ano' ? ' selected' : '' ?>>zaplacená</option></select></label>
+    <label style="flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--ink);padding:8px 4px"><input type="checkbox" name="skr" value="1"<?= $fSkr ? ' checked' : '' ?> onchange="this.form.submit()" style="width:18px;height:18px"> Skrýt dokončené (Vyřízeno, Storno)</label><?php endif; ?>
     <button>Filtrovat</button><a class="btn sec" href="kartoteka.php?typ=<?= $e($typ) ?>">Zrušit</a><a class="btn sec" href="<?= $e($qs(['export' => '1'])) ?>">Export do Excelu (CSV)</a></form>
+  <?php if ($typ === 'objednavka_interni'): $poc = []; foreach ($vse0 as $r0) if (rychly_filtr($r0, $typ, '', $fVyr, $fZal, $fSkr, $HOTOVE, true)) $poc[$r0['stav']] = ($poc[$r0['stav']] ?? 0) + 1; ?>
+  <div class="stavy" style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px"><a class="chip" style="padding:6px 12px;font-size:13px;text-decoration:none;<?= $fStav === '' ? 'outline:2px solid var(--acc)' : '' ?>" href="<?= $e($qs(['stav' => ''])) ?>">Všechny stavy · <?= array_sum($poc) ?></a><?php foreach ($STAVY as $k => $v): if (empty($poc[$k])) continue; ?><a class="chip s-<?= $e($k) ?>" style="padding:6px 12px;font-size:13px;text-decoration:none;<?= $fStav === $k ? 'outline:2px solid var(--acc)' : '' ?>" href="<?= $e($qs(['stav' => $fStav === $k ? '' : $k])) ?>"><?= $e($v) ?> · <?= (int)$poc[$k] ?></a><?php endforeach; ?></div>
+  <?php endif; ?>
   <p class="mut"><?= count($rows) ?> záznamů<?= $suma ? ' · součet cen ' . $e($kc($suma)) : '' ?></p>
   <table><tr><th>Přijato</th><th>Číslo</th><th>Zákazník</th><th class="hide-m">Město</th><th>Model</th><th class="num">Cena</th><th class="hide-m">Prodavač</th><th>Stav</th><th>Akce</th></tr>
   <?php foreach ($rows as $r): $x = $r['x']; ?><tr>
