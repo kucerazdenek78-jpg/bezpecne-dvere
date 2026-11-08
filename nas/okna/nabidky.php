@@ -131,7 +131,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
       if (($fs['error'][$i] ?? 1) !== UPLOAD_ERR_OK) { if (($fs['error'][$i] ?? 4) !== UPLOAD_ERR_NO_FILE) $chyby[] = $jm . ' (nenahrál se – možná je moc velký)'; continue; }
       $jm = trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', basename((string)$jm))); $ext = strtolower(pathinfo($jm, PATHINFO_EXTENSION));
       if (!in_array($ext, NB_PRIL_EXT, true)) { $chyby[] = $jm . ' (nepovolený typ)'; continue; }
-      if ($fs['size'][$i] > 25 * 1048576) { $chyby[] = $jm . ' (víc než 25 MB)'; continue; }
+      if ($fs['size'][$i] > 16 * 1048576) { $chyby[] = $jm . ' (víc než 16 MB)'; continue; }
       if (move_uploaded_file($fs['tmp_name'][$i], $d . '/' . date('Ymd-His') . '_' . mb_substr($jm, -120))) $nOk++; else $chyby[] = $jm;
     }
     header('Location: nabidky.php?id=' . $id . '&pril=' . $nOk . ($chyby ? '&prilchyba=' . rawurlencode(implode('; ', $chyby)) : '') . '#zadani'); exit;
@@ -211,7 +211,7 @@ if ($nb):
 <?php if ($nb['svj_id'] && array_filter($pl, fn($f) => in_array(strtolower(pathinfo($f['f'], PATHINFO_EXTENSION)), ['xlsx', 'xls'], true))): ?><p class="mut">Tabulku bytů můžete nahrát i do seznamu bytů SVJ (velikosti → položky nabídky): stáhněte ji a v <a href="svj.php?svj=<?= (int)$nb['svj_id'] ?>#vchody">SVJ → Vchody a byty → Nahrát seznam bytů z Excelu</a> ji vyberte. Pak „Nová nabídka pro SVJ podle seznamu bytů“ spočítá byty podle velikosti.</p><?php endif; ?>
 <?php else: ?><p class="mut">Zatím žádné soubory.</p><?php endif; ?>
 <form method="post" enctype="multipart/form-data" class="ln"><input type="hidden" name="akce" value="prilohy_nahraj"><input type="hidden" name="id" value="<?= $id ?>">
-<label class="w">Přidat soubory (tabulka s byty a nájemníky, PDF, fotky… max 25 MB)<input type="file" name="soubory[]" multiple accept=".<?= implode(',.', NB_PRIL_EXT) ?>"></label><button class="sec">Nahrát</button></form>
+<label class="w">Přidat soubory (tabulka s byty a nájemníky, PDF, fotky… max 16 MB na soubor, 40 MB najednou)<input type="file" name="soubory[]" multiple accept=".<?= implode(',.', NB_PRIL_EXT) ?>"></label><button class="sec">Nahrát</button></form>
 <form method="post"><input type="hidden" name="akce" value="zadani_ulozit"><input type="hidden" name="id" value="<?= $id ?>">
 <label class="w" style="display:flex;flex-direction:column">Poznámka k zadání (co zákazník chce, kdo poslal, termín…)<textarea name="zadani" rows="3"><?= $e($nb['zadani'] ?? '') ?></textarea></label><p style="margin:6px 0 0"><button class="sec">Uložit poznámku</button></p></form></div>
 <?php $prD = in_array($nb['typ'], ['svj', 'oprava'], true);
