@@ -7,6 +7,8 @@
     if (/[?&]sys=1/.test(location.search) || /panel\.html$/.test(location.pathname) || /kartoteka\.dvere\.app/.test(document.referrer)) sessionStorage.setItem(K, '1');
     on = sessionStorage.getItem(K) === '1';
   } catch (e) { on = /[?&]sys=1/.test(location.search); }
+  /* stránky jen pro prodejce (za zámkem panelu): lišta se ukáže vždy – i když prohlížeč neposlal odkazující stránku (nainstalovaná aplikace, vnitřní prohlížeč, přísná Referrer-Policy) */
+  if (/\/(nabidka-nova|objednavka-nova|objednavka-vice)\.html$/.test(location.pathname)) on = true;
   if (!on) return;
   var S = 'https://kartoteka.dvere.app/';
   var L = [[S, '🏠 Úvod systému', 'u'], [S + 'kartoteka.php', '📋 Kartotéka'], [S + 'nastroje.php', '🧰 Nástroje'], ['poptavka-nova.html', '➕ Nová poptávka'], ['nabidka-nova.html', '➕ Nová nabídka'], ['objednavka-vice.html', '➕ Objednávka interiér/dům'], ['objednavka-nova.html', '➕ Nová objednávka'], [S + 'sklad.php', '📦 Sklad'], [S + 'montaze.php', '📅 Montáže'], [S + 'servis.php', '🔧 Servis']];
