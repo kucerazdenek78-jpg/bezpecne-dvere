@@ -936,7 +936,7 @@
   var hd = /^#d=([a-z0-9-]+)$/i.exec(location.hash || '');   /* #d=orech: předvolba dekoru z ukázky dekorů na stránce Dveře do domu */
   if (hd && DEK[hd[1]]) st.dekor = hd[1];
   if (h[0] === 'foto') { st.step = 5; }   // „Vyzkoušet na fotce“ ze stránky Dveře do domu: rovnou konečný vzhled, kde jsou všechny dekory
-  window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf, vizImage: vizImage };
+  window.KF = { state: st, calc: calc, render: render, collect: collect, buildPdf: buildPdf, vizImage: vizImage, paint: paint };
   render(); showVizRes();
   if (st.step === 5 && vizRes) setTimeout(function () { var e = $('kfVizRes'); if (e) e.scrollIntoView({ block: 'center' }); }, 300);
 })();

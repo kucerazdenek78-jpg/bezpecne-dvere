@@ -71,8 +71,23 @@
         polozky: r.lines.map(function (l) { return [l[0], l[1]]; }), cena_bez_dph: r.bez, dph_sazba: r.rate, cena_s_dph: r.sDph,
         montaz: !!st.montaz, info: r.info || [], obrazek: 'konfigurator-erkado/img/typy/' + String(d.model_kod || '').replace(/^erkado-/, '') + '.jpg', stav: stav, katalog: E.katalog
       } };
-      if (window.parent && window.parent !== window) window.parent.postMessage(msg, location.origin);
-      else if (window.opener) { window.opener.postMessage(msg, location.origin); window.close(); }
+      function posli() {
+        if (window.parent && window.parent !== window) window.parent.postMessage(msg, location.origin);
+        else if (window.opener) { window.opener.postMessage(msg, location.origin); window.close(); }
+      }
+      /* obrázek dveří přebarvený na zvolený dekor (stejně jako v konfigurátoru), zmenšený, aby nebyl odkaz / záznam zbytečně velký; při chybě zůstane katalogová fotka */
+      var sl = String(d.model_kod || '').replace(/^erkado-/, '');
+      if (!KF.paint || !sl) { posli(); return; }
+      var btn = document.getElementById('kfNbOk'); btn.disabled = true; btn.textContent = 'Připravuji obrázek…';
+      Promise.race([KF.paint(sl, st.dekor), new Promise(function (ok, ko) { setTimeout(ko, 8000); })]).then(function (u) {
+        return new Promise(function (ok) {
+          var im = new Image(); im.onload = function () {
+            var k = Math.min(1, 520 / Math.max(im.naturalWidth, im.naturalHeight)), cv = document.createElement('canvas');
+            cv.width = Math.max(1, Math.round(im.naturalWidth * k)); cv.height = Math.max(1, Math.round(im.naturalHeight * k));
+            cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); try { ok(cv.toDataURL('image/jpeg', 0.85)); } catch (e) { ok(''); }
+          }; im.onerror = function () { ok(''); }; im.src = u;
+        });
+      }).then(function (j) { if (j) msg.data.obrazek = j; }, function () {}).then(function () { btn.disabled = false; btn.textContent = '↩ Převzít výpočet'; posli(); });
     });
     KF.render(); obnov();
   }
