@@ -666,7 +666,9 @@
         });
         var pl = []; if (p.popis) { font('normal', 8.8); pl = doc.splitTextToSize(p.popis, wTxt); h += pl.length * 4 + 2; }
         h += 11 + (p.sleva ? 4.5 : 0);
-        var imgCol = hasImg ? IH + (im[1] || (r && r.shadeImg) ? 14 : 2) : 0, cardH = Math.max(h, imgCol) + 3;
+        /* poznámka pod obrázkem: katalogový obrázek je jen ilustrační (vlastní fotka z nabídky se nepoznamenává) */
+        var ilu = hasImg && !(r && r.imgData); font('normal', 6.4); var iluL = ilu ? doc.splitTextToSize('Obrázek je ilustrační – kování, barva a strana otevírání mohou být jiné.', IW) : [], iluH = iluL.length ? iluL.length * 2.7 + 2 : 0;
+        var imgCol = hasImg ? IH + (im[1] || (r && r.shadeImg) ? 14 : 2) + iluH : 0, cardH = Math.max(h, imgCol) + 3;
         ensure(cardH + 4);
         var top = y - 2;
         doc.setFillColor(255, 255, 255); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.3); doc.roundedRect(M, top, CW, cardH, 2.5, 2.5, 'FD');
@@ -678,6 +680,7 @@
           if (im[1]) doc.addImage(im[1].data, 'JPEG', M + 3, sy, 9, 9); else { doc.setFillColor.apply(doc, hexc(r.shadeImg.slice(6))); doc.roundedRect(M + 3, sy, 9, 9, 1, 1, 'F'); }
           font('normal', 7, MUTED); doc.text('Barva', M + 14, sy + 3.2); font('bold', 8.5); doc.text(doc.splitTextToSize(p.odstin || '', IW - 12), M + 14, sy + 7.2);
         }
+        if (iluL.length) { font('normal', 6.4, MUTED); doc.text(iluL, M + 3, top + 3 + IH + (im[1] || (r && r.shadeImg) ? 14 : 2) + 3); }
         /* text */
         var yy = top + 8;
         font('bold', 11.5, GREEN); doc.text(tl, x0, yy); yy += tl.length * 5.2 + 1.2;
