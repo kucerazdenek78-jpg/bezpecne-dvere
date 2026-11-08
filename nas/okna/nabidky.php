@@ -111,6 +111,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $obsah = (string)file_get_contents($up['tmp_name']); if (strncmp($obsah, '%PDF', 4) !== 0) $j(false, 'Soubor není PDF.');
     $komu = array_values(array_filter(array_map('trim', preg_split('/[,;\s]+/', (string)($_POST['email'] ?? ''))), fn($m) => filter_var($m, FILTER_VALIDATE_EMAIL)));
     if (!$komu) $j(false, 'Zadejte platný e-mail zákazníka.');
+    foreach ($komu as $m) { $dom = substr(strrchr($m, '@'), 1); if (function_exists('checkdnsrr') && !checkdnsrr($dom . '.', 'MX') && !checkdnsrr($dom . '.', 'A')) $j(false, 'Doména „' . $dom . '“ neexistuje nebo nepřijímá poštu – zkontrolujte překlep v adrese ' . $m . '.'); }
     $dir = $nbDir(); if (!is_dir($dir)) @mkdir($dir, 0775, true);
     $soubor = 'nabidka-' . preg_replace('/[^\w-]/', '', $x['cislo']) . '.pdf';
     if (@file_put_contents($dir . '/' . $soubor, $obsah) === false) $j(false, 'PDF se nepodařilo uložit na NAS.');
