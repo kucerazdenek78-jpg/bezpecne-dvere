@@ -249,7 +249,7 @@
   function openErk(i) {
     var r = st.rows[i], e = erkCfg(r), u = 'konfigurator-erkado.html?nabidka=1&i=' + i;
     if (e && e.stav) { var s0 = JSON.parse(JSON.stringify(e.stav)), dk = erkDekId(r.odstin); if (dk) s0.dekor = dk; u += '&s=' + b64enc(s0); }
-    else u += '&m=' + encodeURIComponent(String(r.cat).toLowerCase()) + (erkDekId(r.odstin) ? '&d=' + erkDekId(r.odstin) : '');
+    else u += (r.cat && r.cat !== '__jiny' ? '&m=' + encodeURIComponent(String(r.cat).toLowerCase()) : '') + (erkDekId(r.odstin) ? '&d=' + erkDekId(r.odstin) : '');
     var ov = document.createElement('div'); ov.id = 'nbErk';
     ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(15,39,71,.6);display:flex;flex-direction:column;padding:10px';
     ov.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;color:#fff;padding:0 4px 8px;font:600 15px system-ui,Arial,sans-serif"><span>🧮 Výpočet ceny ERKADO – po nastavení klikněte dole na „Převzít výpočet“</span>' +
@@ -269,6 +269,7 @@
   window.addEventListener('message', function (ev) {
     if (ev.origin !== location.origin || !ev.data || ev.data.typ !== 'bd-erkado-nabidka') return;
     var i = +ev.data.idx, r = st.rows[i]; if (!r || st.kat !== 'dum') return;
+    if (!r.cat || r.cat === '__jiny') { var rk9 = String((ev.data.data.konfigurace || {}).rada || '').toUpperCase(); if (rk9 && catFind(rk9)) applyCat(r, rk9); else r.cat = '__jiny'; }   /* položka přidaná rovnou přes průvodce: řada z konfigurátoru */
     applyErk(r, ev.data.data); closeErk();
     /* objednávka: sazba DPH podle výpočtu (s montáží 12 %, bez montáže 21 %), pokud není přenesená daňová povinnost */
     if (hasFak() && dphRezim() !== 'pdp') { var rb = form.querySelector('input[name="dph_rezim"][value="' + ev.data.data.dph_sazba + '"]'); if (rb) { rb.checked = true; fakToggle(); } }
@@ -423,7 +424,7 @@
     if (t.id === 'nbAddKov') { st.rows.push(kovRow('', 'BB / PZ', 1)); renderKat(); renderRows(); return; }
     var kp = t.closest && t.closest('[data-kpick]'); if (kp) { var rk = st.rows[+kp.getAttribute('data-kpick')]; rk.kid = kp.getAttribute('data-kid'); rk.cenaRuc = false; renderRows(); return; }
     var krp = t.closest && t.closest('[data-kreprice]'); if (krp) { st.rows[+krp.getAttribute('data-kreprice')].cenaRuc = false; renderRows(); return; }
-    if (t.id === 'nbAdd') { if (limited() && st.rows.length >= 1) return; st.rows.push(newRow()); renderKat(); renderRows(); if (st.kat === 'byt') openPick(st.rows.length - 1); }
+    if (t.id === 'nbAdd') { if (limited() && st.rows.length >= 1) return; st.rows.push(newRow()); renderKat(); renderRows(); if (st.kat === 'byt') openPick(st.rows.length - 1); else if (st.kat === 'dum') openErk(st.rows.length - 1); }
     if (t.dataset && t.dataset.reprice != null && t.dataset.reprice !== '') { var rr = st.rows[+t.dataset.reprice]; rr.cenaRuc = false; autoPrice(rr); renderRows(); return; }
     if (t.dataset && t.dataset.pick != null && t.dataset.pick !== '') openPick(+t.dataset.pick);
     if (t.dataset && t.dataset.del != null && t.dataset.del !== '') { st.rows.splice(+t.dataset.del, 1); renderKat(); renderRows(); }
@@ -1140,6 +1141,8 @@
       }
       if (o.patro != null && o.patro !== '' && !form.elements.dopr_patro.value) doprNastav('', '', o.patro, o.vytah);
       setDefaults();
+      /* poptávka na dveře do domu bez přenesené konfigurace z konfigurátoru → po načtení se rovnou otevře kompletní průvodce (rozměr, nadsvětlíky, kování, montáž) */
+      if (st.kat === 'dum' && !o.ai && o.typ !== 'nabidka' && st.rows.length && st.rows[0].cat && st.rows[0].cat !== '__jiny' && !erkCfg(st.rows[0])) st.autoErk = true;
       if (o.ai) {
         st.aiNavrh = o.ai_navrh || ''; if (!st.kat && KATS.indexOf(o.kategorie) >= 0) { st.kat = o.kategorie; setDefaults(); }
         if (o.interni && form.elements.interni) form.elements.interni.value = o.interni;
@@ -1154,6 +1157,7 @@
     } catch (e) {}
   })();
   renderKat(); renderRows();
+  if (st.autoErk) { st.autoErk = false; setTimeout(function () { openErk(0); }, 400); }
   if (!fv('dopr_km') && !fv('dopr_kc') && (fv('ulice') || fv('mesto')) && st.fromRef) doprSpocitat(true);   /* poptávka bez dopravy (dům, interiér) → spočítat z adresy */
   doprInfo(); sums();
   /* otevření rozpracované nabídky z kartotéky: #k=id.token */
