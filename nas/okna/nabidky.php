@@ -10,6 +10,8 @@ $ted = date('Y-m-d H:i:s'); $n = ok_nast($pdo);
 $cen = []; foreach (ok_cenik($pdo) as $r) $cen[$r['kod']] = $r;
 const NB_STAVY = ['koncept' => 'Koncept', 'odeslana' => 'Odeslaná', 'prijata' => 'Přijatá', 'odmitnuta' => 'Odmítnutá'];
 const NB_PRIPLATKY = ['' => 'bez příplatku', 'vecer' => 'servis po 18. hodině', 'vikend' => 'soboty, neděle a svátky', 'expres' => 'expres – nástup do 4 hodin'];
+if (!in_array('odeslano', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN odeslano TEXT');
+$nbDir = fn() => $DATA . '/okna/nabidky';
 $polozka = fn(array $c, float $mn) => ['kod' => $c['kod'], 'nazev' => $c['nazev'], 'jednotka' => $c['jednotka'], 'mnozstvi' => $mn, 'cena' => (float)$c['cena'], 'dph' => (float)$c['dph'], 'slevy' => $c['skupina'] === 'doprava' ? 0 : 1];
 $nacti = function (int $id) use ($pdo) { $st = $pdo->prepare('SELECT * FROM ok_nabidka WHERE id=?'); $st->execute([$id]); return $st->fetch(PDO::FETCH_ASSOC) ?: null; };
 $vypocet = function (array $nb) use ($n) {
@@ -88,6 +90,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $sr, json_encode($pol, JSON_UNESCAPED_UNICODE), $P('poznamka', 3000), isset(NB_STAVY[$_POST['stav'] ?? '']) ? $_POST['stav'] : 'koncept', $ted, $id]);
     header('Location: nabidky.php?id=' . $id . (!empty($_POST['dal']) ? '&upravit=1' : '') . '&ok=1'); exit;
   }
+  if ($a === 'poslat' && ($x = $nacti($id))) {   // PDF sestavené v prohlížeči z tiskové stránky: uložit a poslat e-mailem
+    header('Content-Type: application/json; charset=utf-8'); $j = fn($ok, $m = '') => exit(json_encode(['ok' => $ok, 'zprava' => $m], JSON_UNESCAPED_UNICODE));
+    $up = $_FILES['pdf'] ?? null;
+    if (!$up || ($up['error'] ?? 1) !== UPLOAD_ERR_OK || ($up['size'] ?? 0) < 1000 || $up['size'] > 15 * 1048576) $j(false, 'PDF se nepřeneslo.');
+    $obsah = (string)file_get_contents($up['tmp_name']); if (strncmp($obsah, '%PDF', 4) !== 0) $j(false, 'Soubor není PDF.');
+    $komu = array_values(array_filter(array_map('trim', preg_split('/[,;\s]+/', (string)($_POST['email'] ?? ''))), fn($m) => filter_var($m, FILTER_VALIDATE_EMAIL)));
+    if (!$komu) $j(false, 'Zadejte platný e-mail zákazníka.');
+    $dir = $nbDir(); if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    $soubor = 'nabidka-' . preg_replace('/[^\w-]/', '', $x['cislo']) . '.pdf';
+    if (@file_put_contents($dir . '/' . $soubor, $obsah) === false) $j(false, 'PDF se nepodařilo uložit na NAS.');
+    require_once OK_APP . '/lib/posta.php';
+    $predmet = mb_substr(trim((string)($_POST['predmet'] ?? '')), 0, 200) ?: 'Cenová nabídka ' . $x['cislo'] . ' – servis oken a dveří';
+    $telo = trim(str_replace("\r", '', (string)($_POST['text'] ?? '')));
+    $ok = posli_mail($cfg, $DATA, $komu, [], $cfg['from'], $predmet, $telo, [[$dir . '/' . $soubor, $soubor]]);
+    if (!$ok) $j(false, 'E-mail se nepodařilo odeslat. PDF je uložené – můžete ho stáhnout a poslat ručně.');
+    $pdo->prepare('UPDATE ok_nabidka SET odeslano=?, email=CASE WHEN IFNULL(email,\'\')=\'\' THEN ? ELSE email END, stav=CASE WHEN stav=\'koncept\' THEN \'odeslana\' ELSE stav END, upraveno=? WHERE id=?')
+      ->execute([date('j. n. Y H:i') . ' → ' . implode(', ', $komu) . ' (' . uziv_jmeno() . ')', $komu[0], $ted, $id]);
+    if ($x['svj_id']) $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')->execute([(int)$x['svj_id'], date('Y-m-d'), 'nabidka', 'Nabídka ' . $x['cislo'] . ' odeslána e-mailem na ' . implode(', ', $komu), '', $ted, uziv_jmeno()]);
+    $j(true);
+  }
   if ($a === 'stav' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET stav=?, upraveno=? WHERE id=?')->execute([isset(NB_STAVY[$_POST['stav'] ?? '']) ? $_POST['stav'] : 'koncept', $ted, $id]); header('Location: nabidky.php?id=' . $id); exit; }
   if ($a === 'kopie' && ($x = $nacti($id))) {
     $pdo->prepare('INSERT INTO ok_nabidka (cislo, typ, svj_id, jed_id, nazev, adresa, ic, kontakt, telefon, email, datum, platnost, smlouva, interval_let, priplatek, sleva_rucne, polozky, poznamka, stav, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
@@ -106,7 +128,7 @@ body{font:13px/1.45 Arial,sans-serif;color:#1b2430;margin:0}main{max-width:780px
 table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dee6;padding:5px 6px;text-align:left;vertical-align:top}th{background:#eef4f6;font-size:12px}.r{text-align:right}.nowrap{white-space:nowrap}.mut{color:#5f6b7a}
 .hl{display:flex;justify-content:space-between;gap:12px;font-size:12px;border-bottom:3px solid #0e4f5c;padding-bottom:8px}.sum td{font-weight:700;border-top:2px solid #0e4f5c}.no{margin-top:14px}
 @media print{.noprint{display:none}main{padding:0}@page{margin:14mm}}</style></head><body><main>
-<p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button> · <?php $pr = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : in_array($nb['typ'], ['svj', 'oprava'], true); ?><a href="?id=<?= $id ?>&amp;tisk=1&amp;prubeh=<?= $pr ? '0' : '1' ?>"><?= $pr ? 'bez přílohy „Jak u nás probíhá servis a oprava“' : 'přiložit „Jak u nás probíhá servis a oprava“' ?></a></p>
+<?php if (!isset($_GET['pdf'])): ?><p class="noprint"><a href="?id=<?= $id ?>">← zpět</a> · <button onclick="window.print()">🖨 Tisk / uložit jako PDF</button> · <?php $pr = isset($_GET['prubeh']) ? $_GET['prubeh'] === '1' : in_array($nb['typ'], ['svj', 'oprava'], true); ?><a href="?id=<?= $id ?>&amp;tisk=1&amp;prubeh=<?= $pr ? '0' : '1' ?>"><?= $pr ? 'bez přílohy „Jak u nás probíhá servis a oprava“' : 'přiložit „Jak u nás probíhá servis a oprava“' ?></a></p><?php endif; ?>
 <div class="hl"><div><b style="font-size:15px">KK SYSTEM – servis oken a dveří</b><br>Zdeněk Kučera · Zd. Štěpánka 2764/1, 434 01 Most<br>IČ 64682676, DIČ CZ7801242768</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz<br>www.bezpecne-dvere.cz</div></div>
 <h1><?= $nb['typ'] === 'oprava' ? 'Cenová nabídka – oprava oken a dveří' : 'Cenová nabídka – servis oken a dveří' ?></h1>
 <p>č. <b><?= $e($nb['cislo']) ?></b> · ze dne <?= $e(so_datum($nb['datum'])) ?><?= $nb['platnost'] ? ' · platnost do ' . $e(so_datum($nb['platnost'])) : '' ?></p>
@@ -148,6 +170,58 @@ if ($nb):
 <tr><th colspan="3">Celkem s DPH<?= (int)$nb['smlouva'] ? ' (jeden servis)' : '' ?></th><th class="r nowrap"><?= $e(ok_kc($v['sum']['s'], 2)) ?></th></tr></table>
 <p class="mut"><?= $v['sleva'] > 0 ? 'Sleva ' . $e(str_replace('.', ',', (string)$v['sleva'])) . ' % – ' . $e($v['sleva_txt']) . '. ' : 'Bez slevy. ' ?><?= $v['priplatek'] > 0 ? 'Příplatek ' . $e($v['priplatek']) . ' %. ' : '' ?><?= (int)$nb['smlouva'] ? 'Smlouva ' . (int)$nb['smlouva'] . '× – celkem ' . $e(ok_kc($v['sum']['s'] * (int)$nb['smlouva'], 2)) . ' s DPH.' : '' ?></p>
 <p><a class="btn" href="?id=<?= $id ?>&amp;tisk=1" target="_blank">🖨 Tisk / PDF</a> <a class="btn sec" href="?id=<?= $id ?>&amp;upravit=1">✏️ Upravit</a></p></div>
+<?php $prD = in_array($nb['typ'], ['svj', 'oprava'], true);
+  $textD = "Dobrý den,\n\nv příloze Vám zasíláme cenovou nabídku č. " . $nb['cislo'] . ($nb['typ'] === 'oprava' ? ' na opravu oken a dveří' : ' na servis oken a dveří') . ($nb['nazev'] ? ' pro ' . $nb['nazev'] : '') . '.'
+    . ($nb['platnost'] ? "\nNabídka platí do " . so_datum($nb['platnost']) . '.' : '') . ($prD ? "\nV příloze nabídky najdete i popis, jak u nás servis a případná oprava probíhá." : '')
+    . "\n\nPokud máte zájem nebo dotaz, stačí odpovědět na tento e-mail nebo zavolat na +420 725 559 235.\n\nS pozdravem\n" . uziv_jmeno() . "\nKK SYSTEM – servis oken a dveří\nwww.bezpecne-dvere.cz"; ?>
+<div class="box" id="poslat"><h2 style="margin-top:0">📧 Poslat zákazníkovi PDF</h2>
+<?php if (!empty($nb['odeslano'])): ?><p class="mut">Naposledy odesláno: <?= $e($nb['odeslano']) ?></p><?php endif; ?>
+<div class="ln"><label class="w">E-mail zákazníka (více adres oddělte čárkou)<input id="psEmail" type="text" inputmode="email" value="<?= $e($nb['email']) ?>" placeholder="napr. vybor@svj.cz"></label></div>
+<div class="ln"><label class="w">Předmět<input id="psPredmet" value="<?= $e('Cenová nabídka ' . $nb['cislo'] . ' – ' . ($nb['typ'] === 'oprava' ? 'oprava' : 'servis') . ' oken a dveří') ?>"></label></div>
+<div class="ln"><label class="w">Text e-mailu<textarea id="psText" rows="9"><?= $e($textD) ?></textarea></label></div>
+<label style="flex-direction:row;align-items:center;gap:6px;display:flex"><input type="checkbox" id="psPrubeh"<?= $prD ? ' checked' : '' ?>> přiložit do PDF „Jak u nás probíhá servis a oprava“</label>
+<p><button type="button" id="psPoslat" class="ok">📧 Vytvořit PDF a odeslat</button> <button type="button" id="psStahnout" class="sec">⬇ Jen stáhnout PDF</button> <span id="psStav" class="mut"></span></p>
+<p class="mut" style="font-size:13px">PDF se vytvoří z tiskové podoby nabídky (stejně jako „Tisk / PDF“). Kopie zůstane uložená na NASu.</p></div>
+<script>
+(function () {
+  var st = document.getElementById('psStav'), bP = document.getElementById('psPoslat'), bS = document.getElementById('psStahnout');
+  function pdf() {
+    return new Promise(function (ok, ko) {
+      var f = document.createElement('iframe'); f.style.cssText = 'position:fixed;left:-10000px;top:0;width:820px;height:1200px;border:0';
+      f.src = '?id=<?= $id ?>&tisk=1&pdf=1&prubeh=' + (document.getElementById('psPrubeh').checked ? '1' : '0');
+      f.onload = function () {
+        var w = f.contentWindow, d = f.contentDocument, s = d.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.onerror = function () { f.remove(); ko(new Error('Nepodařilo se načíst knihovnu pro PDF.')); };
+        s.onload = function () {
+          w.html2pdf().set(w.JSON.parse(JSON.stringify({ margin: [12, 12, 12, 12], filename: 'nabidka-<?= $e($nb['cislo']) ?>.pdf', image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'li', '.krok'] } })))
+            .from(d.querySelector('main')).outputPdf('blob').then(function (b) { f.remove(); ok(b); }, function (e) { f.remove(); ko(e); });
+        };
+        d.head.appendChild(s);
+      };
+      document.body.appendChild(f);
+    });
+  }
+  function hotovo() { bP.disabled = bS.disabled = false; }
+  bS.addEventListener('click', function () {
+    bP.disabled = bS.disabled = true; st.textContent = 'Vytvářím PDF…';
+    pdf().then(function (b) { var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'nabidka-<?= $e($nb['cislo']) ?>.pdf'; document.body.appendChild(a); a.click(); a.remove(); st.textContent = 'PDF staženo.'; hotovo(); },
+      function (e) { st.textContent = 'Chyba: ' + e.message; hotovo(); });
+  });
+  bP.addEventListener('click', function () {
+    var em = document.getElementById('psEmail').value.trim(); if (!em) { alert('Zadejte e-mail zákazníka.'); return; }
+    if (!confirm('Odeslat nabídku na ' + em + '?')) return;
+    bP.disabled = bS.disabled = true; st.textContent = 'Vytvářím PDF…';
+    pdf().then(function (b) {
+      st.textContent = 'Odesílám…'; var fd = new FormData(); fd.append('akce', 'poslat'); fd.append('id', '<?= $id ?>'); fd.append('email', em);
+      fd.append('predmet', document.getElementById('psPredmet').value); fd.append('text', document.getElementById('psText').value); fd.append('pdf', b, 'nabidka.pdf');
+      return fetch('nabidky.php', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); });
+    }).then(function (j) { if (j.ok) { st.textContent = '✅ Odesláno.'; setTimeout(function () { location.reload(); }, 900); } else { st.textContent = '❌ ' + j.zprava; hotovo(); } },
+      function (e) { st.textContent = 'Chyba: ' + (e && e.message || e); hotovo(); });
+  });
+})();
+</script>
 <div class="ln"><form method="post"><input type="hidden" name="akce" value="stav"><input type="hidden" name="id" value="<?= $id ?>"><select name="stav" onchange="this.form.submit()"><?php foreach (NB_STAVY as $k => $t): ?><option value="<?= $k ?>"<?= $nb['stav'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></form>
 <form method="post"><input type="hidden" name="akce" value="kopie"><input type="hidden" name="id" value="<?= $id ?>"><button class="sec">Kopie jako nová nabídka</button></form>
 <?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Smazat nabídku?')"><input type="hidden" name="akce" value="smazat"><input type="hidden" name="id" value="<?= $id ?>"><button class="del">Smazat</button></form><?php endif; ?></div>
