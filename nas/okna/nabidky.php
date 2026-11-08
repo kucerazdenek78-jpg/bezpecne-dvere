@@ -12,6 +12,20 @@ const NB_STAVY = ['koncept' => 'Koncept', 'odeslana' => 'Odeslaná', 'prijata' =
 const NB_PRIPLATKY = ['' => 'bez příplatku', 'vecer' => 'servis po 18. hodině', 'vikend' => 'soboty, neděle a svátky', 'expres' => 'expres – nástup do 4 hodin'];
 if (!in_array('odeslano', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN odeslano TEXT');
 $nbDir = fn() => $DATA . '/okna/nabidky';
+if (!in_array('zadani', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN zadani TEXT');
+// přílohy zadání (tabulka s byty a nájemníky, výkresy, fotky…): $DATA/okna/nabidky/p<id nabídky>/
+const NB_PRIL_EXT = ['xlsx', 'xls', 'xlsm', 'ods', 'csv', 'pdf', 'doc', 'docx', 'odt', 'txt', 'jpg', 'jpeg', 'png', 'heic', 'webp', 'eml', 'msg', 'zip'];
+$prilDir = fn(int $id) => $DATA . '/okna/nabidky/p' . $id;
+$prilohy = function (int $id) use ($prilDir) { $d = $prilDir($id); $o = []; if (is_dir($d)) foreach (scandir($d) as $f) if ($f[0] !== '.' && is_file("$d/$f")) $o[] = ['f' => $f, 'jm' => preg_replace('/^\d{8}-\d{6}_/', '', $f), 'vel' => filesize("$d/$f"), 'kdy' => filemtime("$d/$f")]; return $o; };
+if (isset($_GET['priloha'], $_GET['f'])) {
+  $pf = basename((string)$_GET['f']); $c = $prilDir((int)$_GET['priloha']) . '/' . $pf;
+  if ($pf === '' || $pf[0] === '.' || !is_file($c)) { http_response_code(404); exit('Soubor nenalezen'); }
+  $ext = strtolower(pathinfo($pf, PATHINFO_EXTENSION)); $typy = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'txt' => 'text/plain; charset=utf-8'];
+  $jm = preg_replace('/^\d{8}-\d{6}_/', '', $pf);
+  header('Content-Type: ' . ($typy[$ext] ?? 'application/octet-stream')); header('Content-Length: ' . filesize($c));
+  header('Content-Disposition: ' . (isset($typy[$ext]) ? 'inline' : 'attachment') . '; filename="' . preg_replace('/[^\x20-\x7e]|"/', '_', $jm) . '"; filename*=UTF-8\'\'' . rawurlencode($jm));
+  readfile($c); exit;
+}
 $polozka = fn(array $c, float $mn) => ['kod' => $c['kod'], 'nazev' => $c['nazev'], 'jednotka' => $c['jednotka'], 'mnozstvi' => $mn, 'cena' => (float)$c['cena'], 'dph' => (float)$c['dph'], 'slevy' => $c['skupina'] === 'doprava' ? 0 : 1];
 $nacti = function (int $id) use ($pdo) { $st = $pdo->prepare('SELECT * FROM ok_nabidka WHERE id=?'); $st->execute([$id]); return $st->fetch(PDO::FETCH_ASSOC) ?: null; };
 $vypocet = function (array $nb) use ($n) {
@@ -110,6 +124,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($x['svj_id']) $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')->execute([(int)$x['svj_id'], date('Y-m-d'), 'nabidka', 'Nabídka ' . $x['cislo'] . ' odeslána e-mailem na ' . implode(', ', $komu), '', $ted, uziv_jmeno()]);
     $j(true);
   }
+  if ($a === 'prilohy_nahraj' && $nacti($id)) {
+    $d = $prilDir($id); if (!is_dir($d)) @mkdir($d, 0775, true); $nOk = 0; $chyby = [];
+    $fs = $_FILES['soubory'] ?? null;
+    if ($fs && is_array($fs['name'])) foreach ($fs['name'] as $i => $jm) {
+      if (($fs['error'][$i] ?? 1) !== UPLOAD_ERR_OK) { if (($fs['error'][$i] ?? 4) !== UPLOAD_ERR_NO_FILE) $chyby[] = $jm . ' (nenahrál se – možná je moc velký)'; continue; }
+      $jm = trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', basename((string)$jm))); $ext = strtolower(pathinfo($jm, PATHINFO_EXTENSION));
+      if (!in_array($ext, NB_PRIL_EXT, true)) { $chyby[] = $jm . ' (nepovolený typ)'; continue; }
+      if ($fs['size'][$i] > 25 * 1048576) { $chyby[] = $jm . ' (víc než 25 MB)'; continue; }
+      if (move_uploaded_file($fs['tmp_name'][$i], $d . '/' . date('Ymd-His') . '_' . mb_substr($jm, -120))) $nOk++; else $chyby[] = $jm;
+    }
+    header('Location: nabidky.php?id=' . $id . '&pril=' . $nOk . ($chyby ? '&prilchyba=' . rawurlencode(implode('; ', $chyby)) : '') . '#zadani'); exit;
+  }
+  if ($a === 'priloha_smaz' && $nacti($id)) {
+    $pf = basename((string)($_POST['f'] ?? '')); if ($pf !== '' && $pf[0] !== '.') @unlink($prilDir($id) . '/' . $pf);
+    header('Location: nabidky.php?id=' . $id . '#zadani'); exit;
+  }
+  if ($a === 'zadani_ulozit' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET zadani=?, upraveno=? WHERE id=?')->execute([$P('zadani', 5000), $ted, $id]); header('Location: nabidky.php?id=' . $id . '&ok=1#zadani'); exit; }
   if ($a === 'stav' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET stav=?, upraveno=? WHERE id=?')->execute([isset(NB_STAVY[$_POST['stav'] ?? '']) ? $_POST['stav'] : 'koncept', $ted, $id]); header('Location: nabidky.php?id=' . $id); exit; }
   if ($a === 'kopie' && ($x = $nacti($id))) {
     $pdo->prepare('INSERT INTO ok_nabidka (cislo, typ, svj_id, jed_id, nazev, adresa, ic, kontakt, telefon, email, datum, platnost, smlouva, interval_let, priplatek, sleva_rucne, polozky, poznamka, stav, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
@@ -170,6 +201,19 @@ if ($nb):
 <tr><th colspan="3">Celkem s DPH<?= (int)$nb['smlouva'] ? ' (jeden servis)' : '' ?></th><th class="r nowrap"><?= $e(ok_kc($v['sum']['s'], 2)) ?></th></tr></table>
 <p class="mut"><?= $v['sleva'] > 0 ? 'Sleva ' . $e(str_replace('.', ',', (string)$v['sleva'])) . ' % – ' . $e($v['sleva_txt']) . '. ' : 'Bez slevy. ' ?><?= $v['priplatek'] > 0 ? 'Příplatek ' . $e($v['priplatek']) . ' %. ' : '' ?><?= (int)$nb['smlouva'] ? 'Smlouva ' . (int)$nb['smlouva'] . '× – celkem ' . $e(ok_kc($v['sum']['s'] * (int)$nb['smlouva'], 2)) . ' s DPH.' : '' ?></p>
 <p><a class="btn" href="?id=<?= $id ?>&amp;tisk=1" target="_blank">🖨 Tisk / PDF</a> <a class="btn sec" href="?id=<?= $id ?>&amp;upravit=1">✏️ Upravit</a></p></div>
+<?php $pl = $prilohy($id); ?>
+<div class="box" id="zadani"><h2 style="margin-top:0">📎 Zadání od zákazníka <span class="mut" style="font-size:14px;font-weight:400">(jen pro nás, do PDF nejde)</span></h2>
+<?php if (isset($_GET['pril'])): ?><div class="msg">Nahráno souborů: <?= (int)$_GET['pril'] ?><?= !empty($_GET['prilchyba']) ? ' · nenahráno: ' . $e($_GET['prilchyba']) : '' ?></div><?php endif; ?>
+<?php if ($pl): ?><table><?php foreach ($pl as $f): $ext = strtolower(pathinfo($f['f'], PATHINFO_EXTENSION)); ?><tr>
+  <td><?= in_array($ext, ['xlsx', 'xls', 'xlsm', 'ods', 'csv'], true) ? '📊' : (in_array($ext, ['jpg', 'jpeg', 'png', 'heic', 'webp'], true) ? '🖼' : '📄') ?> <a href="?priloha=<?= $id ?>&amp;f=<?= $e(rawurlencode($f['f'])) ?>" target="_blank"><?= $e($f['jm']) ?></a></td>
+  <td class="mut nowrap"><?= $e(number_format($f['vel'] / 1024, 0, ',', ' ')) ?> kB · <?= $e(date('j. n. Y', $f['kdy'])) ?></td>
+  <td class="nowrap"><form method="post" style="margin:0" onsubmit="return confirm('Smazat soubor <?= $e(addslashes($f['jm'])) ?>?')"><input type="hidden" name="akce" value="priloha_smaz"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="f" value="<?= $e($f['f']) ?>"><button class="del" style="padding:4px 10px;font-size:13px">Smazat</button></form></td></tr><?php endforeach; ?></table>
+<?php if ($nb['svj_id'] && array_filter($pl, fn($f) => in_array(strtolower(pathinfo($f['f'], PATHINFO_EXTENSION)), ['xlsx', 'xls'], true))): ?><p class="mut">Tabulku bytů můžete nahrát i do seznamu bytů SVJ (velikosti → položky nabídky): stáhněte ji a v <a href="svj.php?svj=<?= (int)$nb['svj_id'] ?>#vchody">SVJ → Vchody a byty → Nahrát seznam bytů z Excelu</a> ji vyberte. Pak „Nová nabídka pro SVJ podle seznamu bytů“ spočítá byty podle velikosti.</p><?php endif; ?>
+<?php else: ?><p class="mut">Zatím žádné soubory.</p><?php endif; ?>
+<form method="post" enctype="multipart/form-data" class="ln"><input type="hidden" name="akce" value="prilohy_nahraj"><input type="hidden" name="id" value="<?= $id ?>">
+<label class="w">Přidat soubory (tabulka s byty a nájemníky, PDF, fotky… max 25 MB)<input type="file" name="soubory[]" multiple accept=".<?= implode(',.', NB_PRIL_EXT) ?>"></label><button class="sec">Nahrát</button></form>
+<form method="post"><input type="hidden" name="akce" value="zadani_ulozit"><input type="hidden" name="id" value="<?= $id ?>">
+<label class="w" style="display:flex;flex-direction:column">Poznámka k zadání (co zákazník chce, kdo poslal, termín…)<textarea name="zadani" rows="3"><?= $e($nb['zadani'] ?? '') ?></textarea></label><p style="margin:6px 0 0"><button class="sec">Uložit poznámku</button></p></form></div>
 <?php $prD = in_array($nb['typ'], ['svj', 'oprava'], true);
   $textD = "Dobrý den,\n\nv příloze Vám zasíláme cenovou nabídku č. " . $nb['cislo'] . ($nb['typ'] === 'oprava' ? ' na opravu oken a dveří' : ' na servis oken a dveří') . ($nb['nazev'] ? ' pro ' . $nb['nazev'] : '') . '.'
     . ($nb['platnost'] ? "\nNabídka platí do " . so_datum($nb['platnost']) . '.' : '') . ($prD ? "\nV příloze nabídky najdete i popis, jak u nás servis a případná oprava probíhá." : '')
