@@ -1142,7 +1142,8 @@
       if (o.patro != null && o.patro !== '' && !form.elements.dopr_patro.value) doprNastav('', '', o.patro, o.vytah);
       setDefaults();
       /* poptávka na dveře do domu bez přenesené konfigurace z konfigurátoru → po načtení se rovnou otevře kompletní průvodce (rozměr, nadsvětlíky, kování, montáž) */
-      if (st.kat === 'dum' && !o.ai && o.typ !== 'nabidka' && st.rows.length && st.rows[0].cat && st.rows[0].cat !== '__jiny' && !erkCfg(st.rows[0])) st.autoErk = true;
+      if (!st.kat && o.kategorie === 'dum' && !o.ai && o.typ !== 'nabidka') { st.kat = 'dum'; st.rows.push(newRow()); }   /* poptávka na dům bez rozpoznaného modelu / položek → prázdná položka a rovnou průvodce */
+      if (st.kat === 'dum' && !o.ai && o.typ !== 'nabidka' && st.rows.length && !erkCfg(st.rows[0])) st.autoErk = true;
       if (o.ai) {
         st.aiNavrh = o.ai_navrh || ''; if (!st.kat && KATS.indexOf(o.kategorie) >= 0) { st.kat = o.kategorie; setDefaults(); }
         if (o.interni && form.elements.interni) form.elements.interni.value = o.interni;
