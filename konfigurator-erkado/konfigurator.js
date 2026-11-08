@@ -1,6 +1,6 @@
 /* Konfigurátor vchodových ocelových dveří ERKADO – testovací verze 24. 10. 2026.
    Data: konfigurator-erkado/erkado-data.js (ceny NETTO bez DPH z katalogu 2026).
-   Cena = komplet z katalogu (* bez kování / ** se základním kováním) + příplatky; montáž +10 000 Kč bez DPH,
+   Cena = komplet z katalogu (* bez kování / ** se základním kováním) + příplatky; montáž +9 450 Kč bez DPH,
    s montáží DPH 12 % z celé zakázky, bez montáže 21 %. Doprava s montáží podle pásem (do 40 km zdarma, 41–80 km 1 200 Kč s DPH, dál upřesníme);
    bez montáže osobní odběr zdarma, nebo doprava na adresu 18 Kč/km s DPH (jen cesta tam, km z Mapy.com). */
 (function () {

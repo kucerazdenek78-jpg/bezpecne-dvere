@@ -230,7 +230,7 @@
       ['Konstrukce', k.konstrukce], ['Zárubeň', r.zarub || k.zarubne], ['Rozměr', r.sirka || k.rozmer], ['Otevírání', r.otev || k.otevirani],
       ['Zasklení', k.zaskleni && k.zaskleni !== 'std' ? k.zaskleni : (k.odstin_skla && k.odstin_skla !== 'Dle vzoru v katalogu' ? 'odstín skla ' + k.odstin_skla : '')],
       ['Kování', r.kov || [k.kovani, k.madlo && k.madlo !== 'bez madla' ? k.madlo : ''].filter(Boolean).join('; ')], ['Světlíky', k.svetliky && k.svetliky !== 'bez světlíků' ? k.svetliky : ''],
-      ['Montáž', e.montaz ? 'na klíč (' + kc(10000) + ' bez DPH, v ceně)' : '']]
+      ['Montáž', e.montaz ? 'na klíč (' + kc(((e.polozky || []).filter(function (l) { return /^Montáž/.test(l[0]); })[0] || [0, 9450])[1]) + ' bez DPH, v ceně)' : '']]
       .filter(function (x) { return x[1]; }).map(function (x) { return [x[0], x[1], 0, '']; });
   }
   function erkHtml(r, i) {
