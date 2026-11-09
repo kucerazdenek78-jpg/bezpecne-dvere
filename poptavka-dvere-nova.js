@@ -747,7 +747,7 @@
       if (d.zaloha > 0 && window.BDPlatba && $('#donePay')) {
         try {
           var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), box = $('#donePayQr'); box.innerHTML = '';
-          var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'width:min(300px,80vw);height:auto;image-rendering:pixelated'; box.appendChild(cv);
+          var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'display:block;margin:0 auto;width:min(300px,100%);max-width:100%;height:auto;image-rendering:pixelated'; box.appendChild(cv);
           var zl = (d.zaloha_label || 'zálohy').toLowerCase(); $('#donePayLabel').textContent = zl === 'záloha' ? 'zálohy' : zl;
           $('#donePayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '');
           $('#donePayCopy').onclick = function () { var b = this, t = pi2.odkaz; (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'Zkopírováno'; }, function () { window.prompt('Odkaz na platbu:', t); }); };

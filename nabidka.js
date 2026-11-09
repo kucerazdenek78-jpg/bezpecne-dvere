@@ -840,7 +840,7 @@
       var to = $('#nbToOrder'); if (to && !OBJ && d.objednavka_odkaz) { to.href = d.objednavka_odkaz; to.hidden = false; }
       if (OBJ && d.zaloha > 0 && window.BDPlatba && $('#nbPay')) {
         try {
-          var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), bx = $('#nbPayQr'); bx.innerHTML = ''; var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'width:min(300px,80vw);height:auto;image-rendering:pixelated'; bx.appendChild(cv);
+          var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), bx = $('#nbPayQr'); bx.innerHTML = ''; var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'display:block;margin:0 auto;width:min(300px,100%);max-width:100%;height:auto;image-rendering:pixelated'; bx.appendChild(cv);
           $('#nbPayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> (' + d.zaloha_proc + ' %) · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : ''); $('#nbPay').hidden = false;
         } catch (e) {}
       }
