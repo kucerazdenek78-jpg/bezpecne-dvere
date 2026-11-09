@@ -67,6 +67,10 @@ if (isset($_GET['nova']) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     if (($r = sj_nacti($pdo, (int)($_GET['jed'] ?? 0)))) {
       $nb = array_merge($nb, ['jed_id' => (int)$r['id'], 'nazev' => $r['jmeno'], 'adresa' => sj_adresa($r), 'telefon' => $r['telefon'], 'email' => $r['email'],
         'poznamka' => trim(($r['zavada'] ? 'Zjištěná závada: ' . $r['zavada'] . "\n" : '') . ($r['oprava'] ? 'Navržená oprava: ' . $r['oprava'] : ''))]);
+      if (($r['plati'] ?? '') === 'svj' && !empty($r['svj_id']) && ($j = so_svj($pdo, (int)$r['svj_id']))) {   // opravu platí SVJ → odběratelem je SVJ, byt v poznámce
+        $nb = array_merge($nb, ['svj_id' => (int)$j['id'], 'nazev' => $j['nazev'], 'adresa' => $j['adresa'], 'ic' => $j['ic'], 'kontakt' => $j['kontakt'], 'telefon' => $j['telefon'], 'email' => $j['email'],
+          'poznamka' => 'Byt: ' . $r['jmeno'] . ($r['byt'] ? ', byt ' . $r['byt'] : '') . ($r['ulice'] ? ', ' . $r['ulice'] : '') . "\n" . $nb['poznamka']]);
+      }
       if (trim((string)$r['oprava']) !== '') $pol[] = ['kod' => '', 'nazev' => 'Oprava: ' . mb_substr(trim($r['oprava']), 0, 180), 'jednotka' => 'ks', 'mnozstvi' => 1, 'cena' => $r['max_cena'] ? round((float)$r['max_cena'] / (1 + $dphB / 100), 2) : 0, 'dph' => $dphB, 'slevy' => 0];
     } elseif (($s = $pdo->query('SELECT * FROM so_servis WHERE id=' . (int)($_GET['servis'] ?? 0))->fetch(PDO::FETCH_ASSOC)) && ($j = so_svj($pdo, (int)$s['svj_id']))) {
       $nb = array_merge($nb, ['svj_id' => (int)$j['id'], 'nazev' => $j['nazev'], 'adresa' => $j['adresa'], 'ic' => $j['ic'], 'kontakt' => $j['kontakt'], 'telefon' => $j['telefon'], 'email' => $j['email'], 'poznamka' => 'Opravy podle zápisu ze servisu „' . $s['nazev'] . '“.']);

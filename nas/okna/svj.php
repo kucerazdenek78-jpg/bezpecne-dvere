@@ -346,7 +346,7 @@ elseif ($svjId !== null):
   if ($jb): ?><div style="overflow-x:auto"><table><tr><th>Termín / provedeno</th><th>Byt / nájemník</th><th>Stav</th></tr>
 <?php foreach ($jb as $x): ?><tr><td class="nowrap"><?= $e(so_datum($x['provedeno'] ?: $x['termin']) ?: 'bez termínu') ?></td>
   <td><a href="index.php?id=<?= (int)$x['id'] ?>"><b><?= $e($x['jmeno']) ?></b></a><div class="mut"><?= $e(implode(', ', array_filter([(string)$x['ulice'], $x['byt'] ? 'byt ' . $x['byt'] : '', (string)$x['telefon']]))) ?></div></td>
-  <td><span class="st <?= $x['stav'] === 'hotovo' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $x['stav'] === 'hotovo' ? 'hotovo' : ($x['stav'] === 'zruseno' ? 'zrušeno' : 'k vyřízení') ?></span><?php $vy = ['oprava' => 'nutná oprava', 'dily' => 'objednat díly'][$x['vysledek'] ?? ''] ?? ''; ?><?= $vy ? ' <span class="st st-odmitl">' . $vy . '</span>' : '' ?></td></tr>
+  <td><span class="st <?= $x['stav'] === 'hotovo' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $x['stav'] === 'hotovo' ? 'hotovo' : ($x['stav'] === 'zruseno' ? 'zrušeno' : 'k vyřízení') ?></span><?php $vy = ['oprava' => 'nutná oprava', 'dily' => 'objednat díly'][$x['vysledek'] ?? ''] ?? ''; ?><?= $vy ? ' <span class="st st-odmitl">' . $vy . '</span>' : '' ?><div class="mut"><?= ($x['plati'] ?? '') === 'svj' ? '💳 platí SVJ' : (($x['plati'] ?? '') === 'najemnik' ? '💳 platí nájemník' : '💳 neurčeno') ?></div></td></tr>
 <?php endforeach; ?></table></div><?php endif; ?>
 <p style="margin-bottom:0"><a class="btn ok" href="index.php?nove=1&amp;svj=<?= $sid ?>">+ Seřízení / oprava bytu</a></p></div>
 
