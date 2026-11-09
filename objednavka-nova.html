@@ -2,6 +2,10 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
+  <script>/* 9. 11. 2026: poptávka / nabídka na dveře do domu (ERKADO) nebo interiérové dveře → objednávka s více položkami a zálohou 70 % (objednavka-vice.html), ne objednávka dveří do bytu */
+  (function () { try { var h = (location.hash.match(/[#&]d=([A-Za-z0-9_-]+)/) || [])[1]; if (!h) return; var t = h.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '=';
+    var bin = atob(t), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); var o = JSON.parse(new TextDecoder().decode(u));
+    if (o && (o.kategorie === 'dum' || o.kategorie === 'interier')) location.replace('objednavka-vice.html' + location.search + location.hash); } catch (e) {} })();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Objednávka dveří (prodejce) | Bezpečné dveře</title>
   <meta name="robots" content="noindex, nofollow">

@@ -237,7 +237,7 @@
     if (st.kat !== 'dum' || !r.cat || r.cat === '__jiny') return '';
     var e = erkCfg(r);
     if (!e) return '<p style="margin:.3rem 0 .7rem"><button type="button" class="btn btn-primary" data-erk="' + i + '">🧮 Spočítat cenu v konfigurátoru</button> <small>vzor, konstrukce, rozměr, kování a montáž – cena podle katalogu ERKADO 2026</small></p>';
-    var bez = e.polozky.map(function (l) { return l[0] + ' ' + kc(l[1]); }).join(' + ');
+    var bez = (e.polozky || []).map(function (l) { return l[0] + ' ' + kc(l[1]); }).join(' + ');
     return '<div style="margin:.3rem 0 .8rem;padding:.6rem .8rem;background:#eef7f1;border:1px solid #b7dcc4;border-radius:10px;font-size:.9rem">' +
       '<b>Cena z konfigurátoru: ' + kc(e.cena_s_dph) + ' vč. ' + e.dph_sazba + ' % DPH</b> (' + kc(e.cena_bez_dph) + ' bez DPH' + (e.montaz ? ', s montáží' : ', bez montáže') + ')' +
       '<br><small>' + esc(bez) + '</small>' +
@@ -534,7 +534,8 @@
     if (!OBJ) d.objednavka_odkaz = orderLink(d);
     return d;
   }
-  /* odkaz „Vytvořit objednávku“: koncový zákazník (byt, dům i interiér) → objednavka-nova.html (jedny dveře); firma / OSVČ na dům a interiér → objednavka-vice.html (víc položek) */
+  /* odkaz „Vytvořit objednávku“: dveře do bytu → objednavka-nova.html (jedny dveře, záloha jako u bytu);
+     dveře do domu (ERKADO) a interiérové → vždy objednavka-vice.html (záloha 70 %), i u koncového zákazníka (Zdeněk 9. 11. 2026) */
   function orderLink(d) {
     var o;
     if (d.kategorie === 'byt' && d.polozky[0] && d.polozky[0].cfg) {
@@ -542,7 +543,7 @@
       ['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'].forEach(function (k) { if (c[k]) o[k] = c[k]; });
       return new URL('objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
     }
-    if (!(d.ic || /firma|OSVČ/i.test(d.fakturace || ''))) {   /* koncový zákazník (ne firma / OSVČ) → vždy objednávka jedněch dveří */
+    if (d.kategorie !== 'dum' && d.kategorie !== 'interier') {   /* byt bez konfigurace / neznámá kategorie → objednávka jedněch dveří */
       o = { cislo: d.obj_cislo, jmeno: d.jmeno, prijmeni: d.prijmeni, telefon: d.telefon, email: d.email, ulice: d.ulice, mesto: d.mesto, psc: d.psc, poznamka: d.poznamka };
       Object.keys(o).forEach(function (k) { if (!o[k]) delete o[k]; });
       return new URL('objednavka-nova.html', location.href).href + '#d=' + b64u(JSON.stringify(o));
@@ -1051,7 +1052,7 @@
       var t = h.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '=';
       var bin = atob(t), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
       var o = JSON.parse(new TextDecoder().decode(u));
-      if (OBJ && !(o.ic || /firma|OSVČ/i.test(o.fakturace || ''))) {   /* koncový zákazník (ne firma / OSVČ) → objednávka jedněch dveří, i když odkaz vedl sem (poptávka, nabídka, kartotéka) */
+      if (OBJ && o.kategorie !== 'dum' && o.kategorie !== 'interier') {   /* dveře do bytu (nebo neznámá kategorie) → objednávka jedněch dveří; dům a interiér zůstávají tady (záloha 70 %, Zdeněk 9. 11. 2026) */
         var o1 = { cislo: o.obj_cislo || o.cislo };
         ['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka'].forEach(function (n) { if (o[n]) o1[n] = o[n]; });
         location.replace(new URL('objednavka-nova.html', location.href).href + location.search + '#d=' + b64u(JSON.stringify(o1)));
