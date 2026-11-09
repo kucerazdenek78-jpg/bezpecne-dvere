@@ -28,7 +28,7 @@ function ok_db(): PDO {
 
 // horní lišta aplikace Servis oken (vlastní, bez menu dveří)
 function ok_bar(string $akt = ''): void {
-  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ, družstva a firmy', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨'], ['nabidky.php', 'Nabídky', 'nab', '📄'], ['cenik.php', 'Ceník', 'cen', '💰']];
+  $pol = [['index.php', 'Jednotlivci', 'jed', '🏠'], ['svj.php', 'SVJ, družstva a firmy', 'svj', '🏢'], ['zakaznici.php', 'Zákazníci', 'zak', '👥'], ['poptavky.php', 'Poptávky z webu', 'popt', '📨'], ['nabidky.php', 'Nabídky', 'nab', '📄'], ['fakturace.php', 'Fakturace', 'fak', '🧾'], ['cenik.php', 'Ceník', 'cen', '💰']];
   $n = 0; try { $n = count(ok_poptavky_nove()); } catch (Throwable $x) {}
   $ns = 0; try { $ns = count(so_pripominky(ok_db())['termin']); } catch (Throwable $x) {}
   echo '<style>.okbar{position:sticky;top:0;z-index:60;display:flex;flex-wrap:wrap;gap:4px;align-items:center;background:#0e4f5c;padding:8px 12px}.okbar b.ap{color:#fff;font:700 16px system-ui,Arial,sans-serif;margin-right:10px}'

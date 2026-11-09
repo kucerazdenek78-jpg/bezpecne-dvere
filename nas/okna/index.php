@@ -10,7 +10,7 @@ $pdo = ok_db();
 const SJ_PLATI = ['svj' => 'SVJ / družstvo', 'najemnik' => 'nájemník (vlastník bytu)'];
 const SJ_VYSLEDKY = ['serizeno' => '✅ Seřízeno, vše funkční', 'oprava' => '🛠 Nutná oprava', 'dily' => '📦 Nutná oprava – objednat díly'];
 $sl = array_column($pdo->query('PRAGMA table_info(so_jed)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT', 'plati' => 'TEXT'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
+foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT', 'plati' => 'TEXT', 'fakturace' => 'TEXT'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
 if (!$pdo->query("SELECT hodnota FROM ok_nastaveni WHERE klic='jed_vazby_v1'")->fetchColumn()) {   // protokoly převzaté z Jotformu: výsledek, SVJ a řádky historie
   $mapa = ['Seřízeno' => 'serizeno', 'Nutná oprava – objednání dílů' => 'dily', 'Nutná oprava' => 'oprava'];
   $ryb = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28750519'")->fetchColumn(); $b701 = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28742699'")->fetchColumn();
@@ -106,6 +106,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $p['o3'], $p['o2'], $p['o1'], $p['bd'], $p['vk'], $p['dv'], uziv_jmeno(), $ted, $ted]);
     $nid = (int)$pdo->lastInsertId(); $pdo->prepare('UPDATE so_jed SET svj_id=?, byt=? WHERE id=?')->execute([$p['svj_id'] ?: null, $p['byt'], $nid]);
     sj_jdi('index.php?id=' . $nid . '&ok=zalozeno');
+  }
+  if ($a === 'fakturace') {   // předat k fakturaci / vrátit (přehled všech: fakturace.php)
+    $id = (int)$_POST['id']; $pdo->prepare('UPDATE so_jed SET fakturace=?, upraveno=? WHERE id=?')->execute([($_POST['k'] ?? '') === 'vratit' ? null : date('j. n. Y') . ' – ' . uziv_jmeno(), $ted, $id]);
+    sj_jdi('index.php?id=' . $id . '&ok=ulozeno');
   }
   if ($a === 'oprava_zalozit') {   // navazující oprava po „Nutná oprava“: stejný zákazník, byt a SVJ; kdo platí se vybere znovu
     $p = sj_nacti($pdo, (int)$_POST['id']); if (!$p) sj_jdi('index.php');
@@ -303,6 +307,20 @@ elseif ($id):
   $st = $pdo->prepare('SELECT id FROM so_jed WHERE predchozi_id=?'); $st->execute([$id]); $nasl = (int)$st->fetchColumn();
   $hist = []; if ($r['klic']) { $st = $pdo->prepare('SELECT id, stav, termin, provedeno FROM so_jed WHERE klic=? AND id<>? ORDER BY COALESCE(provedeno, termin, vytvoreno) DESC'); $st->execute([$r['klic'], $id]); $hist = $st->fetchAll(PDO::FETCH_ASSOC); } ?>
 <p><a href="index.php">← Jednotlivci</a></p>
+<?php if ($r['stav'] === 'hotovo'):   // co po dokončení servisu ještě zbývá – dokud není všechno, servis není uzavřený
+  $kProt = (bool)$r['protokol_poslan'] || (!$r['email'] && $r['protokol']); $kCena = is_numeric($r['cena']); $kFak = (bool)($r['fakturace'] ?? '');
+  $kOpr = !in_array($r['vysledek'] ?? '', ['oprava', 'dily'], true) || $nasl; $kPl = !$r['svj_id'] || isset(SJ_PLATI[$r['plati'] ?? '']); $vse = $kProt && $kCena && $kFak && $kOpr && $kPl;
+  $ok = fn($b) => $b ? '✅' : '⬜'; ?>
+<div class="box" style="border-left:6px solid <?= $vse ? '#15803d' : '#d97706' ?>"><h2 style="margin-top:0"><?= $vse ? '✔ Servis je uzavřený' : 'Servis proběhl – co ještě zbývá' ?></h2>
+<p style="margin:4px 0"><?= $ok($kProt) ?> <b>Protokol zákazníkovi</b> – <?= $r['protokol_poslan'] ? 'poslán ' . $e(date('j. n. Y', strtotime(substr((string)$r['protokol_poslan'], 0, 19)) ?: time())) : ($r['protokol'] ? ($r['email'] ? 'vytvořen, ale neposlán – <a href="#protokol">poslat</a>' : 'vytvořen (zákazník nemá e-mail – vytisknout / předat)') : '<a href="#protokol">vytvořit a poslat PDF</a>') ?></p>
+<?php if ($r['svj_id']): ?><p style="margin:4px 0"><?= $ok($kPl) ?> <b>Kdo platí</b> – <?= $kPl ? $e(SJ_PLATI[$r['plati']]) : 'vyberte v zápisu (Cena a další servis)' ?></p><?php endif; ?>
+<p style="margin:4px 0"><?= $ok($kCena && $kFak) ?> <b>Fakturace</b> – <?php if (!$kCena): ?>nejdřív doplňte cenu servisu v zápisu (Cena a další servis)<?php elseif ($kFak): ?>předáno k fakturaci <?= $e($r['fakturace']) ?> · <a href="fakturace.php?i=1">přehled</a>
+  <form method="post" style="display:inline"><input type="hidden" name="akce" value="fakturace"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="k" value="vratit"><button class="sec" style="padding:3px 8px;font-size:13px">vrátit</button></form>
+  <?php else: ?><?= $e(ok_kc($r['cena'])) ?> s DPH<?= ($r['plati'] ?? '') === 'svj' && isset($svjSeznam[(int)$r['svj_id']]) ? ' – fakturuje se SVJ ' . $e($svjSeznam[(int)$r['svj_id']]) : '' ?>
+  <form method="post" style="display:inline"><input type="hidden" name="akce" value="fakturace"><input type="hidden" name="id" value="<?= $id ?>"><button class="ok" style="padding:5px 10px;font-size:14px">🧾 Předat k fakturaci</button></form> <a href="fakturace.php">všechny podklady</a><?php endif; ?></p>
+<?php if (in_array($r['vysledek'] ?? '', ['oprava', 'dily'], true)): ?><p style="margin:4px 0"><?= $ok($kOpr) ?> <b>Oprava</b> – <?= $nasl ? '<a href="?id=' . $nasl . '">založena (navazující servis)</a>' : 'zatím nezaložena – tlačítko „Založit opravu“ níže' ?></p><?php endif; ?>
+<?php if ($dl): ?><p class="mut" style="margin:4px 0">🔁 Další pravidelný servis: <?= $e(so_datum($dl)) ?> (připomene se v přehledu)</p><?php endif; ?>
+</div><?php endif; ?>
 <div class="box"><h1 style="margin-bottom:4px"><?= $r['klic'] ? '<a href="zakaznici.php?k=' . $e(rawurlencode($r['klic'])) . '" style="color:inherit" title="Zákazník – všechny servisy">' . $e($r['jmeno']) . '</a>' : $e($r['jmeno']) ?> <span class="st st-<?= $e($r['stav']) ?>"><?= $e(SJ_STAVY[$r['stav']] ?? $r['stav']) ?></span></h1>
 <div style="font-size:17px"><?= $e(sj_adresa($r)) ?><?= $r['byt'] ? ', byt ' . $e($r['byt']) : '' ?><?= ok_mapa(sj_adresa($r)) ?></div>
 <?php if ($r['svj_id'] && isset($svjSeznam[(int)$r['svj_id']])): ?><div>🏢 <a href="svj.php?svj=<?= (int)$r['svj_id'] ?>#historie"><?= $e($svjSeznam[(int)$r['svj_id']]) ?></a> ·
