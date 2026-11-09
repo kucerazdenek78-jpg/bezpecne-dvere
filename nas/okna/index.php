@@ -193,7 +193,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 $id = (int)($_GET['id'] ?? 0);
 $OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'zalozeno' => 'Servis založen.'];
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0e4f5c"><title>Jednotlivci – Servis oken</title><style>
+<meta name="theme-color" content="#0e4f5c"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="okna-192.png"><link rel="apple-touch-icon" href="okna-192.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Servis oken"><title>Jednotlivci – Servis oken</title><style>
 body{font:16px/1.45 system-ui,Arial,sans-serif;margin:0;background:#f3f5f8;color:#1b2430}main{max-width:1000px;margin:0 auto;padding:14px}
 .box{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 3px #0002}h1{margin:4px 0 10px;font-size:24px}h2{margin:16px 0 8px;font-size:19px}h3{margin:6px 0 8px;font-size:17px}
 .mut{color:#5f6b7a;font-size:14px}a{color:#1f5fbf}.zk{background:#fff4d6;border:1px solid #f0cf7a;color:#6b4a00;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:14px}
@@ -213,6 +214,31 @@ details>summary{cursor:pointer;color:#1f5fbf;font-weight:600;margin:6px 0}.r{tex
 #vysl{border:1px solid #c9d1dc;border-radius:10px;margin-top:4px;background:#fff;max-height:300px;overflow:auto}#vysl div{padding:9px 12px;border-bottom:1px solid #eef1f5;cursor:pointer}#vysl div:hover{background:#eef3fb}
 </style></head><body><?php ok_bar('jed'); ?><main>
 <div class="zk">🧪 <b>Zkušební verze aplikace Servis oken.</b> Má vlastní databázi a vlastní zákazníky – se systémem dveří se nemíchá.</div>
+<?php if (!isset($_GET['id']) && !isset($_GET['nove'])): ?>
+<div class="box" id="instal" hidden style="border-left:5px solid #0e7490"><b>📲 Servis oken jako aplikace v mobilu</b>
+<p class="mut" style="margin:4px 0 8px">Ikona na ploše, otevře se rovnou na Jednotlivce, bez lišty prohlížeče. Přihlášení zůstává stejné.</p>
+<p style="margin:0"><button type="button" id="instalTl">Nainstalovat aplikaci</button> <button type="button" class="sec" id="instalZavrit">Teď ne</button></p>
+<p class="mut" id="instalIos" hidden style="margin:8px 0 0">Na iPhonu: v Safari klepněte na <b>Sdílet</b> (čtvereček se šipkou) → <b>Přidat na plochu</b>.</p>
+<p class="mut" id="instalRucne" hidden style="margin:8px 0 0">Prohlížeč instalaci nenabídl sám: v Chromu otevřete menu <b>⋮</b> → <b>Přidat na plochu</b> / <b>Nainstalovat aplikaci</b>.</p></div>
+<?php endif; ?>
+<script>
+(function () {
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () {});
+  var b = document.getElementById('instal'); if (!b) return;
+  var app = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true, skryto = false;
+  try { skryto = localStorage.getItem('okna_instal_skryt') === '1'; } catch (e) {}
+  if (app || skryto) return;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent), vyzva = null;
+  b.hidden = false; if (ios) { document.getElementById('instalIos').hidden = false; document.getElementById('instalTl').hidden = true; }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); vyzva = e; });
+  document.getElementById('instalTl').addEventListener('click', function () {
+    if (!vyzva) { document.getElementById('instalRucne').hidden = false; return; }
+    vyzva.prompt(); vyzva.userChoice.then(function (r) { if (r.outcome === 'accepted') b.hidden = true; vyzva = null; });
+  });
+  window.addEventListener('appinstalled', function () { b.hidden = true; });
+  document.getElementById('instalZavrit').addEventListener('click', function () { b.hidden = true; try { localStorage.setItem('okna_instal_skryt', '1'); } catch (e) {} });
+})();
+</script>
 <?php if (isset($_GET['ok'], $OK[$_GET['ok']])): ?><div class="msg"><?= $e($OK[$_GET['ok']]) ?></div><?php endif; ?>
 <?php if (($_GET['chyba'] ?? '') === 'jmeno'): ?><div class="msg err">Vyplňte jméno zákazníka.</div><?php endif; ?>
 <?php
