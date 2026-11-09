@@ -340,6 +340,16 @@ elseif ($svjId !== null):
 <?php endforeach; ?>
 <details><summary>+ Přidat smlouvu</summary><?php $smForm(['id' => 0, 'cislo' => '', 'od' => date('Y-m-d'), 'interval_let' => 1, 'pocet' => 5, 'limit_opravy' => '', 'pokuta' => '', 'havarie_h' => '', 'zaruka_mes' => 3, 'nahradni' => 1, 'nabidka' => '', 'poznamka' => '', 'aktivni' => 1, 'stav_podpisu' => 'podepsana', 'platnost_do' => '', 'dokument' => '', 'pripomenout_dni' => 60]); ?></details></div>
 
+<div class="box" id="byty"><h2 style="margin-top:0">🔧 Seřízení a opravy jednotlivých bytů</h2>
+<p class="mut" style="margin-top:0">Když SVJ / družstvo objedná seřízení nebo opravu u konkrétního nájemníka: založte servis bytu – zápis, fotky, podpis a protokol jsou stejné jako u jednotlivců a po dokončení se zapíše i sem do historie domu.</p>
+<?php $jb = $pdo->prepare('SELECT * FROM so_jed WHERE svj_id=? ORDER BY CASE stav WHEN \'nova\' THEN 0 ELSE 1 END, COALESCE(provedeno, termin, vytvoreno) DESC'); $jb->execute([$sid]); $jb = $jb->fetchAll(PDO::FETCH_ASSOC);
+  if ($jb): ?><div style="overflow-x:auto"><table><tr><th>Termín / provedeno</th><th>Byt / nájemník</th><th>Stav</th></tr>
+<?php foreach ($jb as $x): ?><tr><td class="nowrap"><?= $e(so_datum($x['provedeno'] ?: $x['termin']) ?: 'bez termínu') ?></td>
+  <td><a href="index.php?id=<?= (int)$x['id'] ?>"><b><?= $e($x['jmeno']) ?></b></a><div class="mut"><?= $e(implode(', ', array_filter([(string)$x['ulice'], $x['byt'] ? 'byt ' . $x['byt'] : '', (string)$x['telefon']]))) ?></div></td>
+  <td><span class="st <?= $x['stav'] === 'hotovo' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $x['stav'] === 'hotovo' ? 'hotovo' : ($x['stav'] === 'zruseno' ? 'zrušeno' : 'k vyřízení') ?></span><?php $vy = ['oprava' => 'nutná oprava', 'dily' => 'objednat díly'][$x['vysledek'] ?? ''] ?? ''; ?><?= $vy ? ' <span class="st st-odmitl">' . $vy . '</span>' : '' ?></td></tr>
+<?php endforeach; ?></table></div><?php endif; ?>
+<p style="margin-bottom:0"><a class="btn ok" href="index.php?nove=1&amp;svj=<?= $sid ?>">+ Seřízení / oprava bytu</a></p></div>
+
 <div class="box" id="historie"><h2 style="margin-top:0">Historie – provedené servisy, zápisy a dokumenty</h2>
 <?php $hist = so_historie($pdo, $sid); $smNazev = []; foreach ($smlouvy as $sm) $smNazev[(int)$sm['id']] = ($sm['cislo'] ?: 'smlouva') . ' od ' . so_datum($sm['od']);
   $hForm = function ($h) use ($e, $sid, $smNazev) { ?>

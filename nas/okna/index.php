@@ -6,6 +6,33 @@
 // (sestavení ze servisů podle klíče telefon → e-mail → jméno); do Zákazníků kartotéky dveří se nic nezapisuje.
 require __DIR__ . '/lib.php';
 $pdo = ok_db();
+// výsledek návštěvy, vazba bytu na SVJ / družstvo, číslo bytu (9. 11. 2026)
+const SJ_VYSLEDKY = ['serizeno' => '✅ Seřízeno, vše funkční', 'oprava' => '🛠 Nutná oprava', 'dily' => '📦 Nutná oprava – objednat díly'];
+$sl = array_column($pdo->query('PRAGMA table_info(so_jed)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
+if (!$pdo->query("SELECT hodnota FROM ok_nastaveni WHERE klic='jed_vazby_v1'")->fetchColumn()) {   // protokoly převzaté z Jotformu: výsledek, SVJ a řádky historie
+  $mapa = ['Seřízeno' => 'serizeno', 'Nutná oprava – objednání dílů' => 'dily', 'Nutná oprava' => 'oprava'];
+  $ryb = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28750519'")->fetchColumn(); $b701 = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28742699'")->fetchColumn();
+  foreach ($pdo->query("SELECT id, poznamka FROM so_jed WHERE vytvoril='import Jotform'")->fetchAll(PDO::FETCH_ASSOC) as $x) {
+    $v = null; if (preg_match('/Výsledek: (.+?)\. /u', (string)$x['poznamka'], $m)) $v = $mapa[$m[1]] ?? null;
+    $svj = str_contains((string)$x['poznamka'], 'RYBÁRNA') ? $ryb : (str_contains((string)$x['poznamka'], 'Blok 701') ? $b701 : 0);
+    $pdo->prepare('UPDATE so_jed SET vysledek=?, svj_id=? WHERE id=?')->execute([$v, $svj ?: null, $x['id']]);
+    if (preg_match('/odeslání (\d{10,})/', (string)$x['poznamka'], $m)) $pdo->prepare('UPDATE so_historie SET dokument=? WHERE dokument=?')->execute(['jednotlivec #' . $x['id'], 'Jotform odeslání ' . $m[1]]);
+  }
+  $pdo->prepare("INSERT INTO ok_nastaveni (klic, hodnota) VALUES ('jed_vazby_v1', ?) ON CONFLICT(klic) DO UPDATE SET hodnota=excluded.hodnota")->execute([date('Y-m-d H:i:s')]);
+}
+// servis bytu patřícího k SVJ / družstvu → řádek v historii domu (aktualizuje se při každém uložení)
+function sj_do_historie(PDO $pdo, int $id): void {
+  $r = sj_nacti($pdo, $id); if (!$r) return; $zn = 'jednotlivec #' . $id;
+  $pdo->prepare('DELETE FROM so_historie WHERE dokument=?')->execute([$zn]);
+  if (!$r['svj_id'] || $r['stav'] !== 'hotovo') return;
+  $vys = SJ_VYSLEDKY[$r['vysledek'] ?? ''] ?? ''; $vys = trim(preg_replace('/^\S+\s/u', '', $vys));
+  $txt = trim(implode(' ', array_filter([(string)$r['opraveno_hned'], (string)$r['zavada'], (string)$r['oprava']])));
+  $popis = 'Byt ' . $r['jmeno'] . ($r['byt'] ? ' (' . $r['byt'] . ')' : '') . ($r['ulice'] ? ', ' . $r['ulice'] : '') . ($vys ? ' – ' . $vys : '') . ($txt !== '' ? ': ' . mb_strimwidth($txt, 0, 300, '…') : '');
+  $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
+    ->execute([(int)$r['svj_id'], $r['provedeno'] ?: date('Y-m-d'), in_array($r['vysledek'], ['oprava', 'dily'], true) ? 'zavady' : 'servis', $popis, $zn, date('Y-m-d H:i:s'), uziv_jmeno()]);
+}
+$svjSeznam = $pdo->query('SELECT id, nazev FROM so_svj ORDER BY nazev')->fetchAll(PDO::FETCH_KEY_PAIR);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $kc = fn($n) => ($n === null || $n === '' || !is_numeric($n)) ? '' : number_format((float)$n, 0, ',', ' ') . ' Kč';
 $ted = date('Y-m-d H:i:s'); $dnes = date('Y-m-d');
@@ -45,13 +72,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $id = (int)($_POST['id'] ?? 0);
     $f = ['jmeno' => $P('jmeno', 200), 'telefon' => $P('telefon', 60), 'email' => $P('email', 200), 'ulice' => $P('ulice', 200), 'mesto' => $P('mesto', 120), 'psc' => $P('psc', 10),
       'popis' => $P('popis', 3000), 'termin' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $P('termin', 10)) ? $P('termin', 10) : null, 'cas' => $P('cas', 40), 'poznamka' => $P('poznamka', 3000)];
+    $vSvj = (int)($_POST['svj_id'] ?? 0); $vSvj = isset($svjSeznam[$vSvj]) ? $vSvj : null; $vByt = $P('byt', 60);
     if ($f['jmeno'] === '') sj_jdi('index.php?' . ($id ? 'id=' . $id . '&' : 'nove=1&') . 'chyba=jmeno');
     // zákazník aplikace: vybraný klíč, jinak klíč z telefonu / e-mailu / jména (do Zákazníků kartotéky dveří se nic nezapisuje)
     $klic = $P('klic', 120);
     if ($klic === '') $klic = ok_klic($f['telefon'], $f['email'], $f['jmeno'], $f['mesto']);
     if ($id) {
-      $pdo->prepare('UPDATE so_jed SET klic=?, jmeno=?, telefon=?, email=?, ulice=?, mesto=?, psc=?, popis=?, termin=?, cas=?, poznamka=?, upraveno=? WHERE id=?')
-        ->execute([$klic, $f['jmeno'], $f['telefon'], $f['email'], $f['ulice'], $f['mesto'], $f['psc'], $f['popis'], $f['termin'], $f['cas'], $f['poznamka'], $ted, $id]);
+      $pdo->prepare('UPDATE so_jed SET klic=?, jmeno=?, telefon=?, email=?, ulice=?, mesto=?, psc=?, popis=?, termin=?, cas=?, poznamka=?, svj_id=?, byt=?, upraveno=? WHERE id=?')
+        ->execute([$klic, $f['jmeno'], $f['telefon'], $f['email'], $f['ulice'], $f['mesto'], $f['psc'], $f['popis'], $f['termin'], $f['cas'], $f['poznamka'], $vSvj, $vByt, $ted, $id]);
+      sj_do_historie($pdo, $id);
       sj_jdi('index.php?id=' . $id . '&ok=ulozeno');
     }
     $zid = (int)($_POST['zadost_id'] ?? 0) ?: null; $pred = (int)($_POST['predchozi_id'] ?? 0) ?: null;
@@ -62,6 +91,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
       ->execute([$klic, $f['jmeno'], $f['telefon'], $f['email'], $f['ulice'], $f['mesto'], $f['psc'], $zid, $pred, $f['popis'], 'nova', $f['termin'], $f['cas'], $f['poznamka'],
         $okna['o3'], $okna['o2'], $okna['o1'], $okna['bd'], $okna['vk'], $okna['dv'], uziv_jmeno(), $ted, $ted]);
     $nid = (int)$pdo->lastInsertId();
+    if (!$vSvj && $pred && ($p = sj_nacti($pdo, $pred))) { $vSvj = $p['svj_id'] ?: null; if ($vByt === '') $vByt = (string)$p['byt']; }
+    $pdo->prepare('UPDATE so_jed SET svj_id=?, byt=? WHERE id=?')->execute([$vSvj, $vByt, $nid]);
     sj_poptavka_stav($pdo, $zid, 'rozpracovano');
     sj_jdi('index.php?id=' . $nid . '&ok=zalozeno');
   }
@@ -71,7 +102,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $pdo->prepare('INSERT INTO so_jed (klic, jmeno, telefon, email, ulice, mesto, psc, predchozi_id, popis, stav, opakovat, o3, o2, o1, bd, vk, dv, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       ->execute([$p['klic'], $p['jmeno'], $p['telefon'], $p['email'], $p['ulice'], $p['mesto'], $p['psc'], $p['id'], 'Pravidelný servis (předchozí ' . so_datum($p['provedeno'] ?: $p['termin']) . ')', 'nova', (int)$p['opakovat'],
         $p['o3'], $p['o2'], $p['o1'], $p['bd'], $p['vk'], $p['dv'], uziv_jmeno(), $ted, $ted]);
-    sj_jdi('index.php?id=' . (int)$pdo->lastInsertId() . '&ok=zalozeno');
+    $nid = (int)$pdo->lastInsertId(); $pdo->prepare('UPDATE so_jed SET svj_id=?, byt=? WHERE id=?')->execute([$p['svj_id'] ?: null, $p['byt'], $nid]);
+    sj_jdi('index.php?id=' . $nid . '&ok=zalozeno');
   }
   if ($a === 'zapis_ulozit') {
     $id = (int)$_POST['id']; $r = sj_nacti($pdo, $id); if (!$r) sj_jdi('index.php');
@@ -90,6 +122,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
       ->execute(array_merge([$stav, empty($_POST['k_kovani']) ? 0 : 1, empty($_POST['k_ramy']) ? 0 : 1, empty($_POST['k_tesneni']) ? 0 : 1, empty($_POST['k_zlabky']) ? 0 : 1, implode(',', $zk)], $okna,
         [$P('zavada', 3000), $P('oprava', 3000), $cis($_POST['max_cena'] ?? ''), $cis($_POST['cena'] ?? ''), $P('opraveno_hned', 1000), $pod, $P('podepsal', 120),
          $stav === 'hotovo' ? ($r['technik'] ?: uziv_jmeno()) : (string)$r['technik'], $prov, isset(SJ_OPAKOVAT[(int)($_POST['opakovat'] ?? 0)]) ? (int)$_POST['opakovat'] : 0, $P('kategorie', 20), $ted, $id]));
+    $pdo->prepare('UPDATE so_jed SET vysledek=? WHERE id=?')->execute([isset(SJ_VYSLEDKY[$_POST['vysledek'] ?? '']) ? $_POST['vysledek'] : null, $id]);
+    sj_do_historie($pdo, $id);
     if ($stav === 'hotovo') sj_poptavka_stav($pdo, $r['zadost_id'] ? (int)$r['zadost_id'] : null, 'vyrizeno');
     sj_jdi('index.php?id=' . $id . '&ok=ulozeno' . ($stav === 'hotovo' && $r['stav'] !== 'hotovo' ? '#protokol' : ''));
   }
@@ -187,12 +221,14 @@ if (isset($_GET['nove'])):
   } ?>
 <p><a href="index.php">← Jednotlivci</a></p>
 <h1>Nový servis oken u zákazníka</h1>
+<?php $objSvj = (int)($_GET['svj'] ?? 0); if ($objSvj && isset($svjSeznam[$objSvj])): ?><div class="msg">🏢 Objednává <b><?= $e($svjSeznam[$objSvj]) ?></b> – vyplňte nájemníka, adresu a číslo bytu. Servis se po dokončení zapíše i do historie domu.</div><?php endif; ?>
 <?php if ($f['puvod']): ?><p class="mut">Údaje převzaty <?= $e($f['puvod']) ?> – zkontrolujte je.</p><?php endif; ?>
 <?php if (!$f['jmeno']): ?><div class="box"><label class="mut">Najít zákazníka, u kterého už servis byl (jméno, telefon, obec…)<input id="hledej" autocomplete="off" style="width:100%" placeholder="např. Novák nebo 725…"></label><div id="vysl" hidden></div>
 <p class="mut" style="margin-bottom:0">Nový zákazník? Stačí vyplnit údaje níže.</p></div><?php endif; ?>
 <form method="post" class="box"><input type="hidden" name="akce" value="zalozit"><input type="hidden" name="klic" id="klic" value="<?= $e($f['klic']) ?>"><input type="hidden" name="zadost_id" value="<?= (int)$f['zadost_id'] ?>">
 <div class="ln"><label class="w">Jméno a příjmení *<input name="jmeno" id="f_jmeno" value="<?= $e($f['jmeno']) ?>" required></label><label>Telefon<input name="telefon" id="f_telefon" value="<?= $e($f['telefon']) ?>" inputmode="tel"></label><label class="w">E-mail<input name="email" id="f_email" value="<?= $e($f['email']) ?>" type="email"></label></div>
 <div class="ln"><label class="w">Ulice a číslo<input name="ulice" id="f_ulice" value="<?= $e($f['ulice']) ?>"></label><label class="w">Obec<input name="mesto" id="f_mesto" value="<?= $e($f['mesto']) ?>"></label><label>PSČ<input name="psc" id="f_psc" value="<?= $e($f['psc']) ?>" size="6" inputmode="numeric"></label></div>
+<?php $SVJV = (int)($_GET['svj'] ?? 0); $BYTV = ''; ?><div class="ln"><label class="w">Patří k SVJ / družstvu (servis se zapíše i do historie domu)<select name="svj_id"><option value="">– ne –</option><?php foreach ($svjSeznam as $k => $t): ?><option value="<?= (int)$k ?>"<?= (int)($SVJV ?? 0) === (int)$k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label><label>Číslo bytu / patro<input name="byt" value="<?= $e($BYTV ?? '') ?>" size="12" placeholder="např. 12, 3. p."></label></div>
 <label class="mut">Co zákazník potřebuje<textarea name="popis"><?= $e($f['popis']) ?></textarea></label>
 <div class="ln"><label>Termín<input type="date" name="termin"></label><label>Čas<input name="cas" placeholder="např. 9:00" size="10"></label><label class="w">Poznámka (interní)<input name="poznamka"></label></div>
 <button class="ok">Založit servis</button></form>
@@ -229,7 +265,9 @@ elseif ($id):
   $hist = []; if ($r['klic']) { $st = $pdo->prepare('SELECT id, stav, termin, provedeno FROM so_jed WHERE klic=? AND id<>? ORDER BY COALESCE(provedeno, termin, vytvoreno) DESC'); $st->execute([$r['klic'], $id]); $hist = $st->fetchAll(PDO::FETCH_ASSOC); } ?>
 <p><a href="index.php">← Jednotlivci</a></p>
 <div class="box"><h1 style="margin-bottom:4px"><?= $r['klic'] ? '<a href="zakaznici.php?k=' . $e(rawurlencode($r['klic'])) . '" style="color:inherit" title="Zákazník – všechny servisy">' . $e($r['jmeno']) . '</a>' : $e($r['jmeno']) ?> <span class="st st-<?= $e($r['stav']) ?>"><?= $e(SJ_STAVY[$r['stav']] ?? $r['stav']) ?></span></h1>
-<div style="font-size:17px"><?= $e(sj_adresa($r)) ?><?= ok_mapa(sj_adresa($r)) ?></div>
+<div style="font-size:17px"><?= $e(sj_adresa($r)) ?><?= $r['byt'] ? ', byt ' . $e($r['byt']) : '' ?><?= ok_mapa(sj_adresa($r)) ?></div>
+<?php if ($r['svj_id'] && isset($svjSeznam[(int)$r['svj_id']])): ?><div>🏢 <a href="svj.php?svj=<?= (int)$r['svj_id'] ?>#historie"><?= $e($svjSeznam[(int)$r['svj_id']]) ?></a></div><?php endif; ?>
+<?php if (!empty($r['vysledek']) && isset(SJ_VYSLEDKY[$r['vysledek']])): ?><div style="margin-top:4px"><span class="st <?= $r['vysledek'] === 'serizeno' ? 'st-hotovo' : 'st-nova' ?>"><?= $e(SJ_VYSLEDKY[$r['vysledek']]) ?></span></div><?php endif; ?>
 <div><?= $r['telefon'] ? '📞 <a href="tel:' . $e(preg_replace('/[^\d+]/', '', $r['telefon'])) . '">' . $e($r['telefon']) . '</a>' : '' ?><?= $r['email'] ? ' · ✉ <a href="mailto:' . $e($r['email']) . '">' . $e($r['email']) . '</a>' : '' ?></div>
 <?php if ($r['termin']): ?><p style="margin:6px 0 0"><b>Termín:</b> <?= $e(so_datum($r['termin'])) ?> <?= $e($r['cas']) ?></p><?php endif; ?>
 <?php if ($r['popis']): ?><p style="margin:6px 0 0"><b>Požadavek:</b> <?= nl2br($e($r['popis'])) ?></p><?php endif; ?>
@@ -239,13 +277,16 @@ elseif ($id):
 <form method="post"><input type="hidden" name="akce" value="udaje_ulozit"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="klic" value="<?= $e($r['klic']) ?>">
 <div class="ln"><label class="w">Jméno a příjmení *<input name="jmeno" value="<?= $e($r['jmeno']) ?>" required></label><label>Telefon<input name="telefon" value="<?= $e($r['telefon']) ?>" inputmode="tel"></label><label class="w">E-mail<input name="email" type="email" value="<?= $e($r['email']) ?>"></label></div>
 <div class="ln"><label class="w">Ulice a číslo<input name="ulice" value="<?= $e($r['ulice']) ?>"></label><label class="w">Obec<input name="mesto" value="<?= $e($r['mesto']) ?>"></label><label>PSČ<input name="psc" value="<?= $e($r['psc']) ?>" size="6"></label></div>
+<?php $SVJV = (int)$r['svj_id']; $BYTV = (string)$r['byt']; ?><div class="ln"><label class="w">Patří k SVJ / družstvu (servis se zapíše i do historie domu)<select name="svj_id"><option value="">– ne –</option><?php foreach ($svjSeznam as $k => $t): ?><option value="<?= (int)$k ?>"<?= (int)($SVJV ?? 0) === (int)$k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label><label>Číslo bytu / patro<input name="byt" value="<?= $e($BYTV ?? '') ?>" size="12" placeholder="např. 12, 3. p."></label></div>
 <label class="mut">Co zákazník potřebuje<textarea name="popis"><?= $e($r['popis']) ?></textarea></label>
 <div class="ln"><label>Termín<input type="date" name="termin" value="<?= $e($r['termin']) ?>"></label><label>Čas<input name="cas" value="<?= $e($r['cas']) ?>" size="10"></label><label class="w">Poznámka (interní)<input name="poznamka" value="<?= $e($r['poznamka']) ?>"></label></div>
 <button class="sec">Uložit údaje</button></form></details></div>
 
 <form method="post" id="zapis"><input type="hidden" name="akce" value="zapis_ulozit"><input type="hidden" name="id" value="<?= $id ?>">
 <div class="box"><h3>Stav</h3><div class="stavy"><?php foreach (['nova' => '📋 K vyřízení', 'hotovo' => '✅ Hotovo', 'zruseno' => '✋ Zrušeno'] as $k => $t): ?><label><input type="radio" name="stav" value="<?= $k ?>"<?= $r['stav'] === $k ? ' checked' : '' ?>><?= $t ?></label><?php endforeach; ?></div>
-<div class="ln"><label>Provedeno dne<input type="date" name="provedeno" value="<?= $e($r['provedeno']) ?>"></label><span class="mut">při Hotovo se doplní dnešek</span></div></div>
+<div class="ln"><label>Provedeno dne<input type="date" name="provedeno" value="<?= $e($r['provedeno']) ?>"></label><span class="mut">při Hotovo se doplní dnešek</span></div>
+<h3 style="margin-top:14px">Výsledek návštěvy</h3><div class="stavy"><?php foreach (SJ_VYSLEDKY as $k => $t): ?><label><input type="radio" name="vysledek" value="<?= $k ?>"<?= ($r['vysledek'] ?? '') === $k ? ' checked' : '' ?>><?= $t ?></label><?php endforeach; ?></div>
+<p class="mut" style="margin-bottom:0">Při „Nutná oprava“ vyplňte níže závadu a návrh opravy – oprava se pak zapíše jako další servis (navazující).</p></div>
 <div class="box"><h3>Provedeno</h3><div class="chk"><?php foreach (SO_KONTROLY as $k => $t): ?><label><input type="checkbox" name="<?= $k ?>" value="1"<?= $r[$k] ? ' checked' : '' ?>> <?= $t ?></label><?php endforeach; ?></div></div>
 <div class="box"><h3>Okna</h3><div class="okna"><?php foreach (SO_OKNA as $k => $t): ?><label><?= $t ?><input type="number" min="0" name="<?= $k ?>" value="<?= (int)$r[$k] ?>" inputmode="numeric"></label><?php endforeach; ?></div></div>
 <div class="box"><h3>Závady</h3><div class="chk"><?php foreach (SO_ZKRATKY as $k => $t): ?><label><input type="checkbox" name="zkratky[]" value="<?= $k ?>"<?= in_array($k, $zk, true) ? ' checked' : '' ?>> <?= $e($t) ?></label><?php endforeach; ?></div>
@@ -284,7 +325,7 @@ elseif ($id):
   $kontroly = []; foreach (SO_KONTROLY as $k => $t) if ($r[$k]) $kontroly[] = $t;
   $okna = []; foreach (SO_OKNA as $k => $t) if ((int)$r[$k] > 0) $okna[] = $t . ': ' . (int)$r[$k];
   $pdfData = ['cislo' => 'SOJ-' . $id, 'jmeno' => $r['jmeno'], 'adresa' => sj_adresa($r), 'telefon' => $r['telefon'], 'email' => $r['email'],
-    'datum' => so_datum($r['provedeno'] ?: $r['termin'] ?: date('Y-m-d')), 'stav' => SJ_STAVY[$r['stav']] ?? '', 'popis' => (string)$r['popis'], 'kontroly' => $kontroly, 'okna' => implode(', ', $okna),
+    'datum' => so_datum($r['provedeno'] ?: $r['termin'] ?: date('Y-m-d')), 'stav' => trim((SJ_STAVY[$r['stav']] ?? '') . (isset(SJ_VYSLEDKY[$r['vysledek'] ?? '']) ? ' – ' . preg_replace('/^\S+\s/u', '', SJ_VYSLEDKY[$r['vysledek']]) : '')), 'popis' => (string)$r['popis'], 'kontroly' => $kontroly, 'okna' => implode(', ', $okna),
     'zkratky' => implode(', ', array_map(fn($k) => SO_ZKRATKY[$k] ?? $k, $zk)), 'zavada' => (string)$r['zavada'], 'opraveno' => (string)$r['opraveno_hned'], 'oprava' => (string)$r['oprava'],
     'max_cena' => $r['max_cena'] !== null ? $kc($r['max_cena']) : '', 'cena' => $r['cena'] !== null ? $kc($r['cena']) : '', 'dalsi' => $dl ? so_datum($dl) : '',
     'podpis' => $r['podpis'] ? '?podpis=' . $id . '&t=' . time() : '', 'podepsal' => (string)($r['podepsal'] ?: $r['jmeno']), 'technik' => (string)($r['technik'] ?: uziv_jmeno()),
@@ -423,6 +464,6 @@ else:
 <?php if (!$hot): ?><p class="mut">Zatím nic.</p><?php else: ?>
 <table><tr><th>Provedeno</th><th>Zákazník</th><th>Stav</th><th class="r">Cena</th></tr>
 <?php foreach ($hot as $x): $dl = sj_dalsi($x); ?><tr><td class="nowrap"><?= $e(so_datum($x['provedeno'] ?: $x['termin'])) ?></td><td><a href="?id=<?= (int)$x['id'] ?>"><b><?= $e($x['jmeno']) ?></b></a><div class="mut"><?= $e(sj_adresa($x)) ?><?= $dl ? ' · další ' . $e(so_datum($dl)) : '' ?></div></td>
-<td><span class="st st-<?= $e($x['stav']) ?>"><?= $e(SJ_STAVY[$x['stav']] ?? '') ?></span><?= $x['protokol_poslan'] ? ' <span class="mut">📧</span>' : '' ?></td><td class="r nowrap"><?= $e($kc($x['cena'])) ?></td></tr><?php endforeach; ?></table><?php endif; ?></div>
+<td><span class="st st-<?= $e($x['stav']) ?>"><?= $e(SJ_STAVY[$x['stav']] ?? '') ?></span><?= in_array($x['vysledek'] ?? '', ['oprava', 'dily'], true) ? ' <span class="st st-nova">' . $e(SJ_VYSLEDKY[$x['vysledek']]) . '</span>' : '' ?><?= $x['protokol_poslan'] ? ' <span class="mut">📧</span>' : '' ?></td><td class="r nowrap"><?= $e($kc($x['cena'])) ?></td></tr><?php endforeach; ?></table><?php endif; ?></div>
 <?php endif; ?>
 </main></body></html>
