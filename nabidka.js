@@ -741,6 +741,7 @@
         section('Platba');
         var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
         para('Záloha ' + d.zaloha_proc + ' % z ceny zakázky: ' + money(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') : '') + '. Doplatek ' + money(d.doplatek) + ' hotově po montáži.', 9.2, [15, 42, 28], 4.2);
+        if (OBJ && d.zaloha > 0 && window.BDPlatba) para(window.BDPlatba.podminka(d.zaloha_label), 9.2, [124, 45, 12], 4.2);
         if (d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
         if (d.termin_text) para('Termín dodání / montáže: ' + d.termin_text, 9.2, [15, 42, 28], 4.2);
         section('Smluvní ujednání');
@@ -755,7 +756,7 @@
         doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
         font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
         font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
-        doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235'], W - M - 75, y);
+        doc.text([OBJ ? 'akceptace po připsání zálohy' : null, 'Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235'].filter(Boolean), W - M - 75, y);
         footer();
         return { blob: doc.output('blob'), pages: doc.getNumberOfPages() };
       }
@@ -788,7 +789,7 @@
       var lo = [['_subject', 'Objednávka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
         ['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.'],
         ['Objednávka', d.obj_cislo], ['Celkem ' + dphTxt(), kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
-        ['Doplatek po montáži', kc(d.doplatek) + ' hotově']];
+        ['Doplatek po montáži', kc(d.doplatek) + ' hotově']].concat(OBJ && d.zaloha > 0 && window.BDPlatba ? [['Důležité', window.BDPlatba.podminka(d.zaloha_label)]] : []);
       return lo.concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
     }
     return [['_subject', 'Cenová nabídka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
@@ -841,7 +842,7 @@
       if (OBJ && d.zaloha > 0 && window.BDPlatba && $('#nbPay')) {
         try {
           var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), bx = $('#nbPayQr'); bx.innerHTML = ''; var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'display:block;margin:0 auto;width:min(300px,100%);max-width:100%;height:auto;image-rendering:pixelated'; bx.appendChild(cv);
-          $('#nbPayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> (' + d.zaloha_proc + ' %) · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : ''); $('#nbPay').hidden = false;
+          $('#nbPayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> (' + d.zaloha_proc + ' %) · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '') + '<br><small style="display:block;margin-top:.5rem;color:#7c2d0c">' + window.BDPlatba.podminka(d.zaloha_label) + '</small>'; $('#nbPay').hidden = false;
         } catch (e) {}
       }
       if (!d.email) { w.textContent = 'Zákazník nemá vyplněný e-mail – nabídka odešla jen vám. PDF si vytiskněte a předejte mu ho.'; w.hidden = false; }

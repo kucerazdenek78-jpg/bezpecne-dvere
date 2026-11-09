@@ -688,7 +688,7 @@
       ['_cc', [CC_OBJ, d.email].filter(Boolean).join(',')], ['_replyto', CC]
     ];
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
-    if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); }
+    if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); f.push(['Důležité', window.BDPlatba.podminka(d.zaloha_label)]); }
     if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) f.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
     /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */
     (function () { var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime(); try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {} if (on) f.push(['Aplikace Moje dveře v ceně', 'K Vašim dveřím patří zdarma aplikace Moje dveře: přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady a připomínka roční kontroly. Podrobnosti: ' + new URL('moje-dvere.html', location.href).href]); })();
@@ -749,7 +749,7 @@
           var pi2 = window.BDPlatba.info(d.obj_cislo, d.zaloha), box = $('#donePayQr'); box.innerHTML = '';
           var cv = window.BDPlatba.canvas(pi2.spd, 360); cv.style.cssText = 'display:block;margin:0 auto;width:min(300px,100%);max-width:100%;height:auto;image-rendering:pixelated'; box.appendChild(cv);
           var zl = (d.zaloha_label || 'zálohy').toLowerCase(); $('#donePayLabel').textContent = zl === 'záloha' ? 'zálohy' : zl;
-          $('#donePayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '');
+          $('#donePayTxt').innerHTML = '<b>' + kc(d.zaloha) + '</b> · účet ' + pi2.ucet + (pi2.vs ? ' · VS ' + pi2.vs : '') + '<br><small style="display:block;margin-top:.5rem;color:#7c2d0c">' + window.BDPlatba.podminka(d.zaloha_label) + '</small>';
           $('#donePayCopy').onclick = function () { var b = this, t = pi2.odkaz; (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { b.textContent = 'Zkopírováno'; }, function () { window.prompt('Odkaz na platbu:', t); }); };
           $('#donePay').hidden = false;
         } catch (e) {}

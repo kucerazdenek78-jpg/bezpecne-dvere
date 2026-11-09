@@ -172,6 +172,7 @@
             ['Doplatek', fmt(d.doplatek) + ' po montáži HOTOVĚ'],
             ['Termín montáže', (d.termin ? 'odhad ' + d.termin + ', ' : '') + 'přesný termín dohodneme telefonicky s týdenním předstihem']].filter(Boolean), M, 34, cw - 34 - (pay ? 30 : 0)) + 1;
           if (pay) { try { doc.addImage(window.BDPlatba.png(pay.spd, 300), 'PNG', W - M - 27, y0 - 2, 27, 27); font('normal', 6.5, MUTED); doc.text('QR platba', W - M - 13.5, y0 + 27, { align: 'center' }); } catch (e) {} y = Math.max(y, y0 + 29); }
+          if (pay) { font('bold', 8.5, [124, 45, 12]); var pc = doc.splitTextToSize(window.BDPlatba.podminka(d.zaloha_label), cw); ensure(pc.length * 4 + 2); doc.text(pc, M, y); y += pc.length * 4 + 2; }
           if (d.poznamka) { section('Poznámka'); font('normal', 9.5); var pl = doc.splitTextToSize(d.poznamka, cw); ensure(pl.length * 4.4); doc.text(pl, M, y); y += pl.length * 4.4 + 3; }
           /* fotky z poptávky (malé) */
           var fit = x.fit || { photoH: 52, legal: 7.4 };
@@ -206,7 +207,7 @@
           doc.line(M, y, M + 75, y); doc.line(W - M - 75, y, W - M, y); y += 4.5;
           font('bold', 9); doc.text('Závazně objednávám – objednatel', M, y); doc.text('Zhotovitel', W - M - 75, y); y += 4.2;
           font('normal', 8.5, MUTED); doc.text((d.jmeno + ' ' + d.prijmeni).trim(), M, y);
-          doc.text(['Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235, +420 471 008 994'], W - M - 75, y);
+          doc.text(['akceptace po připsání zálohy', 'Zdeněk Kučera, KK SYSTEM', 'Zd. Štěpánka 2764/1, 434 01 Most', '+420 725 559 235, +420 471 008 994'], W - M - 75, y);
           footer();
           return { blob: doc.output('blob'), pages: doc.getNumberOfPages() };
         }

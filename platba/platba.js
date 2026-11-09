@@ -30,5 +30,10 @@
   function info(cislo, a) { return { ucet: ACC + '/' + BANK, iban: iban(), vs: vs(cislo), castka: amount(a), spd: spd(a, cislo), odkaz: link(cislo, a) }; }
   function mojeUrl(t) { return 'https://bezpecne-dvere.cz/aplikace/#moje?t=' + encodeURIComponent(t || ''); }   // aplikace Moje dveře (automatické spárování)
   function predaniUrl(t) { return 'https://kartoteka.dvere.app/predani.php?t=' + encodeURIComponent(t || ''); }
-  w.BDPlatba = { mojeUrl: mojeUrl, predaniUrl: predaniUrl, iban: iban, vs: vs, spd: spd, canvas: canvas, png: png, link: link, info: info, ucet: ACC + '/' + BANK };
+  /* podmínka akceptace (rozhodnutí Zdeňka 9. 11. 2026): záloha do 5 pracovních dnů, jinak storno; label = 'Záloha' / 'Rezervace' */
+  function podminka(label) {
+    var rez = /rezerv/i.test(label || ''), sl = rez ? 'Rezervační platba' : 'Záloha';
+    return sl + ' musí být připsána na účet zhotovitele do 5 pracovních dnů od odeslání objednávky. Připsání ' + (rez ? 'platby' : 'zálohy') + ' je podmínkou akceptace objednávky zhotovitelem; nebude-li v této lhůtě připsána, objednávka se stornuje.';
+  }
+  w.BDPlatba = { podminka: podminka, mojeUrl: mojeUrl, predaniUrl: predaniUrl, iban: iban, vs: vs, spd: spd, canvas: canvas, png: png, link: link, info: info, ucet: ACC + '/' + BANK };
 })(window);
