@@ -216,6 +216,8 @@ function so_souhrn(PDO $pdo, array $servis): array {
 // ───── jednotlivci (tabulka so_jed) ─────
 const SJ_STAVY = ['nova' => 'K vyřízení', 'hotovo' => 'Hotovo', 'zruseno' => 'Zrušeno'];
 const SJ_OPAKOVAT = [0 => 'neopakovat', 1 => 'za 1 rok', 2 => 'za 2 roky'];
+const SJ_PLATI = ['svj' => 'SVJ / družstvo', 'najemnik' => 'nájemník (vlastník bytu)'];
+const SJ_VYSLEDKY = ['serizeno' => '✅ Seřízeno, vše funkční', 'oprava' => '🛠 Nutná oprava', 'dily' => '📦 Nutná oprava – objednat díly'];
 
 function sj_tabulka(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS so_jed (id INTEGER PRIMARY KEY AUTOINCREMENT, klic TEXT, jmeno TEXT NOT NULL, telefon TEXT, email TEXT, ulice TEXT, mesto TEXT, psc TEXT,

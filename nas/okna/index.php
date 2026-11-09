@@ -7,10 +7,8 @@
 require __DIR__ . '/lib.php';
 $pdo = ok_db();
 // výsledek návštěvy, vazba bytu na SVJ / družstvo, číslo bytu (9. 11. 2026)
-const SJ_PLATI = ['svj' => 'SVJ / družstvo', 'najemnik' => 'nájemník (vlastník bytu)'];
-const SJ_VYSLEDKY = ['serizeno' => '✅ Seřízeno, vše funkční', 'oprava' => '🛠 Nutná oprava', 'dily' => '📦 Nutná oprava – objednat díly'];
 $sl = array_column($pdo->query('PRAGMA table_info(so_jed)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT', 'plati' => 'TEXT', 'fakturace' => 'TEXT'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
+foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT', 'plati' => 'TEXT', 'fakturace' => 'TEXT', 'polozky' => 'TEXT'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
 if (!$pdo->query("SELECT hodnota FROM ok_nastaveni WHERE klic='jed_vazby_v1'")->fetchColumn()) {   // protokoly převzaté z Jotformu: výsledek, SVJ a řádky historie
   $mapa = ['Seřízeno' => 'serizeno', 'Nutná oprava – objednání dílů' => 'dily', 'Nutná oprava' => 'oprava'];
   $ryb = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28750519'")->fetchColumn(); $b701 = (int)$pdo->query("SELECT id FROM so_svj WHERE ic='28742699'")->fetchColumn();
@@ -133,10 +131,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $prov = preg_match('/^\d{4}-\d{2}-\d{2}$/', $P('provedeno', 10)) ? $P('provedeno', 10) : null;
     if ($stav === 'hotovo' && !$prov) $prov = $r['provedeno'] ?: $dnes;
     $okna = []; foreach (array_keys(SO_OKNA) as $k) $okna[] = max(0, (int)($_POST[$k] ?? 0));
-    $pdo->prepare('UPDATE so_jed SET stav=?, k_kovani=?, k_ramy=?, k_tesneni=?, k_zlabky=?, zkratky=?, o3=?, o2=?, o1=?, bd=?, vk=?, dv=?, zavada=?, oprava=?, max_cena=?, cena=?, opraveno_hned=?, podpis=?, podepsal=?, technik=?, provedeno=?, opakovat=?, kategorie=?, upraveno=? WHERE id=?')
+    // položky k vyúčtování (JSON z editoru): každá má název, množství, cenu/j s DPH a sazbu DPH; cena servisu = jejich součet
+    $polIn = json_decode((string)($_POST['polozky'] ?? ''), true); $polC = []; $polSum = 0.0;
+    if (is_array($polIn)) foreach ($polIn as $it) {
+      if (!is_array($it)) continue;
+      $nz = mb_substr(trim(preg_replace('/\s+/u', ' ', (string)($it['nazev'] ?? ''))), 0, 120);
+      $mn = round((float)str_replace(',', '.', (string)($it['mn'] ?? 1)), 2); $cj = round((float)str_replace(',', '.', (string)($it['cena'] ?? 0)), 2);
+      if ($nz === '' || $mn <= 0) continue;
+      $dph = in_array((int)($it['dph'] ?? 12), [0, 12, 15, 21], true) ? (int)$it['dph'] : 12;
+      $polC[] = ['kod' => mb_substr(preg_replace('/[^A-Za-z0-9]/', '', (string)($it['kod'] ?? '')), 0, 20), 'nazev' => $nz, 'mn' => $mn, 'jedn' => mb_substr(preg_replace('/[\x00-\x1f]/u', '', (string)($it['jedn'] ?? 'ks')), 0, 20), 'cena' => $cj, 'dph' => $dph];
+      $polSum += $mn * $cj;
+    }
+    $polJson = $polC ? json_encode($polC, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+    $cenaFin = $polC ? round($polSum, 2) : $cis($_POST['cena'] ?? '');
+    $katFin = ''; foreach ($polC as $it) if ($it['kod'] !== '') { $katFin = $it['kod']; break; } if ($katFin === '') $katFin = $P('kategorie', 20);
+    $pdo->prepare('UPDATE so_jed SET stav=?, k_kovani=?, k_ramy=?, k_tesneni=?, k_zlabky=?, zkratky=?, o3=?, o2=?, o1=?, bd=?, vk=?, dv=?, zavada=?, oprava=?, max_cena=?, cena=?, opraveno_hned=?, podpis=?, podepsal=?, technik=?, provedeno=?, opakovat=?, kategorie=?, polozky=?, upraveno=? WHERE id=?')
       ->execute(array_merge([$stav, empty($_POST['k_kovani']) ? 0 : 1, empty($_POST['k_ramy']) ? 0 : 1, empty($_POST['k_tesneni']) ? 0 : 1, empty($_POST['k_zlabky']) ? 0 : 1, implode(',', $zk)], $okna,
-        [$P('zavada', 3000), $P('oprava', 3000), $cis($_POST['max_cena'] ?? ''), $cis($_POST['cena'] ?? ''), $P('opraveno_hned', 1000), $pod, $P('podepsal', 120),
-         $stav === 'hotovo' ? ($r['technik'] ?: uziv_jmeno()) : (string)$r['technik'], $prov, isset(SJ_OPAKOVAT[(int)($_POST['opakovat'] ?? 0)]) ? (int)$_POST['opakovat'] : 0, $P('kategorie', 20), $ted, $id]));
+        [$P('zavada', 3000), $P('oprava', 3000), $cis($_POST['max_cena'] ?? ''), $cenaFin, $P('opraveno_hned', 1000), $pod, $P('podepsal', 120),
+         $stav === 'hotovo' ? ($r['technik'] ?: uziv_jmeno()) : (string)$r['technik'], $prov, isset(SJ_OPAKOVAT[(int)($_POST['opakovat'] ?? 0)]) ? (int)$_POST['opakovat'] : 0, $katFin, $polJson, $ted, $id]));
     $pdo->prepare('UPDATE so_jed SET vysledek=? WHERE id=?')->execute([isset(SJ_VYSLEDKY[$_POST['vysledek'] ?? '']) ? $_POST['vysledek'] : null, $id]);
     if ($r['svj_id'] && isset($_POST['plati'])) $pdo->prepare('UPDATE so_jed SET plati=? WHERE id=?')->execute([isset(SJ_PLATI[$_POST['plati']]) ? $_POST['plati'] : null, $id]);
     sj_do_historie($pdo, $id);
@@ -309,13 +321,14 @@ elseif ($id):
 <p><a href="index.php">← Jednotlivci</a></p>
 <?php if ($r['stav'] === 'hotovo'):   // co po dokončení servisu ještě zbývá – dokud není všechno, servis není uzavřený
   $kProt = (bool)$r['protokol_poslan'] || (!$r['email'] && $r['protokol']); $kCena = is_numeric($r['cena']); $kFak = (bool)($r['fakturace'] ?? '');
-  $kOpr = !in_array($r['vysledek'] ?? '', ['oprava', 'dily'], true) || $nasl; $kPl = !$r['svj_id'] || isset(SJ_PLATI[$r['plati'] ?? '']); $vse = $kProt && $kCena && $kFak && $kOpr && $kPl;
+  $kOpr = !in_array($r['vysledek'] ?? '', ['oprava', 'dily'], true) || $nasl; $openOpr = !$kOpr; $kPl = !$r['svj_id'] || isset(SJ_PLATI[$r['plati'] ?? '']); $vse = $kProt && $kCena && $kFak && $kOpr && $kPl;
   $ok = fn($b) => $b ? '✅' : '⬜'; ?>
 <div class="box" style="border-left:6px solid <?= $vse ? '#15803d' : '#d97706' ?>"><h2 style="margin-top:0"><?= $vse ? '✔ Servis je uzavřený' : 'Servis proběhl – co ještě zbývá' ?></h2>
 <p style="margin:4px 0"><?= $ok($kProt) ?> <b>Protokol zákazníkovi</b> – <?= $r['protokol_poslan'] ? 'poslán ' . $e(date('j. n. Y', strtotime(substr((string)$r['protokol_poslan'], 0, 19)) ?: time())) : ($r['protokol'] ? ($r['email'] ? 'vytvořen, ale neposlán – <a href="#protokol">poslat</a>' : 'vytvořen (zákazník nemá e-mail – vytisknout / předat)') : '<a href="#protokol">vytvořit a poslat PDF</a>') ?></p>
 <?php if ($r['svj_id']): ?><p style="margin:4px 0"><?= $ok($kPl) ?> <b>Kdo platí</b> – <?= $kPl ? $e(SJ_PLATI[$r['plati']]) : 'vyberte v zápisu (Cena a další servis)' ?></p><?php endif; ?>
 <p style="margin:4px 0"><?= $ok($kCena && $kFak) ?> <b>Fakturace</b> – <?php if (!$kCena): ?>nejdřív doplňte cenu servisu v zápisu (Cena a další servis)<?php elseif ($kFak): ?>předáno k fakturaci <?= $e($r['fakturace']) ?> · <a href="fakturace.php?i=1">přehled</a>
   <form method="post" style="display:inline"><input type="hidden" name="akce" value="fakturace"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="k" value="vratit"><button class="sec" style="padding:3px 8px;font-size:13px">vrátit</button></form>
+  <?php elseif ($openOpr): ?><?= $e(ok_kc($r['cena'])) ?> s DPH zatím – <b>počká na dokončení opravy</b> a vyfakturuje se jako celek (servis + oprava). Založte opravu níže.
   <?php else: ?><?= $e(ok_kc($r['cena'])) ?> s DPH<?= ($r['plati'] ?? '') === 'svj' && isset($svjSeznam[(int)$r['svj_id']]) ? ' – fakturuje se SVJ ' . $e($svjSeznam[(int)$r['svj_id']]) : '' ?>
   <form method="post" style="display:inline"><input type="hidden" name="akce" value="fakturace"><input type="hidden" name="id" value="<?= $id ?>"><button class="ok" style="padding:5px 10px;font-size:14px">🧾 Předat k fakturaci</button></form> <a href="fakturace.php">všechny podklady</a><?php endif; ?></p>
 <?php if (in_array($r['vysledek'] ?? '', ['oprava', 'dily'], true)): ?><p style="margin:4px 0"><?= $ok($kOpr) ?> <b>Oprava</b> – <?= $nasl ? '<a href="?id=' . $nasl . '">založena (navazující servis)</a>' : 'zatím nezaložena – tlačítko „Založit opravu“ níže' ?></p><?php endif; ?>
@@ -353,12 +366,28 @@ elseif ($id):
 <label class="mut">Opraveno hned na místě<input name="opraveno_hned" value="<?= $e($r['opraveno_hned']) ?>" style="width:100%"></label>
 <label class="mut">Návrh opravy pro zákazníka<textarea name="oprava" placeholder="např. výměna převodu na křídle v ložnici"><?= $e($r['oprava']) ?></textarea></label>
 <div class="ln"><label>Maximální cena opravy (Kč s DPH)<input name="max_cena" value="<?= $e($r['max_cena']) ?>" inputmode="decimal" size="10"></label></div></div>
-<?php $cenKat = $pdo->query("SELECT kod, nazev, cena, dph FROM ok_cenik WHERE aktivni=1 AND skupina IN ('byt','okno') ORDER BY skupina, poradi")->fetchAll(PDO::FETCH_ASSOC); ?>
+<?php
+$cenVse = $pdo->query("SELECT kod, nazev, skupina, jednotka, cena, dph FROM ok_cenik WHERE aktivni=1 ORDER BY CASE skupina WHEN 'byt' THEN 0 WHEN 'okno' THEN 1 WHEN 'prace' THEN 2 WHEN 'doprava' THEN 3 ELSE 4 END, poradi, id")->fetchAll(PDO::FETCH_ASSOC);
+$polStart = [];
+$pjStart = json_decode((string)($r['polozky'] ?? ''), true);
+if (is_array($pjStart) && $pjStart) $polStart = $pjStart;
+elseif (is_numeric($r['cena']) && (float)$r['cena'] > 0) {   // starší servis bez položek → jedna položka podle vybraného bytu/typu
+  $c0 = null; foreach ($cenVse as $c) if ($c['kod'] === (string)($r['kategorie'] ?? '')) { $c0 = $c; break; }
+  $polStart = [['kod' => (string)($r['kategorie'] ?? ''), 'nazev' => $c0 ? $c0['nazev'] : 'Servis oken a dveří', 'mn' => 1, 'jedn' => $c0 ? $c0['jednotka'] : 'servis', 'cena' => round((float)$r['cena'], 2), 'dph' => $c0 ? (int)$c0['dph'] : 12]];
+}
+?>
+<style>#polList .polrow{border:1px solid #e3e8ef;border-radius:10px;padding:8px 10px;margin-bottom:8px;background:#fafbfc}#polList .pr1{display:flex;gap:8px;align-items:center}#polList .pr1 .pn{flex:1;min-width:0}#polList .pr2{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;margin-top:8px}#polList .pr2 label{display:flex;flex-direction:column;font-size:12px;color:#5f6b7a;gap:2px}#polList .pr2 input,#polList .pr2 select{padding:7px 8px}#polList .pm{width:62px;text-align:right}#polList .pc{width:92px;text-align:right}#polList .pd{width:74px}#polList .cl{margin-left:auto;font-weight:700;color:#1b2430;align-self:center;white-space:nowrap}#polList .px{background:#fde2e2;color:#9b1c1c;border:0;border-radius:8px;padding:7px 11px;cursor:pointer;font-weight:700}</style>
 <div class="box"><h3>Cena a další servis</h3>
-<?php if ($r['svj_id']): ?><div class="ln"><span class="mut">Platí:</span><?php foreach (SJ_PLATI as $k => $t): ?><label style="flex-direction:row;align-items:center;gap:6px;font-size:16px;color:inherit"><input type="radio" name="plati" value="<?= $k ?>"<?= ($r['plati'] ?? '') === $k ? ' checked' : '' ?>> <?= $e($t) ?></label><?php endforeach; ?></div><?php endif; ?><div class="ln"><label>Byt / typ podle ceníku<select name="kategorie" id="kat"><option value="">– vyberte –</option><?php foreach ($cenKat as $c): ?><option value="<?= $e($c['kod']) ?>" data-s="<?= round($c['cena'] * (1 + $c['dph'] / 100)) ?>"<?= ($r['kategorie'] ?? '') === $c['kod'] ? ' selected' : '' ?>><?= $e($c['nazev']) ?> – <?= ok_kc(round($c['cena'] * (1 + $c['dph'] / 100))) ?></option><?php endforeach; ?></select></label>
-<label>Počet oken (u položky po oknech)<input type="number" min="1" id="katPocet" value="1" style="width:90px"></label><button type="button" class="sec" id="katCena">Cena z ceníku</button></div>
-<div class="ln"><label>Cena servisu (Kč s DPH)<input name="cena" value="<?= $e($r['cena']) ?>" inputmode="decimal" size="10"></label>
-<label>Další servis<select name="opakovat"><?php foreach (SJ_OPAKOVAT as $k => $t): ?><option value="<?= $k ?>"<?= (int)$r['opakovat'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
+<?php if ($r['svj_id']): ?><div class="ln"><span class="mut">Platí:</span><?php foreach (SJ_PLATI as $k => $t): ?><label style="flex-direction:row;align-items:center;gap:6px;font-size:16px;color:inherit"><input type="radio" name="plati" value="<?= $k ?>"<?= ($r['plati'] ?? '') === $k ? ' checked' : '' ?>> <?= $e($t) ?></label><?php endforeach; ?></div><?php endif; ?>
+<h4 style="margin:4px 0 6px">Položky k vyúčtování</h4>
+<p class="mut" style="margin:0 0 6px">Přidejte vše, co se účtuje – servis bytu, dopravu, kličku, kování… Cena servisu je jejich součet. Množství i cenu lze přepsat.</p>
+<div id="polList"></div>
+<p style="text-align:right;margin:2px 0 0;font-size:17px"><b>Celkem s DPH: <span id="polSuma">0 Kč</span></b></p>
+<div class="ln" style="align-items:flex-end;margin-top:8px"><label class="w">Přidat z ceníku<select id="polSel"><option value="">– vyberte položku –</option><?php $g = ''; foreach ($cenVse as $c): if ($c['skupina'] !== $g) { if ($g !== '') echo '</optgroup>'; $g = $c['skupina']; echo '<optgroup label="' . $e(OK_SKUPINY[$g] ?? $g) . '">'; } $cs = round($c['cena'] * (1 + $c['dph'] / 100)); ?><option value="<?= $e($c['kod']) ?>" data-nazev="<?= $e($c['nazev']) ?>" data-cena="<?= $cs ?>" data-dph="<?= (int)$c['dph'] ?>" data-jedn="<?= $e($c['jednotka']) ?>"><?= $e($c['nazev']) ?> – <?= ok_kc($cs) ?>/<?= $e($c['jednotka']) ?></option><?php endforeach; if ($g !== '') echo '</optgroup>'; ?></select></label>
+<label>Počet<input type="number" min="0" step="0.5" id="polMn" value="1" style="width:80px"></label>
+<button type="button" class="sec" id="polPridat">+ Přidat</button> <button type="button" class="sec" id="polVlastni">+ Vlastní položka</button></div>
+<input type="hidden" name="polozky" id="polData"><input type="hidden" name="kategorie" id="katHid" value="<?= $e($r['kategorie'] ?? '') ?>"><input type="hidden" name="cena" id="cenaHid" value="<?= $e($r['cena']) ?>">
+<div class="ln" style="margin-top:10px"><label>Další servis<select name="opakovat"><?php foreach (SJ_OPAKOVAT as $k => $t): ?><option value="<?= $k ?>"<?= (int)$r['opakovat'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach; ?></select></label>
 <?php if ($dl): ?><span class="mut">připomenout kolem <?= $e(so_datum($dl)) ?></span><?php endif; ?></div></div>
 <div class="box"><h3>Podpis zákazníka</h3><p class="mut" style="margin-top:0">Zákazník podpisem potvrzuje, že servis proběhl.</p>
 <?php if ($r['podpis']): ?><p><img src="?podpis=<?= $id ?>&amp;t=<?= time() ?>" alt="Podpis" style="max-width:100%;max-height:120px;border:1px solid #e3e8ef;border-radius:8px"> <label class="mut"><input type="checkbox" name="podpis_smazat" value="1"> smazat a podepsat znovu</label></p><?php endif; ?>
@@ -389,12 +418,54 @@ elseif ($id):
     'datum' => so_datum($r['provedeno'] ?: $r['termin'] ?: date('Y-m-d')), 'stav' => trim((SJ_STAVY[$r['stav']] ?? '') . (($r['plati'] ?? '') === 'svj' && isset($svjSeznam[(int)$r['svj_id']]) ? ' · hradí ' . $svjSeznam[(int)$r['svj_id']] : (($r['plati'] ?? '') === 'najemnik' ? ' · hradí zákazník' : '')) . (isset(SJ_VYSLEDKY[$r['vysledek'] ?? '']) ? ' – ' . preg_replace('/^\S+\s/u', '', SJ_VYSLEDKY[$r['vysledek']]) : '')), 'popis' => (string)$r['popis'], 'kontroly' => $kontroly, 'okna' => implode(', ', $okna),
     'zkratky' => implode(', ', array_map(fn($k) => SO_ZKRATKY[$k] ?? $k, $zk)), 'zavada' => (string)$r['zavada'], 'opraveno' => (string)$r['opraveno_hned'], 'oprava' => (string)$r['oprava'],
     'max_cena' => $r['max_cena'] !== null ? $kc($r['max_cena']) : '', 'cena' => $r['cena'] !== null ? $kc($r['cena']) : '', 'dalsi' => $dl ? so_datum($dl) : '',
+    'polozky' => array_map(fn($x) => ['nazev' => (string)($x['nazev'] ?? ''), 'mn' => (float)($x['mn'] ?? 1), 'jedn' => (string)($x['jedn'] ?? ''), 'cena' => (float)($x['cena'] ?? 0)], (is_array($pjStart = json_decode((string)($r['polozky'] ?? ''), true)) ? $pjStart : [])),
     'podpis' => $r['podpis'] ? '?podpis=' . $id . '&t=' . time() : '', 'podepsal' => (string)($r['podepsal'] ?: $r['jmeno']), 'technik' => (string)($r['technik'] ?: uziv_jmeno()),
     'fotky' => array_map(fn($f) => '?foto=' . $id . '&f=' . $f, array_slice($fot, 0, 6))]; ?>
 <script>
 (function () {
-  // cena z ceníku (cena s DPH × počet; u bytu počet 1)
-  document.getElementById('katCena').addEventListener('click', function () { var o = document.getElementById('kat').selectedOptions[0]; if (!o || !o.value) { alert('Vyberte byt / typ podle ceníku.'); return; } var n = /^(F|O|DV)/.test(o.value) ? Math.max(1, +document.getElementById('katPocet').value || 1) : 1; document.querySelector('[name=cena]').value = Math.round(+o.dataset.s * n); });
+  // ── položky k vyúčtování ──
+  var P = <?= json_encode(array_values(array_map(fn($x) => ['kod' => (string)($x['kod'] ?? ''), 'nazev' => (string)($x['nazev'] ?? ''), 'mn' => (float)($x['mn'] ?? 1), 'jedn' => (string)($x['jedn'] ?? 'ks'), 'cena' => (float)($x['cena'] ?? 0), 'dph' => (int)($x['dph'] ?? 12)], $polStart)), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+  var tb = document.getElementById('polList'), suma = document.getElementById('polSuma'), dataIn = document.getElementById('polData'), cenaIn = document.getElementById('cenaHid'), katIn = document.getElementById('katHid');
+  var kc = function (n) { return (Math.round(n * 100) / 100).toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' Kč'; };
+  function uloz() {
+    var sum = 0, kat = ''; P.forEach(function (it) { sum += (+it.mn || 0) * (+it.cena || 0); if (!kat && it.kod) kat = it.kod; });
+    suma.textContent = kc(sum); cenaIn.value = Math.round(sum * 100) / 100; katIn.value = kat;
+    dataIn.value = JSON.stringify(P);
+  }
+  function vykresli() {
+    tb.innerHTML = '';
+    if (!P.length) { tb.innerHTML = '<p class="mut" style="margin:0 0 6px">Zatím žádná položka. Přidejte z ceníku níže, nebo „Vlastní položka“.</p>'; return; }
+    P.forEach(function (it, i) {
+      var row = document.createElement('div'); row.className = 'polrow';
+      row.innerHTML = '<div class="pr1"><input class="pn" placeholder="Název položky"><button type="button" class="px" title="Odebrat">×</button></div>'
+        + '<div class="pr2"><label>Množ.<input class="pm" type="number" min="0" step="0.5"></label>'
+        + '<label>Cena/j s DPH<input class="pc" type="number" min="0" step="0.01"></label>'
+        + '<label>DPH<select class="pd"><option value="12">12 %</option><option value="21">21 %</option><option value="15">15 %</option><option value="0">0 %</option></select></label>'
+        + '<span class="cl"></span></div>';
+      var nn = row.querySelector('.pn'), mm = row.querySelector('.pm'), cc = row.querySelector('.pc'), dd = row.querySelector('.pd'), cl = row.querySelector('.cl');
+      nn.value = it.nazev; mm.value = it.mn; cc.value = it.cena; dd.value = String(it.dph);
+      function pre() { cl.textContent = kc((+mm.value || 0) * (+cc.value || 0)); }
+      pre();
+      nn.addEventListener('input', function () { it.nazev = nn.value; it.kod = ''; uloz(); });
+      mm.addEventListener('input', function () { it.mn = +mm.value || 0; pre(); uloz(); });
+      cc.addEventListener('input', function () { it.cena = +cc.value || 0; it.kod = ''; pre(); uloz(); });
+      dd.addEventListener('change', function () { it.dph = +dd.value; it.kod = ''; uloz(); });
+      row.querySelector('.px').addEventListener('click', function () { P.splice(i, 1); vykresli(); uloz(); });
+      tb.appendChild(row);
+    });
+  }
+  vykresli(); uloz();
+  document.getElementById('polPridat').addEventListener('click', function () {
+    var o = document.getElementById('polSel').selectedOptions[0]; if (!o || !o.value) { alert('Vyberte položku z ceníku.'); return; }
+    var mn = +document.getElementById('polMn').value || 1;
+    P.push({ kod: o.value, nazev: o.dataset.nazev, mn: mn, jedn: o.dataset.jedn, cena: +o.dataset.cena, dph: +o.dataset.dph });
+    document.getElementById('polSel').value = ''; document.getElementById('polMn').value = 1; vykresli(); uloz();
+  });
+  document.getElementById('polVlastni').addEventListener('click', function () {
+    P.push({ kod: '', nazev: '', mn: 1, jedn: 'ks', cena: 0, dph: 12 }); vykresli(); uloz();
+    var ni = tb.querySelectorAll('.pn'); if (ni.length) ni[ni.length - 1].focus();
+  });
+  var frm = document.getElementById('zapis'); if (frm) frm.addEventListener('submit', uloz);
   // podpis prstem
   var c = document.getElementById('podpis'), x = c.getContext('2d'), kresli = false, neco = false, out = document.getElementById('podpisData');
   function velikost() { var r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1; c.width = r.width * d; c.height = r.height * d; x.scale(d, d); x.lineWidth = 2.5; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b2a6b'; neco = false; out.value = ''; }
@@ -445,6 +516,7 @@ elseif ($id):
         doc.addFileToVFS('Inter-Regular.ttf', f[0]); doc.addFont('Inter-Regular.ttf', 'Inter', 'normal'); doc.addFileToVFS('Inter-Bold.ttf', f[1]); doc.addFont('Inter-Bold.ttf', 'Inter', 'bold');
         var W = 210, M = 14, cw = W - 2 * M, y;
         var font = function (s, z, col) { doc.setFont('Inter', s); doc.setFontSize(z); doc.setTextColor.apply(doc, col || INK); };
+        var kcp = function (n) { return (Math.round(n * 100) / 100).toLocaleString('cs-CZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' Kč'; };
         function pata() { font('normal', 7.5, MUTED); doc.text('KK SYSTEM · Bezpečné dveře · Zdeněk Kučera, IČ 64682676 · +420 725 559 235 · info@kksystem.cz · www.bezpecne-dvere.cz', W / 2, 289, { align: 'center' }); }
         function misto(h) { if (y + h > 280) { pata(); doc.addPage(); y = 18; } }
         function sekce(t) { misto(16); font('bold', 9, ORANGE); doc.text(t.toUpperCase(), M, y); y += 2; doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.3); doc.line(M, y, W - M, y); y += 5.5; }
@@ -457,7 +529,14 @@ elseif ($id):
         y = 40;
         sekce('Zákazník'); radek('Jméno', D.jmeno); radek('Adresa', D.adresa); radek('Telefon', D.telefon); radek('E-mail', D.email); y += 2;
         if (D.popis) { sekce('Požadavek zákazníka'); text(D.popis); y += 2; }
-        sekce('Provedený servis'); radek('Datum', D.datum); radek('Provedeno', D.kontroly.join(', ') || '–'); radek('Okna', D.okna); radek('Opraveno na místě', D.opraveno); radek('Cena servisu', D.cena ? D.cena + ' s DPH' : ''); y += 2;
+        sekce('Provedený servis'); radek('Datum', D.datum); radek('Provedeno', D.kontroly.join(', ') || '–'); radek('Okna', D.okna); radek('Opraveno na místě', D.opraveno);
+        if (D.polozky && D.polozky.length) {
+          y += 1; font('bold', 9, MUTED); doc.text('Položka', M, y); doc.text('Množ.', W - M - 52, y, { align: 'right' }); doc.text('Cena/j', W - M - 26, y, { align: 'right' }); doc.text('Celkem', W - M, y, { align: 'right' }); y += 1.5; doc.setDrawColor.apply(doc, LINE); doc.line(M, y, W - M, y); y += 4.5;
+          D.polozky.forEach(function (it) { misto(5.2); var nm = doc.splitTextToSize(String(it.nazev), cw - 60); font('normal', 9.5, INK); doc.text(nm, M, y); font('normal', 9.5, MUTED);
+            doc.text(String(it.mn).replace('.', ',') + (it.jedn ? ' ' + it.jedn : ''), W - M - 52, y, { align: 'right' }); doc.text(kcp(it.cena), W - M - 26, y, { align: 'right' }); font('bold', 9.5, INK); doc.text(kcp(it.mn * it.cena), W - M, y, { align: 'right' }); y += Math.max(5.2, nm.length * 4.6); });
+          doc.setDrawColor.apply(doc, LINE); doc.line(M, y, W - M, y); y += 5; font('bold', 10, INK); doc.text('Celkem s DPH', M, y); doc.text(D.cena + ' s DPH', W - M, y, { align: 'right' }); y += 3;
+        } else radek('Cena servisu', D.cena ? D.cena + ' s DPH' : '');
+        y += 2;
         if (D.zkratky || D.zavada || D.oprava) {
           sekce('Zjištěné závady a návrh opravy'); radek('Závady', [D.zkratky, D.zavada].filter(Boolean).join(' – ')); radek('Návrh opravy', D.oprava); radek('Maximální cena', D.max_cena ? 'do ' + D.max_cena + ' s DPH' : '');
           if (D.oprava) { y += 1; font('normal', 8.5, MUTED); doc.splitTextToSize('Cena opravy bude vyčíslena podle skutečných nákladů a nepřesáhne uvedenou maximální cenu. Máte-li o opravu zájem, odpovězte na e-mail nebo zavolejte.', cw).forEach(function (l) { misto(4.4); doc.text(l, M, y); y += 4.4; }); }
