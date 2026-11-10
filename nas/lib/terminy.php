@@ -20,7 +20,7 @@ const TERM_MONTAZ_OD = '2026-11-01';   // dotaz na spokojenost jen u dveří př
 function terminy_tabulky(PDO $pdo): void {
   $sl = array_column($pdo->query('PRAGMA table_info(zadosti)')->fetchAll(PDO::FETCH_ASSOC), 'name');
   foreach (['term_interni_dne', 'nab_pripom1_dne', 'nab_pripom2_dne', 'term_omluva_dne', 'nab_token', 'nab_hodnoceni_dne', 'nab_hodnoceni_srozum', 'nab_hodnoceni_pozn',
-    'nab_pripom3_dne', 'nab_stop', 'nab_reakce', 'nab_reakce_dne', 'nab_reakce_pozn', 'nab_reakce_hotovo', 'mont_token', 'mont_dotaz_dne', 'mont_hodnoceni_dne', 'mont_hodnoceni_pozn'] as $c) if (!in_array($c, $sl, true)) $pdo->exec("ALTER TABLE zadosti ADD COLUMN $c TEXT");
+    'nab_pripom3_dne', 'nab_stop', 'nab_reakce', 'nab_reakce_dne', 'nab_reakce_pozn', 'nab_reakce_hotovo', 'mont_token', 'mont_dotaz_dne', 'mont_hodnoceni_dne', 'mont_hodnoceni_pozn', 'zal_pripom_dne'] as $c) if (!in_array($c, $sl, true)) $pdo->exec("ALTER TABLE zadosti ADD COLUMN $c TEXT");
   foreach (['nab_hodnoceni', 'mont_hodnoceni'] as $c) if (!in_array($c, $sl, true)) $pdo->exec("ALTER TABLE zadosti ADD COLUMN $c INTEGER");
 }
 function terminy_base(array $cfg): string { return rtrim((string)($cfg['kartoteka_url'] ?? 'https://kartoteka.dvere.app'), '/'); }
@@ -263,6 +263,36 @@ function terminy_text_nabidka_3(array $x, string $url = ''): array {
     . "Děkujeme za Váš čas a přejeme hodně spokojenosti doma, ať už za dveřmi od nás, nebo od kohokoli jiného.";
   return ["Nabídka č. $c: poslední zpráva od nás", $t];
 }
+// ── hlídání zálohy na výrobu (10. 11. 2026) ──
+// objednávky s požadovanou zálohou, která do 4+ dnů od objednání nedorazila (lhůta je 5 dnů) a ještě jsme neupozornili.
+// Bere objednávky staré 4–8 dní (když Plánovač pár dní neběžel, dožene se to, ale starými se nezahltíme).
+function terminy_zaloha_cekajici(PDO $pdo, ?int $ted = null): array {
+  $ted = $ted ?? time(); $o = [];
+  $st = $pdo->query("SELECT id, vytvoreno, cislo, email, data_json, zaloha_prijata_dne, zal_pripom_dne, stav FROM zadosti WHERE typ='objednavka_interni' AND stav NOT IN ('storno','vyrizeno','namontovano','skladem_s','skladem_bez')");
+  foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    if ((string)($r['zaloha_prijata_dne'] ?? '') !== '' || (string)($r['zal_pripom_dne'] ?? '') !== '') continue;   // už zaplaceno / už upozorněno
+    $d = json_decode((string)$r['data_json'], true) ?: [];
+    $zal = (float)($d['zaloha'] ?? 0); if ($zal <= 0) continue;                                   // bez požadované zálohy (hotově apod.)
+    $cis = (string)($d['obj_cislo'] ?? $r['cislo']); if ($cis === '' || preg_match('/test|^\d{4}-[TP]\d/i', $cis)) continue;
+    $t = strtotime((string)$r['vytvoreno']); if (!$t) continue;
+    $dnu = (int)floor(($ted - $t) / 86400);
+    if ($dnu < 4 || $dnu > 8) continue;
+    $o[] = ['id' => (int)$r['id'], 'cislo' => $cis, 'jmeno' => terminy_jmeno($d), 'telefon' => (string)($d['telefon'] ?? ''),
+      'email' => filter_var(trim((string)($d['email'] ?? $r['email'])), FILTER_VALIDATE_EMAIL) ?: '', 'zaloha' => $zal,
+      'prodavac' => (string)($d['prodavac'] ?? ''), 'objednano' => $t, 'dnu' => $dnu,
+      'vs' => substr(ltrim(preg_replace('/\D+/', '', $cis), '0'), 0, 10)];   // stejně jako vs() v platba/platba.js na webu (shodné s QR kódem objednávky)
+  }
+  return $o;
+}
+// vlídný, lehce vtipný e-mail zákazníkovi: čekáme na zálohu, je všechno v pořádku?
+function terminy_text_zaloha_zakaznik(array $z, string $ucet): array {
+  $c = $z['cislo']; $castka = number_format($z['zaloha'], 0, ',', ' ') . ' Kč';
+  $t = "Dobrý den,\n\nu Vaší objednávky č. $c nám na účet zatím nedorazila záloha a chtěli jsme se jen ujistit, že je všechno v pořádku. Někdy to zdrží shon, jindy se QR kód schová na dně e-mailu a občas má člověk prostě tisíc jiných věcí na práci. 🙂\n\n"
+    . "Pokud chcete pokračovat, zálohu $castka pošlete prosím na účet $ucet" . ($z['vs'] !== '' ? ", variabilní symbol {$z['vs']}" : '') . " – nejrychleji přes QR kód, který najdete v e-mailu s objednávkou a v jejím PDF. Jakmile platba dorazí, pustíme se rovnou do příprav Vašich dveří.\n\n"
+    . "A kdyby se cokoli zadrhlo – potřebujete poradit, upravit objednávku, posunout termín nebo se jen na něco zeptat – stačí odpovědět na tento e-mail nebo zavolat na +420 725 559 235. Rádi pomůžeme a do ničeho Vás netlačíme.\n\nDěkujeme a přejeme hezký den.";
+  return ["Objednávka č. $c – čekáme na Vaši zálohu (všechno v pořádku?)", $t];
+}
+
 // dotaz na spokojenost po předání dveří
 function terminy_text_montaz(string $cislo, string $url): array {
   $t = "Dobrý den,\n\npřed pár dny jsme Vám předali nové dveře (objednávka č. $cislo). Rádi bychom věděli, jak jste spokojeni s dveřmi i s naší montáží.\n\n"

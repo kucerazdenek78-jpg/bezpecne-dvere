@@ -5,6 +5,8 @@ date_default_timezone_set('Europe/Prague');
 $DATA = getenv('FORMULARE_DATA') ?: '/data';
 if (!is_file($DATA . '/config.php')) { http_response_code(500); header('Content-Type: text/plain; charset=utf-8'); exit("Chybí $DATA/config.php"); }
 $cfg = require $DATA . '/config.php';
+// 10. 11. 2026: přepis příjemců e-mailů, účetní a účtu ze Správy (Nastavení e-mailů) – /data/nastaveni.json, viz lib/nastaveni.php
+if (is_file(__DIR__ . '/nastaveni.php')) { require_once __DIR__ . '/nastaveni.php'; try { nast_merge($cfg); } catch (Throwable $e) {} }
 
 function db() {
   global $DATA; static $pdo = null; if ($pdo) return $pdo;
@@ -28,7 +30,7 @@ function db() {
 // požadavek přišel přes veřejný tunel (Cloudflare přidává tyto hlavičky; z vnitřní sítě je nemá)
 function pres_tunel() { return isset($_SERVER['HTTP_CF_CONNECTING_IP']) || isset($_SERVER['HTTP_CF_RAY']); }
 function klient_ip() { return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? ''; }
-// Od 3. 11. 2026 běží kartotéka bez Cloudflare Access: přihlašuje se formulářem (lib/uzivatele.php, zámek po 5 chybách na 2 minuty).
+// Od 3. 11. 2026 běží kartotéka bez Cloudflare Access: přihlašuje se formulářem (lib/uzivatele.php, zámek po 5 chybách na 10 minut).
 // Stránky přes tunel dál kontrolují přítomnost hlavičky Cf-Access-Jwt-Assertion, proto ji pro hostitele kartotéky doplníme (funguje s Access i bez něj).
 if (pres_tunel() && empty($_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'])
     && strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]) === strtolower((string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app'))) {
