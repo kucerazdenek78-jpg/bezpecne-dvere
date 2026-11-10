@@ -13,6 +13,12 @@ $cis = function ($v) { $v = str_replace([' ', "\u{a0}", ','], ['', '', '.'], tri
 function so_jdi(string $url): void { header('Location: ' . $url); exit; }
 
 // ───── fotky a podpis (zobrazení) ─────
+if (isset($_GET['kovfoto'])) {
+  $svj = (int)$_GET['kovfoto']; $n = (string)($_GET['f'] ?? ''); if (!preg_match('/^[0-9a-f]{16}\.jpg$/', $n)) { http_response_code(404); exit; }
+  if (!empty($_GET['nahled'])) $n = substr($n, 0, 16) . '_n.jpg';
+  $c = so_kovani_dir($svj) . '/' . $n; if (!is_file($c)) { http_response_code(404); exit('Nenalezeno'); }
+  header('Content-Type: image/jpeg'); header('X-Content-Type-Options: nosniff'); header('Cache-Control: private, max-age=86400'); readfile($c); exit;
+}
 if (isset($_GET['foto']) || isset($_GET['podpis'])) {
   $zid = (int)($_GET['foto'] ?? $_GET['podpis']);
   if (isset($_GET['podpis'])) { $c = so_dir($zid) . '/podpis.png'; $typ = 'image/png'; }
@@ -199,6 +205,29 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (preg_match('/^[0-9a-f]{16}\.jpg$/', $n)) { @unlink(so_dir($zid) . "/$n"); @unlink(so_dir($zid) . '/' . substr($n, 0, 16) . '_n.jpg'); }
     so_jdi('svj.php?servis=' . (int)$_POST['servis_id'] . '&byt=' . (int)$_POST['byt_id'] . '#fotky');
   }
+  if ($a === 'kovani_ulozit') {
+    $id = (int)$_POST['svj_id']; if (!so_svj($pdo, $id)) so_jdi('svj.php');
+    $pdo->prepare('UPDATE so_svj SET kovani_typ=?, kovani_podtyp=?, kovani_rok=?, kovani_pozn=?, upraveno=? WHERE id=?')
+      ->execute([$P('kovani_typ', 60), $P('kovani_podtyp', 80), $P('kovani_rok', 40), $P('kovani_pozn', 2000), $ted, $id]);
+    so_jdi('svj.php?svj=' . $id . '&ok=ulozeno#kovani');
+  }
+  if ($a === 'kovani_foto') {
+    header('Content-Type: application/json; charset=utf-8');
+    $id = (int)$_POST['svj_id']; if (!so_svj($pdo, $id)) exit(json_encode(['ok' => false, 'zprava' => 'Neznámý zákazník.']));
+    $okf = function ($f) { return $f && $f['error'] === UPLOAD_ERR_OK && is_uploaded_file($f['tmp_name']) && filesize($f['tmp_name']) < 6 * 1048576 && (@getimagesize($f['tmp_name'])[2] ?? 0) === IMAGETYPE_JPEG; };
+    if (count(so_kovani_fotky($id)) >= 20) exit(json_encode(['ok' => false, 'zprava' => 'Maximum 20 fotek kování.']));
+    if (!$okf($_FILES['foto'] ?? null) || !$okf($_FILES['nahled'] ?? null)) exit(json_encode(['ok' => false, 'zprava' => 'Soubor není fotka JPEG.']));
+    $dir = so_kovani_dir($id); if (!is_dir($dir) && !@mkdir($dir, 0775, true)) exit(json_encode(['ok' => false, 'zprava' => 'Nelze vytvořit složku.']));
+    $jm = bin2hex(random_bytes(8));
+    $hot = move_uploaded_file($_FILES['foto']['tmp_name'], "$dir/$jm.jpg") && move_uploaded_file($_FILES['nahled']['tmp_name'], "$dir/{$jm}_n.jpg");
+    exit(json_encode(['ok' => $hot, 'zprava' => $hot ? '' : 'Fotku se nepodařilo uložit.']));
+  }
+  if ($a === 'kovani_foto_smaz') {
+    uziv_jen_admin('Fotku smí smazat jen administrátor.');
+    $id = (int)$_POST['svj_id']; $n = (string)$_POST['f'];
+    if (preg_match('/^[0-9a-f]{16}\.jpg$/', $n)) { @unlink(so_kovani_dir($id) . "/$n"); @unlink(so_kovani_dir($id) . '/' . substr($n, 0, 16) . '_n.jpg'); }
+    so_jdi('svj.php?svj=' . $id . '#kovani');
+  }
   http_response_code(400); exit('Neznámá akce');
 }
 
@@ -293,7 +322,7 @@ elseif ($svjId !== null):
 <?php else: ?>
 <p class="noprint"><a href="svj.php">← Servis oken</a></p>
 <h1><?= $sid ? $e($j['nazev']) : 'Nový zákazník' ?> <?= $sid ? '<span class="st">' . $e(SO_TYPY_ZAK[$j['typ'] ?? 'svj'] ?? '') . '</span>' : '' ?></h1>
-<?php if ($sid): ?><div class="mut" style="margin:-4px 0 10px"><?= $e($j['adresa']) ?><?= ok_mapa((string)$j['adresa']) ?><?= $j['ic'] ? ' · IČ ' . $e($j['ic']) : '' ?><?php if (!empty($j['slozka'])): ?><br>Složka na NASu: <?= so_slozka_odkaz((string)$j['slozka']) ?> <code style="font-size:12px"><?= $e($j['slozka']) ?></code><?php endif; ?><?= $j['poznamka'] ? '<br>📝 ' . nl2br($e($j['poznamka'])) : '' ?></div><?php endif; ?>
+<?php if ($sid): ?><div class="mut" style="margin:-4px 0 10px"><?= $e($j['adresa']) ?><?= ok_mapa((string)$j['adresa']) ?><?= $j['ic'] ? ' · IČ ' . $e($j['ic']) : '' ?><?php if (!empty($j['slozka'])): ?><br>Složka na NASu: <?= so_slozka_odkaz((string)$j['slozka']) ?> <code style="font-size:12px"><?= $e($j['slozka']) ?></code><?php endif; ?><?= $j['poznamka'] ? '<br>📝 ' . nl2br($e($j['poznamka'])) : '' ?><?php $kv = trim(implode(', ', array_filter([(string)($j['kovani_typ'] ?? ''), (string)($j['kovani_podtyp'] ?? ''), ($j['kovani_rok'] ?? '') !== '' ? 'rok ' . $j['kovani_rok'] : '']))); if ($kv !== ''): ?><br>🔧 Kování: <a href="#kovani"><?= $e($kv) ?></a><?php endif; ?></div><?php endif; ?>
 <div class="box"><?php if ($sid): ?><details><summary>Údaje zákazníka (upravit)</summary><?php endif; ?>
 <form method="post"><input type="hidden" name="akce" value="svj_ulozit"><input type="hidden" name="id" value="<?= $sid ?>">
 <div class="ln"><label class="w">Název *<input name="nazev" value="<?= $e($j['nazev']) ?>" required placeholder="např. SV bl. 8, SNP 2649, 2650"></label><label>Druh<select name="typ"><?php foreach (SO_TYPY_ZAK as $k => $t): ?><option value="<?= $k ?>"<?= ($j['typ'] ?? 'svj') === $k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label><label>IČ<input name="ic" value="<?= $e($j['ic']) ?>" size="10"></label></div>
@@ -305,6 +334,38 @@ elseif ($svjId !== null):
 <?php if ($sid):
   $smlouvy = so_smlouvy($pdo, $sid); $vchody = so_vchody($pdo, $sid); $servisy = so_servisy($pdo, $sid); ?>
 <p class="noprint"><a class="btn sec" href="nabidky.php?nova=svj&amp;svj=<?= $sid ?>">📄 Nabídka z ceníku pro toto SVJ</a></p>
+<div class="box" id="kovani"><h2 style="margin-top:0">🔧 Kování na oknech</h2>
+<p class="mut" style="margin-top:0">Společný údaj pro celý dům / firmu – značka a typ kování, rok výroby a fotky pro orientaci (poznávací prvky, štítky). Pomáhá při shánění dílů a při servisu.</p>
+<form method="post"><input type="hidden" name="akce" value="kovani_ulozit"><input type="hidden" name="svj_id" value="<?= $sid ?>">
+<div class="ln"><label>Značka kování<input name="kovani_typ" list="kovZn" value="<?= $e($j['kovani_typ'] ?? '') ?>" placeholder="např. Roto"></label>
+<label class="w">Typ / podtyp<input name="kovani_podtyp" value="<?= $e($j['kovani_podtyp'] ?? '') ?>" placeholder="např. Roto NT, dřevo / plast"></label>
+<label>Rok výroby oken<input name="kovani_rok" value="<?= $e($j['kovani_rok'] ?? '') ?>" placeholder="např. 2008" style="width:120px"></label></div>
+<datalist id="kovZn"><?php foreach (SO_KOVANI_ZNACKY as $z): ?><option value="<?= $e($z) ?>"><?php endforeach; ?></datalist>
+<div class="ln"><label class="w">Poznámka ke kování<textarea name="kovani_pozn" rows="2" placeholder="kde je štítek, zvláštnosti, dodavatel dílů…"><?= $e($j['kovani_pozn'] ?? '') ?></textarea></label></div>
+<p style="margin:6px 0 0"><button class="sec">Uložit kování</button></p></form>
+<?php $kf = so_kovani_fotky($sid); ?>
+<h3 style="margin:14px 0 6px">Fotky kování<?= $kf ? ' (' . count($kf) . ')' : '' ?></h3>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><?php foreach ($kf as $f): ?><div><a href="?kovfoto=<?= $sid ?>&amp;f=<?= $e($f) ?>" target="_blank"><img src="?kovfoto=<?= $sid ?>&amp;f=<?= $e($f) ?>&amp;nahled=1" alt="Kování" style="width:120px;height:90px;object-fit:cover;border-radius:8px"></a>
+<?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Smazat fotku?')" style="margin-top:2px"><input type="hidden" name="akce" value="kovani_foto_smaz"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="f" value="<?= $e($f) ?>"><button class="del" style="padding:3px 8px;font-size:13px">smazat</button></form><?php endif; ?></div><?php endforeach; ?></div>
+<input type="file" id="kovVyber" accept="image/*" multiple style="display:none"><p class="noprint" style="margin-top:8px"><button type="button" class="sec" id="kovTl">📷 Přidat fotky kování</button> <span id="kovStav" class="mut"></span></p></div>
+<script>
+(function () {
+  var vyber = document.getElementById('kovVyber'), tl = document.getElementById('kovTl'), st = document.getElementById('kovStav'); if (!tl) return;
+  tl.addEventListener('click', function () { vyber.click(); });
+  function zmensi(s, max, q) { return createImageBitmap(s, { imageOrientation: 'from-image' }).then(function (bm) { var k = Math.min(1, max / Math.max(bm.width, bm.height)), cv = document.createElement('canvas'); cv.width = Math.round(bm.width * k); cv.height = Math.round(bm.height * k); cv.getContext('2d').drawImage(bm, 0, 0, cv.width, cv.height); return new Promise(function (ok) { cv.toBlob(ok, 'image/jpeg', q); }); }); }
+  vyber.addEventListener('change', function () {
+    var sb = Array.prototype.slice.call(vyber.files || []), hot = 0, chy = []; if (!sb.length) return; tl.disabled = true;
+    (function dalsi(i) {
+      if (i >= sb.length) { st.textContent = 'Nahráno ' + hot + (chy.length ? ', chyby: ' + chy.join('; ') : '.'); if (hot) setTimeout(function () { location.href = '?svj=<?= $sid ?>#kovani'; location.reload(); }, 500); else tl.disabled = false; return; }
+      st.textContent = 'Nahrávám ' + (i + 1) + ' z ' + sb.length + '…';
+      Promise.all([zmensi(sb[i], 1600, .82), zmensi(sb[i], 320, .75)]).then(function (b) {
+        var fd = new FormData(); fd.append('akce', 'kovani_foto'); fd.append('svj_id', '<?= $sid ?>'); fd.append('foto', b[0], 'f.jpg'); fd.append('nahled', b[1], 'n.jpg');
+        return fetch('svj.php', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) { return r.json(); });
+      }).then(function (j) { if (j.ok) hot++; else chy.push(j.zprava); }).catch(function () { chy.push(sb[i].name); }).then(function () { dalsi(i + 1); });
+    })(0);
+  });
+})();
+</script>
 <div class="box" id="servisy"><h2 style="margin-top:0">Servisy</h2>
 <?php foreach ($servisy as $s): $sh = so_souhrn($pdo, $s); $b = array_sum(array_column($sh, 'bytu')); $h = array_sum(array_column($sh, 'hotovo')); ?>
   <p><a href="?servis=<?= (int)$s['id'] ?>"><b><?= $e($s['nazev']) ?></b></a> <span class="st <?= $s['stav'] === 'uzavreno' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $s['stav'] === 'uzavreno' ? 'uzavřeno' : 'probíhá' ?></span> <span class="mut">hotovo <?= $h ?> z <?= $b ?> bytů · založeno <?= $e(so_datum($s['vytvoreno'])) ?></span></p>

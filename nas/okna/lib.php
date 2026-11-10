@@ -120,6 +120,13 @@ function so_fotky(int $zid): array {
   foreach (glob(so_dir($zid) . '/*.jpg') ?: [] as $f) { $n = basename($f); if (preg_match('/^[0-9a-f]{16}\.jpg$/', $n)) $o[] = $n; }
   sort($o); return $o;
 }
+// kování na oknech u zákazníka (SVJ / firma): globální údaj + fotky v $DATA/okna/kovani/<svj id>/
+function so_kovani_dir(int $svj): string { global $DATA; return $DATA . '/okna/kovani/' . $svj; }
+function so_kovani_fotky(int $svj): array {
+  $o = []; foreach (glob(so_kovani_dir($svj) . '/*.jpg') ?: [] as $f) { $n = basename($f); if (preg_match('/^[0-9a-f]{16}\.jpg$/', $n)) $o[] = $n; }
+  sort($o); return $o;
+}
+const SO_KOVANI_ZNACKY = ['Roto', 'MACO', 'Winkhaus', 'Siegenia', 'GU', 'Schüco', 'Hautau', 'Fornax', 'jiné / neznámé'];
 function so_datum(?string $d): string { $t = $d ? strtotime($d) : false; return $t ? date('j. n. Y', $t) : ''; }
 function so_cislo_sort(string $s): string { return preg_match('/^\d+/', $s, $m) ? str_pad($m[0], 6, '0', STR_PAD_LEFT) . $s : 'zzzzzz' . $s; }
 
@@ -160,6 +167,7 @@ const SO_HIST = ['servis' => '🛠 Servis proveden', 'smlouva' => '✍ Smlouva',
 function so_rozsireni(PDO $pdo): void {
   $sl = fn($t) => array_column($pdo->query("PRAGMA table_info($t)")->fetchAll(PDO::FETCH_ASSOC), 'name');
   $s = $sl('so_svj'); foreach (['typ' => "TEXT DEFAULT 'svj'", 'slozka' => 'TEXT'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_svj ADD COLUMN $k $d");
+  $s = $sl('so_svj'); foreach (['kovani_typ' => 'TEXT', 'kovani_podtyp' => 'TEXT', 'kovani_rok' => 'TEXT', 'kovani_pozn' => 'TEXT'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_svj ADD COLUMN $k $d");
   $s = $sl('so_smlouva'); foreach (['stav_podpisu' => "TEXT DEFAULT 'podepsana'", 'platnost_do' => 'TEXT', 'dokument' => 'TEXT', 'pripomenout_dni' => 'INTEGER DEFAULT 60'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_smlouva ADD COLUMN $k $d");
   $pdo->exec("CREATE TABLE IF NOT EXISTS so_historie (id INTEGER PRIMARY KEY AUTOINCREMENT, svj_id INTEGER NOT NULL, smlouva_id INTEGER, datum TEXT, druh TEXT DEFAULT 'servis', popis TEXT, dokument TEXT, vytvoreno TEXT, kdo TEXT)");
   $pdo->exec('CREATE INDEX IF NOT EXISTS so_historie_svj ON so_historie(svj_id)');
