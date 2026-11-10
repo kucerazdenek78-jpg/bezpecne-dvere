@@ -3,6 +3,11 @@
 // a náhled <16 hex>_n.jpg. Zmenšení dělá prohlížeč před nahráním (JPEG), server jen kontroluje a ukládá.
 // Používá kartoteka.php (už po přihlášení) – tento soubor sám žádné přihlášení neřeší.
 // 2. 11. 2026: fotky, které poslal zákazník s poptávkou (přílohy záznamu), se ukazují jako náhledy a otevírají se v prohlížeči.
+// 10. 11. 2026: fotka se otevře přes celou obrazovku přímo ve stránce s tlačítkem ✕ Zavřít (v nainstalované aplikaci není tlačítko Zpět);
+//               zavře ji i klepnutí na pozadí, Esc a gesto / tlačítko Zpět. Odkaz zůstává i jako záloha (prostřední tlačítko, bez JavaScriptu).
+// 10. 11. 2026: totéž pro PDF přílohy záznamu (odkazy ?soubor=….pdf v okně Přílohy): otevřou se v okně s tlačítky ✕ Zavřít a ↗ Otevřít samostatně
+//               (v některých telefonech prohlížeč PDF ve stránce neukáže – pak slouží tlačítko Otevřít samostatně).
+// 10. 11. 2026: v detailu poptávky nad Fotkami box „📨 Požádat zákazníka o doplnění“ (lib/doplneni.php, veřejná stránka doplnit.php).
 
 const FOTO_MAX_BAJTU = 6 * 1024 * 1024;   // jedna fotka po zmenšení (zmenšená má řádově stovky kB)
 const FOTO_MAX_KUSU = 40;                 // na jeden záznam
@@ -64,6 +69,8 @@ function foto_obsluz($pdo) {
   }
   if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
   $akce = $_POST['akce'] ?? '';
+  if ($akce === 'doplneni_poslat' && is_file(__DIR__ . '/doplneni.php')) { require_once __DIR__ . '/doplneni.php'; dp_poslat($pdo); }   // žádost o doplnění poptávky
+  if ($akce === 'objednavka_znovu' && is_file(__DIR__ . '/znovu.php')) { require_once __DIR__ . '/znovu.php'; zn_poslat($pdo); }   // znovu odeslat objednávku zákazníkovi (opravený e-mail)
   if ($akce !== 'foto_nahraj' && $akce !== 'foto_smaz') return;
   $id = (int)($_POST['id'] ?? 0);
   $st = $pdo->prepare('SELECT id FROM zadosti WHERE id=?'); $st->execute([$id]);
@@ -92,16 +99,18 @@ function foto_obsluz($pdo) {
 
 // Okno „Fotky“ do detailu záznamu.
 function foto_box($r) {
+  if (($r['typ'] ?? '') === 'poptavka' && is_file(__DIR__ . '/doplneni.php')) { require_once __DIR__ . '/doplneni.php'; dp_box($r); }   // žádost o doplnění poptávky
+  if (($r['typ'] ?? '') === 'objednavka_interni' && is_file(__DIR__ . '/znovu.php')) { require_once __DIR__ . '/znovu.php'; zn_box($r); }   // znovu odeslat objednávku zákazníkovi
   $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   $id = (int)$r['id']; $sez = foto_seznam($id); $zak = foto_zakaznik($r);
   ?><div class="box" id="fotky"><h3>Fotky<?= $sez ? ' (' . count($sez) . ')' : '' ?></h3>
-    <?php if ($zak): ?><p style="margin:.2rem 0;color:#556"><b>Od zákazníka (<?= count($zak) ?>)</b> – klepnutím se otevře celá fotka</p>
+    <?php if ($zak): ?><p style="margin:.2rem 0;color:#556"><b>Od zákazníka (<?= count($zak) ?>)</b> – klepnutím se fotka zvětší</p>
       <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 .8rem">
-      <?php foreach ($zak as $s): ?><a href="?soubor=<?= urlencode($s) ?>" target="_blank" style="display:block;width:150px"><img src="?soubor=<?= urlencode($s) ?>" alt="Fotka od zákazníka" loading="lazy" style="width:150px;height:112px;object-fit:cover;border-radius:8px;border:1px solid #d8dde6;display:block"></a><?php endforeach; ?></div>
+      <?php foreach ($zak as $s): ?><a href="?soubor=<?= urlencode($s) ?>" class="fotoLb" style="display:block;width:150px"><img src="?soubor=<?= urlencode($s) ?>" alt="Fotka od zákazníka" loading="lazy" style="width:150px;height:112px;object-fit:cover;border-radius:8px;border:1px solid #d8dde6;display:block"></a><?php endforeach; ?></div>
     <?php endif; ?>
     <?php if ($sez): ?><div style="display:flex;flex-wrap:wrap;gap:.6rem;margin:.4rem 0 .8rem">
       <?php foreach ($sez as $f): ?><div style="width:150px">
-        <a href="?foto=<?= $id ?>&amp;f=<?= $e($f['n']) ?>" target="_blank"><img src="?foto=<?= $id ?>&amp;f=<?= $e($f['n']) ?>&amp;nahled=1" alt="Fotka" loading="lazy" style="width:150px;height:112px;object-fit:cover;border-radius:8px;border:1px solid #d8dde6;display:block"></a>
+        <a href="?foto=<?= $id ?>&amp;f=<?= $e($f['n']) ?>" class="fotoLb"><img src="?foto=<?= $id ?>&amp;f=<?= $e($f['n']) ?>&amp;nahled=1" alt="Fotka" loading="lazy" style="width:150px;height:112px;object-fit:cover;border-radius:8px;border:1px solid #d8dde6;display:block"></a>
         <form method="post" onsubmit="return confirm('Smazat tuto fotku?')" style="margin:.25rem 0 0<?= uziv_admin() ? '' : ';display:none' ?>"><input type="hidden" name="akce" value="foto_smaz"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="f" value="<?= $e($f['n']) ?>"><button class="sec" style="padding:.2rem .6rem;font-size:.85em">Smazat</button></form>
       </div><?php endforeach; ?></div>
     <?php elseif (!$zak): ?><p style="color:#667;margin:.2em 0 .6em">Zatím žádné fotky.</p><?php endif; ?>
@@ -140,6 +149,52 @@ function foto_box($r) {
         }
         dalsi(0);
       });
+    })();
+    </script>
+    <style>
+    #fotoLb{position:fixed;inset:0;z-index:10000;background:rgba(8,14,26,.94);display:none;align-items:center;justify-content:center;padding:max(56px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));overscroll-behavior:contain}
+    #fotoLb.on{display:flex}
+    #fotoLb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;background:#111}
+    #fotoLb iframe{width:100%;height:100%;border:0;border-radius:4px;background:#fff}
+    #fotoLb.pdf img,#fotoLb:not(.pdf) iframe{display:none}
+    #fotoLbBar{position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:1;display:flex;gap:8px}
+    #fotoLbBar button,#fotoLbBar a{background:#fff;color:#16233a;border:0;border-radius:999px;padding:11px 20px;font:700 16px system-ui,Arial,sans-serif;cursor:pointer;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+    #fotoLb:not(.pdf) #fotoLbOtev{display:none}
+    @media (hover:hover){#fotoLbBar button:hover,#fotoLbBar a:hover{background:#e6ebf3}}
+    </style>
+    <script>
+    (function () {
+      var lb = document.getElementById('fotoLb');
+      if (!lb) {
+        lb = document.createElement('div'); lb.id = 'fotoLb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-label', 'Náhled přílohy');
+        lb.innerHTML = '<div id="fotoLbBar"><a id="fotoLbOtev" target="_blank" rel="noopener">↗ Otevřít samostatně</a><button type="button" id="fotoLbX">✕ Zavřít</button></div><img alt="Fotka"><iframe title="PDF příloha"></iframe>';
+        document.body.appendChild(lb);
+      }
+      var im = lb.querySelector('img'), fr = lb.querySelector('iframe'), x = lb.querySelector('#fotoLbX'), ot = lb.querySelector('#fotoLbOtev'), vHistorii = false;
+      function schovej() { lb.classList.remove('on', 'pdf'); im.removeAttribute('src'); fr.removeAttribute('src'); }
+      function otevri(url, pdf) {
+        if (pdf) { fr.src = url; ot.href = url; lb.classList.add('pdf'); } else { im.src = url; lb.classList.remove('pdf'); }
+        lb.classList.add('on');
+        try { history.pushState({ fotoLb: 1 }, ''); vHistorii = true; } catch (e) { vHistorii = false; }
+        x.focus();
+      }
+      function zavri() {
+        if (!lb.classList.contains('on')) return;
+        schovej();
+        if (vHistorii) { vHistorii = false; try { history.back(); } catch (e) {} }
+      }
+      document.addEventListener('click', function (ev) {
+        var a = ev.target.closest && ev.target.closest('a');
+        if (!a || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button) return;
+        var h = a.getAttribute('href') || '', foto = a.classList.contains('fotoLb'), pdf = /^\?soubor=.*\.pdf$/i.test(h);   // foto, nebo PDF příloha záznamu
+        if (!foto && !pdf) return;
+        ev.preventDefault(); otevri(h, pdf);
+      });
+      x.addEventListener('click', function (ev) { ev.stopPropagation(); zavri(); });
+      ot.addEventListener('click', function (ev) { ev.stopPropagation(); });
+      lb.addEventListener('click', function (ev) { if (ev.target === lb || ev.target === im) zavri(); });
+      document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') zavri(); });
+      window.addEventListener('popstate', function () { if (lb.classList.contains('on')) { vHistorii = false; schovej(); } });
     })();
     </script>
   </div><?php
