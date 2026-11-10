@@ -146,7 +146,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     header('Location: nabidky.php?id=' . $id . '#zadani'); exit;
   }
   if ($a === 'zadani_ulozit' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET zadani=?, upraveno=? WHERE id=?')->execute([$P('zadani', 5000), $ted, $id]); header('Location: nabidky.php?id=' . $id . '&ok=1#zadani'); exit; }
-  if ($a === 'stav' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET stav=?, upraveno=? WHERE id=?')->execute([isset(NB_STAVY[$_POST['stav'] ?? '']) ? $_POST['stav'] : 'koncept', $ted, $id]); header('Location: nabidky.php?id=' . $id); exit; }
+  if ($a === 'stav' && $nacti($id)) { $pdo->prepare('UPDATE ok_nabidka SET stav=?, upraveno=? WHERE id=?')->execute([isset(NB_STAVY[$_POST['stav'] ?? '']) ? $_POST['stav'] : 'koncept', $ted, $id]); header('Location: ' . (!empty($_POST['zpet']) ? 'nabidky.php#rozpracovane' : 'nabidky.php?id=' . $id)); exit; }
   if ($a === 'kopie' && ($x = $nacti($id))) {
     $pdo->prepare('INSERT INTO ok_nabidka (cislo, typ, svj_id, jed_id, nazev, adresa, ic, kontakt, telefon, email, datum, platnost, smlouva, interval_let, priplatek, sleva_rucne, polozky, poznamka, stav, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       ->execute([ok_nabidka_cislo($pdo), $x['typ'], $x['svj_id'], $x['jed_id'], $x['nazev'], $x['adresa'], $x['ic'], $x['kontakt'], $x['telefon'], $x['email'], date('Y-m-d'), date('Y-m-d', strtotime('+' . (int)$n['platnost_dni'] . ' days')), $x['smlouva'], $x['interval_let'], $x['priplatek'], $x['sleva_rucne'], $x['polozky'], $x['poznamka'], 'koncept', uziv_jmeno(), $ted, $ted]);
@@ -311,6 +311,23 @@ else:
 <div class="box ln"><a class="btn ok" href="?nova=jine">+ Nová nabídka servisu</a> <a class="btn" href="?nova=oprava" style="background:#c2410c">+ Nová nabídka na opravu</a>
 <?php if ($svjs): ?><form class="ln" style="margin:0"><input type="hidden" name="nova" value="svj"><select name="svj"><?php foreach ($svjs as $j): ?><option value="<?= (int)$j['id'] ?>"><?= $e($j['nazev']) ?></option><?php endforeach; ?></select><button class="sec">Nabídka pro SVJ podle seznamu bytů</button></form><?php endif; ?>
 <span class="mut">Pro jednotlivce: v jeho servisu tlačítka „📄 Nabídka z ceníku“ a „🛠 Nabídka na opravu“. Pro SVJ: v servisu „🛠 Nabídka oprav z reportu“.</span></div>
+<?php
+  $dnes = strtotime('today');
+  $roz = array_values(array_filter($vse, fn($x) => in_array($x['stav'], ['koncept', 'odeslana'], true)));
+  usort($roz, function ($a, $b) { $r = ['odeslana' => 0, 'koncept' => 1]; return [$r[$a['stav']], $a['platnost'] ?: '9999'] <=> [$r[$b['stav']], $b['platnost'] ?: '9999']; });
+  if ($roz): ?><div class="box" style="border-left:5px solid #d97706" id="rozpracovane"><h2 style="margin-top:0">📝 Rozpracované nabídky <span class="mut">(<?= count($roz) ?>)</span></h2>
+<p class="mut" style="margin-top:0">Nabídky, které ještě nejsou uzavřené – koncepty k odeslání a odeslané, u kterých čekáte na vyjádření zákazníka. Po dohodě přepněte na „Přijatá“ (→ objednávka / servis) nebo „Odmítnutá“.</p>
+<div style="overflow-x:auto"><table><tr><th>Číslo</th><th>Pro koho</th><th class="r">Celkem</th><th>Stav / odesláno</th><th>Platnost</th><th></th></tr>
+<?php foreach ($roz as $x): $v = $vypocet($x); $pl = $x['platnost'] ? strtotime($x['platnost']) : 0; $dni = $pl ? (int)floor(($pl - $dnes) / 86400) : null; ?>
+<tr><td class="nowrap"><a href="?id=<?= (int)$x['id'] ?>"><?= $e($x['cislo']) ?></a><div class="mut"><?= $x['typ'] === 'oprava' ? '🛠 oprava' : ($x['typ'] === 'svj' ? 'SVJ' : ($x['typ'] === 'jed' ? 'jednotlivec' : 'servis')) ?></div></td>
+  <td><?= $e($x['nazev']) ?><div class="mut"><?= $e($x['email'] ?: '') ?><?= !$x['email'] && $x['stav'] === 'koncept' ? '<span style="color:#b91c1c">bez e-mailu</span>' : '' ?></div></td>
+  <td class="r nowrap"><?= $e(ok_kc($v['sum']['s'])) ?></td>
+  <td><?php if ($x['stav'] === 'koncept'): ?><span class="st st-nova">📝 neodesláno</span><?php else: ?><span class="st st-hotovo">odesláno</span><?php if (!empty($x['odeslano'])): ?><div class="mut"><?= $e(mb_strimwidth((string)$x['odeslano'], 0, 46, '…')) ?></div><?php endif; endif; ?></td>
+  <td class="nowrap"><?php if (!$pl): ?><span class="mut">–</span><?php elseif ($dni < 0): ?><span class="st st-odmitl">vypršela <?= $e(so_datum($x['platnost'])) ?></span><?php elseif ($dni <= 7): ?><span class="st st-nebyl">vyprší za <?= $dni ?> dní</span><?php else: ?><?= $e(so_datum($x['platnost'])) ?><?php endif; ?></td>
+  <td class="nowrap"><a class="btn sec" style="padding:5px 10px;font-size:13px" href="?id=<?= (int)$x['id'] ?>"><?= $x['stav'] === 'koncept' ? 'Otevřít / odeslat' : 'Otevřít' ?></a>
+  <?php if ($x['stav'] === 'odeslana'): ?><form method="post" style="display:inline" onsubmit="return confirm('Označit nabídku <?= $e($x['cislo']) ?> jako přijatou?')"><input type="hidden" name="akce" value="stav"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><input type="hidden" name="stav" value="prijata"><input type="hidden" name="zpet" value="1"><button class="ok" style="padding:5px 10px;font-size:13px">✔ Přijatá</button></form>
+  <form method="post" style="display:inline" onsubmit="return confirm('Označit nabídku <?= $e($x['cislo']) ?> jako odmítnutou?')"><input type="hidden" name="akce" value="stav"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><input type="hidden" name="stav" value="odmitnuta"><input type="hidden" name="zpet" value="1"><button class="del" style="padding:5px 10px;font-size:13px">✕ Odmítnutá</button></form><?php endif; ?></td></tr>
+<?php endforeach; ?></table></div></div><?php endif; ?>
 <div class="box"><?php if (!$vse): ?><p class="mut">Zatím žádné nabídky.</p><?php else: ?>
 <table><tr><th>Číslo</th><th>Pro</th><th>Datum</th><th class="r">Celkem s DPH</th><th>Stav</th></tr>
 <?php foreach ($vse as $x): $v = $vypocet($x); ?><tr><td><a href="?id=<?= (int)$x['id'] ?>"><?= $e($x['cislo']) ?></a></td><td><?= $e($x['nazev']) ?><div class="mut"><?= $x['typ'] === 'svj' ? 'SVJ' : ($x['typ'] === 'jed' ? 'jednotlivec' : ($x['typ'] === 'oprava' ? '🛠 oprava' : '')) ?><?= (int)$x['smlouva'] ? ' · smlouva ' . (int)$x['smlouva'] . '×' : '' ?></div></td>
