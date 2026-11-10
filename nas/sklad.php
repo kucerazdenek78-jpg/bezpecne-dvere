@@ -1,6 +1,8 @@
 <?php
 // Sklad dveří PREMIUM 60: seznam objednaných dveří se slíbeným termínem montáže, výběr dveří k objednání ve skladu,
 // list pro sklad (obrázek / text / WhatsApp) a evidence vyzvednutí. Stejná ochrana jako kartoteka.php.
+// 10. 11. 2026: na listu pro sklad (stránka, obrázek i tisk) je QR kód. Kdo dveře vyzvedává, naskenuje ho mobilem (přihlášený do kartotéky)
+//   → sklad.php?prevzit=<číslo listu>: dveře z listu, které ještě nejsou převzaté, jsou předvybrané a tlačítkem se zapíšou jako vyzvednuté (= skladem u nás).
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -50,13 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($ids as $i) $up->execute([$did, $i]);
     header('Location: sklad.php?davka=' . $did); exit;
   }
-  if ($akce === 'vyzvednuto' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav='vyzvednuto' WHERE id=?"); foreach ($ids as $i) $up->execute([$i]); }
+  if ($akce === 'vyzvednuto' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav='vyzvednuto' WHERE id=?"); foreach ($ids as $i) $up->execute([$i]);
+    if (!empty($_POST['qr'])) { header('Location: sklad.php?prevzato=' . count($ids)); exit; } }   // převzetí přes QR z listu pro sklad
   if ($akce === 'zpet' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav=NULL, sklad_davka=NULL WHERE id=?"); foreach ($ids as $i) $up->execute([$i]); }
   header('Location: sklad.php'); exit;
 }
 
 $vse = sk_nacti($pdo);
 $davka = isset($_GET['davka']) ? (int)$_GET['davka'] : 0;
+$prevzit = isset($_GET['prevzit']) ? (int)$_GET['prevzit'] : 0;
+$qrUrl = 'https://' . (string)($cfg['kartoteka_host'] ?? 'kartoteka.dvere.app') . '/sklad.php?prevzit=' . $davka;   // QR na listu pro sklad
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <link rel="manifest" href="kartoteka-manifest.php" crossorigin="use-credentials"><link rel="icon" href="kartoteka-192.png"><link rel="apple-touch-icon" href="kartoteka-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Kartotéka"><title>Sklad dveří – Bezpečné dveře</title><style>
 body{font:15px/1.45 system-ui,Arial,sans-serif;margin:0;background:#f3f5f8;color:#1b2430}
@@ -71,7 +76,21 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
 .list{background:#d9ead3;border-radius:6px;padding:14px 18px;max-width:640px}.list table td,.list table th{border:0;font-size:18px;padding:3px 10px 3px 0;color:#2d4a1f}.list th{background:#f3e0d0;color:#442;font-size:17px;padding:5px 10px 5px 4px}
 @media(max-width:700px){.hide-m{display:none}}@media print{header,.nop{display:none}body{background:#fff}.box{box-shadow:none}}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('sklad'); ?><main>
-<?php if ($davka):
+<?php if (isset($_GET['prevzato'])): ?><div class="box" style="background:#d9f2e0;color:#14653a;font-size:17px">✅ Zapsáno: <?= (int)$_GET['prevzato'] ?> ks dveří je u nás (vyzvednuto, skladem).</div><?php endif; ?>
+<?php if ($prevzit):
+  $rad = array_values(array_filter($vse, fn($r) => $r['davka'] === $prevzit));
+  $zbyva = array_values(array_filter($rad, fn($r) => $r['sklad_stav'] === 'objednano')); ?>
+  <div class="box"><h2 style="margin-top:0">📦 Převzetí dveří ze skladu – list č. <?= $prevzit ?></h2>
+  <?php if (!$rad): ?><p>List č. <?= $prevzit ?> nenalezen (nebo už v něm nic není). <a href="sklad.php">Sklad</a></p>
+  <?php elseif (!$zbyva): ?><p>Všechny dveře z tohoto listu už jsou zapsané jako vyzvednuté (u nás). <a href="sklad.php">Sklad</a></p>
+  <?php else: ?><p>Zkontroluj, které dveře opravdu bereš, a potvrď. Zapíšou se jako <b>vyzvednuté – skladem u nás</b>.</p>
+    <form method="post"><input type="hidden" name="akce" value="vyzvednuto"><input type="hidden" name="qr" value="1">
+    <?php foreach ($zbyva as $r): ?><label style="display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid #e4e8ee;font-size:17px"><input type="checkbox" name="ids[]" value="<?= $r['id'] ?>" checked style="width:26px;height:26px;flex:none">
+      <span><b><?= $e($r['dvere'] . ' · ' . $r['odstin'] . ' · ' . $r['kovani']) ?></b><?= $r['sirka'] ? ' · šířka ' . $e($r['sirka']) : '' ?><br><span class="mut">obj. <?= $e($r['cislo']) ?><?= $r['zakaznik'] ? ' · ' . $e($r['zakaznik']) : '' ?><?= $r['montaz'] ? ' · montáž ' . $e($r['montaz']) : '' ?></span></span></label><?php endforeach; ?>
+    <p><button style="width:100%;padding:16px;font-size:18px;background:#16a34a">✅ Převzato – dveře jsou u nás</button></p></form>
+    <?php if (count($zbyva) < count($rad)): ?><p class="mut"><?= count($rad) - count($zbyva) ?> ks z listu už bylo zapsáno dřív.</p><?php endif; ?>
+  <?php endif; ?></div>
+<?php elseif ($davka):
   $st = $pdo->prepare('SELECT * FROM sklad_davky WHERE id=?'); $st->execute([$davka]); $dv = $st->fetch(PDO::FETCH_ASSOC);
   $rad = array_values(array_filter($vse, fn($r) => $r['davka'] === $davka));
   if (!$dv || !$rad): ?><p>Dávka nenalezena. <a href="sklad.php">Zpět</a></p><?php else:
@@ -83,19 +102,30 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
     <div class="mut" id="msg"></div></div>
   <div class="list"><table><tr><th>Dveře</th><th>Odstín</th><th>Kování</th><th>Číslo obj.</th></tr>
     <?php foreach ($rad as $r): ?><tr><td><?= $e($r['dvere']) ?></td><td><?= $e($r['odstin']) ?></td><td><?= $e($r['kovani']) ?></td><td><?= $e($r['cislo']) ?></td></tr><?php endforeach; ?></table>
-    <?php if ($pozn !== ''): ?><p style="font-size:19px;margin:16px 0 4px"><?= nl2br($e($pozn)) ?></p><?php endif; ?><p class="mut" style="margin:8px 0 0">Ze dne <?= $e($datum) ?></p></div>
+    <?php if ($pozn !== ''): ?><p style="font-size:19px;margin:16px 0 4px"><?= nl2br($e($pozn)) ?></p><?php endif; ?><p class="mut" style="margin:8px 0 0">Ze dne <?= $e($datum) ?></p>
+    <div style="display:flex;gap:14px;align-items:center;margin-top:12px;background:#fff;border-radius:6px;padding:10px"><img id="qrImg" alt="QR kód pro převzetí" width="132" height="132">
+      <div style="font-size:15px;color:#2d4a1f"><b>Při vyzvednutí naskenujte mobilem</b><br>dveře se zapíšou jako převzaté – skladem u nás (list č. <?= $davka ?>).</div></div></div>
+  <script src="qrcode.js"></script>
   <script>
+  var QRURL = <?= json_encode($qrUrl) ?>, QR = null;
+  try { QR = qrcode(0, 'M'); QR.addData(QRURL); QR.make(); document.getElementById('qrImg').src = QR.createDataURL(4, 2); } catch (e) { QR = null; }
   var ROWS = <?= json_encode(array_map(fn($r) => [$r['dvere'], $r['odstin'], $r['kovani'], $r['cislo']], $rad), JSON_UNESCAPED_UNICODE) ?>, POZN = <?= json_encode($pozn, JSON_UNESCAPED_UNICODE) ?>, DATUM = <?= json_encode($datum) ?>, TEXT = <?= json_encode($text, JSON_UNESCAPED_UNICODE) ?>;
   function kresli() {
     var f = '34px Arial,Helvetica,sans-serif', pad = 28, rh = 56, cols = [0, 190, 520, 820], W = 1080, notes = POZN ? POZN.split('\n') : [];
-    var H = pad + rh * (ROWS.length + 1) + (notes.length ? 40 + notes.length * 50 : 0) + 90;
+    var H = pad + rh * (ROWS.length + 1) + (notes.length ? 40 + notes.length * 50 : 0) + 90 + (QR ? 250 : 0);
     var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
-    x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.fillStyle = '#d9ead3'; x.fillRect(40, 20, W - 80, H - 90); x.fillStyle = '#f3e0d0'; x.fillRect(40, 20, W - 80, rh);
+    x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.fillStyle = '#d9ead3'; x.fillRect(40, 20, W - 80, H - (QR ? 40 : 90)); x.fillStyle = '#f3e0d0'; x.fillRect(40, 20, W - 80, rh);
     x.font = f; x.fillStyle = '#3b3b3b'; var ox = 70, y = 20 + 40;
     ['Dveře', 'Odstín', 'Kování', 'Číslo obj.'].forEach(function (t, i) { x.fillText(t, ox + cols[i], y); });
     ROWS.forEach(function (r, k) { y += rh; r.forEach(function (t, i) { x.fillText(t, ox + cols[i], y); }); });
     if (notes.length) { y += 70; notes.forEach(function (t) { x.fillText(t, ox, y); y += 50; }); }
-    x.font = '28px Arial'; x.fillStyle = '#555'; x.fillText('Ze dne ' + DATUM, 70, H - 40); return c;
+    x.font = '28px Arial'; x.fillStyle = '#555'; x.fillText('Ze dne ' + DATUM, 70, H - 40 - (QR ? 250 : 0));
+    if (QR) { var n = QR.getModuleCount(), s = Math.floor(210 / (n + 4)), qx = 70, qy = H - 265, z = s * (n + 4);
+      x.fillStyle = '#fff'; x.fillRect(qx, qy, z, z); x.fillStyle = '#000';
+      for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) if (QR.isDark(i, j)) x.fillRect(qx + (j + 2) * s, qy + (i + 2) * s, s, s);
+      x.fillStyle = '#2d4a1f'; x.font = 'bold 30px Arial'; x.fillText('Při vyzvednutí naskenujte mobilem', qx + z + 30, qy + 80);
+      x.font = '26px Arial'; x.fillText('dveře se zapíšou jako převzaté – skladem u nás', qx + z + 30, qy + 125); x.fillText('(list č. ' + <?= (int)$davka ?> + ')', qx + z + 30, qy + 165); }
+    return c;
   }
   function blob() { return new Promise(function (ok) { kresli().toBlob(ok, 'image/png'); }); }
   var m = document.getElementById('msg');
