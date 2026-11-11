@@ -61,11 +61,11 @@
   }
   function renderKat() {
     $('#nbKat').innerHTML = KATS.map(function (k) {
-      return '<label class="pq-opt pq-chip"><input type="radio" name="kat" value="' + k + '"' + (st.kat === k ? ' checked' : '') + (st.rows.length && st.kat !== k ? ' disabled' : '') + '>' + KAT[k] + '</label>';
+      return '<label class="pq-opt pq-chip"><input type="radio" name="kat" value="' + k + '"' + (st.kat === k ? ' checked' : '') + '>' + KAT[k] + '</label>';
     }).join('');
-    $('#nbKatHint').textContent = (limited() ? 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře patří do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '. ' : '') + (st.rows.length ? 'Kategorii nelze změnit, dokud jsou v nabídce položky. Pro jinou kategorii vytvořte samostatnou ' + (OBJ ? 'objednávku' : 'nabídku') + '.' :
-      (st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
-        st.kat ? (st.kat === 'dum' ? 'Vyberte model ERKADO a dekor, pak „🧮 Spočítat cenu v konfigurátoru“: vzor, konstrukce, rozměr, kování a montáž se nastaví v konfigurátoru a cena (podle katalogu ERKADO 2026) se doplní sama. Jiné dveře zadáte ručně.' : 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.') : 'Nejdřív vyberte kategorii.'));
+    var katHelp = st.kat === 'byt' ? 'Dveře do bytu: výběr jako v poptávce (obrázky, barvy, kování, příplatky); cena se spočítá sama. Do PDF jde karta dveří s obrázkem, barvou a všemi parametry.' :
+      st.kat ? (st.kat === 'dum' ? 'Vyberte model ERKADO a dekor, pak „🧮 Spočítat cenu v konfigurátoru“: vzor, konstrukce, rozměr, kování a montáž se nastaví v konfigurátoru a cena (podle katalogu ERKADO 2026) se doplní sama. Jiné dveře zadáte ručně.' : 'Vyberte model z katalogu (obrázek a odstíny se doplní sami) nebo zadejte vlastní dveře. Rozměr, zárubeň a kování doplňte u položky; cenu vč. DPH zadáváte ručně.') : 'Nejdřív vyberte kategorii.';
+    $('#nbKatHint').textContent = (limited() ? 'Na jednu adresu lze ' + (OBJ ? 'objednat' : 'nabídnout') + ' jedny dveře (' + (st.kat === 'byt' ? 'do bytu' : 'do domu') + '). Další dveře patří do samostatné ' + (OBJ ? 'objednávky' : 'nabídky') + '. ' : '') + (st.rows.length ? 'Při změně kategorie se zadané položky odstraní. ' : '') + katHelp;
     $('#nbAdd').disabled = !st.kat || (limited() && st.rows.length >= 1);
     var kb = $('#nbAddKov');
     if (!kb && KOV.length) { kb = document.createElement('button'); kb.type = 'button'; kb.id = 'nbAddKov'; kb.className = 'btn btn-outline'; kb.style.marginLeft = '.5rem'; kb.textContent = '+ Přidat kování (kliky)'; $('#nbAdd').parentNode.appendChild(kb); }
@@ -391,7 +391,7 @@
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (t.dataset && t.dataset.f === 'kroz') { var rz = st.rows[+t.dataset.i]; rz.rozeta = t.value; rz.cenaRuc = false; renderRows(); return; }
-    if (t.name === 'kat') { st.kat = t.value; setDefaults(); renderKat(); return; }
+    if (t.name === 'kat') { if (t.value !== st.kat && st.rows.length && !confirm('Změnit kategorii dveří? Zadané položky v nabídce se odstraní.')) { renderKat(); return; } if (t.value !== st.kat) st.rows = []; st.kat = t.value; setDefaults(); renderKat(); renderRows(); return; }
     if (t.name === 'zadani') { st.rozp = t.value === 'rozpocet'; renderKat(); sums(); return; }
     if (t.id === 'nbRozpFile') { rozpFile(t.files && t.files[0]); return; }
     if (t.dataset && t.dataset.f === 'cat') { var r = st.rows[+t.dataset.i]; applyCat(r, t.value); renderRows(); return; }
