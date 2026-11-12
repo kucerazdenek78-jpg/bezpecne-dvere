@@ -7,8 +7,14 @@ Index zobrazuje jen články s datem <= dnes (přes client JS), takže se každ�
 """
 import os, sys, html, datetime, json, re
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(BASE, "tools", "novinky"))
-from clanky import ARTICLES  # noqa: E402
+# Zdroj článků: novinky/clanky.json (spravuje se i z kartotéky). Záloha: tools/novinky/clanky.py
+_JSON = os.path.join(BASE, "novinky", "clanky.json")
+if os.path.exists(_JSON):
+    with open(_JSON, encoding="utf-8") as _f:
+        ARTICLES = json.load(_f)
+else:
+    sys.path.insert(0, os.path.join(BASE, "tools", "novinky"))
+    from clanky import ARTICLES  # noqa: E402
 
 STYLE_V = "20261025e"
 

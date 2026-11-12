@@ -1,0 +1,36 @@
+name: Přegenerovat novinky
+
+# Když se změní zdroj článků novinky/clanky.json (např. z kartotéky přes GitHub API),
+# znovu se vygenerují statické stránky novinky/*.html, novinky.html a sitemap.xml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'novinky/clanky.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: novinky
+  cancel-in-progress: false
+
+jobs:
+  novinky:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vygenerovat
+        run: python3 tools/build_novinky.py
+      - name: Uložit změny
+        run: |
+          git config user.name "novinky-bot"
+          git config user.email "novinky-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Žádná změna."
+          else
+            git commit -m "Novinky: přegenerováno ze clanky.json"
+            git push
+          fi
