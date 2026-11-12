@@ -3,9 +3,11 @@
    a dveře za zákazníka nastaví v konfigurátoru (window.KF). Na stránkách bez konfigurátoru ikona odkáže na konfigurátor (#pomocnik).
    Server: https://formulare.dvere.app/pomocnik-web.php (NAS, Claude API; telefon ani e-mail se do Claude neposílají). */
 (function () {
-  var URL = 'https://formulare.dvere.app/pomocnik-web.php';
-  var KEY = 'bd-pom-web', HIST = 'bd-pom-web-hist';
   var hasKF = !!window.KF;
+  var kontext = window.BD_POM_KONTEXT || (hasKF ? 'dum' : '');
+  var byt = kontext === 'byt';   // režim pro dveře do bytu: inline chat, bez konfigurátoru (jiný server)
+  var URL = byt ? 'https://formulare.dvere.app/pomocnik-web-byt.php' : 'https://formulare.dvere.app/pomocnik-web.php';
+  var KEY = byt ? 'bd-pom-byt' : 'bd-pom-web', HIST = byt ? 'bd-pom-byt-hist' : 'bd-pom-web-hist';
   if (document.getElementById('pomWebBtn')) return;
   function $(s, r) { return (r || document).querySelector(s); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -47,13 +49,13 @@
   function ulozHist() { ss(HIST, JSON.stringify(hist.slice(-24))); }
   function build() {
     box = document.createElement('div'); box.id = 'pomWeb'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Pomocník AI pro výběr dveří'); box.hidden = true;
-    box.innerHTML = '<div class="pw-h"><b>Pomocník AI<small>Poradí a dveře za vás nastaví</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
+    box.innerHTML = '<div class="pw-h"><b>Pomocník AI<small>' + (byt ? 'Poradí s výběrem dveří do bytu' : 'Poradí a dveře za vás nastaví') + '</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
     document.body.appendChild(box);
     $('.pw-x', box).addEventListener('click', function () { box.hidden = true; btn.hidden = false; });
     return box;
   }
   function open() {
-    if (!hasKF) { location.href = 'konfigurator-erkado.html' + zamQ() + (zamQ() ? '&' : '?') + 'pomocnik=1'; return; }
+    if (!hasKF && !byt) { location.href = 'konfigurator-erkado.html' + zamQ() + (zamQ() ? '&' : '?') + 'pomocnik=1'; return; }
     if (!box) build();
     box.hidden = false; btn.hidden = true;
     if (token) chat(); else gate();
@@ -63,7 +65,8 @@
   /* ── brána: telefon + e-mail + souhlas ── */
   function gate() {
     var b = $('#pwBody', box);
-    b.innerHTML = '<div class="pw-g"><p>Pomocník vám poradí s barvou, dekorem, rozměry i kováním a dveře za vás rovnou nastaví v konfigurátoru. Než začneme, nechte nám prosím na sebe kontakt, ať se vám můžeme ozvat s nabídkou.</p>'
+    var uvodT = byt ? 'Pomocník vám poradí s výběrem bezpečnostních dveří do bytu. Než začneme, nechte nám prosím na sebe kontakt, ať se vám můžeme ozvat s nabídkou.' : 'Pomocník vám poradí s barvou, dekorem, rozměry i kováním a dveře za vás rovnou nastaví v konfigurátoru. Než začneme, nechte nám prosím na sebe kontakt, ať se vám můžeme ozvat s nabídkou.';
+    b.innerHTML = '<div class="pw-g"><p>' + uvodT + '</p>'
       + '<label>Telefon *<input type="tel" id="pwTel" inputmode="tel" autocomplete="tel" placeholder="777 123 456"></label>'
       + '<label>E-mail *<input type="email" id="pwEm" autocomplete="email"></label>'
       + '<label>Jméno (nepovinné)<input type="text" id="pwJm" autocomplete="name"></label>'
@@ -92,8 +95,8 @@
     try {
       if (window.BDForm && window.BDForm.send) {
         var r = ['Telefon: ' + c.tel, 'E-mail: ' + c.email, c.jmeno && 'Jméno: ' + c.jmeno].filter(Boolean).join('\n');
-        window.BDForm.send({ typ: 'poptavka', predmet: 'Konfigurátor ERKADO – pomocník AI (kontakt před odesláním poptávky)', reply_to: c.email,
-          telo: r + '\n\nZákazník spustil v konfigurátoru pomocníka AI a nechal kontakt. Zavolat / napsat a nabídnout cenu a termín.\nSouhlas se zpracováním údajů: ano (včetně zpracování rozhovoru umělou inteligencí).' }).catch(function () {});
+        window.BDForm.send({ typ: 'poptavka', predmet: (byt ? 'Dveře do bytu – pomocník AI (kontakt před poptávkou)' : 'Konfigurátor ERKADO – pomocník AI (kontakt před odesláním poptávky)'), reply_to: c.email,
+          telo: r + '\n\nZákazník spustil pomocníka AI' + (byt ? ' na stránce Dveře do bytu' : ' v konfigurátoru') + ' a nechal kontakt. Zavolat / napsat a nabídnout cenu a termín.\nSouhlas se zpracováním údajů: ano (včetně zpracování rozhovoru umělou inteligencí).' }).catch(function () {});
       }
     } catch (e) {}
   }
@@ -109,9 +112,9 @@
     var b = $('#pwBody', box);
     b.innerHTML = '<div class="pw-b" id="pwList" aria-live="polite"></div><form class="pw-f" id="pwForm"><textarea id="pwIn" rows="1" maxlength="1000" placeholder="Napište, co hledáte…" aria-label="Vaše zpráva"></textarea><button type="submit" id="pwSend">Odeslat</button></form>';
     if (!hist.length) {
-      bubble('a', 'Dobrý den, jsem pomocník AI. Pomohu vám vybrat vchodové dveře a rovnou je nastavím v konfigurátoru. Řekněte mi, jaký máte dům a jaké dveře si představujete (barva, styl, zasklení, rozpočet).');
+      bubble('a', byt ? 'Dobrý den, jsem pomocník AI. Pomohu vám vybrat bezpečnostní dveře do bytu. Řekněte mi, co od dveří hlavně čekáte (bezpečnost, požární odolnost, odhlučnění) a jaký máte rozpočet.' : 'Dobrý den, jsem pomocník AI. Pomohu vám vybrat vchodové dveře a rovnou je nastavím v konfigurátoru. Řekněte mi, jaký máte dům a jaké dveře si představujete (barva, styl, zasklení, rozpočet).');
       var ch = document.createElement('div'); ch.className = 'pw-chips';
-      ['Moderní dům, tmavé dveře', 'Chci dřevodekor a co nejvíc světla', 'Nevím, poraďte mi'].forEach(function (t) {
+      (byt ? ['Nejvyšší bezpečnost (PREMIUM 60)', 'Spíš levnější varianta', 'Nevím, poraďte mi'] : ['Moderní dům, tmavé dveře', 'Chci dřevodekor a co nejvíc světla', 'Nevím, poraďte mi']).forEach(function (t) {
         var x = document.createElement('button'); x.type = 'button'; x.textContent = t; x.addEventListener('click', function () { ch.remove(); poslat(t); }); ch.appendChild(x);
       });
       $('#pwList', box).appendChild(ch);
@@ -169,7 +172,7 @@
     var send = $('#pwSend', box); send.disabled = true;
     hist.push({ role: 'user', text: text }); bubble('u', text); ulozHist();
     var dots = document.createElement('div'); dots.className = 'pw-dots'; dots.textContent = 'Pomocník píše…'; $('#pwList', box).appendChild(dots);
-    post({ akce: 'chat', token: token, zpravy: hist.slice(-16), stav: stavTxt() }).then(function (r) {
+    post({ akce: 'chat', token: token, zpravy: hist.slice(-16), stav: hasKF ? stavTxt() : undefined }).then(function (r) {
       dots.remove(); busy = false; send.disabled = false;
       if (!r.ok) {
         if (r.znovu) { token = null; ss(KEY, null); bubble('s', r.chyba); gate(); return; }
@@ -182,5 +185,5 @@
     }).catch(function () { dots.remove(); busy = false; send.disabled = false; bubble('s', 'Spojení se nepovedlo. Zkuste to prosím znovu.'); });
   }
 
-  if (hasKF && /[?&]pomocnik=1/.test(location.search)) setTimeout(open, 400);
+  if ((hasKF || byt) && /[?&]pomocnik=1/.test(location.search)) setTimeout(open, 400);
 })();
