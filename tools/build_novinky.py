@@ -25,7 +25,6 @@ NAV = '''<nav class="navbar" id="navbar">
         <li class="nav-item"><a href="{root}servis.html" class="nav-link">Servis</a></li>
         <li class="nav-item"><a href="{root}dokumenty.html" class="nav-link">Dokumenty</a></li>
         <li class="nav-item"><a href="{root}poptavka.html" class="nav-link">Kontakt</a></li>
-        <li class="nav-item"><a href="{root}novinky.html" class="nav-link{nov_active}">Novinky</a></li>
         <li class="nav-item"><a href="{root}darkovy-poukaz.html" class="nav-link nav-poukaz">🎁 Poukaz</a></li>
       </ul>
       <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -74,7 +73,7 @@ FOOTER = '''<footer>
     <div class="footer-bottom">
       <span>© <span class="cy">2026</span><script>document.currentScript.previousElementSibling.textContent=new Date().getFullYear()</script> Bezpečné dveře · Provozovatel: Zdeněk Kučera, IČ 64682676, DIČ CZ7801242768 · Zapsán v živnostenském rejstříku od 13. 3. 1996 · Prodejna a vzorkovna: Obchodní 36, 434 01 Most</span>
       <span><a href="https://kartoteka.dvere.app/" title="Pro prodejce" rel="nofollow" style="text-decoration:none;opacity:.4">🔒</a></span>
-      <span><a href="{root}zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">Zásady osobních údajů</a> · <a href="{root}cookies.html" style="color:inherit;text-decoration:underline">Cookies</a></span>
+      <span><a href="{root}novinky.html" style="color:inherit;text-decoration:underline">Novinky</a> · <a href="{root}zasady-osobnich-udaju.html" style="color:inherit;text-decoration:underline">Zásady osobních údajů</a> · <a href="{root}cookies.html" style="color:inherit;text-decoration:underline">Cookies</a></span>
     </div>
   </div>
 </footer>'''
