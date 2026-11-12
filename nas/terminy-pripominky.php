@@ -11,12 +11,13 @@
 //    Každá připomínka se pošle nejvýš jednou; duplicitní záznamy téže nabídky (stejný e-mail a číslo) dostanou jeden e-mail.
 //    Připomínky se zastaví, když zákazník odpoví přes odkaz (upravit / zavolat / nemám zájem) nebo je někdo vypne tlačítkem „Nepřipomínat“ na úvodu.
 // 3) (5. 11. 2026) 5–30 dní po předání dveří (od 1. 11. 2026) jednou dotaz na spokojenost s dveřmi a montáží (hodnoceni.php?m=…).
-// 4) (10. 11. 2026) objednávka s požadovanou zálohou, která do 4+ dnů od objednání nedorazila (lhůta 5 dnů) → jednou:
-//    e-mail účetní (ať zavolá zákazníkovi, kopie firmě) + vlídný e-mail zákazníkovi, že na platbu čekáme. Účetní a účet z Nastavení e-mailů (lib/nastaveni.php).
+// 4) (10.–12. 11. 2026) objednávka s požadovanou zálohou (převodem), která do nastavené lhůty nedorazila na účet:
+//    první upozornění = e-mail účetní (ať zavolá zákazníkovi, kopie firmě) + vlídný e-mail zákazníkovi, že na platbu čekáme;
+//    připomínka zákazníkovi se může opakovat. Vše konfigurovatelné ve Správě → E-maily (lib/nastaveni.php, nast_zaloha), logika v lib/terminy-zaloha.php.
 // Mimo pracovní dobu (před 7 a po 20 h) se nic neposílá.
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit('Not found'); }
-require __DIR__ . '/lib/start.php'; require __DIR__ . '/lib/posta.php'; require __DIR__ . '/lib/terminy.php';
-$suchy = in_array('--suchy', $argv ?? [], true); $pdo = db(); terminy_tabulky($pdo);
+require __DIR__ . '/lib/start.php'; require __DIR__ . '/lib/posta.php'; require __DIR__ . '/lib/terminy.php'; require __DIR__ . '/lib/terminy-zaloha.php';
+$suchy = in_array('--suchy', $argv ?? [], true); $pdo = db(); terminy_tabulky($pdo); zaloha_tabulky($pdo);
 if (is_file(__DIR__ . '/lib/stav.php')) { require_once __DIR__ . '/lib/stav.php'; if (!$suchy) bd_stavy_sync($pdo, true); }   // poptávka, ze které vznikla nabídka / objednávka, je Vyřízeno a nehlídá se
 $log = fn($s) => print(date('Y-m-d H:i:s') . ' ' . ($suchy ? '[suchý] ' : '') . $s . "\n");
 $hod = (int)date('G'); if (!$suchy && ($hod < 7 || $hod >= 20)) { $log('mimo pracovní dobu, nic se neposílá'); exit; }
@@ -72,27 +73,36 @@ foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
   if ($ok && !$suchy) { $pdo->prepare('UPDATE zadosti SET mont_dotaz_dne=? WHERE id=?')->execute([date('Y-m-d'), $z['id']]); terminy_hist($pdo, (int)$z['id'], 'dotaz na spokojenost s montáží odeslán', $em); }
 }
 
-// 4) nezaplacená záloha: 4+ dní od objednání záloha nedorazila → účetní (ať zavolá) + vlídný e-mail zákazníkovi
-$ucetni = function_exists('nast_ucetni') ? array_values(array_filter(nast_ucetni($cfg), fn($a) => filter_var($a, FILTER_VALIDATE_EMAIL))) : [];
-$ucet = function_exists('nast_ucet') ? nast_ucet($cfg) : '1821576001/5500';
+// 4) nezaplacená záloha: do nastavené lhůty nedorazila → poprvé účetní (ať zavolá) + vlídný e-mail zákazníkovi; připomínka zákazníkovi se dle nastavení opakuje
+$zcfg = nast_zaloha($cfg);
+$ucetni = array_values(array_filter(nast_ucetni($cfg), fn($a) => filter_var($a, FILTER_VALIDATE_EMAIL)));
+$ucet = nast_ucet($cfg);
 $firma = array_values(array_filter((array)($cfg['prijemci']['objednavka_interni']['to'] ?? []), fn($a) => filter_var($a, FILTER_VALIDATE_EMAIL)));
 $web = terminy_base($cfg);
-foreach (terminy_zaloha_cekajici($pdo, $ted) as $z) {
-  if (!$ucetni) { $log("záloha {$z['cislo']}: 4+ dní bez platby, ale chybí e-mail účetní (Nastavení e-mailů) – přeskočeno"); continue; }
-  // e-mail účetní (kopie firmě): ať zavolá zákazníkovi
-  $telU = "Dobrý den,\n\nu objednávky č. {$z['cislo']} nám zatím nedorazila záloha a od objednání uběhly {$z['dnu']} dny. Lhůta na zaplacení je 5 dnů, pak se objednávka stornuje.\n\n"
-    . "Zákazník: " . ($z['jmeno'] !== '' ? $z['jmeno'] : '(bez jména)') . ($z['telefon'] !== '' ? "\nTelefon: {$z['telefon']}" : '') . ($z['email'] !== '' ? "\nE-mail: {$z['email']}" : '') . "\n"
-    . "Požadovaná záloha: " . number_format($z['zaloha'], 0, ',', ' ') . " Kč, VS {$z['vs']}, účet $ucet\n"
-    . "Objednáno: " . date('j. n. Y', $z['objednano']) . "\n\n"
-    . "Zavolejte prosím zákazníkovi, ať víme, jestli platbu chystá, nebo jestli něco nebrání. Zákazníkovi jsme zároveň poslali vlídný e-mail, že na platbu čekáme.\n\n"
-    . "Otevřít v kartotéce: $web/kartoteka.php?id={$z['id']}\n";
-  $okU = $suchy ? true : posli_mail($cfg, $DATA, $ucetni, $firma, $cfg['from'], '⚠ Nezaplacená záloha – objednávka č. ' . $z['cislo'] . ' (zavolejte zákazníkovi)', $telU);
-  // vlídný e-mail zákazníkovi
+foreach (terminy_zaloha_cekajici($pdo, $zcfg, $ted) as $z) {
+  $okU = null;
+  if ($z['faze'] === 'prvni') {
+    // první upozornění: e-mail účetní (kopie firmě), ať zavolá zákazníkovi
+    if (!$ucetni) { $log("záloha {$z['cislo']}: {$z['dnu']} dní bez platby, ale chybí e-mail účetní (Nastavení e-mailů) – přeskočeno"); continue; }
+    $telU = "Dobrý den,\n\nu objednávky č. {$z['cislo']} nám zatím nedorazila záloha a od objednání uběhlo {$z['dnu']} dní.\n\n"
+      . "Zákazník: " . ($z['jmeno'] !== '' ? $z['jmeno'] : '(bez jména)') . ($z['telefon'] !== '' ? "\nTelefon: {$z['telefon']}" : '') . ($z['email'] !== '' ? "\nE-mail: {$z['email']}" : '') . "\n"
+      . "Požadovaná záloha: " . number_format($z['zaloha'], 0, ',', ' ') . " Kč, VS {$z['vs']}, účet $ucet\n"
+      . "Objednáno: " . date('j. n. Y', $z['objednano']) . "\n\n"
+      . "Zavolejte prosím zákazníkovi, ať víme, jestli platbu chystá, nebo jestli něco nebrání. Zákazníkovi jsme zároveň poslali vlídný e-mail, že na platbu čekáme.\n\n"
+      . "Otevřít v kartotéce: $web/kartoteka.php?id={$z['id']}\n";
+    $okU = $suchy ? true : posli_mail($cfg, $DATA, $ucetni, $firma, $cfg['from'], '⚠ Nezaplacená záloha – objednávka č. ' . $z['cislo'] . ' (zavolejte zákazníkovi)', $telU);
+  }
+  // vlídný e-mail zákazníkovi (poprvé i při opakování)
   $okZ = null;
   if ($z['email'] !== '') {
     [$predmet, $telo] = terminy_text_zaloha_zakaznik($z, $ucet);
     $okZ = $suchy ? true : posli_mail($cfg, $DATA, [$z['email']], [], $cfg['from'], $predmet, $telo, [], '', $z['prodavac']);
   }
-  $log("záloha {$z['cislo']}: účetní → " . implode(', ', $ucetni) . ($okU ? ' (odesláno)' : ' (SELHALO)') . '; zákazník ' . ($z['email'] !== '' ? $z['email'] . ($okZ ? ' (odesláno)' : ' (SELHALO)') : '(bez e-mailu)'));
-  if ($okU && !$suchy) { $pdo->prepare('UPDATE zadosti SET zal_pripom_dne=? WHERE id=?')->execute([date('Y-m-d H:i:s'), $z['id']]); terminy_hist($pdo, (int)$z['id'], 'upozornění na nezaplacenou zálohu (účetní' . ($z['email'] !== '' ? ' + zákazník' : '') . ')', implode(', ', $ucetni)); }
+  $poslano = ($z['faze'] === 'prvni' ? ($okU || $okZ) : (bool)$okZ);   // za odeslané bereme, když aspoň jeden e-mail prošel
+  if ($z['faze'] === 'prvni') $log("záloha {$z['cislo']}: 1. upozornění – účetní → " . implode(', ', $ucetni) . ($okU ? ' (odesláno)' : ' (SELHALO)') . '; zákazník ' . ($z['email'] !== '' ? $z['email'] . ($okZ ? ' (odesláno)' : ' (SELHALO)') : '(bez e-mailu)'));
+  else $log("záloha {$z['cislo']}: připomínka zákazníkovi (" . ($z['pocet'] + 1) . ".) → " . ($z['email'] !== '' ? $z['email'] . ($okZ ? ' (odesláno)' : ' (SELHALO)') : '(bez e-mailu)'));
+  if ($poslano && !$suchy) {
+    $pdo->prepare('UPDATE zadosti SET zal_pripom_dne=?, zal_pripom_pocet=? WHERE id=?')->execute([date('Y-m-d H:i:s'), $z['pocet'] + 1, $z['id']]);
+    terminy_hist($pdo, (int)$z['id'], $z['faze'] === 'prvni' ? ('upozornění na nezaplacenou zálohu (účetní' . ($z['email'] !== '' ? ' + zákazník' : '') . ')') : ('připomínka nezaplacené zálohy zákazníkovi (' . ($z['pocet'] + 1) . '.)'), $z['faze'] === 'prvni' ? implode(', ', $ucetni) : $z['email']);
+  }
 }

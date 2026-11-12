@@ -35,9 +35,20 @@ function nast_merge(array &$cfg): void {
   if (!empty($n['ucetni']) && is_array($n['ucetni'])) $cfg['ucetnictvi']['email'] = $n['ucetni'];
   if (!empty($n['from']) && filter_var($n['from'], FILTER_VALIDATE_EMAIL)) $cfg['from'] = $n['from'];
   if (!empty($n['ucet']) && is_string($n['ucet'])) $cfg['ucet'] = $n['ucet'];
+  if (isset($n['zaloha']) && is_array($n['zaloha'])) $cfg['zaloha'] = array_merge(is_array($cfg['zaloha'] ?? null) ? $cfg['zaloha'] : [], $n['zaloha']);
 }
 
 // účetní e-maily (z nastavení / configu, jinak výchozí Dana)
 function nast_ucetni(array $cfg): array { $e = nast_emaily($cfg['ucetnictvi']['email'] ?? []); return $e ?: ['kucerovadn@kksystem.cz']; }
 // číslo účtu pro zálohy (z nastavení / configu, jinak výchozí RB – stejný jako na webu v platba/platba.js)
 function nast_ucet(array $cfg): string { $u = nast_ucet_ocisti((string)($cfg['ucet'] ?? '')); return $u !== '' ? $u : '1821576001/5500'; }
+
+// nastavení hlídače nezaplacené zálohy (s rozumnými mezemi): lhuta = dnů do první připomínky (výchozí 4),
+// opak = opakovat připomínku zákazníkovi (vyp), opak_dnu = po kolika dnech (2), opak_max = max kolikrát navíc (2).
+function nast_zaloha(array $cfg): array {
+  $z = is_array($cfg['zaloha'] ?? null) ? $cfg['zaloha'] : [];
+  $lhuta = (int)($z['lhuta'] ?? 4); $lhuta = max(1, min(60, $lhuta));
+  $opak_dnu = (int)($z['opak_dnu'] ?? 2); $opak_dnu = max(1, min(60, $opak_dnu));
+  $opak_max = (int)($z['opak_max'] ?? 2); $opak_max = max(0, min(10, $opak_max));
+  return ['lhuta' => $lhuta, 'opak' => !empty($z['opak']), 'opak_dnu' => $opak_dnu, 'opak_max' => $opak_max];
+}

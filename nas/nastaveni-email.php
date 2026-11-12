@@ -33,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $from = trim((string)($_POST['from'] ?? '')); $n['from'] = filter_var($from, FILTER_VALIDATE_EMAIL) ? $from : (string)($cfg['from'] ?? '');
   $ucet = nast_ucet_ocisti((string)($_POST['ucet'] ?? ''));
   if ($ucet !== '') $n['ucet'] = $ucet; elseif (trim((string)($_POST['ucet'] ?? '')) === '') unset($n['ucet']);
+  $n['zaloha'] = [                                           // hlídání nezaplacené zálohy (lhůta + opakování)
+    'lhuta' => max(1, min(60, (int)($_POST['zal_lhuta'] ?? 4))),
+    'opak' => !empty($_POST['zal_opak']),
+    'opak_dnu' => max(1, min(60, (int)($_POST['zal_opak_dnu'] ?? 2))),
+    'opak_max' => max(0, min(10, (int)($_POST['zal_opak_max'] ?? 2))),
+  ];
   $ok = nast_uloz($n);
   $badUcet = trim((string)($_POST['ucet'] ?? '')) !== '' && $ucet === '';
   header('Location: nastaveni-email.php?ulozeno=' . ($ok ? ($badUcet ? 'ucet' : '1') : '0')); exit;
@@ -41,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 nast_merge($cfg);
 $ucetni = implode(', ', nast_ucetni($cfg));
 $ucet = nast_ucet($cfg);
+$zal = nast_zaloha($cfg);
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <link rel="icon" href="kartoteka-192.png"><title>Nastavení e-mailů – Kartotéka</title><style>
 :root{--bg:#f3f5f8;--card:#fff;--ink:#16233a;--mut:#64708a;--line:#e1e6ee;--acc:#1d5fb8}
@@ -78,6 +85,14 @@ button{background:var(--acc);color:#fff;border:0;border-radius:9px;padding:11px 
     <label>Odesílatel e-mailů <span class="lbl">(adresa „Od")</span></label><input type="email" name="from" value="<?= $e((string)($cfg['from'] ?? '')) ?>" placeholder="chci@bezpecne-dvere.cz">
     <label>Číslo účtu pro zálohy</label><input type="text" name="ucet" value="<?= $e($ucet) ?>" placeholder="1821576001/5500">
     <p class="mut" style="margin:.4rem 0 0">Tento účet se použije v upozornění na nezaplacenou zálohu. <b>Pozor:</b> QR kód a účet v samotné objednávce na webu se berou z webové stránky (platba.js) a tímto se nemění – při změně banky je potřeba upravit i tam (napište mi).</p></div>
+  <div class="box"><h2>Hlídání nezaplacené zálohy</h2><p class="mut" style="margin:.2rem 0 .6rem">U objednávek se zálohou placenou převodem: když záloha do nastavené lhůty nedorazí na účet, systém pošle interní upozornění (účetní + příjemci „Objednávky (firmě)") a vlídnou připomínku zákazníkovi s údaji k platbě. Běží ráno přes Plánovač, spolu s připomínkami nabídek.</p>
+    <div class="two">
+      <div><label>Lhůta do první připomínky <span class="lbl">(dnů od objednání)</span></label><input type="text" inputmode="numeric" name="zal_lhuta" value="<?= $e($zal['lhuta']) ?>" placeholder="4"></div>
+      <div><label>Opakovat připomínku zákazníkovi</label><label style="font-weight:400;margin:6px 0 0"><input type="checkbox" name="zal_opak" value="1"<?= $zal['opak'] ? ' checked' : '' ?>> ano, posílat opakovaně (dokud záloha nedorazí)</label></div>
+      <div><label>Opakovat po <span class="lbl">(dnů)</span></label><input type="text" inputmode="numeric" name="zal_opak_dnu" value="<?= $e($zal['opak_dnu']) ?>" placeholder="2"></div>
+      <div><label>Max. počet opakování <span class="lbl">(navíc k prvnímu)</span></label><input type="text" inputmode="numeric" name="zal_opak_max" value="<?= $e($zal['opak_max']) ?>" placeholder="2"></div>
+    </div>
+    <p class="mut" style="margin:.5rem 0 0">Interní upozornění firmě/účetní jde jen jednou (poprvé). Opakuje se pouze vlídná připomínka zákazníkovi – nejvýš nastavený početkrát a jen dokud záloha nedorazí nebo se objednávka nestornuje.</p></div>
   <p><button>Uložit nastavení</button></p>
   </form>
 </main></body></html>
