@@ -38,6 +38,7 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
 
 ## Podpis e-mailů zákazníkům (od 30. 10. 2026)
 - Každý e-mail zákazníkovi má podpis: jméno obchodníka, malé logo (`userFiles/email/logo-podpis.png`) a firemní údaje (BEZPEČNÉ DVEŘE CZ, KKSYSTEM, pobočka/sklady Most Obchodní 36, e-shop, infolinka +420 725 559 235 / +420 471 008 994, info@kksystem.cz, chci@bezpecne-dvere.cz).
+- Od 13. 11. 2026 je u infolinky pracovní doba **Po–Čt 9:00–16:30** a věta „Volejte prosím v pracovní době, mimo ni nám napište e-mail.“ (konstanta `PODPIS_PRAC_DOBA` v `lib/podpis.php`).
 - Kód: NAS `lib/podpis.php`; používá `odeslat.php` (typ objednavka_zakaznik, jméno z pole `prodavac`) a `lib/posta.php` → `posli_mail` (jméno z parametru, jinak přihlášený uživatel kartotéky). Interní e-maily firmě jsou bez podpisu.
 - Nový formulář, který posílá e-mail zákazníkovi, musí posílat `prodavac` (formulare-klient.js ho přenáší). Změna firemních údajů = upravit `lib/podpis.php`.
 

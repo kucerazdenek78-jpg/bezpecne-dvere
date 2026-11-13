@@ -5,6 +5,9 @@
 // Logo: https://bezpecne-dvere.cz/userFiles/email/logo-podpis.png (z logo.jpg, 360 px, zobrazené 150 px).
 // Patří na NAS do /docker/formulare/app/lib/podpis.php.
 
+// Pracovní doba infolinky (Zdeněk 13. 11. 2026) – zákazníci mají volat jen v ní; změna = upravit tady.
+const PODPIS_PRAC_DOBA = 'Po–Čt 9:00–16:30';
+
 function podpis_jmeno(string $jmeno): string {
   $j = trim(preg_replace('/\s+/u', ' ', $jmeno));
   if ($j === '' && function_exists('uziv_jmeno')) $j = trim((string)uziv_jmeno());   // přihlášený uživatel kartotéky
@@ -15,7 +18,7 @@ function podpis_text(string $jmeno = ''): string {
   $j = podpis_jmeno($jmeno);
   return "\n\n--\n" . ($j !== '' ? $j . "\n" : '')
     . "BEZPEČNÉ DVEŘE CZ, KKSYSTEM\nPobočka: Most, Obchodní 36\nSklady: Most, Obchodní 36\nE-shop: obchod.bezpecne-dvere.cz\n\n"
-    . "INFOLINKA:\n+420 725 559 235\n+420 471 008 994\ninfo@kksystem.cz\nchci@bezpecne-dvere.cz\nwww.bezpecne-dvere.cz";
+    . "INFOLINKA (" . PODPIS_PRAC_DOBA . "):\n+420 725 559 235\n+420 471 008 994\nVolejte prosím v pracovní době, mimo ni nám napište e-mail.\ninfo@kksystem.cz\nchci@bezpecne-dvere.cz\nwww.bezpecne-dvere.cz";
 }
 
 function podpis_html(string $jmeno = '', string $web = 'https://bezpecne-dvere.cz'): string {
@@ -29,8 +32,9 @@ function podpis_html(string $jmeno = '', string $web = 'https://bezpecne-dvere.c
     . '<div style="font-weight:bold">BEZPEČNÉ DVEŘE CZ, KKSYSTEM</div>'
     . '<div><b>Pobočka:</b> Most, Obchodní 36</div><div><b>Sklady:</b> Most, Obchodní 36</div>'
     . '<div><b>E-shop:</b> ' . $a('https://obchod.bezpecne-dvere.cz', 'obchod.bezpecne-dvere.cz') . '</div>'
-    . '<div style="margin-top:8px;font-weight:bold">INFOLINKA:</div>'
+    . '<div style="margin-top:8px;font-weight:bold">INFOLINKA: <span style="font-weight:normal">' . $h(PODPIS_PRAC_DOBA) . '</span></div>'
     . '<div>' . $a('tel:+420725559235', '+420 725 559 235') . '</div><div>' . $a('tel:+420471008994', '+420 471 008 994') . '</div>'
+    . '<div style="font-size:13px;color:#4a5a50">Volejte prosím v pracovní době, mimo ni nám napište e-mail.</div>'
     . '<div>' . $a('mailto:info@kksystem.cz', 'info@kksystem.cz') . '</div><div>' . $a('mailto:chci@bezpecne-dvere.cz', 'chci@bezpecne-dvere.cz') . '</div>'
     . '<div style="font-weight:bold">' . $a($web, 'www.bezpecne-dvere.cz') . '</div>'
     . '</td></tr></table>';
