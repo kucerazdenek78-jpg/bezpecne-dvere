@@ -265,8 +265,7 @@
     r.nazev = 'Vchodové dveře ' + d.model; r.odstin = d.odstin || r.odstin; r.prov = d.provedeni || '';
     r.sirka = k.rozmer || ''; r.otev = k.otevirani || ''; r.zarub = k.zarubne ? k.zarubne + ' zárubeň' : ''; r.kov = [k.kovani, k.madlo && k.madlo !== 'bez madla' ? k.madlo : ''].filter(Boolean).join('; ');
     r.img = d.obrazek || r.img; r.hint = ''; r.ai = null;
-    if (r.imgLib === 'lib') { r.imgData = ''; r.imgLib = ''; } else if (r.imgData) r.imgLib = '';   /* knihovní obrázek patří ke staré konfiguraci; vlastní zůstává, ale už není „uložený“ pro novou */
-    r.vzP = '';
+    [1, 2].forEach(function (sl) { if (r[vzF(sl, 'imgLib')] === 'lib') r[vzF(sl, 'imgData')] = ''; r[vzF(sl, 'imgLib')] = ''; r[vzF(sl, 'vzP')] = ''; });   /* knihovní obrázky patří ke staré konfiguraci; vlastní zůstávají */
   }
   window.addEventListener('message', function (ev) {
     if (ev.origin !== location.origin || !ev.data || ev.data.typ !== 'bd-erkado-nabidka') return;
@@ -316,62 +315,75 @@
         (r.cenaRuc ? ' <button type="button" class="btn btn-outline" data-kreprice="' + i + '" style="padding:.15rem .6rem">Použít cenu z ceníku</button>' : '') + '</p>' : '<p class="pq-help">Vyberte kliku.</p>') +
       '<p style="margin:.4rem 0 0" data-tot="' + i + '">Za položku: <b>' + kc(tot) + '</b></p></div>';
   }
-  /* skutečný vzhled dveří: vlastní obrázek položky (nahrát, přetáhnout nebo vložit Ctrl+V – např. snímek z konfigurátoru ERKADO); v PDF nahradí ilustrační obrázek */
-  var imgRow = -1;
+  /* skutečný vzhled dveří: vlastní obrázky položky – zvenku (imgData) a zevnitř (imgData2); nahrát nebo vložit Ctrl+V (např. snímky z konfigurátoru ERKADO); v PDF nahradí ilustrační obrázek */
+  var imgRow = -1, imgSlot = 0;
+  function vzF(slot, zaklad) { return zaklad + (slot === 2 ? '2' : ''); }
   function vlastniImgHtml(r, i) {
+    function slotHtml(slot, nadpis) {
+      var d = r[vzF(slot, 'imgData')], lib = r[vzF(slot, 'imgLib')];
+      return '<div data-imgslot="' + slot + '" style="flex:1 1 220px;min-width:0;padding:.5rem .6rem;border:1px solid var(--gray-200);border-radius:8px;background:#fff"><b>' + nadpis + '</b>' +
+        (d ? '<div style="display:flex;gap:.6rem;align-items:center;margin-top:.4rem"><img src="' + esc(d) + '" alt="" style="max-height:120px;max-width:80px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' +
+          '<span><small>' + (lib === 'lib' ? '✓ Z knihovny (stejná konfigurace už byla vložena dřív).' : lib === 'ulozeno' ? '✓ Vloženo a uloženo do knihovny – příště se doplní samo.' : '✓ Obrázek je vložený.') + '</small><br><button type="button" class="btn btn-outline" data-imgdel="' + i + '" data-s="' + slot + '" style="padding:.2rem .7rem;margin-top:.3rem">✕ Odebrat</button></span></div>' : '') +
+        '<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile" data-s="' + slot + '" style="display:block;margin-top:.45rem;max-width:100%"></div>';
+    }
     return '<div class="pq-f" data-imgbox="' + i + '" style="margin-top:.5rem;padding:.6rem .7rem;border:1.5px dashed var(--gray-200);border-radius:10px">' +
-      '<b>Skutečný vzhled dveří (volitelné)</b><br><small>Nahrajte nebo sem vložte (Ctrl+V) snímek dveří, např. z konfigurátoru ERKADO. V nabídce nahradí ilustrační obrázek.</small>' +
-      (r.imgData ? '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.45rem"><img src="' + esc(r.imgData) + '" alt="" style="max-height:120px;max-width:80px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' +
-        '<span>' + (r.imgLib === 'lib' ? '✓ Skutečný vzhled z knihovny (stejná konfigurace už byla vložena dřív).' : r.imgLib === 'ulozeno' ? '✓ Vlastní obrázek je vložený a uložený do knihovny – u stejné konfigurace se příště doplní sám.' : '✓ Vlastní obrázek je vložený.') + '<br><button type="button" class="btn btn-outline" data-imgdel="' + i + '" style="padding:.2rem .7rem;margin-top:.3rem">✕ Odebrat obrázek</button></span></div>' : '') +
-      '<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile" style="display:block;margin-top:.45rem"></div>';
+      '<b>Skutečný vzhled dveří (volitelné)</b><br><small>Nahrajte nebo vložte (Ctrl+V) snímky dveří, např. z konfigurátoru ERKADO – pohled zvenku a zevnitř. Před vložením klikněte do příslušného okénka. V nabídce nahradí ilustrační obrázek.</small>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.5rem">' + slotHtml(1, 'Pohled zvenku') + slotHtml(2, 'Pohled zevnitř') + '</div></div>';
   }
-  function vlastniImgSet(i, blob) {
+  function vlastniImgSet(i, blob, slot) {
     var r = st.rows[i]; if (!r || !blob) return;
+    slot = slot === 2 ? 2 : 1;
     var fr = new FileReader();
-    fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r.imgData = j ? j.data : ''; r.imgLib = ''; renderRows(); if (r.imgData) vzUloz(r); }); };
+    fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r[vzF(slot, 'imgData')] = j ? j.data : ''; r[vzF(slot, 'imgLib')] = ''; renderRows(); if (j) vzUloz(r, slot); }); };
     fr.readAsDataURL(blob);
   }
-  /* knihovna skutečných vzhledů ERKADO (formulare.dvere.app/vzhled.php): klíč = otisk konfigurace, která je na dveřích vidět */
+  /* knihovna skutečných vzhledů ERKADO (formulare.dvere.app/vzhled.php): klíč = otisk konfigurace, která je na dveřích vidět (+ pohled) */
   var VZ_URL = ((window.BDForm && window.BDForm.ENDPOINT) || 'https://formulare.dvere.app/odeslat.php').replace(/odeslat\.php.*$/, 'vzhled.php');
-  function vzPopis(r) {
+  function vzPopis(r, slot) {
     var e = erkCfg(r); if (!e || !e.stav) return '';
     var s = e.stav, sv = s.sv || {};
     return [e.model_kod || '', e.provedeni || s.prov || '', 'dekor ' + s.dekor, s.dvou && s.dvou !== 'ne' ? 'dvoubarevné ' + s.dvou + ' ' + s.dekor2 : '', 'zárubeň ' + s.zar,
       'strana ' + s.strana + ' ' + s.smer, 'sklo ' + (s.sklo || '') + ' / ' + (s.odstin || ''), 'kování ' + s.kov + (s.kov !== 'X' ? ' ' + s.kovB : ''),
       s.madlo && s.madlo !== 'none' ? 'madlo ' + s.madlo + ' ' + s.madloD + ' ' + s.madloB : 'bez madla',
-      'světlíky ' + (sv.h ? 'H' : '') + (sv.l ? 'L' : '') + (sv.p ? 'P' : '') + (sv.h || sv.l || sv.p ? ' ' + (sv.sklo || '') : '-')].filter(Boolean).join(' | ').toLowerCase();
+      'světlíky ' + (sv.h ? 'H' : '') + (sv.l ? 'L' : '') + (sv.p ? 'P' : '') + (sv.h || sv.l || sv.p ? ' ' + (sv.sklo || '') : '-'),
+      slot === 2 ? 'pohled zevnitř' : ''].filter(Boolean).join(' | ').toLowerCase();   /* pohled zvenku bez přípony (klíče z 13. 11. ráno zůstávají platné) */
   }
-  function vzKlic(r) {
-    var p = vzPopis(r); if (!p || !window.crypto || !crypto.subtle || !window.TextEncoder) return Promise.resolve('');
-    return crypto.subtle.digest('SHA-1', new TextEncoder().encode(p)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }, function () { return ''; });
+  function vzKlic(popis) {
+    if (!popis || !window.crypto || !crypto.subtle || !window.TextEncoder) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-1', new TextEncoder().encode(popis)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }, function () { return ''; });
   }
-  function vzUloz(r) {
+  function vzUloz(r, slot) {
     if (!erkCfg(r) || !window.fetch) return;
-    var obr = r.imgData;
-    vzKlic(r).then(function (k) {
+    var fD = vzF(slot, 'imgData'), obr = r[fD], popis = vzPopis(r, slot);
+    vzKlic(popis).then(function (k) {
       if (!k) return;
-      return fetch(VZ_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: k, popis: vzPopis(r), b64: obr }) })
-        .then(function (x) { return x.json(); }).then(function (j) { if (j && j.ok && r.imgData === obr) { r.imgLib = 'ulozeno'; r.vzK = k; renderRows(); } });
+      return fetch(VZ_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: k, popis: popis, b64: obr }) })
+        .then(function (x) { return x.json(); }).then(function (j) { if (j && j.ok && r[fD] === obr) { r[vzF(slot, 'imgLib')] = 'ulozeno'; renderRows(); } });
     }).catch(function () {});
   }
-  /* u položek z konfigurátoru bez vlastního obrázku zkusit knihovnu (jednou pro danou konfiguraci) */
+  /* u položek z konfigurátoru bez vlastního obrázku zkusit knihovnu (jednou pro danou konfiguraci a pohled) */
   function vzHledej() {
     if (!window.fetch) return;
     st.rows.forEach(function (r) {
-      if (!erkCfg(r) || r.imgData) return;
-      var p = vzPopis(r); if (!p || r.vzP === p) return; r.vzP = p;
-      vzKlic(r).then(function (k) {
-        if (!k) return;
-        return fetch(VZ_URL + '?k=' + k).then(function (x) { return x.ok ? x.json() : null; }).then(function (j) {
-          if (j && j.ok && /^data:image\/jpeg;base64,/.test(j.obr || '') && !r.imgData && vzPopis(r) === p) { r.imgData = j.obr; r.imgLib = 'lib'; r.vzK = k; renderRows(); }
-        });
-      }).catch(function () {});
+      if (!erkCfg(r)) return;
+      [1, 2].forEach(function (slot) {
+        var fD = vzF(slot, 'imgData'), fP = vzF(slot, 'vzP');
+        if (r[fD]) return;
+        var p = vzPopis(r, slot); if (!p || r[fP] === p) return; r[fP] = p;
+        vzKlic(p).then(function (k) {
+          if (!k) return;
+          return fetch(VZ_URL + '?k=' + k).then(function (x) { return x.ok ? x.json() : null; }).then(function (j) {
+            if (j && j.ok && /^data:image\/jpeg;base64,/.test(j.obr || '') && !r[fD] && vzPopis(r, slot) === p) { r[fD] = j.obr; r[vzF(slot, 'imgLib')] = 'lib'; renderRows(); }
+          });
+        }).catch(function () {});
+      });
     });
   }
-  document.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('[data-i]'); if (b && b.dataset.i !== undefined) imgRow = +b.dataset.i; });
+  document.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('[data-i]'); if (b && b.dataset.i !== undefined) { imgRow = +b.dataset.i; var sl = e.target.closest('[data-imgslot]'); imgSlot = sl ? +sl.dataset.imgslot : 0; } });
   document.addEventListener('click', function (e) {
-    var d = e.target.closest && e.target.closest('[data-imgdel]'); if (d) { var r = st.rows[+d.dataset.imgdel]; if (r) { r.imgData = ''; r.imgLib = ''; renderRows(); } return; }
-    var b = e.target.closest && e.target.closest('[data-imgbox]'); if (b) imgRow = +b.dataset.imgbox;
+    var d = e.target.closest && e.target.closest('[data-imgdel]');
+    if (d) { var r = st.rows[+d.dataset.imgdel], s2 = +d.dataset.s === 2 ? 2 : 1; if (r) { r[vzF(s2, 'imgData')] = ''; r[vzF(s2, 'imgLib')] = ''; renderRows(); } return; }
+    var b = e.target.closest && e.target.closest('[data-imgbox]'); if (b) { imgRow = +b.dataset.imgbox; var sl = e.target.closest('[data-imgslot]'); imgSlot = sl ? +sl.dataset.imgslot : 0; }
   });
   document.addEventListener('paste', function (e) {
     var it = (e.clipboardData && e.clipboardData.items) || [], blob = null;
@@ -380,7 +392,8 @@
     var dvere = []; st.rows.forEach(function (r, i) { if (r.typ !== 'kovani') dvere.push(i); });
     var i = dvere.indexOf(imgRow) >= 0 ? imgRow : (dvere.length === 1 ? dvere[0] : -1);
     if (i < 0) return;                       /* víc položek a žádná vybraná – nehádat */
-    e.preventDefault(); vlastniImgSet(i, blob);
+    var r = st.rows[i], slot = imgSlot || (!r.imgData ? 1 : !r.imgData2 ? 2 : 1);   /* bez vybraného okénka: první volné (zvenku, pak zevnitř) */
+    e.preventDefault(); vlastniImgSet(i, blob, slot); imgSlot = 0;
   });
   function renderRows() {
     st.rows.forEach(function (r) { if (r.typ === 'kovani') kovCena(r); });
@@ -473,7 +486,7 @@
       autoPrice(r4); renderRows(); return;
     }
     if (t.dataset && t.dataset.f === 'imgfile' && t.files && t.files[0]) {
-      vlastniImgSet(+t.dataset.i, t.files[0]);
+      vlastniImgSet(+t.dataset.i, t.files[0], +t.dataset.s);
     }
   });
   document.addEventListener('input', function (e) {
@@ -667,7 +680,7 @@
   }
   function buildOwn(d) {
     var P = window.PoptavkaPDF; if (!P || !P.prepare) return Promise.reject(new Error('pdf'));
-    var imgJobs = st.rows.map(function (r) { return Promise.all([toJpeg(r.imgData || r.img, 600), (r.shadeImg && r.shadeImg.indexOf('color:') !== 0) ? toJpeg(r.shadeImg, 120) : Promise.resolve(null)]); });
+    var imgJobs = st.rows.map(function (r) { return Promise.all([toJpeg(r.imgData || r.img, 600), (r.shadeImg && r.shadeImg.indexOf('color:') !== 0) ? toJpeg(r.shadeImg, 120) : Promise.resolve(null), toJpeg(r.imgData2, 600)]); });
     return Promise.all([P.prepare(), toJpeg('logo.jpg', 600), Promise.all(imgJobs)]).then(function (res) {
       var fonts = res[0], lg = res[1], ims = res[2];
       var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', compress: true });
@@ -723,7 +736,8 @@
       d.polozky.forEach(function (p, i) {
         if (p.ks == null) return;
         var r = st.rows[i], im = ims[i] || [null, null];
-        var hasImg = !!im[0], IW = hasImg ? 36 : 0, IH = hasImg ? 52 : 0, x0 = M + (hasImg ? IW + 6 : 5), wTxt = W - M - x0 - 2, wLab = 30;
+        var two = !!(im[0] && im[2]), SW = two ? 31 : 36, capH = two ? 4 : 0;   /* dva pohledy (zvenku + zevnitř) vedle sebe s popisky */
+        var hasImg = !!im[0], IW = hasImg ? (two ? SW * 2 + 2 : 36) : 0, IH = hasImg ? 52 : 0, x0 = M + (hasImg ? IW + 6 : 5), wTxt = W - M - x0 - 2, wLab = 30;
         var sp = [['Počet', p.ks + ' ks']].concat(p.spec || []);   /* počet kusů vždy viditelně v parametrech */
         font('bold', 11.5); var tl = doc.splitTextToSize(p.nazev, wTxt);
         var h = tl.length * 5.2 + 2;
@@ -735,19 +749,24 @@
         h += 11 + (p.sleva ? 4.5 : 0);
         /* poznámka pod obrázkem: katalogový obrázek je jen ilustrační (vlastní fotka z nabídky se nepoznamenává) */
         var ilu = hasImg && !(r && r.imgData); font('normal', 6.4); var iluL = ilu ? doc.splitTextToSize('Obrázek je ilustrační – kování, barva a strana otevírání mohou být jiné.', IW) : [], iluH = iluL.length ? iluL.length * 2.7 + 2 : 0;
-        var imgCol = hasImg ? IH + (im[1] || (r && r.shadeImg) ? 14 : 2) + iluH : 0, cardH = Math.max(h, imgCol) + 3;
+        var imgCol = hasImg ? IH + capH + (im[1] || (r && r.shadeImg) ? 14 : 2) + iluH : 0, cardH = Math.max(h, imgCol) + 3;
         ensure(cardH + 4);
         var top = y - 2;
         doc.setFillColor(255, 255, 255); doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.3); doc.roundedRect(M, top, CW, cardH, 2.5, 2.5, 'FD');
         /* obrázek */
-        if (hasImg) { doc.setFillColor.apply(doc, PALE); doc.roundedRect(M + 3, top + 3, IW, IH, 2, 2, 'F'); }
-        if (im[0]) { var rr = Math.min((IW - 4) / im[0].w, (IH - 4) / im[0].h), iw = im[0].w * rr, ih = im[0].h * rr; doc.addImage(im[0].data, 'JPEG', M + 3 + (IW - iw) / 2, top + 3 + (IH - ih) / 2, iw, ih); }
+        [im[0], two ? im[2] : null].forEach(function (o, n) {
+          if (!o) return;
+          var sx = M + 3 + n * (SW + 2);
+          doc.setFillColor.apply(doc, PALE); doc.roundedRect(sx, top + 3, SW, IH, 2, 2, 'F');
+          var rr = Math.min((SW - 4) / o.w, (IH - 4) / o.h), iw = o.w * rr, ih = o.h * rr; doc.addImage(o.data, 'JPEG', sx + (SW - iw) / 2, top + 3 + (IH - ih) / 2, iw, ih);
+          if (two) { font('normal', 6.8, MUTED); doc.text(n ? 'Pohled zevnitř' : (r && r.imgData ? 'Pohled zvenku' : 'Ilustrační obrázek'), sx + SW / 2, top + 3 + IH + 3, { align: 'center' }); }
+        });
         if (hasImg && (im[1] || (r && r.shadeImg && r.shadeImg.indexOf('color:') === 0))) {
-          var sy = top + 3 + IH + 2.5;
+          var sy = top + 3 + IH + capH + 2.5;
           if (im[1]) doc.addImage(im[1].data, 'JPEG', M + 3, sy, 9, 9); else { doc.setFillColor.apply(doc, hexc(r.shadeImg.slice(6))); doc.roundedRect(M + 3, sy, 9, 9, 1, 1, 'F'); }
           font('normal', 7, MUTED); doc.text('Barva', M + 14, sy + 3.2); font('bold', 8.5); doc.text(doc.splitTextToSize(p.odstin || '', IW - 12), M + 14, sy + 7.2);
         }
-        if (iluL.length) { font('normal', 6.4, MUTED); doc.text(iluL, M + 3, top + 3 + IH + (im[1] || (r && r.shadeImg) ? 14 : 2) + 3); }
+        if (iluL.length) { font('normal', 6.4, MUTED); doc.text(iluL, M + 3, top + 3 + IH + capH + (im[1] || (r && r.shadeImg) ? 14 : 2) + 3); }
         /* text */
         var yy = top + 8;
         font('bold', 11.5, GREEN); doc.text(tl, x0, yy); yy += tl.length * 5.2 + 1.2;
