@@ -265,6 +265,8 @@
     r.nazev = 'Vchodové dveře ' + d.model; r.odstin = d.odstin || r.odstin; r.prov = d.provedeni || '';
     r.sirka = k.rozmer || ''; r.otev = k.otevirani || ''; r.zarub = k.zarubne ? k.zarubne + ' zárubeň' : ''; r.kov = [k.kovani, k.madlo && k.madlo !== 'bez madla' ? k.madlo : ''].filter(Boolean).join('; ');
     r.img = d.obrazek || r.img; r.hint = ''; r.ai = null;
+    if (r.imgLib === 'lib') { r.imgData = ''; r.imgLib = ''; } else if (r.imgData) r.imgLib = '';   /* knihovní obrázek patří ke staré konfiguraci; vlastní zůstává, ale už není „uložený“ pro novou */
+    r.vzP = '';
   }
   window.addEventListener('message', function (ev) {
     if (ev.origin !== location.origin || !ev.data || ev.data.typ !== 'bd-erkado-nabidka') return;
@@ -320,18 +322,55 @@
     return '<div class="pq-f" data-imgbox="' + i + '" style="margin-top:.5rem;padding:.6rem .7rem;border:1.5px dashed var(--gray-200);border-radius:10px">' +
       '<b>Skutečný vzhled dveří (volitelné)</b><br><small>Nahrajte nebo sem vložte (Ctrl+V) snímek dveří, např. z konfigurátoru ERKADO. V nabídce nahradí ilustrační obrázek.</small>' +
       (r.imgData ? '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.45rem"><img src="' + esc(r.imgData) + '" alt="" style="max-height:120px;max-width:80px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' +
-        '<span>✓ Vlastní obrázek je vložený.<br><button type="button" class="btn btn-outline" data-imgdel="' + i + '" style="padding:.2rem .7rem;margin-top:.3rem">✕ Odebrat obrázek</button></span></div>' : '') +
+        '<span>' + (r.imgLib === 'lib' ? '✓ Skutečný vzhled z knihovny (stejná konfigurace už byla vložena dřív).' : r.imgLib === 'ulozeno' ? '✓ Vlastní obrázek je vložený a uložený do knihovny – u stejné konfigurace se příště doplní sám.' : '✓ Vlastní obrázek je vložený.') + '<br><button type="button" class="btn btn-outline" data-imgdel="' + i + '" style="padding:.2rem .7rem;margin-top:.3rem">✕ Odebrat obrázek</button></span></div>' : '') +
       '<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile" style="display:block;margin-top:.45rem"></div>';
   }
   function vlastniImgSet(i, blob) {
     var r = st.rows[i]; if (!r || !blob) return;
     var fr = new FileReader();
-    fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r.imgData = j ? j.data : ''; renderRows(); }); };
+    fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r.imgData = j ? j.data : ''; r.imgLib = ''; renderRows(); if (r.imgData) vzUloz(r); }); };
     fr.readAsDataURL(blob);
+  }
+  /* knihovna skutečných vzhledů ERKADO (formulare.dvere.app/vzhled.php): klíč = otisk konfigurace, která je na dveřích vidět */
+  var VZ_URL = ((window.BDForm && window.BDForm.ENDPOINT) || 'https://formulare.dvere.app/odeslat.php').replace(/odeslat\.php.*$/, 'vzhled.php');
+  function vzPopis(r) {
+    var e = erkCfg(r); if (!e || !e.stav) return '';
+    var s = e.stav, sv = s.sv || {};
+    return [e.model_kod || '', e.provedeni || s.prov || '', 'dekor ' + s.dekor, s.dvou && s.dvou !== 'ne' ? 'dvoubarevné ' + s.dvou + ' ' + s.dekor2 : '', 'zárubeň ' + s.zar,
+      'strana ' + s.strana + ' ' + s.smer, 'sklo ' + (s.sklo || '') + ' / ' + (s.odstin || ''), 'kování ' + s.kov + (s.kov !== 'X' ? ' ' + s.kovB : ''),
+      s.madlo && s.madlo !== 'none' ? 'madlo ' + s.madlo + ' ' + s.madloD + ' ' + s.madloB : 'bez madla',
+      'světlíky ' + (sv.h ? 'H' : '') + (sv.l ? 'L' : '') + (sv.p ? 'P' : '') + (sv.h || sv.l || sv.p ? ' ' + (sv.sklo || '') : '-')].filter(Boolean).join(' | ').toLowerCase();
+  }
+  function vzKlic(r) {
+    var p = vzPopis(r); if (!p || !window.crypto || !crypto.subtle || !window.TextEncoder) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-1', new TextEncoder().encode(p)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }, function () { return ''; });
+  }
+  function vzUloz(r) {
+    if (!erkCfg(r) || !window.fetch) return;
+    var obr = r.imgData;
+    vzKlic(r).then(function (k) {
+      if (!k) return;
+      return fetch(VZ_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: k, popis: vzPopis(r), b64: obr }) })
+        .then(function (x) { return x.json(); }).then(function (j) { if (j && j.ok && r.imgData === obr) { r.imgLib = 'ulozeno'; r.vzK = k; renderRows(); } });
+    }).catch(function () {});
+  }
+  /* u položek z konfigurátoru bez vlastního obrázku zkusit knihovnu (jednou pro danou konfiguraci) */
+  function vzHledej() {
+    if (!window.fetch) return;
+    st.rows.forEach(function (r) {
+      if (!erkCfg(r) || r.imgData) return;
+      var p = vzPopis(r); if (!p || r.vzP === p) return; r.vzP = p;
+      vzKlic(r).then(function (k) {
+        if (!k) return;
+        return fetch(VZ_URL + '?k=' + k).then(function (x) { return x.ok ? x.json() : null; }).then(function (j) {
+          if (j && j.ok && /^data:image\/jpeg;base64,/.test(j.obr || '') && !r.imgData && vzPopis(r) === p) { r.imgData = j.obr; r.imgLib = 'lib'; r.vzK = k; renderRows(); }
+        });
+      }).catch(function () {});
+    });
   }
   document.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('[data-i]'); if (b && b.dataset.i !== undefined) imgRow = +b.dataset.i; });
   document.addEventListener('click', function (e) {
-    var d = e.target.closest && e.target.closest('[data-imgdel]'); if (d) { var r = st.rows[+d.dataset.imgdel]; if (r) { r.imgData = ''; renderRows(); } return; }
+    var d = e.target.closest && e.target.closest('[data-imgdel]'); if (d) { var r = st.rows[+d.dataset.imgdel]; if (r) { r.imgData = ''; r.imgLib = ''; renderRows(); } return; }
     var b = e.target.closest && e.target.closest('[data-imgbox]'); if (b) imgRow = +b.dataset.imgbox;
   });
   document.addEventListener('paste', function (e) {
@@ -381,7 +420,7 @@
         '<label class="pq-f">Sleva na položku (Kč)<input data-i="' + i + '" data-f="sleva" inputmode="numeric" value="' + (r.sleva || '') + '"></label></div>' +
         '<p style="margin:.4rem 0 0" data-tot="' + i + '">Za položku: <b>' + kc(tot) + '</b></p></div>';
     }).join('');
-    sums();
+    sums(); vzHledej();
   }
   function totals() {
     if (st.rozp) { var c = Math.max(0, int(fv('rozp_cena'))); return { sub: c, sleva: 0, total: c }; }
