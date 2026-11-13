@@ -314,6 +314,35 @@
         (r.cenaRuc ? ' <button type="button" class="btn btn-outline" data-kreprice="' + i + '" style="padding:.15rem .6rem">Použít cenu z ceníku</button>' : '') + '</p>' : '<p class="pq-help">Vyberte kliku.</p>') +
       '<p style="margin:.4rem 0 0" data-tot="' + i + '">Za položku: <b>' + kc(tot) + '</b></p></div>';
   }
+  /* skutečný vzhled dveří: vlastní obrázek položky (nahrát, přetáhnout nebo vložit Ctrl+V – např. snímek z konfigurátoru ERKADO); v PDF nahradí ilustrační obrázek */
+  var imgRow = -1;
+  function vlastniImgHtml(r, i) {
+    return '<div class="pq-f" data-imgbox="' + i + '" style="margin-top:.5rem;padding:.6rem .7rem;border:1.5px dashed var(--gray-200);border-radius:10px">' +
+      '<b>Skutečný vzhled dveří (volitelné)</b><br><small>Nahrajte nebo sem vložte (Ctrl+V) snímek dveří, např. z konfigurátoru ERKADO. V nabídce nahradí ilustrační obrázek.</small>' +
+      (r.imgData ? '<div style="display:flex;gap:.7rem;align-items:center;margin-top:.45rem"><img src="' + esc(r.imgData) + '" alt="" style="max-height:120px;max-width:80px;border:1px solid var(--gray-200);border-radius:8px;background:#fff;object-fit:contain">' +
+        '<span>✓ Vlastní obrázek je vložený.<br><button type="button" class="btn btn-outline" data-imgdel="' + i + '" style="padding:.2rem .7rem;margin-top:.3rem">✕ Odebrat obrázek</button></span></div>' : '') +
+      '<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile" style="display:block;margin-top:.45rem"></div>';
+  }
+  function vlastniImgSet(i, blob) {
+    var r = st.rows[i]; if (!r || !blob) return;
+    var fr = new FileReader();
+    fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r.imgData = j ? j.data : ''; renderRows(); }); };
+    fr.readAsDataURL(blob);
+  }
+  document.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('[data-i]'); if (b && b.dataset.i !== undefined) imgRow = +b.dataset.i; });
+  document.addEventListener('click', function (e) {
+    var d = e.target.closest && e.target.closest('[data-imgdel]'); if (d) { var r = st.rows[+d.dataset.imgdel]; if (r) { r.imgData = ''; renderRows(); } return; }
+    var b = e.target.closest && e.target.closest('[data-imgbox]'); if (b) imgRow = +b.dataset.imgbox;
+  });
+  document.addEventListener('paste', function (e) {
+    var it = (e.clipboardData && e.clipboardData.items) || [], blob = null;
+    for (var x = 0; x < it.length; x++) if (it[x].kind === 'file' && /^image\//.test(it[x].type)) { blob = it[x].getAsFile(); break; }
+    if (!blob) return;
+    var dvere = []; st.rows.forEach(function (r, i) { if (r.typ !== 'kovani') dvere.push(i); });
+    var i = dvere.indexOf(imgRow) >= 0 ? imgRow : (dvere.length === 1 ? dvere[0] : -1);
+    if (i < 0) return;                       /* víc položek a žádná vybraná – nehádat */
+    e.preventDefault(); vlastniImgSet(i, blob);
+  });
   function renderRows() {
     st.rows.forEach(function (r) { if (r.typ === 'kovani') kovCena(r); });
     $('#nbRows').innerHTML = st.rows.map(function (r, i) {
@@ -331,7 +360,7 @@
         /* odstíny jako obrázky (jako v poptávce): skladové interiéry – celé dveře v dekoru; dveře do domu – vzorky dekorů ERKADO */
         var swHtml = cobj && cobj[5] && cobj[5].length ? '<div class="pq-f" style="margin-top:.2rem">Odstín / dekor – vyberte</div><div class="nb-sw">' + cobj[5].map(function (d) { return '<button type="button" data-sw="' + i + '" data-v="' + esc(d[0]) + '" class="' + (r.odstin === d[0] ? 'on' : '') + '"><img src="aplikace/' + esc(d[1]) + '" alt="" loading="lazy">' + esc(d[0]) + '<br><span class="nb-sk">skladem</span></button>'; }).join('') + '</div>'
           : st.kat === 'dum' && r.cat && r.cat !== '__jiny' ? '<div class="pq-f" style="margin-top:.2rem">Dekory ERKADO (orientačně – dostupnost podle modelu ověřte v konfigurátoru)</div><div class="nb-sw tex">' + ERK_DEKORY.map(function (d) { return '<button type="button" data-sw="' + i + '" data-v="' + esc(d[1]) + '" class="' + (r.odstin === d[1] ? 'on' : '') + '"><img src="konfigurator-erkado/img/dekory/' + esc(d[0]) + '.jpg" alt="" loading="lazy">' + esc(d[1]) + '</button>'; }).join('') + '</div>' : '';
-        var curHtml = cobj ? '<div class="nb-cur"><img src="' + esc(r.img || ('aplikace/' + cobj[1])) + '" alt=""><div><b>' + esc(cobj[0]) + '</b>' + (st.kat === 'interier' ? ' ' + (cobj[4] ? '<span class="nb-sk">SKLADEM</span>' : '<span class="nb-ob">na objednávku</span>') : '') + '<br><small>' + esc(st.kat === 'interier' ? cobj[2] + ' · ' + cobj[3] : cobj[3]) + '</small><br><button type="button" class="btn btn-outline" data-catpick="' + i + '" style="padding:.25rem .8rem;margin-top:.3rem">🖼 Změnit model</button></div></div>'
+        var curHtml = cobj ? '<div class="nb-cur"><img src="' + esc(r.imgData || r.img || ('aplikace/' + cobj[1])) + '" alt=""><div><b>' + esc(cobj[0]) + '</b>' + (st.kat === 'interier' ? ' ' + (cobj[4] ? '<span class="nb-sk">SKLADEM</span>' : '<span class="nb-ob">na objednávku</span>') : '') + '<br><small>' + esc(st.kat === 'interier' ? cobj[2] + ' · ' + cobj[3] : cobj[3]) + '</small><br><button type="button" class="btn btn-outline" data-catpick="' + i + '" style="padding:.25rem .8rem;margin-top:.3rem">🖼 Změnit model</button></div></div>'
           : '<p style="margin:.4rem 0 .6rem"><button type="button" class="btn btn-primary" data-catpick="' + i + '">🖼 Vybrat model podle obrázků</button> <small>nebo ze seznamu:</small></p>';
         sel = curHtml + '<label class="pq-f">' + (cobj ? 'Model (seznam)' : 'Model z katalogu') + '<select data-i="' + i + '" data-f="cat"><option value="">– vybrat model –</option>' + groups + '<option value="__jiny"' + (r.cat === '__jiny' ? ' selected' : '') + '>Jiné dveře (vyplním ručně)</option></select></label>' +
           (r.hint && !erkCfg(r) ? '<p class="pq-help" style="margin:.2rem 0 .6rem">' + esc(r.hint) + '</p>' : '') + erkHtml(r, i) +
@@ -340,7 +369,7 @@
           '<label class="pq-f">Otevírání<input data-i="' + i + '" data-f="otev" value="' + esc(r.otev) + '" placeholder="např. levé"></label>' +
           '<label class="pq-f">Zárubeň<input data-i="' + i + '" data-f="zarub" value="' + esc(r.zarub) + '" placeholder="např. obložková, dekor shodný s dveřmi"></label>' + tlHtml(r, i) +
           '<label class="pq-f">Kování<input data-i="' + i + '" data-f="kov" value="' + esc(r.kov) + '" placeholder="např. klika Hera nerez"></label>' +
-          '<label class="pq-f">Vlastní obrázek (volitelné)<input type="file" accept="image/*" data-i="' + i + '" data-f="imgfile"></label></div>' + montHtml(r, i);
+          '</div>' + vlastniImgHtml(r, i) + montHtml(r, i);
       }
       return '<div class="pq-block-in" style="border:1.5px solid var(--gray-200);border-radius:12px;padding:1rem;margin-bottom:.8rem;overflow:hidden"><strong>Položka ' + (i + 1) + '</strong> ' + thumb +
         '<button type="button" class="btn btn-outline" data-del="' + i + '" style="float:right;padding:.3rem .8rem">Odebrat</button>' +
@@ -405,9 +434,7 @@
       autoPrice(r4); renderRows(); return;
     }
     if (t.dataset && t.dataset.f === 'imgfile' && t.files && t.files[0]) {
-      var r3 = st.rows[+t.dataset.i], fr = new FileReader();
-      fr.onload = function () { toJpeg(fr.result, 900).then(function (j) { r3.imgData = j ? j.data : ''; renderRows(); }); };
-      fr.readAsDataURL(t.files[0]);
+      vlastniImgSet(+t.dataset.i, t.files[0]);
     }
   });
   document.addEventListener('input', function (e) {

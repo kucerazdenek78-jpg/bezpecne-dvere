@@ -44,7 +44,7 @@ window.ERKADO = {
     D: { h88: [2062, 2527], h78: [2062, 2461], t78: [2062, 2461], t64: [1796, 2328] }
   },
   /* str. 67: kování Erkado CERTUS (inox / černá – stejná cena) */
-  certus: { klika: 1064, stitekHorni: 532, setMadlo: 865, horniDeska: 466 },
+  certus: { klika: 1064, klikaCerna: 133, stitekHorni: 532, setMadlo: 865, horniDeska: 466 },   /* klikaCerna: příplatek za černý odstín kliky HAGA (konfigurace ERKADO 13. 11. 2026: „Odstín kliky Černá 133 Kč“) */
   /* str. 69: madla [inox, černá] podle délky (cm) */
   madla: [
     { id: 'K35', nazev: 'Madlo K35', d: { 180: [3791, 4921], 160: [3591, 4655], 120: [3259, 4256], 60: [2727, 3591] } },

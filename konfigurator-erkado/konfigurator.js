@@ -237,6 +237,7 @@
     else if (st.kov === 'A') {
       L.push(['Sada vložek pro otevírání A (' + cn + ')', E.sady.A[k][c]]);
       L.push(['Klika HAGA RC2 (' + (c ? 'černá' : 'inox') + ')', E.certus.klika]);
+      if (c && E.certus.klikaCerna) L.push(['Černý odstín kliky HAGA', E.certus.klikaCerna]);
     } else if (st.kov === 'C' || st.kov === 'D') {
       L.push(['Sada vložek pro otevírání ' + st.kov + ' (' + cn + ')', E.sady[st.kov][k][c]]);
       L.push(['Erkado CERTUS set madlo + štíhlá deska (' + (c ? 'černá' : 'inox') + ')', E.certus.setMadlo]);
@@ -403,7 +404,7 @@
     $('kfKov').innerHTML = ['B', 'A', 'C', 'D', 'E', 'F', 'X'].map(function (id) {
       var dis = ol && (id === 'B' || id === 'D' || id === 'F'), price, MM = E.madloMadlo;
       if (id === 'B') price = '<em class="free">v ceně kompletu</em>';
-      else if (id === 'A') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + E.certus.klika) + '</em>';
+      else if (id === 'A') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + E.certus.klika + (c ? (E.certus.klikaCerna || 0) : 0)) + '</em>';
       else if (id === 'C') price = '<em>bez kování + ' + kc(E.sady.C[k][c] + E.certus.setMadlo) + ' + madlo</em>';
       else if (id === 'D') price = '<em>bez kování + ' + kc(E.sady.D[k][c] + E.certus.setMadlo + E.certus.horniDeska) + ' + madlo</em>';
       else if (id === 'E') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + MM.slimZnak + MM.tlacitka2 + MM.elZamek + MM.napajeni) + ' + 2 madla + samozavírač</em>';
