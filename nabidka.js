@@ -746,7 +746,7 @@
           h += Math.max(1, ls.length) * 4.3 + 1.1; return [s[0], ls];
         });
         var pl = []; if (p.popis) { font('normal', 8.8); pl = doc.splitTextToSize(p.popis, wTxt); h += pl.length * 4 + 2; }
-        h += 11 + (p.sleva ? 4.5 : 0);
+        h += 16 + (p.sleva ? 4.5 : 0);   /* místo na cenu položky dole (2 řádky) – dřív 11 mm a dlouhý popis / poslední parametr se s cenou překrýval */
         /* poznámka pod obrázkem: katalogový obrázek je jen ilustrační (vlastní fotka z nabídky se nepoznamenává) */
         var ilu = hasImg && !(r && r.imgData); font('normal', 6.4); var iluL = ilu ? doc.splitTextToSize('Obrázek je ilustrační – kování, barva a strana otevírání mohou být jiné.', IW) : [], iluH = iluL.length ? iluL.length * 2.7 + 2 : 0;
         var imgCol = hasImg ? IH + capH + (im[1] || (r && r.shadeImg) ? 14 : 2) + iluH : 0, cardH = Math.max(h, imgCol) + 3;

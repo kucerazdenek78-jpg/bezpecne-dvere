@@ -58,6 +58,8 @@
       document.getElementById('kfNbErr').textContent = '';
       document.getElementById('kfNbCena').textContent = kc(r.sDph) + ' vč. ' + r.rate + ' % DPH';
       document.getElementById('kfNbSub').textContent = 'bez DPH ' + kc(r.bez) + (st.montaz ? ' (vč. montáže ' + kc(E.montaz.cena) + ')' : ' · bez montáže') + ' · doprava se počítá v nabídce';
+      /* před převzetím je vidět, jaké kování a barva se do nabídky propíše (ať nezůstane omylem výchozí inox / nikl) */
+      try { var kk = KF.collect().konfigurace || {}; document.getElementById('kfNbSub').textContent += ' · Kování: ' + [kk.kovani, kk.madlo && kk.madlo !== 'bez madla' ? kk.madlo : ''].filter(Boolean).join('; '); } catch (e) {}
     }
     var t = null; function pozdeji() { clearTimeout(t); t = setTimeout(obnov, 30); }
     document.addEventListener('click', pozdeji, true); document.addEventListener('change', pozdeji, true); document.addEventListener('input', pozdeji, true);
