@@ -86,6 +86,7 @@
     var fs = $('#nbRows').parentNode, box = document.createElement('div');
     box.innerHTML = '<div id="nbRozpVolba" class="pq-chips" style="margin-bottom:1rem" hidden>' +
       '<label class="pq-opt pq-chip"><input type="radio" name="zadani" value="polozky" checked>Položky ručně</label>' +
+      '<button type="button" class="pq-opt pq-chip" id="nbTral" style="font:inherit;cursor:pointer" hidden>🚪 Detailní konfigurátor ERKADO</button>' +
       '<label class="pq-opt pq-chip"><input type="radio" name="zadani" value="rozpocet">Rozpočet z jiného programu (PDF)</label></div>' +
       '<div id="nbRozp" hidden>' +
       '<p class="pq-help" style="margin:0 0 .8rem">Nahrajte rozpočet z programu jako PDF. Zákazník dostane jedno PDF: naše úvodní strana (zákazník, předmět, cena, ' + (OBJ ? 'platba, smluvní ujednání a podpisy' : 'podmínky nabídky') + ') a za ní celý rozpočet.</p>' +
@@ -103,6 +104,7 @@
     ensureRozpUI();
     if (!rozpOk()) st.rozp = false;
     $('#nbRozpVolba').hidden = !rozpOk() || st.rows.length > 0;
+    var tb = $('#nbTral'); if (tb) tb.hidden = st.kat !== 'dum';   /* detailní konfigurátor ERKADO podle TRALu (kartotéka) – jen dveře do domu */
     var r = document.querySelector('input[name="zadani"][value="' + (st.rozp ? 'rozpocet' : 'polozky') + '"]'); if (r) r.checked = true;
     $('#nbRozp').hidden = !st.rozp;
     $('#nbRows').hidden = st.rozp;
@@ -276,7 +278,25 @@
     if (hasFak() && dphRezim() !== 'pdp') { var rb = form.querySelector('input[name="dph_rezim"][value="' + ev.data.data.dph_sazba + '"]'); if (rb) { rb.checked = true; fakToggle(); } }
     renderRows();
   });
+  /* detailní konfigurátor ERKADO podle TRALu (15. 11. 2026): běží v kartotéce (kartoteka.dvere.app/erkado-test.php) v novém okně;
+     po „Vytvořit nabídku“ pošle konfiguraci zpět (postMessage) ve stejném tvaru jako poptávka z konfigurátoru ERKADO → položka se doplní sem.
+     Obrázky zvenčí / zevnitř si položka dotáhne z knihovny vzhledu (vzHledej). */
+  var TRAL_ORIGIN = 'https://kartoteka.dvere.app';
+  window.addEventListener('message', function (ev) {
+    if (ev.origin !== TRAL_ORIGIN || !ev.data || ev.data.typ !== 'bd-erkado-tral') return;
+    var o = ev.data.data; if (!o || !o.konfigurace || !isFinite(+o.cena_s_dph) || st.kat !== 'dum') return;
+    st.rozp = false;
+    var r = st.rows.length ? st.rows[0] : null; if (!r) { r = newRow(); st.rows.push(r); }
+    var rk = String(o.konfigurace.rada || '').toUpperCase(); if (rk && catFind(rk)) applyCat(r, rk); else r.cat = '__jiny';
+    applyErk(r, { model: o.model, model_kod: o.model_kod, odstin: o.odstin, provedeni: o.provedeni, konfigurace: o.konfigurace,
+      polozky: (o.polozky || []).map(function (p3) { return [p3.co, int(p3.priplatek)]; }), cena_bez_dph: int(o.cena_bez_dph), dph_sazba: int(o.dph_sazba), cena_s_dph: int(o.cena_s_dph),
+      montaz: !!o.montaz, info: ['Spočítáno v detailním konfigurátoru ERKADO (TRAL) – úpravy dělejte znovu tam.'], obrazek: 'konfigurator-erkado/img/typy/' + String(o.model_kod || '').replace(/^erkado-/, '') + '.jpg', stav: o.kf_stav || null });
+    if (hasFak() && dphRezim() !== 'pdp') { var rb = form.querySelector('input[name="dph_rezim"][value="' + int(o.dph_sazba) + '"]'); if (rb) { rb.checked = true; fakToggle(); } }
+    try { ev.source.postMessage({ typ: 'bd-erkado-tral-ok' }, ev.origin); } catch (x) {}
+    renderKat(); renderRows(); try { window.focus(); } catch (x) {}
+  });
   document.addEventListener('click', function (e) {
+    if (e.target.closest('#nbTral')) { window.open(TRAL_ORIGIN + '/erkado-test.php?nab=1', 'bdErkadoTral'); return; }
     var b = e.target.closest('[data-erk]'); if (b) { openErk(+b.getAttribute('data-erk')); return; }
     var c = e.target.closest('[data-erkcena]'); if (c) { var r = st.rows[+c.getAttribute('data-erkcena')], x = erkCfg(r); if (x) { r.cena = x.cena_s_dph; r.cenaRuc = false; renderRows(); } }
   });
