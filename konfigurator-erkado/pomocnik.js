@@ -18,6 +18,8 @@
   css.textContent = '#pomWebBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;background:#123d27;color:#fff;font:600 14px/1 system-ui,Arial,sans-serif;padding:10px 16px 10px 10px;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:pointer}'
     + '#pomWebBtn svg{width:34px;height:34px;background:#fff;border-radius:50%;padding:5px;box-sizing:border-box}#pomWebBtn small{display:block;font-weight:400;font-size:11px;opacity:.85;margin-top:2px}'
     + '@media (max-width:980px){#pomWebBtn{bottom:calc(76px + env(safe-area-inset-bottom,0px))}#pomWebBtn small{display:none}}'
+    /* konfigurátor na telefonu: tlačítko v pravém horním rohu (v liště vedle loga), ať nepřekáží dole u ceny a tlačítka Vyzkoušet na fotce (17. 11. 2026) */
+    + '@media (max-width:980px){#pomWebBtn.pw-top{top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;z-index:1200;padding:6px 13px 6px 6px;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.22)}#pomWebBtn.pw-top svg{width:30px;height:30px}}'
     + '@media (hover:hover){#pomWebBtn:hover{background:#1b5a39}}'
     + '#pomWeb{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:80;width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 32px));display:flex;flex-direction:column;background:#fff;color:#1b2430;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);overflow:hidden;font:15px/1.45 system-ui,Arial,sans-serif}'
     + '#pomWeb[hidden]{display:none}'
@@ -40,6 +42,7 @@
   var btn = document.createElement('button');
   btn.id = 'pomWebBtn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Otevřít pomocníka AI pro výběr dveří');
   btn.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="9" y="4" width="22" height="32" rx="2" fill="#123d27"/><rect x="12" y="7" width="16" height="26" rx="1" fill="#2f7d52"/><circle cx="25" cy="21" r="1.8" fill="#fff"/><text x="20" y="19" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,Arial,sans-serif" fill="#fff">AI</text></svg><span>Poradí s výběrem<small>Pomocník AI</small></span>';
+  if (hasKF) btn.className = 'pw-top';
   document.body.appendChild(btn);
 
   var box = null, token = ss(KEY), hist = [];
