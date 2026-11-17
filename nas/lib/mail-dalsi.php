@@ -1,5 +1,6 @@
 <?php
-// Další veselé HTML e-maily zákazníkům (17. 11. 2026, přání Zdeňka): poděkování za poptávku a připomínky nabídky, na kterou nikdo nereaguje.
+// Další veselé HTML e-maily zákazníkům (17. 11. 2026, přání Zdeňka): poděkování za poptávku, připomínky nabídky, na kterou nikdo nereaguje,
+// připomínky servisu a záruky a kopie předávacího listu (animace s buldočkem).
 // Volá mailh_uprav (lib/mail-html.php) před obecnou šablonou; vrací true, když e-mail poznala a upravila.
 // Texty připomínek zůstávají z lib/terminy.php, tady se jen převedou do HTML: odkazy „• text: adresa“ na tlačítka + animace.
 // Patří na NAS do /docker/formulare/app/lib/mail-dalsi.php.
@@ -53,6 +54,28 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     if ($kolo < 3) $o .= mailh_video($web, 'buldok-ceka', 'Krátké video: buldoček leží u telefonu, který nezvoní', '<b>Takhle u nás Vaše nabídka čeká na zprávu.</b> Telefon mlčí, pes vzdychá. Stačí pár slov a oba ožijí.');
     if ($klik !== '') $o .= mailh_ramecek('Stačí jedno kliknutí', $klik);
     $htmlTelo = mailh_sablona("Nabídka č. $cislo", $kolo === 1 ? 'Dorazila k Vám naše nabídka?' : ($kolo === 2 ? 'Platnost ceny se chýlí ke konci' : 'Poslední zpráva, slibujeme'), $o);
+    return true;
+  }
+  // 3) připomínky servisu a záruky (nabidky.php, udrzba-pripominky.php) a kopie předávacího listu po podpisu na displeji (posli_predani_kopii):
+  //    text e-mailu beze změny, jen šablona + animace s buldočkem pod úvodním odstavcem. PDF v příloze se nemění.
+  $bul = [
+    ['~^Prodloužení záruky na Vaše dveře – objednávka (.+)$~u', 'Záruku můžete ještě prodloužit', 'buldok-zaruka', 'Krátké video: buldoček v přilbě a s medailí hlídá dveře',
+      '<b>Hlídač záruky je ve službě.</b> Medaili už má, teď hlídá i termín. Prodloužit záruku jde jen do data uvedeného výše.'],
+    ['~^Roční kontrola požárního uzávěru – objednávka (.+)$~u', 'Rok utekl. Čas na kontrolu dveří', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
+      '<b>Servisní technik je připraven.</b> Šroubovák má, přilbu taky. Samotnou kontrolu raději necháme na dvounohých kolezích.'],
+    ['~^Čas na údržbu dveří – objednávka (.+)$~u', 'Čas na údržbu dveří', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
+      '<b>Náš technik už si šroubovák nachystal.</b> Vám bude stačit pár minut, hadřík a trocha maziva.'],
+    ['~^Předávací a záruční list – objednávka (.+)$~u', 'Dveře jsou Vaše. Ať dobře slouží!', 'buldok-predani', 'Krátké video: buldoček v přilbě přináší klíče od nových dveří',
+      '<b>Klíče předány.</b> Náš vedoucí předávky je pouštěl z tlamy jen nerad. Dveře jsou teď Vaše.'],
+  ];
+  foreach ($bul as [$re, $nadpis, $soubor, $alt, $popis]) {
+    if (!preg_match($re, $predmet, $m)) continue;
+    if ($htmlTelo !== '') return false;                                       // hotové HTML se nemění
+    $bloky = preg_split('/\n{2,}/', trim(preg_replace('/^[ \t]+•/mu', '•', str_replace("\r", '', $telo))));
+    $n = (count($bloky) > 2 && preg_match('~^Dobrý den~u', $bloky[0])) ? 2 : 1;
+    if (count($bloky) > $n + 1 && substr(rtrim($bloky[$n - 1]), -1) === ':') $n++;   // úvod končí dvojtečkou → výčet patří k němu
+    $htmlTelo = mailh_sablona('Objednávka č. ' . trim($m[1]), $nadpis,
+      mailh_text_html(implode("\n\n", array_slice($bloky, 0, $n))) . mailh_video($web, $soubor, $alt, $popis) . mailh_text_html(implode("\n\n", array_slice($bloky, $n))));
     return true;
   }
   return false;
