@@ -47,6 +47,7 @@ function mailh_formular(array $cfg, string $predmet, string $telo, array $obr = 
       continue;
     }
     if (preg_match('~^Moje dveře~u', $k) && $url($v) !== '') { $moje .= '<div style="margin:0 0 6px"><b>Vaše dveře v mobilu:</b> záruka, návod na údržbu a servis na jednom místě.</div><div>' . $btn($url($v), 'Otevřít Moje dveře') . '</div>'; continue; }
+    if (preg_match('~^Aplikace Moje dveře~u', $k) && $nab && preg_match('~^(.*?)\s*Podrobnosti:\s*(https?://\S+)\s*$~us', $v, $am)) { $moje .= '<div style="margin:0 0 6px">' . mailh_h($am[1]) . '</div><div>' . $btn(rtrim($am[2], '.,;'), 'Podívat se na aplikaci') . '</div>'; continue; }
     if (preg_match('~^Aplikace Moje dveře~u', $k)) { $moje .= '<div style="font-size:14px;color:#33463a;margin-top:8px">' . $link($v) . '</div>'; continue; }
     $ostatni .= '<tr><td valign="top" style="padding:5px 12px 5px 0;color:#4f6a5b;font-size:14px;width:38%">' . mailh_h($k) . '</td><td valign="top" style="padding:5px 0;font-size:14.5px">' . $link($v) . '</td></tr>';
   }
@@ -55,6 +56,8 @@ function mailh_formular(array $cfg, string $predmet, string $telo, array $obr = 
         : ($uvod !== '' ? $link(mb_strtolower(mb_substr($uvod, 0, 1)) . mb_substr($uvod, 1)) : 'děkujeme za zájem. V příloze posíláme cenovou nabídku v PDF.')) . '</p>';
   if ($obj) $o .= mailh_video($web, 'zlodeji-to-vzdali', 'Krátké video: dva zloději stojí bezradně před bezpečnostními dveřmi a odcházejí',
       '<b>Mezitím někde na poradě zlodějů:</b> ' . ($prijmeni !== '' ? 'u jména „' . mailh_h($prijmeni) . '“ si právě udělali křížek.' : 'Vaši adresu si právě škrtli ze seznamu.') . ' Prý je to v tahu, tam už nejdou. Nám jich líto není.');
+  if ($nab) $o .= mailh_video($web, 'buldok-kontrolor', 'Krátké video: šedý francouzský buldoček v přilbě si prohlíží dveře ve vzorkovně',
+      '<b>Výstupní kontrola proběhla.</b> Nabídku Vám očichal náš nejpřísnější kontrolor a neměl námitek. Za podpis tlapkou se omlouváme, propisku neudrží.');
   if ($platba !== '') $o .= mailh_ramecek($obj ? 'Platba zálohy' : 'Cena', $platba . ($dulezite !== '' ? '<div style="font-size:13px;line-height:1.45;color:#7c2d0c;margin-top:8px">' . mailh_h($dulezite) . '</div>' : ''));
   if ($polozky !== '') $o .= '<div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#c2410c;font-weight:bold;margin:4px 0 6px">' . ($obj ? 'Co jste si objednali' : 'Co Vám nabízíme') . '</div>' . $polozky;
   if ($ostatni !== '') $o .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 14px;border-top:1px solid #e3ebe6">' . $ostatni . '</table>';

@@ -914,7 +914,7 @@
     }
     return [['_subject', 'Cenová nabídka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
       ['Dobrý den', 'děkujeme za zájem. V příloze posíláme cenovou nabídku v PDF' + (d.nabidka_do ? ' (platí do ' + new Date(d.nabidka_do).toLocaleDateString('cs-CZ') + ')' : '') + '. Pokud Vám vyhovuje, ozvěte se nám a převedeme ji na objednávku. Dotazy: ' + CC + ' nebo +420 725 559 235.'],
-      ['Nabídka', d.obj_cislo], ['Celkem vč. DPH', kc(d.cena_celkem)]].concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
+      ['Nabídka', d.obj_cislo], ['Celkem vč. DPH', kc(d.cena_celkem)]].concat((d.kategorie === 'byt' || d.kategorie === 'dum') && bonusOn() ? [['Aplikace Moje dveře v ceně', 'K novým dveřím od nás dostanete zdarma aplikaci Moje dveře: přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady a připomínka roční kontroly. Podrobnosti: ' + new URL('moje-dvere.html', location.href).href]] : []).concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
   }
   function internalList(d) {
     return [['_subject', (OBJ ? 'Objednávka ' : 'Nabídka ') + d.obj_cislo + ' (interní) – ' + KAT[d.kategorie] + ' – ' + d.prijmeni + (d.mesto ? ', ' + d.mesto : '')],
