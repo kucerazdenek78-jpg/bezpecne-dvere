@@ -1057,7 +1057,7 @@
     else if (konec && konec < t)
       txt = 'Hele, já to páníčkovi vyřídím. Dveře dělá už 30 let a fakt jim rozumí, takže vám poradí, co s tím, a řekne na rovinu, co by to stálo.';
     else
-      txt = 'Hele, já to páníčkovi vyřídím. On je dobrý, fakt tomu rozumí, dělá to už 30 let. A je i na mě hodný, občas mi dá párek nebo šunku. S tím se dá vyjít vždycky.';
+      txt = 'Hele, v klidu, já to páníčkovi vyřídím. Dveře dělá už 30 let a fakt jim rozumí. Mně taky občas poradí, když si nevím rady s fenkou odvedle. Jsme rodinná firma, žádný kolos, takže se vám ozve člověk, ne automat.';
     return '<div class="falko"><img src="../userFiles/maskot/buldok-servis.webp" width="398" height="480" alt=""><div><p>' + txt + '</p><small>Falko, maskot Bezpečných dveří</small></div></div>';
   }
   function svOk(j, falko) { return '<h2>Odesláno ✓</h2>' + (falko || '') + '<p>Číslo požadavku <b>' + esc(j.cislo) + '</b>. Stav uvidíte přímo v aplikaci u svých dveří – jakmile požadavek přijmeme a domluvíme termín návštěvy, zobrazí se tam.</p><button class="b wide" onclick="this.closest(\'dialog\').close()">Zavřít</button>'; }
@@ -1069,14 +1069,14 @@
   function openService(dv) {
     var tok = doorToken(dv);
     if (tok) {
-      openDlg('<h2>Nahlásit závadu</h2><p class="small">Údaje o objednávce a adresu už máme z kartotéky – stačí popsat, co se děje. Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
+      openDlg('<h2>Nahlásit závadu</h2><p class="small">Údaje o objednávce a adresu už máme z kartotéky – stačí popsat, co se děje. Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma). Placený servis a zjevně neoprávněná reklamace: doprava 15 Kč/km a práce technika 800 Kč/h, ceny bez DPH (reklamační řád čl. 7.2).</p><form class="form" id="svForm" novalidate>' +
         '<label>Co se děje? *<textarea name="popis" required minlength="5" placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
         '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactLite(kontakt()) +
         '<label>Kdy se vám hodí návštěva<input name="termin" placeholder="např. odpoledne po 15. hod."></label>' + CONSENT +
         '<button class="b pri wide" type="submit">Odeslat</button><p class="msg" role="status"></p></form>');
       return submitApi($('#svForm'), tok, 'zavada', function (o) { return o.popis; }, function (j) { return svOk(j, falkoServis(dv)); });
     }
-    openDlg('<h2>Nahlásit závadu</h2><p class="small">Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma).</p><form class="form" id="svForm" novalidate>' +
+    openDlg('<h2>Nahlásit závadu</h2><p class="small">Dveře při předání seřizujeme a promazáváme. Nové seřízení, když dveře drhnou nebo nezapadají, je zdarma do 6 měsíců od předání, potom je placené (oprava vady je v záruce vždy zdarma). Placený servis a zjevně neoprávněná reklamace: doprava 15 Kč/km a práce technika 800 Kč/h, ceny bez DPH (reklamační řád čl. 7.2).</p><form class="form" id="svForm" novalidate>' +
       '<label>Co se děje? *<textarea name="popis" required placeholder="např. dveře drhnou nahoře, klíč jde ztuha, …"></textarea></label>' +
       '<label>Fotky (až 3)<input type="file" name="fotky" accept="image/*" multiple></label>' + contactFields(kontakt(), true) +
       '<label>Kdy se vám hodí návštěva<input name="termin" placeholder="např. odpoledne po 15. hod."></label>' + CONSENT +
