@@ -826,7 +826,7 @@
       if (d.poznamka) { section('Poznámka'); para(d.poznamka, 9.5, [15, 42, 28], 4.4); }
 
       /* bonus Moje dveře */
-      if (d.kategorie === 'byt' && bonusOn()) {
+      if ((d.kategorie === 'byt' || d.kategorie === 'dum') && bonusOn()) {   /* od 17. 11. 2026 i dveře do domu (Zdeněk: stejně jako u dveří do bytu) */
         ensure(15);
         doc.setFillColor.apply(doc, PALE); doc.setDrawColor.apply(doc, LINE); doc.roundedRect(M, y - 3.5, CW, 11, 2, 2, 'FD');
         font('bold', 9.5, GREEN); doc.text('V ceně: aplikace Moje dveře', M + 4, y + 0.6);
@@ -904,6 +904,11 @@
         ['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.'],
         ['Objednávka', d.obj_cislo], ['Celkem ' + dphTxt(), kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
         ['Doplatek po montáži', kc(d.doplatek) + ' hotově']].concat(OBJ && d.zaloha > 0 && window.BDPlatba ? [['Důležité', window.BDPlatba.podminka(d.zaloha_label)]] : []);
+      /* dveře do domu: odkaz do aplikace Moje dveře (záruka, servis) a bonus – stejně jako u objednávky dveří do bytu (poptavka-dvere-nova.js) */
+      if (d.kategorie === 'dum') {
+        if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) lo.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
+        if (bonusOn()) lo.push(['Aplikace Moje dveře v ceně', 'K Vašim dveřím patří zdarma aplikace Moje dveře: přehled dveří a záruky, návod na údržbu a vlastní servis, hlášení závady a připomínka roční kontroly. Podrobnosti: ' + new URL('moje-dvere.html', location.href).href]);
+      }
       return lo.concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
     }
     return [['_subject', 'Cenová nabídka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
