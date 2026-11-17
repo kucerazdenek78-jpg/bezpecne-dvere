@@ -41,7 +41,7 @@
   if (DD.interier) VIZ.interier = { cat: 'int', name: 'Interiérové dveře', label: 'Provedení', noFrame: true, def: 0,
     shades: DD.interier.slice().sort(function (a, b) { return (b[4] ? 1 : 0) - (a[4] ? 1 : 0); }).map(function (x) { return [x[0], x[1], x[2], x[3], x[4], x[5]]; }),
     web: '../dvere-do-interieru.html', ask: '../dvere-do-interieru.html#poptavka', priceNote: 'Cena komplet se zárubní, bez kování a bez DPH.',
-    note: 'Nejdřív jsou dveře skladem – u nich si vyberete i odstín. Na fotce nahradíte křídlo; zárubeň zůstává vaše.' };
+    note: 'Nejdřív jsou dveře skladem. U každých dveří si pod výběrem zvolíte dekor podle katalogu – u skladových je to fotka z katalogu, u dveří na objednávku orientační barva. Na fotce nahradíte křídlo; zárubeň zůstává vaše.' };
   VIZ.premium60.cat = VIZ.extreme54.cat = 'byt';
   /* konfigurátor ERKADO (../konfigurator-erkado.html) → #viz?m=konf: přesně nakonfigurované dveře (dekor, vzor, světlíky, strana).
      Předává se přes localStorage (stejná doména); výsledek se vrací zpět do konfigurátoru a přiloží se k poptávce. */
@@ -53,7 +53,29 @@
   function SH() { return VIZ[vizModel].shades; }
   /* odstíny interiérových dveří (6. pole provedení): [[název, obrázek], …] */
   function DEC(i) { var x = SH()[i == null ? shadeIdx : i]; return x && x[5] && x[5].length ? x[5] : null; }
-  function srcOf(i) { var d = DEC(i); return d ? d[Math.min(decIdx, d.length - 1)][1] : SH()[i][1]; }
+  /* dekor: [název, obrázek] = fotka dveří z katalogu, nebo [název, '#barva', dřevo 0/1] = orientační přebarvení základní fotky (dveře na objednávku).
+     Přebarvené dveře mají v doorImgs klíč „obrázek|#barva|dřevo“. */
+  var FOTO_KAT = 'Foto z katalogu';
+  function decOf(i) { var d = DEC(i); return d ? d[Math.min(decIdx, d.length - 1)] : null; }
+  function srcOf(i) { var d = decOf(i); return !d ? SH()[i][1] : d[1].charAt(0) === '#' ? SH()[i][1] + '|' + d[1] + '|' + (d[2] ? 1 : 0) : d[1]; }
+  function tintDoor(im, hex, wood) {
+    var c = document.createElement('canvas'), w = c.width = im.naturalWidth || im.width, h = c.height = im.naturalHeight || im.height, x = c.getContext('2d');
+    x.drawImage(im, 0, 0, w, h);
+    var id; try { id = x.getImageData(0, 0, w, h); } catch (e) { return im; }
+    var p = id.data, hist = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)], n = 0, i, j, k, q;
+    for (j = Math.floor(h * .05); j < h * .95; j += 2) for (i = Math.floor(w * .1); i < w * .9; i += 2) { q = (j * w + i) * 4; hist[0][p[q]]++; hist[1][p[q + 1]]++; hist[2][p[q + 2]]++; n++; }
+    var base = hist.map(function (hh) { var a = 0, v = 0; while (v < 255 && (a += hh[v]) < n / 2) v++; return v; });   // medián barvy křídla
+    var lb = .299 * base[0] + .587 * base[1] + .114 * base[2] || 1, t = [1, 3, 5].map(function (o) { return parseInt(hex.substr(o, 2), 16); });
+    var cl = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+    for (q = 0; q < p.length; q += 4) {
+      k = (.299 * p[q] + .587 * p[q + 1] + .114 * p[q + 2]) / lb;
+      var d = Math.max(Math.abs(p[q] - base[0] * k), Math.abs(p[q + 1] - base[1] * k), Math.abs(p[q + 2] - base[2] * k));   // jak moc se bod liší od povrchu křídla (sklo, klika, linky zůstanou)
+      var wg = cl(1 - (d - 22) / 26) * cl((k - .35) / .2) * cl((1.9 - k) / .25); if (wg <= 0) continue;
+      var kk = wood ? k : 1 + (k - 1) * .3; kk = kk < .6 ? .6 : kk > 1.35 ? 1.35 : kk;
+      for (var ch = 0; ch < 3; ch++) p[q + ch] = Math.min(255, t[ch] * kk) * wg + p[q + ch] * (1 - wg);
+    }
+    x.putImageData(id, 0, 0); return c;
+  }
   function hex2rgb(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); }
 
   /* ═══════════════ anonymní počítadlo využití (NAS: aplikace-api.php, akce „udalost“) ═══════════════
@@ -114,13 +136,22 @@
     $$('.view').forEach(function (s) { s.hidden = s.getAttribute('data-view') !== v; });
     $$('.tabs a').forEach(function (a) { if (a.getAttribute('data-tab') === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     if (/[?&]p=1/.test(location.hash)) { try { sessionStorage.setItem('bd-app-prodejce', '1'); } catch (e) {} }
-    if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]]) { if (mm[1] !== vizModel) setModel(mm[1]); setLock(true); } else setLock(false); layout(); }
+    if (v === 'viz') { var mm = /[?&]m=([a-z0-9]+)/.exec(location.hash); if (mm && VIZ[mm[1]]) { if (mm[1] !== vizModel) setModel(mm[1]); setLock(true); pickByName(); } else setLock(false); layout(); }
     if (v === 'moje') {
       var tm = /[?&]t=([a-f0-9]{24})/.exec(location.hash), cd = door();
       if (tm && !(cd && doorToken(cd) === tm[1])) pairByCode(tm[1]); else renderMoje();
     }
     if (v === 'viz' && /[?&]navod=1/.test(location.hash)) setTimeout(openHowto, 50);
     window.scrollTo(0, 0);
+  }
+  /* odkaz z webu na konkrétní dveře: #viz?m=interier&d=NÁZEV (karty na dvere-do-interieru.html) */
+  function pickByName() {
+    var dm = /[?&]d=([^&]+)/.exec(location.hash); if (!dm) return;
+    var dn; try { dn = decodeURIComponent(dm[1].replace(/\+/g, ' ')).toLowerCase(); } catch (e) { return; }
+    var ix = -1; SH().forEach(function (x, i) { if (String(x[0]).toLowerCase() === dn) ix = i; });
+    if (ix < 0 || ix === shadeIdx) return;
+    shadeIdx = ix; decIdx = 0; buildShades(); loadDoor(ix, function () { render(); });
+    var b = document.querySelector('#shades .sh[aria-pressed=true]'); if (b && b.scrollIntoView) try { b.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
   }
   window.addEventListener('hashchange', route);
 
@@ -209,21 +240,22 @@
   var rq = 0; function renderSoon() { if (rq) return; rq = requestAnimationFrame(function () { rq = 0; render(); }); }
 
   function loadDoor(i, cb) {
-    var src = srcOf(i), o = doorImgs[src];
+    var src = srcOf(i), o = doorImgs[src], tp = src.split('|');
     if (o && o.ok) { upload(texDoor, 1, o.img); return cb && cb(); }
     if (o) { o.cbs.push(cb); return; }
     var im = new Image(); o = doorImgs[src] = { img: im, ok: false, cbs: [cb] };
     im.onload = function () {
+      var pic = tp[1] ? tintDoor(im, tp[1], tp[2] === '1') : im; o.img = pic;   // dveře na objednávku: orientační přebarvení do dekoru
       // průměrná barva vnitřku křídla → barva nové zárubně (PREMIUM 60)
       var c = document.createElement('canvas'); c.width = 8; c.height = 8; var x = c.getContext('2d');
-      x.drawImage(im, im.width * .1, im.height * .05, im.width * .8, im.height * .9, 0, 0, 8, 8);
+      x.drawImage(pic, pic.width * .1, pic.height * .05, pic.width * .8, pic.height * .9, 0, 0, 8, 8);
       var d = x.getImageData(0, 0, 8, 8).data, sm = [0, 0, 0]; for (var k = 0; k < d.length; k += 4) { sm[0] += d[k]; sm[1] += d[k + 1]; sm[2] += d[k + 2]; }
       o.mean = sm.map(function (v) { return v / 64 / 255; }); o.ok = true;
-      if (SH()[shadeIdx] && srcOf(shadeIdx) === src) upload(texDoor, 1, im);
+      if (SH()[shadeIdx] && srcOf(shadeIdx) === src) upload(texDoor, 1, pic);
       o.cbs.forEach(function (f) { f && f(); }); o.cbs = [];
     };
     im.onerror = function () { hint.textContent = 'Obrázek odstínu se nepodařilo načíst. Zkontrolujte připojení.'; };
-    im.src = src;
+    im.src = tp[0];
   }
 
   /* ── fotka ── */
@@ -404,7 +436,7 @@
     var V = VIZ[vizModel];
     $('#shades').innerHTML = V.shades.map(function (x, i) {
       return '<button class="sh" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + x[1] + '" alt="" loading="lazy">' + esc(x[0]) +
-        (x[3] ? '<small>' + esc(x[3]) + '</small>' : '') + (x[4] ? '<em class="sk">skladem</em>' : '') + (x[5] && x[5].length > 1 ? '<i class="ndec">' + x[5].length + (x[5].length > 4 ? ' odstínů' : ' odstíny') + '</i>' : '') + '</button>'; }).join('');
+        (x[3] ? '<small>' + esc(x[3]) + '</small>' : '') + (x[4] ? '<em class="sk">skladem</em>' : '') + (function (n) { return n > 1 ? '<i class="ndec">' + n + (n > 4 ? ' dekorů' : ' dekory') + '</i>' : ''; })(x[5] ? x[5].length - (x[5][0] && x[5][0][0] === FOTO_KAT ? 1 : 0) : 0) + '</button>'; }).join('');
     $('#shadeNote').textContent = V.note;
     $('#shadeH').textContent = V.label || 'Odstín';
     $('#frameBox').hidden = !V.frames;
@@ -425,9 +457,10 @@
   }
   function decHtml() {
     var d = DEC(); if (!d || d.length < 2) return '';
-    return '<div class="decs" role="group" aria-label="Odstín"><b class="dech">Odstín: ' + esc(d[decIdx][0]) + '</b>' + d.map(function (o, i) {
-      return '<button type="button" class="dec" data-d="' + i + '" aria-pressed="' + (i === decIdx) + '" title="' + esc(o[0]) + '"><img src="' + o[1] + '" alt="" loading="lazy"><span>' + esc(o[0]) + '</span></button>'; }).join('') +
-      '</div><span class="decn">Fotky odstínů z katalogu výrobce – skutečný odstín uvidíte na vzorku v prodejně.</span>';
+    var orient = d.some(function (o) { return o[1].charAt(0) === '#'; });
+    return '<div class="decs' + (orient ? ' sws' : '') + '" role="group" aria-label="Dekor"><b class="dech">Dekor: ' + esc(d[decIdx][0]) + (d[decIdx][1].charAt(0) === '#' ? ' <em>(orientační barva)</em>' : '') + '</b>' + d.map(function (o, i) {
+      return '<button type="button" class="dec" data-d="' + i + '" aria-pressed="' + (i === decIdx) + '" title="' + esc(o[0]) + '">' + (o[1].charAt(0) === '#' ? '<i class="sw" style="background:' + o[1] + '"></i>' : '<img src="' + o[1] + '" alt="" loading="lazy">') + '<span>' + esc(o[0]) + '</span></button>'; }).join('') +
+      '</div><span class="decn">' + (orient ? 'Dekory podle akčního katalogu výrobce. Dveře na objednávku jsou do vybraného dekoru jen přebarvené podle vzorníku – barva i kresba dřeva jsou orientační. Skutečný dekor uvidíte na vzorku v prodejně.' : 'Fotky odstínů z katalogu výrobce – skutečný odstín uvidíte na vzorku v prodejně.') + '</span>';
   }
   /* zamčený režim: z webu (nebo z Nabídky) vedeme na konkrétní dveře, ostatní nenabízíme */
   function setLock(on) {
@@ -464,7 +497,7 @@
     setModel(c === 'byt' ? (VIZ[vizModel].cat === 'byt' ? vizModel : 'premium60') : c === 'domu' ? 'domovni' : 'interier');
   });
   function MN() { return (MODELS[vizModel] || VIZ[vizModel]).name; }
-  function shadeName() { var d = DEC(); return SH()[shadeIdx][0] + (d ? ' – ' + d[Math.min(decIdx, d.length - 1)][0] : ''); }
+  function shadeName() { var d = decOf(shadeIdx); return SH()[shadeIdx][0] + (d && d[0] !== FOTO_KAT ? ' – ' + d[0] + (d[1].charAt(0) === '#' ? ' (orientační barva)' : '') : ''); }
   function frameName() { var f = VIZ[vizModel].frames; return !$('#frame').checked ? 'původní' : f ? 'nová, ' + f[frameIdx][0] : 'nová v dekoru dveří'; }
 
   $('#fileCam').addEventListener('change', onFile); $('#fileGal').addEventListener('change', onFile);

@@ -13,7 +13,7 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
    - `pdftoppm` → `katalog-akcni/s-NN.jpg` (1240×1754), upravit `const TOTAL` v `katalog-akcni.html`,
      aktualizovat `katalog-akcni/source.json` (label např. „10/2026", sha256, pages).
    - Ceny číst z textové vrstvy: `pdftotext -layout`. V katalogu jsou € s DPH / Kč bez DPH; **web uvádí Kč bez DPH**.
-2. **Porovnat modely a ceny** na `dvere-do-interieru.html` (31 karet `.int-card`) a v `detail-*.html`
+2. **Porovnat modely a ceny** na `dvere-do-interieru.html` (34 karet `.int-card`, viz oddíl Karty interiérových dveří) a v `detail-*.html`
    (ceny komplet = křídlo + zárubeň; „pouze křídlo"; falcové vs. bezfalcové).
    - Modely skladem (SKLADEM) mají třídu `int-card-sklad` (zelený rámeček) + `badge-skladem`; na objednávku ne.
    - Všechny skladové dveře z katalogu musí být na webu (kromě vědomě vynechaných: Extreme RC3 jako karta, HIDE zárubně – zeptat se).
@@ -28,6 +28,11 @@ Web svetdveri.cz/.sk není z prostředí dostupný (proxy 403) → vždy pracuji
 7. **Kontrola**: Playwright screenshot přehledu (desktop + mobil 390 px): řádky karet zarovnané, ceny se
    nezalamují, žádný chybějící obrázek. Pak commit + push do `main` (GitHub Pages).
 8. **Shrnutí pro Zdenka**: co se změnilo (nové/odebrané modely, změny cen, co nejsou v katalogu ověřeno).
+
+## Karty interiérových dveří a dekory (od 17. 11. 2026)
+- Všech 34 karet `.int-card` na `dvere-do-interieru.html` má stejnou stavbu: štítek SKLADEM / NA OBJEDNÁVKU, materiál, kolečka dekorů + „Názvy dekorů“, Zárubeň v ceně, „Komplet od X Kč“ + doplněk, tlačítka **📷 Ukázat na mé fotce** (`aplikace/#viz?m=interier&d=NÁZEV`) a **Poptávka**, odkazy Detail / Katalog str. N. Štítek „Aplikace Moje dveře v ceně“ na kartách interiérů není (`bonus.js`).
+- Karty i odstíny ve vizualizaci generuje `python3 tools/interier/karty.py` (jde pouštět opakovaně; zachová ceny, fotky a texty karet). Dekory podle katalogu jsou v `tools/interier/dekory_data.py`: vzorníky str. 17 (ERKADO), 23 (INVADO), 33 (PORTA) se souřadnicemi vzorků, a `MODELY` = které skupiny dekorů platí pro který model (podle strany modelu). **Při novém katalogu zkontrolovat čísla stran, souřadnice vzorků (`python3 tools/interier/paleta.py` uloží kontrolní arch) a seznamy u modelů.**
+- Vizualizace (`aplikace/viz-data.js`, `app.js`): skladové modely mají dekory jako fotky z katalogu `[název, obrázek]`; dveře na objednávku `[název, "#barva", dřevo]` = orientační přebarvení základní fotky v prohlížeči (`tintDoor`), první volba je „Foto z katalogu“. Náhled přebarvení: `python3 tools/interier/tint.py`. Po změně zvýšit `?v=` u `app.js`, `viz-data.js`, `app.css` v `aplikace/index.html`, `test.html` a `VERZE` + `SHELL` v `aplikace/sw.js`.
 
 ## Konvence
 - Statický HTML + `style.css`, inline CSS v některých stránkách; formuláře přes FormSubmit.

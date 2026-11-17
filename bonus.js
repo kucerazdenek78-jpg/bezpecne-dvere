@@ -17,8 +17,7 @@
     return a;
   }
   function before(sel, long) { document.querySelectorAll(sel).forEach(function (el) { var p = el.previousElementSibling; if (!(p && p.classList.contains('md-bonus'))) el.parentNode.insertBefore(badge(long), el); }); }
-  /* interiér: před tlačítky karty; dům: před odkazem do katalogu; byt a detaily: před tlačítky / za štítky */
-  before('.int-card-body .int-card-actions', false);
+  /* interiér: na kartách štítek není (17. 11. 2026, zrušeno na přání Zdeňka); dům: před odkazem do katalogu; byt a detaily: před tlačítky / za štítky */
   before('.e-card-body .e-card-more', false);
   before('.prod-cta', true);
   document.querySelectorAll('.detail-hero-info .feature-pills').forEach(function (el) { if (!el.nextElementSibling || !el.nextElementSibling.classList.contains('md-bonus')) el.insertAdjacentElement('afterend', badge(true)); });
