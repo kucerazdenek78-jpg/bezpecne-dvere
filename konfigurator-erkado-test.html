@@ -87,6 +87,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pq-chip em{font-style:normal;color:var(--orange-text);font-size:.78rem;font-weight:700}
 .pq-chip small{font-weight:500;color:var(--text-muted);font-size:.74rem}
 .pq-chip:has(input:checked)::after{display:none}
+/* madla s obrázkem z katalogu (17. 11. 2026) */
+.kf-mad{flex-direction:column;align-items:center;text-align:center;gap:.25rem;width:calc((100% - 1.2rem)/3);min-width:92px;max-width:130px;padding:.5rem .3rem}
+.kf-mad img,.kf-mad-0{display:block;width:64px;height:72px;object-fit:contain;background:#fff;border-radius:8px}
+.kf-mad-0{display:grid;place-items:center;color:#9aa5a0;font-size:1.4rem;border:1px dashed #c9d4ce}
 .pq-chip:has(input:checked){background:var(--orange-pale)}
 
 .kf-kons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem}
@@ -453,7 +457,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 </section>
 
 <script src="konfigurator-erkado/erkado-data.js?v=20261113a"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261113a"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261117a"></script>
 <script src="konfigurator-erkado/lead-gate-test.js?v=20261102a"></script>
 <script src="cookies.js?v=5" defer></script>
 </body>

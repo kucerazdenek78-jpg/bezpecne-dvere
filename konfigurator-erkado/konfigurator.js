@@ -436,9 +436,10 @@
     $('kfMadloD').previousElementSibling.hidden = $('kfMadloB').previousElementSibling.hidden = !md;
     $('kfMadloD').hidden = $('kfMadloB').hidden = !md;
     {
-      $('kfMadlo').innerHTML = '<label class="pq-opt pq-chip">' + radio('madlo', 'none', !md) + 'Bez madla</label>' + E.madla.map(function (x) {
+      // obrázky madel: výřezy z katalogu ERKADO str. 69 (černé provedení), konfigurator-erkado/img/madla/<id>.jpg
+      $('kfMadlo').innerHTML = '<label class="pq-opt pq-chip kf-mad">' + radio('madlo', 'none', !md) + '<span class="kf-mad-0" aria-hidden="true">✕</span><span>Bez madla</span></label>' + E.madla.map(function (x) {
         var dd = x.d[st.madloD] ? st.madloD : Object.keys(x.d).sort(function (a, b) { return b - a; })[0];
-        return '<label class="pq-opt pq-chip">' + radio('madlo', x.id, x.id === st.madlo) + x.nazev + ' <em>od ' + kc(Math.min.apply(null, Object.keys(x.d).map(function (l) { return x.d[l][bi]; }))) + '</em></label>';
+        return '<label class="pq-opt pq-chip kf-mad">' + radio('madlo', x.id, x.id === st.madlo) + '<img src="' + IMG + 'madla/' + x.id.toLowerCase() + '.jpg" alt="" width="64" height="72" loading="lazy"><span>' + x.nazev + '</span> <em>od ' + kc(Math.min.apply(null, Object.keys(x.d).map(function (l) { return x.d[l][bi]; }))) + '</em></label>';
       }).join('');
       if (md) $('kfMadloD').innerHTML = Object.keys(md.d).sort(function (a, b) { return b - a; }).map(function (l) {
         return '<label class="pq-opt pq-chip">' + radio('madloD', l, l === st.madloD) + l + ' cm <em>' + kc(md.d[l][bi]) + '</em></label>';
