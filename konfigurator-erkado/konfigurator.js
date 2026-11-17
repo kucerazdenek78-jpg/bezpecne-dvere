@@ -15,7 +15,7 @@
   var TLC = { h88: '#b91c2c', h78: '#d4600f', t78: '#a8860b', t64: '#13684a' };
   var SKLO = [['std', 'Standardní soustava skel', 'v ceně'], ['benat', 'Benátské zrcadlo (polopropustné)', 1], ['bila', 'Matné bílé / průhledné sklo', 2], ['seda', 'Matné šedé / průhledné sklo', 3]];
   var KOV = {
-    B: { n: 'Klika – klika + horní zámek', d: 'Klika, druhý (horní) zámek, vložky v systému 1 klíče. S klikou HAGA v ceně kompletu.' },
+    B: { n: 'Klika – klika + horní zámek', d: 'Klika, druhý (horní) zámek, vložky v systému 1 klíče. S klikou Erkado CERTUS RC2 v ceně kompletu.' },
     A: { n: 'Klika – klika', d: 'Jeden zámek, vložka klíč–knoflík, kliku vyberete níže.' },
     C: { n: 'Madlo – klika', d: 'Madlo zvenku, klika zevnitř, vložka klíč–knoflík. Kliku a madlo vyberete níže.' },
     D: { n: 'Madlo – klika + horní zámek', d: 'Madlo zvenku, klika zevnitř, horní zámek, vložky v systému 1 klíče. Kliku a madlo vyberete níže.' },
@@ -27,7 +27,7 @@
   var st = {
     step: 1, model: 'horn', typ: 1, prov: 'PLAIN GLASS', kon: 't64', zar: 'ocel', smer: 'ven', strana: 'P',
     sirka: '90', sc: '', vyska: 'std', hc: '', dekor: 'dub-surovy', dvou: 'ne', dekor2: 'bily-mat', sklo: 'std', rc2: false,
-    kov: 'B', kovB: 'nikl', klika: 'haga', setMadlo: 'certus', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, klice: '3', odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
+    kov: 'B', kovB: 'nikl', klika: 'certus', setMadlo: 'certus', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, klice: '3', odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
   };
 
   /* ── pomocné ── */
@@ -241,7 +241,7 @@
     /* kování */
     var c = st.kovB === 'cerna' ? 1 : 0, cn = st.kovB === 'cerna' ? 'černá' : 'nikl / mosaz';
     if (st.kov === 'B') { if (c) L.push(['Černé základní kování (černé vložky)', cerneB(k)]);
-      if (klikaRozdilB(KL(), c) > 0) L.push(['Klika ' + KL().nazev + ' místo základní HAGA (vč. štítku horního zámku)', klikaRozdilB(KL(), c)]); }
+      if (klikaRozdilB(KL(), c) > 0) L.push(['Klika ' + KL().nazev + ' místo základní CERTUS RC2 (vč. štítku horního zámku)', klikaRozdilB(KL(), c)]); }
     else if (st.kov === 'A') {
       L.push(['Sada vložek pro otevírání A (' + cn + ')', E.sady.A[k][c]]);
       L.push(['Klika ' + KL().nazev + ' (' + (c ? 'černá' : 'inox') + ')', KL().k[c]]);
