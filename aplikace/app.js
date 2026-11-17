@@ -912,6 +912,7 @@
     $('#mojeEmpty').hidden = !!dv; $('#mojeDoor').hidden = !dv;
     if (!dv) return;
     var m = doorInfo(dv), w = warranty(dv), ni = nextInspection(dv), hist = store.get('bd-app-historie', []);
+    var intr = m.kind === 'interier';   // interiérové dveře (17. 11. 2026): jen záruka, doklady a servis – bez servisní knížky (údržba po 6 měsících, bonus k záruce, roční prohlídka)
     var sImg = null; if (VIZ[dv.model_kod]) VIZ[dv.model_kod].shades.forEach(function (x) { if (x[0].toLowerCase() === String(dv.odstin || '').trim().toLowerCase()) sImg = x[1]; });
     var h = '<div class="hero k-' + m.kind + '"><div class="hero-t"><span class="hero-k">' + esc(m.label) + '</span><h2>' + esc(m.name) + '</h2>' + (m.spec ? '<p class="hero-s">' + esc(m.spec) + '</p>' : '') +
       '<div class="chips">' + (dv.odstin ? '<span class="chip">🎨 ' + esc(dv.odstin) + '</span>' : '') + (dv.cislo ? '<span class="chip">№ ' + esc(dv.cislo) + '</span>' : '') +
@@ -924,12 +925,13 @@
     else {
       var active = w.base >= today();
       h += '<div class="status ' + (active ? 'ok' : 'info') + '"><span>🛡</span><div><b>' + (active ? 'Záruka platí do ' : 'Záruka skončila ') + fmt(w.base) + '</b>' +
-        (w.ext ? 'prodloužená záruka na ' + w.ext + ' let od předání' : 'základní záruka 2 roky' + (dv.zaruka_do ? ' (včetně bonusu, pokud zapisujete údržbu)' : '')) + '</div></div>';
+        (w.ext ? 'prodloužená záruka na ' + w.ext + ' let od předání' : 'základní záruka 2 roky' + (dv.zaruka_do && !intr ? ' (včetně bonusu, pokud zapisujete údržbu)' : '')) + '</div></div>';
     }
-    h += (doorToken(dv) ? '<div id="bnBox"></div>' : '<p class="small">Bonus za registraci a prodloužení záruky najdete po spárování dveří s objednávkou.</p>') +
+    h += intr ? '</div>' : (doorToken(dv) ? '<div id="bnBox"></div>' : '<p class="small">Bonus za registraci a prodloužení záruky najdete po spárování dveří s objednávkou.</p>') +
       '<p class="small"><a href="../podminky-prodlouzeni-zaruky.html" target="_blank">Podmínky bonusu a prodloužení záruky</a></p></div>';
 
-    // roční prohlídka
+    // roční prohlídka (jen bezpečnostní / požární dveře)
+    if (!intr) {
     h += '<div class="card c-p"><h3>🗓 Roční prohlídka</h3>';
     if (ni) {
       var dd = daysBetween(today(), ni);
@@ -940,6 +942,7 @@
     h += '<p class="note">Všechny naše bezpečnostní dveře do bytu mají požární odolnost (PREMIUM 60 EI 60, ostatní EI 30). Pokud jsou ve vašem domě podle požárně bezpečnostního řešení požárním uzávěrem ' +
       '(typicky vstupní dveře z bytu do společné chodby), kontroluje se jejich provozuschopnost jednou za rok (vyhláška č. 246/2001 Sb.). Zeptejte se ve svém SVJ nebo družstvu, jestli kontrolu zajišťuje dům – jinak ji rádi provedeme. ' +
       'Prohlídka se hodí i kvůli seřízení a promazání.</p></div>';
+    }
 
     // servis
     var fa = freeAdjust(dv);
@@ -953,7 +956,9 @@
     h += '<div class="card c-d"><h3>🤝 Doporuč a získej 1 500 Kč</h3>' + (doorToken(dv) ? '<div id="dpBox"></div>' : '<p class="small">Za každé doporučení dveří PREMIUM 60 s montáží 1 500 Kč. <a href="../doporuc-nas.html" target="_blank">Pravidla a formulář</a></p>') + '</div>';
 
     // péče a pravidelná údržba (předávací list + výrobce; celý návod udrzba-dveri.html)
-    h += '<div class="card c-c"><h3>🧽 Péče a údržba dveří</h3>' + (doorToken(dv) ? '<div id="udBox"></div>' : '') + '<ul class="care">' +
+    if (intr) h += '<div class="card c-c"><h3>🧽 Péče o dveře</h3><ul class="care"><li>Povrch myjte teplou vodou s trochou saponátu a měkkou houbou nebo hadříkem. Nedrhněte, nepoužívejte rozpouštědla ani brusné prostředky.</li></ul>' +
+      '<p class="small">Když dveře drhnou nebo nezapadají, napište nám přes „Nahlásit závadu“ výše.</p></div>';
+    else h += '<div class="card c-c"><h3>🧽 Péče a údržba dveří</h3>' + (doorToken(dv) ? '<div id="udBox"></div>' : '') + '<ul class="care">' +
       '<li>Povrch myjte teplou vodou s trochou saponátu a měkkou houbou nebo hadříkem. Nedrhněte, nepoužívejte rozpouštědla ani brusné prostředky.</li>' +
       '<li>Každých 6 měsíců ošetřete těsnění dveří a zárubně (pokud je) silikonovým mazivem.</li>' +
       '<li>Každých 6 měsíců promažte zamykací čepy a krycí misku vložky (pokud je) olejem nebo WD-40.</li>' +

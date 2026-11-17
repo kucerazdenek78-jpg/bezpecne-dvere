@@ -20,7 +20,8 @@
   /* interiér: na kartách štítek není (17. 11. 2026, zrušeno na přání Zdeňka); dům: před odkazem do katalogu; byt a detaily: před tlačítky / za štítky */
   before('.e-card-body .e-card-more', false);
   before('.prod-cta', true);
-  document.querySelectorAll('.detail-hero-info .feature-pills').forEach(function (el) { if (!el.nextElementSibling || !el.nextElementSibling.classList.contains('md-bonus')) el.insertAdjacentElement('afterend', badge(true)); });
+  /* detaily: jen bezpečnostní dveře (EXTREME RC3); u interiérových dveří štítek není – nemají servisní knížku ani připomínku kontroly (17. 11. 2026) */
+  if (/detail-extreme-rc3/.test(location.pathname)) document.querySelectorAll('.detail-hero-info .feature-pills').forEach(function (el) { if (!el.nextElementSibling || !el.nextElementSibling.classList.contains('md-bonus')) el.insertAdjacentElement('afterend', badge(true)); });
   /* formuláře poptávky a objednávky: štítek pod nadpisem */
   var fh = document.querySelector('form#pq');
   if (fh) { var h1 = document.querySelector('h1'); if (h1 && !(h1.nextElementSibling && h1.nextElementSibling.classList.contains('md-bonus'))) h1.insertAdjacentElement('afterend', badge(true)); }
