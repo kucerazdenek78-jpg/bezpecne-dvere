@@ -14,7 +14,7 @@
   function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} return null; }
   function zamQ() { try { var z = (location.search.match(/[?&]zam=([^&]+)/) || [])[1] || (JSON.parse(localStorage.getItem('bd-zam') || 'null') || {}).t; return z ? '?zam=' + encodeURIComponent(z) : ''; } catch (e) { return ''; } }
 
-  /* maskot (šedý buldoček v přilbě) jako tvář pomocníka; obrázky v userFiles/maskot/ */
+  /* maskot Falco (šedý buldoček v přilbě, skutečný pes Zdeňka) jako tvář pomocníka; obrázky v userFiles/maskot/ */
   var MASKOT = (((document.currentScript || {}).src || '').replace(/konfigurator-erkado\/pomocnik\.js.*$/, '')) + 'userFiles/maskot/';
   var HLAVA = '<img src="' + MASKOT + 'buldok-hlava-96.png" width="34" height="34" alt="" decoding="async">';
 
@@ -45,7 +45,7 @@
 
   var btn = document.createElement('button');
   btn.id = 'pomWebBtn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Otevřít pomocníka AI pro výběr dveří');
-  btn.innerHTML = HLAVA + '<span>Poradí s výběrem<small>Pomocník AI</small></span>';
+  btn.innerHTML = HLAVA + '<span>Poradí s výběrem<small>Falco, pomocník AI</small></span>';
   if (hasKF) btn.className = 'pw-top';
   document.body.appendChild(btn);
 
@@ -56,7 +56,7 @@
   function ulozHist() { ss(HIST, JSON.stringify(hist.slice(-24))); }
   function build() {
     box = document.createElement('div'); box.id = 'pomWeb'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Pomocník AI pro výběr dveří'); box.hidden = true;
-    box.innerHTML = '<div class="pw-h">' + HLAVA + '<b>Pomocník AI<small>' + (byt ? 'Poradí s výběrem dveří do bytu' : 'Poradí a dveře za vás nastaví') + '</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
+    box.innerHTML = '<div class="pw-h">' + HLAVA + '<b>Falco · pomocník AI<small>' + (byt ? 'Poradí s výběrem dveří do bytu' : 'Poradí a dveře za vás nastaví') + '</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
     document.body.appendChild(box);
     $('.pw-x', box).addEventListener('click', function () { box.hidden = true; btn.hidden = false; });
     return box;
@@ -122,7 +122,7 @@
     var b = $('#pwBody', box);
     b.innerHTML = '<div class="pw-b" id="pwList" aria-live="polite"></div><form class="pw-f" id="pwForm"><textarea id="pwIn" rows="1" maxlength="1000" placeholder="Napište, co hledáte…" aria-label="Vaše zpráva"></textarea><button type="submit" id="pwSend">Odeslat</button></form>';
     if (!hist.length) {
-      bubble('a', byt ? 'Dobrý den, jsem pomocník AI. Pomohu vám vybrat bezpečnostní dveře do bytu. Řekněte mi, co od dveří hlavně čekáte (bezpečnost, požární odolnost, odhlučnění) a jaký máte rozpočet.' : 'Dobrý den, jsem pomocník AI. Pomohu vám vybrat vchodové dveře a rovnou je nastavím v konfigurátoru. Řekněte mi, jaký máte dům a jaké dveře si představujete (barva, styl, zasklení, rozpočet).');
+      bubble('a', byt ? 'Dobrý den, jsem Falco, pomocník AI Bezpečných dveří. Pomohu vám vybrat bezpečnostní dveře do bytu. Řekněte mi, co od dveří hlavně čekáte (bezpečnost, požární odolnost, odhlučnění) a jaký máte rozpočet.' : 'Dobrý den, jsem Falco, pomocník AI Bezpečných dveří. Pomohu vám vybrat vchodové dveře a rovnou je nastavím v konfigurátoru. Řekněte mi, jaký máte dům a jaké dveře si představujete (barva, styl, zasklení, rozpočet).');
       var ch = document.createElement('div'); ch.className = 'pw-chips';
       (byt ? ['Nejvyšší bezpečnost (PREMIUM 60)', 'Spíš levnější varianta', 'Nevím, poraďte mi'] : ['Moderní dům, tmavé dveře', 'Chci dřevodekor a co nejvíc světla', 'Nevím, poraďte mi']).forEach(function (t) {
         var x = document.createElement('button'); x.type = 'button'; x.textContent = t; x.addEventListener('click', function () { ch.remove(); poslat(t); }); ch.appendChild(x);
@@ -181,7 +181,7 @@
     if (busy) return; busy = true;
     var send = $('#pwSend', box); send.disabled = true;
     hist.push({ role: 'user', text: text }); bubble('u', text); ulozHist();
-    var dots = document.createElement('div'); dots.className = 'pw-dots'; dots.textContent = 'Pomocník píše…'; $('#pwList', box).appendChild(dots);
+    var dots = document.createElement('div'); dots.className = 'pw-dots'; dots.textContent = 'Falco píše…'; $('#pwList', box).appendChild(dots);
     post({ akce: 'chat', token: token, zpravy: hist.slice(-16), stav: hasKF ? stavTxt() : undefined }).then(function (r) {
       dots.remove(); busy = false; send.disabled = false;
       if (!r.ok) {
