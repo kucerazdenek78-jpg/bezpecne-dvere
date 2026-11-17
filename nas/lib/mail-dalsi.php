@@ -12,7 +12,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
   // 1) poděkování za poptávku (odeslat.php i poptávky z e-mailu)
   if (preg_match('~^Děkujeme za poptávku(?: č\. (.+))?$~u', $predmet, $m)) {
     $cislo = trim((string)($m[1] ?? ''));
-    $vtip = 'Takhle to u nás vypadá, když přijde nová poptávka. Konfety jsou trochu přehnané, radost je pravá.';
+    $vtip = 'Takhle to u nás vypadá, když přijde nová poptávka. Falko to s konfetami trochu přehnal, radost je ale pravá.';
     // shrnutí poptávky: řádky „Popisek: hodnota“ za nadpisem SHRNUTÍ VAŠÍ POPTÁVKY (přidává odeslat.php) → tabulka; interní řádky a odkazy pro prodejce se vynechají
     $cast = preg_split('~\n+SHRNUTÍ VAŠÍ POPTÁVKY\n~u', str_replace("\r", '', $telo), 2); $uvod = $cast[0]; $tab = '';
     if (isset($cast[1])) {
@@ -31,7 +31,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     }
     $htmlTelo = mailh_sablona($cislo !== '' ? "Poptávka č. $cislo" : 'Vaše poptávka', 'Poptávka dorazila. Už se na ni vrháme!',
       mailh_text_html($uvod)
-      . mailh_video($web, 'buldok-poptavka', 'Krátké video: buldoček u notebooku ve vzorkovně slaví novou poptávku', '<b>Takhle to u nás vypadá, když přijde nová poptávka.</b> Konfety jsou trochu přehnané, radost je pravá.')
+      . mailh_video($web, 'buldok-poptavka', 'Krátké video: buldoček u notebooku ve vzorkovně slaví novou poptávku', '<b>Takhle to u nás vypadá, když přijde nová poptávka.</b> Falko to s konfetami trochu přehnal, radost je ale pravá.')
       . mailh_ramecek('Co bude dál', '<div><b>1.</b> Projdeme si, co jste nám napsali.</div><div><b>2.</b> Ozveme se Vám na telefon nebo e-mail.</div><div><b>3.</b> Připravíme Vám nabídku na míru.</div>')
       . $tab);
     $telo .= "\n\n" . $vtip . "\nKrátké video: $web/userFiles/email/buldok-poptavka.mp4";
@@ -51,7 +51,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     foreach ($tl as [$txt, $url]) $klik .= $b($url, $txt, strpos($url, 'a=nezajem') !== false ? '#6b7c71' : (strpos($url, 'a=zavolat') !== false ? '#1d5fb8' : '#e8650a'));
     if ($hodn !== '') $klik .= '<div style="margin:10px 0 6px;font-size:14px;color:#33463a">' . mailh_h($hodnTxt) . ' (1 až 5):</div>' . $b($hodn, 'Ohodnotit nabídku', '#123d27');
     $o = mailh_text_html(trim($t));
-    if ($kolo < 3) $o .= mailh_video($web, 'buldok-ceka', 'Krátké video: buldoček leží u telefonu, který nezvoní', '<b>Takhle u nás Vaše nabídka čeká na zprávu.</b> Telefon mlčí, pes vzdychá. Stačí pár slov a oba ožijí.');
+    if ($kolo < 3) $o .= mailh_video($web, 'buldok-ceka', 'Krátké video: buldoček leží u telefonu, který nezvoní', '<b>Takhle u nás Vaše nabídka čeká na zprávu.</b> Telefon mlčí, Falko vzdychá. Stačí pár slov a oba ožijí.');
     if ($klik !== '') $o .= mailh_ramecek('Stačí jedno kliknutí', $klik);
     $htmlTelo = mailh_sablona("Nabídka č. $cislo", $kolo === 1 ? 'Dorazila k Vám naše nabídka?' : ($kolo === 2 ? 'Platnost ceny se chýlí ke konci' : 'Poslední zpráva, slibujeme'), $o);
     return true;
@@ -62,13 +62,13 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
   //    text e-mailu beze změny, jen šablona + animace s buldočkem pod úvodním odstavcem. PDF v příloze se nemění.
   $bul = [
     ['~^Prodloužení záruky na Vaše dveře – objednávka (.+)$~u', 'Záruku můžete ještě prodloužit', 'buldok-zaruka', 'Krátké video: buldoček v přilbě a s medailí hlídá dveře',
-      '<b>Hlídač záruky je ve službě.</b> Medaili už má, teď hlídá i termín. Prodloužit záruku jde jen do data uvedeného výše.'],
+      '<b>Falko hlídá i záruku.</b> Medaili už má, teď hlídá termín. Prodloužit ji jde jen do data uvedeného výše.'],
     ['~^Roční kontrola požárního uzávěru – objednávka (.+)$~u', 'Rok utekl. Čas na kontrolu dveří', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
-      '<b>Servisní technik je připraven.</b> Šroubovák má, přilbu taky. Samotnou kontrolu raději necháme na dvounohých kolezích.'],
+      '<b>Falko má nářadí připravené.</b> Šroubovák má, přilbu taky. Samotnou kontrolu raději necháme na dvounohých kolezích.'],
     ['~^Čas na údržbu dveří – objednávka (.+)$~u', 'Čas na údržbu dveří', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
       '<b>Náš technik už si šroubovák nachystal.</b> Vám bude stačit pár minut, hadřík a trocha maziva.'],
     ['~^Předávací a záruční list – objednávka (.+)$~u', 'Dveře jsou Vaše. Ať dobře slouží!', 'buldok-predani', 'Krátké video: buldoček v přilbě přináší klíče od nových dveří',
-      '<b>Klíče předány.</b> Náš vedoucí předávky je pouštěl z tlamy jen nerad. Dveře jsou teď Vaše.'],
+      '<b>Klíče předány.</b> Falko je pouštěl z tlamy jen nerad. Dveře jsou teď Vaše.'],
     ['~^Záruka prodloužena – objednávka (.+)$~u', 'Záruka je prodloužená', 'buldok-zaruka', 'Krátké video: buldoček v přilbě a s medailí hlídá dveře',
       '<b>Hlídač záruky má delší službu.</b> Vaše dveře hlídá dál, jen o pár let déle.'],
     ['~^Jak jste spokojeni s novými dveřmi\? \(objednávka (.+)\)$~u', 'Jak se Vám s novými dveřmi bydlí?', 'buldok-predani', 'Krátké video: buldoček v přilbě přináší klíče od nových dveří',
@@ -76,7 +76,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     ['~^Přijali jsme váš požadavek – (.+)$~u', 'Požadavek máme. Jdeme na to', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
       '<b>Servisní technik si bere kufřík.</b> Váš požadavek máme a ozveme se s termínem.', 'Servis č. '],
     ['~^Termín návštěvy – (.+)$~u', 'Termín servisní návštěvy', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
-      '<b>Kufřík je sbalený.</b> Technik dorazí v domluvený čas, buldok zatím pohlídá vzorkovnu.', 'Servis č. '],
+      '<b>Kufřík je sbalený.</b> Technik dorazí v domluvený čas, Falko zatím pohlídá vzorkovnu.', 'Servis č. '],
   ];
   foreach ($bul as $b) {
     [$re, $nadpis, $soubor, $alt, $popis] = $b;

@@ -57,7 +57,7 @@ function mailh_formular(array $cfg, string $predmet, string $telo, array $obr = 
   if ($obj) $o .= mailh_video($web, 'zlodeji-to-vzdali', 'Krátké video: dva zloději stojí bezradně před bezpečnostními dveřmi a odcházejí',
       '<b>Mezitím někde na poradě zlodějů:</b> ' . ($prijmeni !== '' ? 'u jména „' . mailh_h($prijmeni) . '“ si právě udělali křížek.' : 'Vaši adresu si právě škrtli ze seznamu.') . ' Prý je to v tahu, tam už nejdou. Nám jich líto není.');
   if ($nab) $o .= mailh_video($web, 'buldok-kontrolor', 'Krátké video: šedý francouzský buldoček v přilbě si prohlíží dveře ve vzorkovně',
-      '<b>Výstupní kontrola proběhla.</b> Nabídku Vám očichal náš nejpřísnější kontrolor a neměl námitek. Za podpis tlapkou se omlouváme, propisku neudrží.');
+      '<b>Výstupní kontrola proběhla.</b> Nabídku Vám očichal náš nejpřísnější kontrolor Falko a neměl námitek. Za podpis tlapkou se omlouváme, propisku neudrží.');
   if ($platba !== '') $o .= mailh_ramecek($obj ? 'Platba zálohy' : 'Cena', $platba . ($dulezite !== '' ? '<div style="font-size:13px;line-height:1.45;color:#7c2d0c;margin-top:8px">' . mailh_h($dulezite) . '</div>' : ''));
   if ($polozky !== '') $o .= '<div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#c2410c;font-weight:bold;margin:4px 0 6px">' . ($obj ? 'Co jste si objednali' : 'Co Vám nabízíme') . '</div>' . $polozky;
   if ($ostatni !== '') $o .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 14px;border-top:1px solid #e3ebe6">' . $ostatni . '</table>';
