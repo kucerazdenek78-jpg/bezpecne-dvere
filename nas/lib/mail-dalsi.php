@@ -11,7 +11,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
   // 1) poděkování za poptávku (odeslat.php i poptávky z e-mailu)
   if (preg_match('~^Děkujeme za poptávku(?: č\. (.+))?$~u', $predmet, $m)) {
     $cislo = trim((string)($m[1] ?? ''));
-    $vtip = 'Takhle to u nás vypadá, když přijde nová poptávka. Konfety si domyslete, radost je pravá.';
+    $vtip = 'Takhle to u nás vypadá, když přijde nová poptávka. Konfety jsou trochu přehnané, radost je pravá.';
     // shrnutí poptávky: řádky „Popisek: hodnota“ za nadpisem SHRNUTÍ VAŠÍ POPTÁVKY (přidává odeslat.php) → tabulka; interní řádky a odkazy pro prodejce se vynechají
     $cast = preg_split('~\n+SHRNUTÍ VAŠÍ POPTÁVKY\n~u', str_replace("\r", '', $telo), 2); $uvod = $cast[0]; $tab = '';
     if (isset($cast[1])) {
@@ -30,10 +30,10 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     }
     $htmlTelo = mailh_sablona($cislo !== '' ? "Poptávka č. $cislo" : 'Vaše poptávka', 'Poptávka dorazila. Už se na ni vrháme!',
       mailh_text_html($uvod)
-      . mailh_video($web, 'poptavka-dorazila', 'Krátké video: tým ve vzorkovně slaví novou poptávku', '<b>Takhle to u nás vypadá, když přijde nová poptávka.</b> Konfety si domyslete, radost je pravá.')
+      . mailh_video($web, 'buldok-poptavka', 'Krátké video: buldoček u notebooku ve vzorkovně slaví novou poptávku', '<b>Takhle to u nás vypadá, když přijde nová poptávka.</b> Konfety jsou trochu přehnané, radost je pravá.')
       . mailh_ramecek('Co bude dál', '<div><b>1.</b> Projdeme si, co jste nám napsali.</div><div><b>2.</b> Ozveme se Vám na telefon nebo e-mail.</div><div><b>3.</b> Připravíme Vám nabídku na míru.</div>')
       . $tab);
-    $telo .= "\n\n" . $vtip . "\nKrátké video: $web/userFiles/email/poptavka-dorazila.mp4";
+    $telo .= "\n\n" . $vtip . "\nKrátké video: $web/userFiles/email/buldok-poptavka.mp4";
     return true;
   }
 
@@ -50,7 +50,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     foreach ($tl as [$txt, $url]) $klik .= $b($url, $txt, strpos($url, 'a=nezajem') !== false ? '#6b7c71' : (strpos($url, 'a=zavolat') !== false ? '#1d5fb8' : '#e8650a'));
     if ($hodn !== '') $klik .= '<div style="margin:10px 0 6px;font-size:14px;color:#33463a">' . mailh_h($hodnTxt) . ' (1 až 5):</div>' . $b($hodn, 'Ohodnotit nabídku', '#123d27');
     $o = mailh_text_html(trim($t));
-    if ($kolo < 3) $o .= mailh_video($web, 'nabidka-ceka', 'Krátké video: dveře a pejsek čekají u telefonu, který nezvoní', '<b>Takhle u nás Vaše nabídka čeká na zprávu.</b> Telefon mlčí, pes vzdychá. Stačí pár slov a oba ožijí.');
+    if ($kolo < 3) $o .= mailh_video($web, 'buldok-ceka', 'Krátké video: buldoček leží u telefonu, který nezvoní', '<b>Takhle u nás Vaše nabídka čeká na zprávu.</b> Telefon mlčí, pes vzdychá. Stačí pár slov a oba ožijí.');
     if ($klik !== '') $o .= mailh_ramecek('Stačí jedno kliknutí', $klik);
     $htmlTelo = mailh_sablona("Nabídka č. $cislo", $kolo === 1 ? 'Dorazila k Vám naše nabídka?' : ($kolo === 2 ? 'Platnost ceny se chýlí ke konci' : 'Poslední zpráva, slibujeme'), $o);
     return true;

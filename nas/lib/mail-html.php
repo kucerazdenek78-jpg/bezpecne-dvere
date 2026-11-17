@@ -2,7 +2,7 @@
 // HTML podoba e-mailů zákazníkům (17. 11. 2026, přání Zdeňka: „e-maily ne jako prostý text, ale HTML“, vtipný text a krátké video).
 // Volá ji posli_mail (lib/posta.php) jen u e-mailů zákazníkům: mailh_uprav() podle předmětu
 //   - akceptace objednávky (podepsaná objednávka po přijetí zálohy): veselý text + animace „roboti ve výrobě“,
-//   - potvrzení / změna termínu montáže: upozornění na prach + animace „kočka při montáži“ + PDF cedulka pro sousedy v příloze,
+//   - potvrzení / změna termínu montáže: upozornění na prach + animace „buldoček při montáži“ + PDF cedulka pro sousedy v příloze,
 //   - ostatní e-maily: prostý text zabalí do jednotné šablony (zelená hlavička).
 // Obrázky a videa leží na webu v userFiles/email/. Podpis obchodníka dál přidává lib/podpis.php (pod šablonu).
 // Když cokoli selže, e-mail odejde v původní podobě. Patří na NAS do /docker/formulare/app/lib/mail-html.php.
@@ -147,7 +147,7 @@ function mailh_uprav(array $cfg, string $DATA, string &$predmet, string &$telo, 
         '<div style="margin-bottom:6px">Výměna dveří se bez bourání neobejde a jemný prach se dostane i tam, kam by ho nikdo nezval. Proto prosíme:</div>'
         . '<ul style="margin:0 0 8px 18px;padding:0">' . implode('', array_map(fn($x) => '<li style="margin:0 0 5px">' . mailh_h($x) . '</li>', $prach)) . '</ul>'
         . '<div><b>' . mailh_h($omluva) . '</b></div>')
-      . mailh_video($web, 'kocka-pri-montazi', 'Krátké video: kočka s ochrannými brýlemi sedí na zakrytém gauči při montáži dveří', '<b>Takhle vypadá dobře připravený byt.</b> Gauč má prostěradlo, kytka roušku a kočka brýle. Brýle pro kočku nejsou podmínkou.');
+      . mailh_video($web, 'buldok-pri-montazi', 'Krátké video: buldoček v přilbě a ochranných brýlích sedí na zakrytém gauči při montáži dveří', '<b>Takhle vypadá dobře připravený byt.</b> Gauč má prostěradlo a stavbyvedoucí brýle. Brýle pro psa nejsou podmínkou.');
     $h = $htmlTelo;
     if ($h !== '') {
       if ($pdf) $h = str_replace(mailh_h($stara), mailh_h($nova), $h);
