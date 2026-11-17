@@ -287,7 +287,7 @@
   /* velikost plátna podle šířky obrazovky a 72 % výšky; překryv a rozdělovač přesně na plátno */
   function layout() {
     if (!photo) return;
-    var sw = stage.clientWidth, maxH = Math.round(window.innerHeight * 0.72), ar = photo.width / photo.height;
+    var sw = stage.clientWidth, maxH = Math.round(window.innerHeight * (window.innerWidth < 760 && pts.length === 4 ? 0.5 : 0.72)), ar = photo.width / photo.height;   // na telefonu po označení rohů nižší fotka, ať je pod ní vidět výběr dveří a dekoru
     var w = sw, h = w / ar; if (h > maxH) { h = maxH; w = h * ar; }
     canvas.style.width = Math.round(w) + 'px'; canvas.style.height = Math.round(h) + 'px';
     var left = Math.round((sw - w) / 2);
@@ -411,11 +411,38 @@
     var n = pts.length, done = n === 4;
     hint.className = 'hint' + (done ? ' ok' : '');
     if (!photo) hint.textContent = 'Začněte fotkou dveří.';
-    else hint.textContent = done ? 'Hotovo! Rohy můžete doladit tažením (s lupou), odstín vyberete níže.' :
+    else hint.textContent = done ? 'Hotovo! Rohy můžete doladit tažením (s lupou). Dveře a dekor vyberete hned pod fotkou.' :
       'Klepněte na ' + (n + 1) + '. roh křídla dveří (' + NAMES[n] + ') – ne na zárubeň. Nebo použijte „Rámeček k posunutí“.';
     ['save', 'cmp', 'ask'].forEach(function (id) { $('#' + id).disabled = !done; });
     var sb = $('#share'); sb.disabled = !done; sb.hidden = !(navigator.canShare && navigator.share);
+    // při označování rohů se fotka neposouvá (klepnutí = roh); po označení jde přes fotku stránku posouvat prstem, táhnout jdou jen kolečka rohů
+    var mk = !!photo && !done, mk0 = stage.classList.contains('mark'); stage.classList.toggle('mark', mk);
+    var qb = $('#qbar'), bylo = qb.hidden; qb.hidden = !photo; if (bylo !== qb.hidden) quickBar();
+    if (bylo !== qb.hidden || mk !== mk0) { qZamek = Date.now(); layout(); buildOverlay(); }   // fotka změnila výšku → pás se posunul pod prst, chvíli ignorovat klepnutí
   }
+  /* rychlý výběr hned pod fotkou (17. 11. 2026): pás dveří / odstínů a pod ním pás dekorů – vše na jedné obrazovce s fotkou.
+     Klepnutí jen „zmáčkne“ odpovídající tlačítko v plném výběru níže, takže logika je na jednom místě. */
+  var qZamek = 0;
+  function quickBar() {
+    var qb = $('#qbar'); if (!qb || qb.hidden) return;
+    var V = VIZ[vizModel], d = DEC();
+    $('#qShH').textContent = (V.label || 'Odstín') + ': ' + SH()[shadeIdx][0];
+    $('#qShades').innerHTML = V.shades.map(function (x, i) {
+      return '<button type="button" class="qs" data-i="' + i + '" aria-pressed="' + (i === shadeIdx) + '"><img src="' + x[1] + '" alt="" loading="lazy"><span>' + esc(x[0]) + '</span>' + (x[4] ? '<em>skladem</em>' : '') + '</button>'; }).join('');
+    var dr = $('#qDecRow'); dr.hidden = !(d && d.length > 1);
+    if (!dr.hidden) {
+      $('#qDecH').innerHTML = 'Dekor: ' + esc(d[decIdx][0]) + (d[decIdx][1].charAt(0) === '#' ? ' <em>(orientační barva)</em>' : '');
+      $('#qDecs').innerHTML = d.map(function (o, i) {
+        return '<button type="button" class="qd" data-d="' + i + '" aria-pressed="' + (i === decIdx) + '" title="' + esc(o[0]) + '">' + (o[1].charAt(0) === '#' ? '<i style="background:' + o[1] + '"></i>' : '<img src="' + o[1] + '" alt="" loading="lazy">') + '<span>' + esc(o[0]) + '</span></button>'; }).join('');
+    }
+    ['#qShades', '#qDecs'].forEach(function (q) { var r = $(q), b = r && r.querySelector('[aria-pressed=true]'); if (b) r.scrollLeft = Math.max(0, b.offsetLeft - (r.clientWidth - b.offsetWidth) / 2); });
+  }
+  $('#qbar').addEventListener('click', function (e) {
+    if (Date.now() - qZamek < 600) return;
+    var a = e.target.closest('.qs'), b = e.target.closest('.qd'), t = null;
+    if (a) t = $('#shades .sh[data-i="' + a.getAttribute('data-i') + '"]'); else if (b) t = $('#pick .dec[data-d="' + b.getAttribute('data-d') + '"]');
+    if (t) t.click();
+  });
 
   /* ── porovnání před/po (posuvný předěl) ── */
   function setSplit(v) {
@@ -449,6 +476,7 @@
   }
   function showPick() {
     var V = VIZ[vizModel], x = V.shades[shadeIdx], el = $('#pick');
+    quickBar();
     if (V.cat === 'byt' || !x) { el.hidden = true; return; }
     el.hidden = false;
     el.style.marginBottom = '.6rem'; el.innerHTML = '<b>' + esc(x[0]) + '</b>' + (x[4] ? ' <em class="sk">skladem</em>' : '') + '<br><span>' + esc(x[2]) + '</span>' +

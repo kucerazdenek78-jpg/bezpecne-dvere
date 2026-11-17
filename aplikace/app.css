@@ -48,7 +48,7 @@ h3{font-size:1rem;margin:0 0 .4rem;color:var(--navy)}
 .chk input{width:20px;height:20px;accent-color:var(--navy-mid)}
 
 /* plátno vizualizace */
-.stage{scroll-margin-top:58px;position:relative;background:#e3eae6;overflow:hidden;min-height:300px;touch-action:none;user-select:none;-webkit-user-select:none;margin:.2rem 0}
+.stage{scroll-margin-top:58px;position:relative;background:#e3eae6;overflow:hidden;min-height:300px;touch-action:pan-y;user-select:none;-webkit-user-select:none;margin:.2rem 0}
 .stage canvas#gl{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain;margin:0 auto}
 .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;color:var(--muted)}
 .empty p{margin:.5rem 0 0}
@@ -256,3 +256,18 @@ dialog::backdrop{background:rgba(10,30,20,.55)}
 .pick a.konfgo{display:inline-flex;margin:.55rem 0 .25rem;text-decoration:none;color:#fff}
 .pick small{color:var(--muted,#5b6b62);font-size:.78rem;line-height:1.35}
 .bn-warn{color:#b42318;font-weight:700}
+
+/* fotka: po označení rohů jde přes ni stránku posouvat (pan-y); při označování ne (klepnutí = roh) */
+.stage.mark{touch-action:none}
+/* rychlý výběr pod fotkou: pás dveří / odstínů a pás dekorů (vodorovně posuvné) */
+.qbar{background:#fff;border-bottom:1px solid var(--line);padding:.35rem .6rem .45rem}
+.qbar[hidden],#qDecRow[hidden]{display:none}
+.qh{display:block;font-size:.8rem;color:var(--navy);margin:.15rem 0 .2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qh em{font-style:normal;font-weight:600;color:#667;font-size:.72rem}
+.qrow{display:flex;gap:.4rem;overflow-x:auto;padding:2px 2px .3rem;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.qs,.qd{flex:none;scroll-snap-align:center;border:2px solid var(--line);border-radius:10px;background:#fff;padding:.2rem;font:inherit;cursor:pointer;text-align:center;color:#334;position:relative}
+.qs{width:66px}.qs img{display:block;width:100%;height:76px;object-fit:contain;background:#eef1ee;border-radius:6px}
+.qd{width:60px}.qd img{display:block;width:100%;height:32px;object-fit:cover;border-radius:6px}.qd i{display:block;height:32px;border-radius:6px;border:1px solid rgba(0,0,0,.18)}
+.qs span,.qd span{display:block;font-size:.62rem;font-weight:700;line-height:1.15;margin-top:.15rem;max-height:2.3em;overflow:hidden}
+.qs em{position:absolute;top:3px;left:3px;font-style:normal;font-size:.52rem;font-weight:800;background:#dcfce7;color:#15803d;border-radius:99px;padding:0 4px}
+.qs[aria-pressed=true],.qd[aria-pressed=true]{border-color:var(--orange);box-shadow:0 0 0 2px rgba(194,65,12,.25)}

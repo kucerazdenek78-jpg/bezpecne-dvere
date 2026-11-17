@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
   <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-  <link rel="stylesheet" href="app.css?v=20261117a">
+  <link rel="stylesheet" href="app.css?v=20261117c">
 </head>
 <body>
 <header class="top">
@@ -41,6 +41,11 @@
       <div class="ov" id="ov" hidden></div>
       <div class="split" id="split" hidden><div class="split-line"></div><div class="split-knob">⇆</div><span class="split-l">Teď</span><span class="split-r">PREMIUM 60</span></div>
       <div class="loupe" id="loupe"><canvas id="lp" width="220" height="220"></canvas></div>
+    </div>
+    <div class="qbar" id="qbar" hidden>
+      <b class="qh" id="qShH"></b>
+      <div class="qrow" id="qShades"></div>
+      <div id="qDecRow" hidden><b class="qh" id="qDecH"></b><div class="qrow" id="qDecs"></div></div>
     </div>
     <div class="pad">
       <div class="hint" id="hint" role="status">Začněte fotkou dveří.</div>
@@ -172,7 +177,7 @@
 
 <script src="bd-form.js?v=20261024b"></script>
 <script src="viz-data.js?v=20261117a"></script>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261117c"></script>
 <script src="lead-gate-viz.js?v=20261102b"></script>
 <script src="../cookies.js?v=5" defer></script>
 </body>
