@@ -902,6 +902,7 @@
       var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
       var lo = [['_subject', 'Objednávka ' + d.obj_cislo + ' – ' + KAT[d.kategorie].toLowerCase() + ' – Bezpečné dveře'],
         ['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.'],
+        ['Příjmení', d.prijmeni || ''],   /* jen pro oslovení ve vtipu v HTML e-mailu (NAS lib/mail-html.php), v e-mailu se nezobrazuje */
         ['Objednávka', d.obj_cislo], ['Celkem ' + dphTxt(), kc(d.cena_celkem)], ['Záloha ' + d.zaloha_proc + ' %', kc(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz : '')],
         ['Doplatek po montáži', kc(d.doplatek) + ' hotově']].concat(OBJ && d.zaloha > 0 && window.BDPlatba ? [['Důležité', window.BDPlatba.podminka(d.zaloha_label)]] : []);
       /* dveře do domu: odkaz do aplikace Moje dveře (záruka, servis) a bonus – stejně jako u objednávky dveří do bytu (poptavka-dvere-nova.js) */

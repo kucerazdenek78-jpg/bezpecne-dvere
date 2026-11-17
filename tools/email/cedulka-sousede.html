@@ -1,0 +1,61 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Cedulka pro sousedy – podklad (A4, 1240×1754)</title>
+<!-- Podklad PDF cedulky pro sousedy (17. 11. 2026). Z téhle stránky se Playwrightem udělá userFiles/email/cedulka-sousede.jpg;
+     NAS (lib/mail-html.php) do bílých okének #datum a #cas dopíše datum a čas příjezdu a obrázek zabalí do PDF. Po změně rozložení
+     znovu vygenerovat JPG (tools/email/cedulka.cjs) a upravit souřadnice okének v mailh_cedulka_pdf(). -->
+<style>
+@font-face{font-family:Inter;src:url(../../poptavka-pdf/Inter-Regular.ttf);font-weight:400}
+@font-face{font-family:Inter;src:url(../../poptavka-pdf/Inter-Bold.ttf);font-weight:700}
+*{box-sizing:border-box}html,body{margin:0}
+body{width:1240px;height:1754px;font-family:Inter,Arial,sans-serif;color:#16261c;background:#fff;position:relative;overflow:hidden}
+.top{background:#123d27;color:#fff;padding:54px 80px 46px}
+.top small{display:block;font-size:26px;letter-spacing:.12em;text-transform:uppercase;color:#b9d3c2;font-weight:700}
+.top h1{margin:12px 0 0;font-size:84px;line-height:1.04;font-weight:700;letter-spacing:-.01em}
+.top h1 span{color:#ff9a4d}
+.kdy{margin:36px 80px 0;border:5px solid #e8650a;border-radius:26px;padding:30px 36px;background:#fff7ef}
+.row{display:flex;align-items:center;gap:26px;font-size:40px;font-weight:700}
+.row+.row{margin-top:22px}
+.row b{flex:0 0 372px;white-space:nowrap}
+.okno{background:#fff;border:3px solid #16261c;border-radius:14px;height:96px}
+#datum{flex:1}#cas{flex:0 0 330px}
+.row em{font-style:normal;font-weight:400;font-size:28px;color:#4f6a5b;line-height:1.25}
+.txt{margin:30px 80px 0;font-size:35px;line-height:1.42}
+.txt p{margin:0 0 20px}
+.slib{margin:8px 80px 0;display:flex;gap:18px}
+.slib div{flex:1;background:#f1f6f2;border-radius:18px;padding:20px 22px;font-size:28px;line-height:1.3;font-weight:700;text-align:center}
+.slib div span{display:block;font-size:44px;margin-bottom:6px}
+.pod{margin:24px 80px 0;font-size:35px;line-height:1.4;display:flex;gap:34px;align-items:center}
+.pod img{width:400px;border-radius:18px;display:block}
+.pod .cap{font-size:25px;color:#4f6a5b;margin-top:10px;line-height:1.3}
+.cara{display:inline-block;border-bottom:3px solid #16261c;width:260px;height:38px;vertical-align:bottom}
+.ad{position:absolute;left:0;right:0;bottom:0;background:#123d27;color:#fff;padding:34px 80px;display:flex;align-items:center;gap:34px}
+.ad .t{flex:1}.ad h2{margin:0 0 8px;font-size:42px;line-height:1.12}.ad h2 span{color:#ff9a4d}
+.ad p{margin:0;font-size:26px;line-height:1.4;color:#d7e6dc}.ad p b{color:#fff}
+.ad .qr{background:#fff;border-radius:14px;padding:12px;text-align:center;color:#16261c;font-size:19px;font-weight:700}
+.ad .qr canvas{display:block;width:170px;height:170px}
+.ad .logo{height:120px;border-radius:10px}
+</style></head><body>
+<div class="top"><small>Vážení sousedé</small><h1>Omlouváme se,<br>chvíli tu bude <span>rachot.</span></h1></div>
+<div class="kdy">
+  <div class="row"><b>Měníme dveře dne</b><div class="okno" id="datum"></div></div>
+  <div class="row"><b>Montéři přijedou</b><div class="okno" id="cas"></div><em>a zdrží se obvykle 4–6 hodin</em></div>
+</div>
+<div class="txt">
+  <p>Bude to slyšet (vrtání a bourání staré zárubně) a na chodbě se může trochu zaprášit. Montéři po sobě samozřejmě uklidí.</p>
+</div>
+<div class="slib">
+  <div><span>🌙</span>Žádné vrtání o&nbsp;půlnoci</div>
+  <div><span>🛋️</span>Žádná sbíječka v&nbsp;neděli</div>
+  <div><span>🤫</span>Za pár hodin klid.<br>A napořád.</div>
+</div>
+<div class="pod">
+  <div><img src="../../userFiles/email/kocka-pri-montazi.jpg" alt=""><div class="cap">Kočka od vedle to zvládla s&nbsp;brýlemi. Vy to zvládnete taky.</div></div>
+  <div><b>Děkujeme za trpělivost a pochopení!</b><br><br>Váš soused z bytu č. <span class="cara"></span><br><br><span style="font-size:27px;color:#4f6a5b">Kdyby cokoli, klidně zazvoňte. Nebo se přijďte podívat, jak se to dělá.</span></div>
+</div>
+<div class="ad">
+  <img class="logo" src="../../userFiles/email/logo-podpis.png" alt="">
+  <div class="t"><h2>Líbí se Vám sousedovy <span>nové dveře?</span></h2><p>Bezpečnostní dveře do bytu i domu, výměna během jediného dne. Jsme tu od roku 1996.<br><b>Vzorkovna KK SYSTEM, Obchodní 36, Most<br>+420 725 559 235 · <span style="white-space:nowrap">www.bezpecne-dvere.cz</span></b></p></div>
+  <div class="qr" id="qr">bezpecne-dvere.cz</div>
+</div>
+<script src="../../platba/qrcode.js"></script><script src="../../platba/platba.js"></script>
+<script>var q=document.getElementById('qr');q.insertBefore(BDPlatba.canvas('https://bezpecne-dvere.cz/?utm_source=cedulka-sousede',340),q.firstChild);</script>
+</body></html>

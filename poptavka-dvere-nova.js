@@ -688,6 +688,7 @@
       ['_cc', [CC_OBJ, d.email].filter(Boolean).join(',')], ['_replyto', CC]
     ];
     f.push(['Dobrý den', 'děkujeme za objednávku. V příloze posíláme objednávku v PDF. S dotazy se obracejte na ' + CC + ' nebo +420 725 559 235.']);
+    f.push(['Příjmení', d.prijmeni || '']);   /* jen pro oslovení ve vtipu v HTML e-mailu (NAS lib/mail-html.php), v e-mailu se nezobrazuje */
     if (d.zaloha > 0 && window.BDPlatba) { var pi = window.BDPlatba.info(d.obj_cislo, d.zaloha); f.push(['Platba ' + (d.zaloha_label || 'zálohy').toLowerCase(), kc(d.zaloha) + ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + '. QR kód a údaje k platbě: ' + pi.odkaz]); f.push(['Důležité', window.BDPlatba.podminka(d.zaloha_label)]); }
     if (d.zakaznik_token && window.BDPlatba && window.BDPlatba.mojeUrl) f.push(['Moje dveře – záruka a servis', window.BDPlatba.mojeUrl(d.zakaznik_token)]);
     /* bonus: aplikace Moje dveře v ceně (od 1. 11. 2026; náhled: localStorage bd-bonus = 1) */

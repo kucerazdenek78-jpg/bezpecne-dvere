@@ -99,7 +99,13 @@ try {
   $teloMail = $sPodpisem ? podpis_ocisti($telo) : $telo;
   $telo_html = preg_replace('~(https?://[^\s<]+)~u', '<a href="$1">$1</a>', htmlspecialchars($teloMail, ENT_QUOTES, 'UTF-8'));
   $html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;white-space:pre-wrap">' . $telo_html . '</div>';
-  if ($sPodpisem) { $html .= podpis_html($prodavac, (string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz')); $teloMail .= podpis_text($prodavac); }
+  if ($sPodpisem) {
+    // přehledná HTML podoba objednávky / nabídky (lib/mail-formular.php); když ji nejde sestavit, odejde původní výpis
+    $mh = ''; if (is_file(__DIR__ . '/lib/mail-formular.php')) { try { require_once __DIR__ . '/lib/mail-formular.php'; $mh = mailh_formular($cfg, $predmet, $teloMail); } catch (Throwable $e) { error_log('mail-html: ' . $e->getMessage()); $mh = ''; } }
+    $webP = (string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz');
+    $html = $mh !== '' ? podpis_do_html($mh, $prodavac, $webP) : $html . podpis_html($prodavac, $webP);
+    $teloMail = preg_replace('/^Příjmení: .*\n?/mu', '', $teloMail) . podpis_text($prodavac);
+  }
   $reply = ($typ === 'objednavka_zakaznik') ? $cfg['from'] : ($replyTo ?: $cfg['from']);
 
   if (($cfg['mail_rezim'] ?? 'smtp') === 'soubor') { // zkušební režim: nic se neposílá, zapíše se do /data/odeslano-test
