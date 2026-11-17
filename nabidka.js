@@ -921,6 +921,17 @@
       [OBJ ? 'Číslo objednávky' : 'Číslo nabídky', d.obj_cislo], ['Kategorie', KAT[d.kategorie]], ['Prodavač', d.prodavac], [OBJ ? 'Z nabídky / poptávky' : 'Z poptávky', (OBJ ? d.z_nabidky : d.z_poptavky) || '–'], ['Interní poznámka', d.interni || '–'],
       ['Cena celkem', kc(d.cena_celkem) + (d.dph_rezim ? ' ' + dphTxt() : '')]].concat(d.dph_rezim ? [['DPH (pro účetnictví)', d.dph_rezim === 'pdp' ? 'přenesená daňová povinnost, základ ' + kc(d.cena_bez_dph) : d.dph_sazba + ' %, základ ' + kc(d.cena_bez_dph) + ', DPH ' + kc(d.dph_kc)]] : []).concat(d.ic ? [['Fakturace', d.fak_jmeno + ', ' + d.fak_adresa + ', IČ ' + d.ic + (d.dic ? ', DIČ ' + d.dic : '') + (d.platce_dph ? ', plátce DPH' : '')]] : []).concat(OBJ ? [['Záloha / doplatek', kc(d.zaloha) + ' (' + d.zaloha_proc + ' %) / ' + kc(d.doplatek)]] : [['Vytvořit objednávku', d.objednavka_odkaz]]).concat([['data_json', JSON.stringify(d)]]).concat(d.polozky.map(function (p, i) { return ['Položka ' + (i + 1), p.co + (p.volba ? ' – ' + p.volba : '') + ': ' + kc(p.priplatek)]; }));
   }
+  /* obrázky dveří do e-mailu s cenovou nabídkou (NAS odeslat.php je vloží do karet položek; „i“ v názvu = ilustrační obrázek) */
+  function emailImgs(d) {
+    if (OBJ || d.rozpocet) return Promise.resolve([]);
+    return Promise.all(st.rows.slice(0, 6).map(function (r, i) {
+      return toJpeg(r.imgData || r.img, 420).then(function (j) {
+        if (!j) return null;
+        try { var b = atob(j.data.split(',')[1]), u = new Uint8Array(b.length); for (var k = 0; k < b.length; k++) u[k] = b.charCodeAt(k);
+          return { name: 'nahled_' + (i + 1), file: 'nahled-' + (i + 1) + (r.imgData ? '' : 'i') + '.jpg', blob: new Blob([u], { type: 'image/jpeg' }) }; } catch (e) { return null; }
+      }).catch(function () { return null; });
+    })).then(function (a) { return a.filter(Boolean); }).catch(function () { return []; });
+  }
   function pick(list, k) { var r = ''; list.forEach(function (x) { if (x[0] === k) r = x[1]; }); return r; }
   function send(typ, list, files, ref, extra) {
     var o = { typ: typ, predmet: pick(list, '_subject'), telo: fieldsTelo(list), reply_to: pick(list, '_replyto'), cislo: ref, data_json: pick(list, 'data_json'), honey: form._honey.value, files: files || [] };
@@ -953,7 +964,7 @@
     }).then(function () {
       if (!d.email) return;
       var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
-      return send('objednavka_zakaznik', customerList(d), files, d.obj_cislo, { email_zakaznik: d.email, prodavac: d.prodavac })
+      return emailImgs(d).then(function (im) { return send('objednavka_zakaznik', customerList(d), files.concat(im), d.obj_cislo, { email_zakaznik: d.email, prodavac: d.prodavac }); })
         .catch(function () { custOk = false; return send('objednavka_zakaznik', customerList(d), [], d.obj_cislo, { email_zakaznik: d.email, prodavac: d.prodavac }); });
     }).then(function () {
       kHotovo(d.obj_cislo);
@@ -1127,7 +1138,7 @@
       if (b && b.blob) files.push({ name: 'objednavka_pdf', file: fn, blob: b.blob });
       if (d.rozpocet && st.rozpBuf && !(b && b.merged)) files.push({ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) });
       var list = customerList(d).map(function (x) { return x[0] === '_subject' ? ['_subject', '[ZKOUŠKA] ' + x[1]] : x; });
-      return send('objednavka_zakaznik', list, files, d.obj_cislo, { email_zakaznik: st.test, prodavac: d.prodavac });
+      return emailImgs(d).then(function (im) { return send('objednavka_zakaznik', list, files.concat(im), d.obj_cislo, { email_zakaznik: st.test, prodavac: d.prodavac }); });
     }).then(function () {
       var hl = '✓ Zkušební e-mail nabídky ' + (d.obj_cislo || '') + ' odeslán na ' + st.test + (d.email ? ' (zákazníkovi ' + d.email + ' nic neodešlo)' : '') + '. Nabídka zůstává rozpracovaná.';
       if (!st.autoQ.length) { kAutoStav(hl + ' Hotovo.'); return; }

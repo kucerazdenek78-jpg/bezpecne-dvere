@@ -64,12 +64,18 @@ try {
 } catch (Throwable $e) { error_log('DB: ' . $e->getMessage()); $pdo = null; /* e-mail je důležitější, pokračujeme */ }
 
 // přílohy ($_FILES)
-$prilohy = [];
+$prilohy = []; $nahledy = [];
 $max = (int)$cfg['max_priloha_mb'] * 1048576; $celkem = 0;
 foreach ($_FILES as $f) {
   if (is_array($f['name']) || $f['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) continue;
   $celkem += $f['size']; if ($celkem > $max) konec(413, false, 'velke');
   $nazev = preg_replace('/[^A-Za-z0-9._-]/', '_', basename(str_replace(['\\','/'], '-', $f['name']))); if ($nazev === '') $nazev = 'priloha';
+  // obrázky dveří do těla e-mailu s nabídkou (nahled-N.jpg / nahled-Ni.jpg = ilustrační): nejsou příloha, vloží se do karet položek
+  if ($typ === 'objednavka_zakaznik' && preg_match('/^nahled-(\d{1,2})(i?)\.jpg$/', $nazev, $nm)) {
+    $gi = @getimagesize($f['tmp_name']);
+    if ($gi && $gi[2] === IMAGETYPE_JPEG && $f['size'] <= 400000 && count($nahledy) < 6) $nahledy[(int)$nm[1]] = ['cesta' => $f['tmp_name'], 'cid' => 'nahled' . (int)$nm[1], 'ilu' => $nm[2] === 'i', 'w' => $gi[0], 'h' => $gi[1]];
+    continue;
+  }
   $prilohy[] = ['nazev' => $nazev, 'cesta' => $f['tmp_name']];
 }
 
@@ -101,8 +107,9 @@ try {
   $html = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;white-space:pre-wrap">' . $telo_html . '</div>';
   if ($sPodpisem) {
     // přehledná HTML podoba objednávky / nabídky (lib/mail-formular.php); když ji nejde sestavit, odejde původní výpis
-    $mh = ''; if (is_file(__DIR__ . '/lib/mail-formular.php')) { try { require_once __DIR__ . '/lib/mail-formular.php'; $mh = mailh_formular($cfg, $predmet, $teloMail); } catch (Throwable $e) { error_log('mail-html: ' . $e->getMessage()); $mh = ''; } }
+    $mh = ''; if (is_file(__DIR__ . '/lib/mail-formular.php')) { try { require_once __DIR__ . '/lib/mail-formular.php'; $mh = mailh_formular($cfg, $predmet, $teloMail, $nahledy); } catch (Throwable $e) { error_log('mail-html: ' . $e->getMessage()); $mh = ''; } }
     $webP = (string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz');
+    if ($mh === '') $nahledy = [];
     $html = $mh !== '' ? podpis_do_html($mh, $prodavac, $webP) : $html . podpis_html($prodavac, $webP);
     $teloMail = preg_replace('/^Příjmení: .*\n?/mu', '', $teloMail) . podpis_text($prodavac);
   }
@@ -129,6 +136,7 @@ try {
     $m->addReplyTo($reply);
     $m->isHTML(true); $m->Subject = $predmet; $m->Body = $html; $m->AltBody = $teloMail;
     foreach ($prilohy as $a) $m->addAttachment($a['cesta'], $a['nazev']);
+    foreach ($nahledy as $n => $a) if (strpos($html, 'cid:' . $a['cid'] . '"') !== false) $m->addEmbeddedImage($a['cesta'], $a['cid'], 'dvere-' . $n . '.jpg', 'base64', 'image/jpeg');
     $m->send();
     $odeslano = true;
   }
