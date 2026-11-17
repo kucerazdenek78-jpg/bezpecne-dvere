@@ -45,6 +45,20 @@ window.ERKADO = {
   },
   /* str. 67: kování Erkado CERTUS (inox / černá – stejná cena) */
   certus: { klika: 1064, klikaCerna: 133, stitekHorni: 532, setMadlo: 865, horniDeska: 466 },   /* klikaCerna: příplatek za černý odstín kliky HAGA (konfigurace ERKADO 13. 11. 2026: „Odstín kliky Černá 133 Kč“) */
+  /* str. 67–68: kliky pro otevírání A, B [inox, černá]: k = klika, st = štítek pro horní zámek (jen B). První = klika v základní výbavě (HAGA).
+     PASA v nabídce není (od 1. 7. 2025 jen do vyprodání zásob). */
+  kliky: [
+    { id: 'haga', nazev: 'HAGA', k: [1064, 1197], st: [532, 599] },
+    { id: 'certus', nazev: 'Erkado CERTUS RC2', k: [1064, 1064], st: [532, 532] },
+    { id: 'certus3', nazev: 'Erkado CERTUS RC3', pozn: 'ochrana proti odvrtání tř. C', k: [1463, 1463], st: [665, 665] },
+    { id: 'royal', nazev: 'ROYAL', k: [1862, 2195], st: [1264, 1463] },
+    { id: 'royalflex', nazev: 'ROYAL FLEX', pozn: 'ochrana proti odvrtání tř. C', k: [2128, 2461], st: [1264, 1463] }
+  ],
+  /* str. 67–68: sady pro dveře s madlem (otevírání C, D) [inox, černá]: set = klika + štíhlý štítek, horni = sada horních štítků (jen D) */
+  sety: [
+    { id: 'certus', nazev: 'Erkado CERTUS', set: [865, 865], horni: [466, 466] },
+    { id: 'solo', nazev: 'SOLO GAJA', set: [1064, 1264], horni: [399, 466] }
+  ],
   /* str. 69: madla [inox, černá] podle délky (cm) */
   madla: [
     { id: 'K35', nazev: 'Madlo K35', d: { 180: [3791, 4921], 160: [3591, 4655], 120: [3259, 4256], 60: [2727, 3591] } },

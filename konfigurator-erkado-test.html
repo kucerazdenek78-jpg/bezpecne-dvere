@@ -93,6 +93,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .kf-pic img{display:block;height:74px;width:auto;border-radius:6px}
 .kf-vl img{height:46px}
 .kf-pic small{display:block}
+/* výběr kliky / sady a povrchu madla (17. 11. 2026) */
+.kf-kl{width:calc((100% - 1.2rem)/3);min-width:96px;max-width:150px;padding:.45rem .4rem}
+.kf-kl img{height:84px;max-width:100%;object-fit:contain}
+.kf-sub2{font-size:.82rem;color:var(--text-muted);margin-top:.6rem}
+#kfMadloBlock[hidden]{display:none}
 /* skla s fotkou z katalogu str. 62 (17. 11. 2026) */
 .kf-sk{width:calc((100% - 1.2rem)/3);min-width:96px;max-width:150px;padding:.45rem .4rem}
 .kf-sk img,.kf-sk-0{display:block;width:100%;height:auto;aspect-ratio:186/206;max-height:none;border-radius:6px}
@@ -357,20 +362,23 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
           <fieldset class="pq-block">
             <legend>Kování a zamykání</legend>
             <div class="pq-tiles" id="kfKov"></div>
+            <div class="kf-sub">Klika</div>
+            <div class="pq-chips" id="kfKlika"></div>
+            <div id="kfMadloBlock">
+              <div class="kf-sub">Madlo <small style="font-weight:500">ceník str. 69</small></div>
+              <div class="kf-sub kf-sub2">Povrch madla</div>
+              <div class="pq-chips" id="kfMadloB"></div>
+              <div class="kf-sub kf-sub2">Tvar madla</div>
+              <div class="pq-chips" id="kfMadlo"></div>
+              <div class="kf-sub kf-sub2">Délka</div>
+              <div class="pq-chips" id="kfMadloD"></div>
+            </div>
             <div class="kf-sub">Barva kování a vložek</div>
             <div class="pq-chips" id="kfKovBarva"></div>
             <div class="kf-sub">Třída vložek</div>
             <div class="pq-chips" id="kfTrida"></div>
             <div class="kf-sub">Počet klíčů</div><div class="pq-chips" id="kfKlice"></div>
             <div id="kfKovNote"></div>
-          </fieldset>
-          <fieldset class="pq-block" id="kfMadloBlock">
-            <legend>Madlo <small>vybírá se zvlášť, ceník str. 69</small></legend>
-            <div class="pq-chips" id="kfMadlo"></div>
-            <div class="kf-sub">Délka</div>
-            <div class="pq-chips" id="kfMadloD"></div>
-            <div class="kf-sub">Povrch</div>
-            <div class="pq-chips" id="kfMadloB"></div>
           </fieldset>
           <fieldset class="pq-block">
             <legend>Výbava za příplatek</legend>
@@ -466,8 +474,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   </div>
 </section>
 
-<script src="konfigurator-erkado/erkado-data.js?v=20261113a"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261117e"></script>
+<script src="konfigurator-erkado/erkado-data.js?v=20261117a"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261117f"></script>
 <script src="konfigurator-erkado/lead-gate-test.js?v=20261102a"></script>
 <script src="cookies.js?v=5" defer></script>
 </body>

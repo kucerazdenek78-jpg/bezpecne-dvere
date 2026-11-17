@@ -15,10 +15,10 @@
   var TLC = { h88: '#b91c2c', h78: '#d4600f', t78: '#a8860b', t64: '#13684a' };
   var SKLO = [['std', 'Standardní soustava skel', 'v ceně'], ['benat', 'Benátské zrcadlo (polopropustné)', 1], ['bila', 'Matné bílé / průhledné sklo', 2], ['seda', 'Matné šedé / průhledné sklo', 3]];
   var KOV = {
-    B: { n: 'Klika – klika + horní zámek', d: 'Klika HAGA RC2, druhý (horní) zámek, vložky v systému 1 klíče. V ceně kompletu.' },
-    A: { n: 'Klika – klika', d: 'Jeden zámek, vložka klíč–knoflík, klika HAGA RC2.' },
-    C: { n: 'Madlo – klika', d: 'Madlo zvenku, klika zevnitř, vložka klíč–knoflík. Madlo vyberte níže.' },
-    D: { n: 'Madlo – klika + horní zámek', d: 'Madlo zvenku, klika zevnitř, horní zámek, vložky v systému 1 klíče. Madlo vyberte níže.' },
+    B: { n: 'Klika – klika + horní zámek', d: 'Klika, druhý (horní) zámek, vložky v systému 1 klíče. S klikou HAGA v ceně kompletu.' },
+    A: { n: 'Klika – klika', d: 'Jeden zámek, vložka klíč–knoflík, kliku vyberete níže.' },
+    C: { n: 'Madlo – klika', d: 'Madlo zvenku, klika zevnitř, vložka klíč–knoflík. Kliku a madlo vyberete níže.' },
+    D: { n: 'Madlo – klika + horní zámek', d: 'Madlo zvenku, klika zevnitř, horní zámek, vložky v systému 1 klíče. Kliku a madlo vyberete níže.' },
     E: { n: 'Madlo – madlo', d: 'Madlo z obou stran, otevírání tlačítkem, elektromechanický zámek, samozavírač. Jen s hliníkovou zárubní.' },
     F: { n: 'Madlo – madlo + horní zámek', d: 'Jako madlo – madlo, navíc horní zámek a vložky v systému 1 klíče. Jen s hliníkovou zárubní.' },
     X: { n: 'Bez kování', d: 'Bez kliky, madla a vložek (vlastní kování).' }
@@ -27,7 +27,7 @@
   var st = {
     step: 1, model: 'horn', typ: 1, prov: 'PLAIN GLASS', kon: 't64', zar: 'ocel', smer: 'ven', strana: 'P',
     sirka: '90', sc: '', vyska: 'std', hc: '', dekor: 'dub-surovy', dvou: 'ne', dekor2: 'bily-mat', sklo: 'std', rc2: false,
-    kov: 'B', kovB: 'nikl', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, klice: '3', odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
+    kov: 'B', kovB: 'nikl', klika: 'haga', setMadlo: 'certus', madlo: 'none', madloD: '160', madloB: 'cerna', tridaC: false, klice: '3', odstin: 'Dle vzoru v katalogu', rozs: {}, sv: { h: false, hv: '300', l: false, lw: '400', p: false, pw: '400', sklo: 'std' }, vyb: {}, montaz: false, odber: 'odber', km: '', tripMsg: '', trip: null
   };
 
   /* ── pomocné ── */
@@ -57,6 +57,12 @@
   function isAlu() { return KON[st.kon].zarubenStd === 'hlinik' || st.zar === 'hlinik'; }
   function anySv() { return st.sv.h || st.sv.l || st.sv.p; }
   function madloMadlo() { return st.kov === 'E' || st.kov === 'F'; }
+  /* výběr kliky (A, B) a sady klika + štítek pro dveře s madlem (C, D) – ceník str. 67–68 */
+  function maMadlo() { return st.kov === 'C' || st.kov === 'D' || madloMadlo(); }
+  function KL() { return E.kliky.filter(function (x) { return x.id === st.klika; })[0] || E.kliky[0]; }
+  function SM() { return E.sety.filter(function (x) { return x.id === st.setMadlo; })[0] || E.sety[0]; }
+  /* B = komplet se základní klikou; jiná klika = rozdíl ceny kliky a horního štítku proti základní (nikdy pod cenu kompletu) */
+  function klikaRozdilB(kl, c) { var z = E.kliky[0]; return Math.max(0, kl.k[c] + kl.st[c] - z.k[c] - z.st[c]); }
   function needsAlu() { return anySv() || madloMadlo(); }
   function group(m, t, prov) {
     var g = m.skupiny.filter(function (x) { return x.typy.indexOf(t) >= 0 && (!x.jen || String(prov || '').indexOf(x.jen) === 0); });
@@ -120,6 +126,7 @@
     if (fixedHeight()) st.vyska = 'std';
     if (!zasklTyp()) { st.sklo = 'std'; st.rc2 = false; }
     if (oneLock() && (st.kov === 'B' || st.kov === 'D' || st.kov === 'F')) st.kov = { B: 'A', D: 'C', F: 'E' }[st.kov];
+    if (!maMadlo()) st.madlo = 'none';   // madlo jen u otevírání C, D, E, F
     if (madloMadlo()) { st.vyb.samozavirac = true; delete st.vyb.elektro; delete st.vyb.tlacitko; }
     if (!(st.kov === 'C' || st.kov === 'D') || !st.vyb.elektro) delete st.vyb.tlacitko;
     if (st.kov === 'X') st.tridaC = false;
@@ -233,15 +240,15 @@
     }
     /* kování */
     var c = st.kovB === 'cerna' ? 1 : 0, cn = st.kovB === 'cerna' ? 'černá' : 'nikl / mosaz';
-    if (st.kov === 'B') { if (c) L.push(['Černé základní kování (černé vložky)', cerneB(k)]); }
+    if (st.kov === 'B') { if (c) L.push(['Černé základní kování (černé vložky)', cerneB(k)]);
+      if (klikaRozdilB(KL(), c) > 0) L.push(['Klika ' + KL().nazev + ' místo základní HAGA (vč. štítku horního zámku)', klikaRozdilB(KL(), c)]); }
     else if (st.kov === 'A') {
       L.push(['Sada vložek pro otevírání A (' + cn + ')', E.sady.A[k][c]]);
-      L.push(['Klika HAGA RC2 (' + (c ? 'černá' : 'inox') + ')', E.certus.klika]);
-      if (c && E.certus.klikaCerna) L.push(['Černý odstín kliky HAGA', E.certus.klikaCerna]);
+      L.push(['Klika ' + KL().nazev + ' (' + (c ? 'černá' : 'inox') + ')', KL().k[c]]);
     } else if (st.kov === 'C' || st.kov === 'D') {
       L.push(['Sada vložek pro otevírání ' + st.kov + ' (' + cn + ')', E.sady[st.kov][k][c]]);
-      L.push(['Erkado CERTUS set madlo + štíhlá deska (' + (c ? 'černá' : 'inox') + ')', E.certus.setMadlo]);
-      if (st.kov === 'D') L.push(['Erkado CERTUS sada horní desky (' + (c ? 'černá' : 'inox') + ')', E.certus.horniDeska]);
+      L.push([SM().nazev + ' – sada klika + štíhlý štítek pro dveře s madlem (' + (c ? 'černá' : 'inox') + ')', SM().set[c]]);
+      if (st.kov === 'D') L.push([SM().nazev + ' – sada horních štítků (' + (c ? 'černá' : 'inox') + ')', SM().horni[c]]);
     } else if (madloMadlo()) {
       var MM = E.madloMadlo, sada = st.kov === 'E' ? 'A' : 'B';
       L.push(['Sada vložek pro otevírání ' + st.kov + ' (' + cn + ')', E.sady[sada][k][c]]);
@@ -377,12 +384,14 @@
     var z = zasklTyp();
     $('kfSkloBlock').hidden = !z;
     if (z) {
-      $('kfSklo').innerHTML = SKLO.map(function (s) {
-        return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('sklo', s[0], st.sklo === s[0]) + skloPic({ benat: 'zrcadlo', bila: 'matne-bile', seda: 'matne-sede' }[s[0]]) + '<span>' + s[1] + (typeof s[2] === 'number' ? ' <em>+ ' + kc(z[s[2]]) + '</em>' : ' <small>' + s[2] + '</small>') + '</span></label>';
-      }).join('');
+      // jedno společné políčko pro sklo (17. 11. 2026): odstíny standardního skla bez příplatku + skla za příplatek; fotky z katalogu str. 62
+      var skVyb = st.sklo !== 'std' ? 's:' + st.sklo : 'o:' + st.odstin;
+      $('kfSklo').innerHTML = E.skla.map(function (o, i) {
+        return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('skloVse', 'o:' + o, skVyb === 'o:' + o) + skloPic(SKLO_IMG[o]) + '<span>' + (i ? o : 'Standardní – dle vzoru v katalogu') + ' <small>v ceně</small></span></label>'; }).join('') +
+        SKLO.slice(1).map(function (s) {
+        return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('skloVse', 's:' + s[0], skVyb === 's:' + s[0]) + skloPic({ benat: 'zrcadlo', bila: 'matne-bile', seda: 'matne-sede' }[s[0]]) + '<span>' + s[1] + ' <em>+ ' + kc(z[s[2]]) + '</em></span></label>'; }).join('');
       $('kfRc2').innerHTML = '<label class="pq-check"><input type="checkbox" id="kfRc2c"' + (st.rc2 ? ' checked' : '') + '><span><b>Zasklení RC2</b><small>Prosklené dveře musí mít soustavu skel RC2, aby byly klasifikovány jako RC2 (str. 12).</small></span><em>+ ' + kc(z[0]) + '</em></label>' +
-        '<div class="kf-sub">Odstín skla <small style="font-weight:500">bez příplatku</small></div><div class="pq-chips">' + E.skla.map(function (o) {
-          return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('odstin', o, o === st.odstin) + skloPic(SKLO_IMG[o]) + '<span>' + o + '</span></label>'; }).join('') + '</div><p class="pq-help" style="margin:.4rem 0 0">Fotky skel z katalogu ERKADO (str. 62): vlevo pohled bez skla, vpravo přes sklo. Dostupnost odstínu pro vzor ověříme (str. 4, 62).</p>';
+        '<p class="pq-help" style="margin:.8rem 0 0">Fotky skel z katalogu ERKADO (str. 62): vlevo pohled bez skla, vpravo přes sklo. Dostupnost skla pro vybraný vzor ověříme (str. 4, 62).</p>';
     }
     renderSv();
   }
@@ -404,18 +413,30 @@
     var k = st.kon, c = st.kovB === 'cerna' ? 1 : 0, ol = oneLock();
     $('kfKov').innerHTML = ['B', 'A', 'C', 'D', 'E', 'F', 'X'].map(function (id) {
       var dis = ol && (id === 'B' || id === 'D' || id === 'F'), price, MM = E.madloMadlo;
-      if (id === 'B') price = '<em class="free">v ceně kompletu</em>';
-      else if (id === 'A') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + E.certus.klika + (c ? (E.certus.klikaCerna || 0) : 0)) + '</em>';
-      else if (id === 'C') price = '<em>bez kování + ' + kc(E.sady.C[k][c] + E.certus.setMadlo) + ' + madlo</em>';
-      else if (id === 'D') price = '<em>bez kování + ' + kc(E.sady.D[k][c] + E.certus.setMadlo + E.certus.horniDeska) + ' + madlo</em>';
+      if (id === 'B') price = klikaRozdilB(KL(), c) > 0 ? '<em>komplet + ' + kc(klikaRozdilB(KL(), c)) + ' za kliku</em>' : '<em class="free">v ceně kompletu</em>';
+      else if (id === 'A') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + KL().k[c]) + '</em>';
+      else if (id === 'C') price = '<em>bez kování + ' + kc(E.sady.C[k][c] + SM().set[c]) + ' + madlo</em>';
+      else if (id === 'D') price = '<em>bez kování + ' + kc(E.sady.D[k][c] + SM().set[c] + SM().horni[c]) + ' + madlo</em>';
       else if (id === 'E') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + MM.slimZnak + MM.tlacitka2 + MM.elZamek + MM.napajeni) + ' + 2 madla + samozavírač</em>';
       else if (id === 'F') price = '<em>bez kování + ' + kc(E.sady.B[k][c] + MM.slimZnak + MM.horniStitek + MM.tlacitka2 + MM.elZamek + MM.napajeni) + ' + 2 madla + samozavírač</em>';
       else price = '<em class="free">komplet bez kování</em>';
       return '<label class="pq-opt pq-tile">' + radio('kov', id, st.kov === id, dis) + kovImg(id) + '<span>' + KOV[id].n + '</span>' + price + '<small>' + KOV[id].d + '</small></label>';
     }).join('');
+    var kB = $('kfKlika');
+    if (kB) {
+      var jeKl = st.kov === 'A' || st.kov === 'B', jeSet = st.kov === 'C' || st.kov === 'D', bv = c ? 'cerna' : 'nikl';
+      kB.hidden = kB.previousElementSibling.hidden = !(jeKl || jeSet);
+      kB.previousElementSibling.innerHTML = jeSet ? 'Klika zevnitř <small style="font-weight:500">sada klika + štíhlý štítek pro dveře s madlem</small>' : 'Klika';
+      kB.innerHTML = jeKl ? E.kliky.map(function (x) {
+        var cena = st.kov === 'A' ? '<em>' + kc(x.k[c]) + '</em>' : (klikaRozdilB(x, c) > 0 ? '<em>+ ' + kc(klikaRozdilB(x, c)) + '</em>' : '<em class="free">v ceně</em>');
+        return '<label class="pq-opt pq-chip kf-pic kf-kl">' + radio('klika', x.id, x.id === KL().id) + kovPic('klika-' + x.id + '-' + bv) + '<span>' + x.nazev + ' ' + cena + (x.pozn ? ' <small>' + x.pozn + '</small>' : '') + '</span></label>'; }).join('')
+        : jeSet ? E.sety.map(function (x) {
+        return '<label class="pq-opt pq-chip kf-pic kf-kl">' + radio('setMadlo', x.id, x.id === SM().id) + kovPic('set-' + x.id + '-' + bv) + '<span>' + x.nazev + ' <em>' + kc(x.set[c] + (st.kov === 'D' ? x.horni[c] : 0)) + '</em></span></label>'; }).join('') : '';
+    }
+    var mBl = $('kfMadloBlock'); if (mBl) mBl.hidden = !maMadlo();
     $('kfKovBarva').innerHTML = st.kov === 'X' ? '<p class="pq-help" style="margin:0">Bez kování.</p>' :
-      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'nikl', st.kovB === 'nikl') + kovPic(madloMadlo() ? 'vlozka-knoflik-nikl' : 'klika-nikl') + '<span>Inox, vložky nikl / mosaz</span></label>' +
-      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'cerna', st.kovB === 'cerna') + kovPic(madloMadlo() ? 'vlozka-knoflik-cerna' : 'klika-cerna') + '<span>Černé' + (st.kov === 'B' ? ' <em>+ ' + kc(cerneB(st.kon)) + '</em>' : '') + '</span></label>';
+      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'nikl', st.kovB === 'nikl') + kovPic(madloMadlo() ? 'vlozka-knoflik-nikl' : (st.kov === 'C' || st.kov === 'D') ? 'set-' + SM().id + '-nikl' : 'klika-' + KL().id + '-nikl') + '<span>Inox, vložky nikl / mosaz</span></label>' +
+      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'cerna', st.kovB === 'cerna') + kovPic(madloMadlo() ? 'vlozka-knoflik-cerna' : (st.kov === 'C' || st.kov === 'D') ? 'set-' + SM().id + '-cerna' : 'klika-' + KL().id + '-cerna') + '<span>Černé' + (st.kov === 'B' ? ' <em>+ ' + kc(cerneB(st.kon)) + '</em>' : '') + '</span></label>';
     var V = E.vlozky, one = st.kov === 'A' || st.kov === 'C' || st.kov === 'E';
     var dC = one ? V.knoflikC[k][c] - V.knoflikB[k][c] : V.sadaC[k][c] - V.sadaB[k][c];
     var vlPic = kovPic((one ? 'vlozka-knoflik-' : 'vlozky-sada-') + (c ? 'cerna' : 'nikl'));
@@ -435,8 +456,7 @@
     if ((st.kov === 'C' || st.kov === 'D' || madloMadlo()) && st.madlo === 'none') kn.push('<b>U kování s madlem vyberte madlo níže.</b>');
     $('kfKovNote').innerHTML = kn.length ? '<div class="pq-note' + (st.madlo === 'none' && (st.kov === 'C' || st.kov === 'D' || madloMadlo()) ? ' warn' : '') + '">' + kn.join('<br>') + '</div>' : '';
     var md = E.madla.filter(function (x) { return x.id === st.madlo; })[0], bi = st.madloB === 'cerna' ? 1 : 0;
-    $('kfMadloD').previousElementSibling.hidden = $('kfMadloB').previousElementSibling.hidden = !md;
-    $('kfMadloD').hidden = $('kfMadloB').hidden = !md;
+    $('kfMadloD').previousElementSibling.hidden = $('kfMadloD').hidden = !md;   // povrch madla (inox / černé) je vidět pořád – přepíná i obrázky madel
     {
       // obrázky madel: výřezy z katalogu ERKADO str. 69 (černé provedení) = <id>.jpg; inox = <id>-inox.jpg, orientačně přebarvené (tools/erkado_madla_inox.py)
       $('kfMadlo').innerHTML = '<label class="pq-opt pq-chip kf-mad">' + radio('madlo', 'none', !md) + '<span class="kf-mad-0" aria-hidden="true">✕</span><span>Bez madla</span></label>' + E.madla.map(function (x) {
@@ -446,7 +466,9 @@
       if (md) $('kfMadloD').innerHTML = Object.keys(md.d).sort(function (a, b) { return b - a; }).map(function (l) {
         return '<label class="pq-opt pq-chip">' + radio('madloD', l, l === st.madloD) + l + ' cm <em>' + kc(md.d[l][bi]) + '</em></label>';
       }).join('');
-      $('kfMadloB').innerHTML = '<label class="pq-opt pq-chip">' + radio('madloB', 'inox', st.madloB === 'inox') + 'Inox (nerez)</label><label class="pq-opt pq-chip">' + radio('madloB', 'cerna', st.madloB === 'cerna') + 'Černé STR</label>';
+      var mUk = (md ? md.id : 'K35').toLowerCase();
+      $('kfMadloB').innerHTML = '<label class="pq-opt pq-chip kf-pic kf-kl">' + radio('madloB', 'inox', st.madloB === 'inox') + '<img src="' + IMG + 'madla/' + mUk + '-inox.jpg" alt="" loading="lazy"><span>Inox (nerez)</span></label>' +
+        '<label class="pq-opt pq-chip kf-pic kf-kl">' + radio('madloB', 'cerna', st.madloB === 'cerna') + '<img src="' + IMG + 'madla/' + mUk + '.jpg" alt="" loading="lazy"><span>Černé STR</span></label>';
     }
     $('kfVyb').innerHTML = E.vybava.map(function (v) {
       var why = '';
@@ -512,7 +534,7 @@
   }
   function kovText() {
     if (st.kov === 'X') return 'bez kování';
-    var t = KOV[st.kov].n + ', ' + (st.kovB === 'cerna' ? 'černé' : 'inox / nikl') + ', vložky třídy ' + (st.tridaC ? 'C' : 'B') + (st.kov !== 'X' ? ', ' + st.klice + (st.klice === '3' ? ' klíče' : ' klíčů') : '');
+    var t = KOV[st.kov].n + (st.kov === 'A' || st.kov === 'B' ? ', klika ' + KL().nazev : st.kov === 'C' || st.kov === 'D' ? ', klika ' + SM().nazev : '') + ', ' + (st.kovB === 'cerna' ? 'černé' : 'inox / nikl') + ', vložky třídy ' + (st.tridaC ? 'C' : 'B') + (st.kov !== 'X' ? ', ' + st.klice + (st.klice === '3' ? ' klíče' : ' klíčů') : '');
     return t;
   }
   function madloText() {
@@ -764,6 +786,7 @@
     if (t.matches('[data-sv]')) { st.sv[t.getAttribute('data-sv')] = t.checked; }
     else if (t.matches('[data-rozs]')) { if (t.checked) st.rozs[t.getAttribute('data-rozs')] = true; else delete st.rozs[t.getAttribute('data-rozs')]; }
     else if (t.id === 'kfOdstin' || n === 'odstin') st.odstin = t.value;
+    else if (n === 'skloVse') { if (v.indexOf('s:') === 0) { st.sklo = v.slice(2); st.odstin = E.skla[0]; } else { st.sklo = 'std'; st.odstin = v.slice(2); } }
     else if (n === 'svSklo') st.sv.sklo = v;
     else if (n === 'trida') st.tridaC = v === 'C';
     else if (n === 'klice') st.klice = v;
