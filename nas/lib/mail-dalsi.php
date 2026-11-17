@@ -57,6 +57,7 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
     return true;
   }
 
+
   // 3) připomínky servisu a záruky (nabidky.php, udrzba-pripominky.php) a kopie předávacího listu po podpisu na displeji (posli_predani_kopii):
   //    text e-mailu beze změny, jen šablona + animace s buldočkem pod úvodním odstavcem. PDF v příloze se nemění.
   $bul = [
