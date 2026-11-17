@@ -843,10 +843,19 @@
         if (LG[2]) legal.push(LG[2]);
         if (LG[3]) legal.push(LG[3]);
         if (LG[4]) { var gd = LG[4].indexOf('Osobní údaje objednatele'), gz = LG[4].indexOf(' číslo občanského průkazu'); legal.push(cutTo(LG[4], ' Objednatel bere na vědomí, že čistý průchod') + (gd >= 0 ? ' ' + LG[4].slice(gd, gz > gd ? gz : undefined).replace(/;\s*$/, '.') : '')); }
-        section('Platba');
         var pi = window.BDPlatba && d.zaloha > 0 ? window.BDPlatba.info(d.obj_cislo, d.zaloha) : null;
-        para('Záloha ' + d.zaloha_proc + ' % z ceny zakázky: ' + money(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') : '') + '. Doplatek ' + money(d.doplatek) + ' hotově po montáži.', 9.2, [15, 42, 28], 4.2);
+        /* QR platba zálohy přímo v PDF objednávky (17. 11. 2026 – dřív byl QR jen na stránce a v e-mailu odkaz; objednávka jedněch dveří ho v PDF měla) */
+        var qrPng = null; if (OBJ && pi) { try { qrPng = window.BDPlatba.png(pi.spd, 300); } catch (e) { qrPng = null; } }
+        if (qrPng) ensure(46);                      /* nadpis + QR pohromadě na jedné straně */
+        section('Platba');
+        var qrY = y - 3, CWplna = CW; if (qrPng) CW = CW - 33;   /* text vedle QR užší */
+        para('Záloha ' + d.zaloha_proc + ' % z ceny zakázky: ' + money(d.zaloha) + (pi ? ' – účet ' + pi.ucet + (pi.vs ? ', variabilní symbol ' + pi.vs : '') + (qrPng ? ' (nebo QR kód vpravo)' : '') : '') + '. Doplatek ' + money(d.doplatek) + ' hotově po montáži.', 9.2, [15, 42, 28], 4.2);
         if (OBJ && d.zaloha > 0 && window.BDPlatba) para(window.BDPlatba.podminka(d.zaloha_label), 9.2, [124, 45, 12], 4.2);
+        if (qrPng) {
+          CW = CWplna;
+          try { doc.addImage(qrPng, 'PNG', W - M - 28, qrY, 28, 28); font('normal', 6.5, MUTED); doc.text('QR platba zálohy', W - M - 14, qrY + 31, { align: 'center' }); } catch (e) {}
+          y = Math.max(y, qrY + 34);
+        }
         if (d.zahrnuje) { section('Co cena zahrnuje'); para(d.zahrnuje, 9.2, [15, 42, 28], 4.2); }
         if (d.termin_text) para('Termín dodání / montáže: ' + d.termin_text, 9.2, [15, 42, 28], 4.2);
         section('Smluvní ujednání');
