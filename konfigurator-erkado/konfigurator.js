@@ -410,15 +410,16 @@
       else if (id === 'E') price = '<em>bez kování + ' + kc(E.sady.A[k][c] + MM.slimZnak + MM.tlacitka2 + MM.elZamek + MM.napajeni) + ' + 2 madla + samozavírač</em>';
       else if (id === 'F') price = '<em>bez kování + ' + kc(E.sady.B[k][c] + MM.slimZnak + MM.horniStitek + MM.tlacitka2 + MM.elZamek + MM.napajeni) + ' + 2 madla + samozavírač</em>';
       else price = '<em class="free">komplet bez kování</em>';
-      return '<label class="pq-opt pq-tile">' + radio('kov', id, st.kov === id, dis) + kovSvg(id) + '<span>' + KOV[id].n + '</span>' + price + '<small>' + KOV[id].d + '</small></label>';
+      return '<label class="pq-opt pq-tile">' + radio('kov', id, st.kov === id, dis) + kovImg(id) + '<span>' + KOV[id].n + '</span>' + price + '<small>' + KOV[id].d + '</small></label>';
     }).join('');
     $('kfKovBarva').innerHTML = st.kov === 'X' ? '<p class="pq-help" style="margin:0">Bez kování.</p>' :
-      '<label class="pq-opt pq-chip">' + radio('kovB', 'nikl', st.kovB === 'nikl') + 'Inox, vložky nikl / mosaz</label>' +
-      '<label class="pq-opt pq-chip">' + radio('kovB', 'cerna', st.kovB === 'cerna') + 'Černé' + (st.kov === 'B' ? ' <em>+ ' + kc(cerneB(st.kon)) + '</em>' : '') + '</label>';
+      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'nikl', st.kovB === 'nikl') + kovPic(madloMadlo() ? 'vlozka-knoflik-nikl' : 'klika-nikl') + '<span>Inox, vložky nikl / mosaz</span></label>' +
+      '<label class="pq-opt pq-chip kf-pic">' + radio('kovB', 'cerna', st.kovB === 'cerna') + kovPic(madloMadlo() ? 'vlozka-knoflik-cerna' : 'klika-cerna') + '<span>Černé' + (st.kov === 'B' ? ' <em>+ ' + kc(cerneB(st.kon)) + '</em>' : '') + '</span></label>';
     var V = E.vlozky, one = st.kov === 'A' || st.kov === 'C' || st.kov === 'E';
     var dC = one ? V.knoflikC[k][c] - V.knoflikB[k][c] : V.sadaC[k][c] - V.sadaB[k][c];
-    $('kfTrida').innerHTML = st.kov === 'X' ? '' : '<label class="pq-opt pq-chip">' + radio('trida', 'B', !st.tridaC) + 'Třída B <small>ve standardu, splňuje RC2</small></label>' +
-      '<label class="pq-opt pq-chip">' + radio('trida', 'C', st.tridaC) + 'Třída C <em>+ ' + kc(dC) + '</em> <small>vyšší ochrana</small></label>';
+    var vlPic = kovPic((one ? 'vlozka-knoflik-' : 'vlozky-sada-') + (c ? 'cerna' : 'nikl'));
+    $('kfTrida').innerHTML = st.kov === 'X' ? '' : '<label class="pq-opt pq-chip kf-pic kf-vl">' + radio('trida', 'B', !st.tridaC) + vlPic + '<span>Třída B <small>ve standardu, splňuje RC2</small></span></label>' +
+      '<label class="pq-opt pq-chip kf-pic kf-vl">' + radio('trida', 'C', st.tridaC) + vlPic + '<span>Třída C <em>+ ' + kc(dC) + '</em> <small>vyšší ochrana</small></span></label>';
     $('kfTrida').previousElementSibling.hidden = st.kov === 'X';
     $('kfKlice').innerHTML = st.kov === 'X' ? '' : '<label class="pq-opt pq-chip">' + radio('klice', '3', st.klice === '3') + '3 klíče <small>v základu</small></label>' +
       Object.keys(E.klice).map(function (n) { return '<label class="pq-opt pq-chip">' + radio('klice', n, st.klice === n) + n + ' klíčů <em>+ ' + kc(E.klice[n]) + '</em></label>'; }).join('');
@@ -585,6 +586,9 @@
       '<rect x="' + (x0 - 4) + '" y="6" width="' + (w + 8) + '" height="68" fill="none" stroke="#123d27" stroke-width="3"/>' + leaf +
       '<circle cx="' + hx + '" cy="22" r="2.2" fill="#c2410c"/><circle cx="' + hx + '" cy="58" r="2.2" fill="#c2410c"/>' + arc + '</svg>';
   }
+  /* obrázky kování z katalogu ERKADO (17. 11. 2026): způsoby otevírání A–F str. 65, klika HAGA str. 68, vložky str. 66 → konfigurator-erkado/img/kovani/ */
+  function kovImg(id) { return id === 'X' ? kovSvg(id) : '<img class="kf-kov-i" src="' + IMG + 'kovani/zpusob-' + id.toLowerCase() + '.jpg" alt="" loading="lazy">'; }
+  function kovPic(n) { return '<img src="' + IMG + 'kovani/' + n + '.jpg" alt="" loading="lazy">'; }
   function kovSvg(id) {
     var klika = function (x, dir) { return '<rect x="' + (x - 3) + '" y="40" width="6" height="16" rx="2" fill="#123d27"/><rect x="' + (dir > 0 ? x : x - 18) + '" y="42" width="18" height="5" rx="2.5" fill="#123d27"/>'; };
     var madlo = '<rect x="96" y="12" width="5" height="62" rx="2" fill="#123d27"/><rect x="88" y="16" width="9" height="3" fill="#123d27"/><rect x="88" y="67" width="9" height="3" fill="#123d27"/>';

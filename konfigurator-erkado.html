@@ -86,6 +86,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .pq-chip em{font-style:normal;color:var(--orange-text);font-size:.78rem;font-weight:700}
 .pq-chip small{font-weight:500;color:var(--text-muted);font-size:.74rem}
 .pq-chip:has(input:checked)::after{display:none}
+/* kování s obrázky z katalogu: způsoby otevírání, klika, vložky (17. 11. 2026) */
+.pq-tile img.kf-kov-i{display:block;height:120px;width:auto;margin:0 auto .45rem}
+.kf-pic{flex-direction:column;align-items:center;text-align:center;gap:.3rem;padding:.5rem .7rem;max-width:170px}
+.kf-pic img{display:block;height:74px;width:auto;border-radius:6px}
+.kf-vl img{height:46px}
+.kf-pic small{display:block}
 /* madla s obrázkem z katalogu (17. 11. 2026) */
 .kf-mad{flex-direction:column;align-items:center;text-align:center;gap:.25rem;width:calc((100% - 1.2rem)/3);min-width:92px;max-width:130px;padding:.5rem .3rem}
 .kf-mad img,.kf-mad-0{display:block;width:64px;height:72px;object-fit:contain;background:#fff;border-radius:8px}
@@ -458,7 +464,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <script src="konfigurator-erkado/nabidka-most.js?v=20261113a"></script>
 <script src="konfigurator-erkado/lead-gate.js?v=20261102b"></script>
 <script src="konfigurator-erkado/erkado-data.js?v=20261113a"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261117a"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261117b"></script>
 <script src="konfigurator-erkado/pomocnik.js?v=20261117a" defer></script>
 <script src="cookies.js?v=5" defer></script>
 </body>
