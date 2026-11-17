@@ -147,8 +147,10 @@ if ($typ === 'poptavka' && $replyTo && ($odeslano || $id)) {
       require_once __DIR__ . '/lib/posta.php';
       $cis = cisti($_POST['cislo'] ?? '', 40);
       $txt = "Dobrý den,\n\nděkujeme za Vaši poptávku" . ($cis !== '' ? " (č. $cis)" : '') . ". Dorazila k nám v pořádku a budeme se jí věnovat nejpozději do dvou pracovních dnů. Ozveme se Vám na telefon nebo e-mail, který jste uvedli.\n\n"
-        . "Kdybyste chtěli cokoli doplnit, stačí odpovědět na tento e-mail nebo zavolat na +420 725 559 235.\n\n"
-        . "Bezpečné dveře · KK SYSTEM\nObchodní 36, Most\nwww.bezpecne-dvere.cz";
+        . "Kdybyste chtěli cokoli doplnit, stačí odpovědět na tento e-mail nebo zavolat na +420 725 559 235.";
+      // shrnutí toho, co zákazník poslal (lib/mail-dalsi.php z něj v HTML e-mailu udělá přehlednou tabulku)
+      $shr = trim(mb_substr($telo, 0, 6000)); if ($shr !== '') $txt .= "\n\nSHRNUTÍ VAŠÍ POPTÁVKY\n" . $shr;
+      $txt .= "\n\nBezpečné dveře · KK SYSTEM\nObchodní 36, Most\nwww.bezpecne-dvere.cz";
       posli_mail($cfg, $DATA, [$replyTo], [], $cfg['from'], 'Děkujeme za poptávku' . ($cis !== '' ? " č. $cis" : ''), $txt);
     }
   } catch (Throwable $e) { error_log('Poděkování za poptávku: ' . $e->getMessage()); }

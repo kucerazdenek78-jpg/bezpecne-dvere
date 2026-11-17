@@ -99,6 +99,9 @@ function mailh_cedulka_pdf(string $DATA, string $web, string $datum, string $cas
 function mailh_uprav(array $cfg, string $DATA, string &$predmet, string &$telo, string &$htmlTelo, array &$prilohy): void {
   $web = rtrim((string)($cfg['web_url'] ?? 'https://bezpecne-dvere.cz'), '/');
 
+  // poděkování za poptávku a připomínky nabídek (lib/mail-dalsi.php)
+  if (is_file(__DIR__ . '/mail-dalsi.php')) { require_once __DIR__ . '/mail-dalsi.php'; if (mailh_dalsi($cfg, $predmet, $telo, $htmlTelo)) return; }
+
   // 1) podepsaná objednávka po přijetí zálohy (akceptace.php)
   if (preg_match('~^Objednávka č\. (.+?) podepsaná – akceptace~u', $predmet, $m)) {
     $cislo = $m[1]; $kc = preg_match('~záloha ve výši ([\d\s\x{00A0}]+) Kč~u', $telo, $z) ? trim($z[1]) . ' Kč' : '';
