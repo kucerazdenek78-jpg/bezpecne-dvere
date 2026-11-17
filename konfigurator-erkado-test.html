@@ -93,6 +93,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .kf-pic img{display:block;height:74px;width:auto;border-radius:6px}
 .kf-vl img{height:46px}
 .kf-pic small{display:block}
+/* skla s fotkou z katalogu str. 62 (17. 11. 2026) */
+.kf-sk{width:calc((100% - 1.2rem)/3);min-width:96px;max-width:150px;padding:.45rem .4rem}
+.kf-sk img,.kf-sk-0{display:block;width:100%;height:auto;aspect-ratio:186/206;max-height:none;border-radius:6px}
+.kf-sk-0{border:1px dashed #c9d4ce;background:repeating-linear-gradient(135deg,#f4f7f5 0 8px,#fff 8px 16px)}
 /* madla s obrázkem z katalogu (17. 11. 2026) */
 .kf-mad{flex-direction:column;align-items:center;text-align:center;gap:.25rem;width:calc((100% - 1.2rem)/3);min-width:92px;max-width:130px;padding:.5rem .3rem}
 .kf-mad img,.kf-mad-0{display:block;width:64px;height:72px;object-fit:contain;background:#fff;border-radius:8px}
@@ -463,7 +467,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 </section>
 
 <script src="konfigurator-erkado/erkado-data.js?v=20261113a"></script>
-<script src="konfigurator-erkado/konfigurator.js?v=20261117d"></script>
+<script src="konfigurator-erkado/konfigurator.js?v=20261117e"></script>
 <script src="konfigurator-erkado/lead-gate-test.js?v=20261102a"></script>
 <script src="cookies.js?v=5" defer></script>
 </body>

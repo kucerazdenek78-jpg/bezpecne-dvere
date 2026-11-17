@@ -378,10 +378,11 @@
     $('kfSkloBlock').hidden = !z;
     if (z) {
       $('kfSklo').innerHTML = SKLO.map(function (s) {
-        return '<label class="pq-opt pq-chip">' + radio('sklo', s[0], st.sklo === s[0]) + s[1] + (typeof s[2] === 'number' ? ' <em>+ ' + kc(z[s[2]]) + '</em>' : ' <small>' + s[2] + '</small>') + '</label>';
+        return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('sklo', s[0], st.sklo === s[0]) + skloPic({ benat: 'zrcadlo', bila: 'matne-bile', seda: 'matne-sede' }[s[0]]) + '<span>' + s[1] + (typeof s[2] === 'number' ? ' <em>+ ' + kc(z[s[2]]) + '</em>' : ' <small>' + s[2] + '</small>') + '</span></label>';
       }).join('');
       $('kfRc2').innerHTML = '<label class="pq-check"><input type="checkbox" id="kfRc2c"' + (st.rc2 ? ' checked' : '') + '><span><b>Zasklení RC2</b><small>Prosklené dveře musí mít soustavu skel RC2, aby byly klasifikovány jako RC2 (str. 12).</small></span><em>+ ' + kc(z[0]) + '</em></label>' +
-        '<label class="pq-f" style="margin:1rem 0 0;max-width:320px">Odstín skla (bez příplatku)<select id="kfOdstin">' + E.skla.map(function (o) { return '<option' + (o === st.odstin ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select><small>Dostupnost odstínu pro vzor ověříme (str. 4, 62).</small></label>';
+        '<div class="kf-sub">Odstín skla <small style="font-weight:500">bez příplatku</small></div><div class="pq-chips">' + E.skla.map(function (o) {
+          return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('odstin', o, o === st.odstin) + skloPic(SKLO_IMG[o]) + '<span>' + o + '</span></label>'; }).join('') + '</div><p class="pq-help" style="margin:.4rem 0 0">Fotky skel z katalogu ERKADO (str. 62): vlevo pohled bez skla, vpravo přes sklo. Dostupnost odstínu pro vzor ověříme (str. 4, 62).</p>';
     }
     renderSv();
   }
@@ -395,7 +396,7 @@
       chk('l', st.sv.l, 'Boční světlík vpravo', 'Výška podle dveří (Hc ' + z.hc + ' mm), šířka 200–800 mm.') +
       (st.sv.l ? '<div class="kf-row"><label class="pq-f" style="max-width:220px">Šířka pravého světlíku (mm)<input type="number" id="kfSvLw" min="200" max="800" step="1" value="' + esc(st.sv.lw) + '"><small>Ceník po 100 mm</small></label></div>' : '');
     if (anySv()) h += '<div class="kf-sub">Sklo ve světlících</div><div class="pq-chips">' + [['std', 'Standardní', ''], ['p4', 'Bezpečnostní P4', S.m2.p4], ['zrcadlo', 'Polopropustné zrcadlo', S.m2.zrcadlo], ['bila', 'Matné bílé / průhledné', S.m2.bila], ['seda', 'Matné šedé / průhledné', S.m2.seda]].map(function (o) {
-      return '<label class="pq-opt pq-chip">' + radio('svSklo', o[0], st.sv.sklo === o[0]) + o[1] + (o[2] ? ' <em>+ ' + kc(o[2]) + '/m²</em>' : '') + '</label>';
+      return '<label class="pq-opt pq-chip kf-pic kf-sk">' + radio('svSklo', o[0], st.sv.sklo === o[0]) + skloPic({ zrcadlo: 'zrcadlo', bila: 'matne-bile', seda: 'matne-sede' }[o[0]]) + '<span>' + o[1] + (o[2] ? ' <em>+ ' + kc(o[2]) + '/m²</em>' : '') + '</span></label>';
     }).join('') + '</div><div class="pq-note">Světlíky jen s hliníkovou zárubní (zapne se sama). Cena je za nejbližší vyšší rozměr z ceníku, u nestandardního rozměru + 665 Kč. Dveře se světlíky nemají zkoušku RC2. Rozměry jsou vně rámu (str. 62–63).</div>';
     $('kfSv').innerHTML = h;
   }
@@ -588,6 +589,9 @@
   }
   /* obrázky kování z katalogu ERKADO (17. 11. 2026): způsoby otevírání A–F str. 65, klika HAGA str. 68, vložky str. 66 → konfigurator-erkado/img/kovani/ */
   function kovImg(id) { return id === 'X' ? kovSvg(id) : '<img class="kf-kov-i" src="' + IMG + 'kovani/zpusob-' + id.toLowerCase() + '.jpg" alt="" loading="lazy">'; }
+  /* fotky skel z katalogu ERKADO str. 62 (Soustavy skel – typy zasklení) → konfigurator-erkado/img/skla/; bez fotky = prázdné políčko */
+  var SKLO_IMG = { 'Černé (neprůhledné)': 'cerna', 'Grafit': 'grafit', 'Hnědé reflexní': 'hneda-reflexni', 'Šedé reflexní': 'seda-reflexni', 'Pískované': 'piskovane', 'Čiré': 'cire' };
+  function skloPic(n) { return n ? '<img src="' + IMG + 'skla/' + n + '.jpg" alt="" loading="lazy">' : '<i class="kf-sk-0" aria-hidden="true"></i>'; }
   function kovPic(n) { return '<img src="' + IMG + 'kovani/' + n + '.jpg" alt="" loading="lazy">'; }
   function kovSvg(id) {
     var klika = function (x, dir) { return '<rect x="' + (x - 3) + '" y="40" width="6" height="16" rx="2" fill="#123d27"/><rect x="' + (dir > 0 ? x : x - 18) + '" y="42" width="18" height="5" rx="2.5" fill="#123d27"/>'; };
@@ -759,7 +763,7 @@
     var t = e.target, n = t.name, v = t.value;
     if (t.matches('[data-sv]')) { st.sv[t.getAttribute('data-sv')] = t.checked; }
     else if (t.matches('[data-rozs]')) { if (t.checked) st.rozs[t.getAttribute('data-rozs')] = true; else delete st.rozs[t.getAttribute('data-rozs')]; }
-    else if (t.id === 'kfOdstin') st.odstin = t.value;
+    else if (t.id === 'kfOdstin' || n === 'odstin') st.odstin = t.value;
     else if (n === 'svSklo') st.sv.sklo = v;
     else if (n === 'trida') st.tridaC = v === 'C';
     else if (n === 'klice') st.klice = v;
