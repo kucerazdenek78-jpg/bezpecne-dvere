@@ -7,6 +7,9 @@
 // Obrázky a videa leží na webu v userFiles/email/. Podpis obchodníka dál přidává lib/podpis.php (pod šablonu).
 // Když cokoli selže, e-mail odejde v původní podobě. Patří na NAS do /docker/formulare/app/lib/mail-html.php.
 
+// maskot (šedý buldoček v přilbě) v hlavičce každého e-mailu ze šablony; obrázky na webu v userFiles/maskot/
+const MAILH_MASKOT = 'https://bezpecne-dvere.cz/userFiles/maskot/buldok-hlava.png';
+
 function mailh_h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 // Jednotná šablona: zelená hlavička (nadtitul + nadpis) a obsah ve sloupci 600 px. Podpis se vkládá před </body>.
@@ -14,10 +17,10 @@ function mailh_sablona(string $nadtitul, string $nadpis, string $obsah): string 
   return '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . mailh_h($nadpis) . '</title></head>'
     . '<body style="margin:0;padding:0;background:#ffffff">'
     . '<div style="max-width:600px;margin:0 auto;padding:14px 10px 0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#1d2b22">'
-    . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#123d27;border-radius:12px;padding:20px 24px">'
+    . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#123d27;border-radius:12px"><tr><td style="padding:20px 8px 20px 24px">'
     . ($nadtitul !== '' ? '<div style="font-size:13px;letter-spacing:.08em;color:#b9d3c2;text-transform:uppercase">' . mailh_h($nadtitul) . '</div>' : '')
     . '<div style="font-size:23px;line-height:1.25;font-weight:bold;color:#ffffff;margin-top:4px">' . mailh_h($nadpis) . '</div>'
-    . '</td></tr></table>'
+    . '</td><td width="64" valign="middle" style="padding:12px 18px 12px 0;width:64px"><img src="' . MAILH_MASKOT . '" width="64" height="64" alt="Náš maskot, buldoček v přilbě" style="display:block;border:0;width:64px;height:64px;border-radius:50%"></td></tr></table>'
     . '<div style="padding:18px 4px 0">' . $obsah . '</div>'
     . '</div></body></html>';
 }

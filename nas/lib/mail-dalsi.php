@@ -68,15 +68,31 @@ function mailh_dalsi(array $cfg, string &$predmet, string &$telo, string &$htmlT
       '<b>Náš technik už si šroubovák nachystal.</b> Vám bude stačit pár minut, hadřík a trocha maziva.'],
     ['~^Předávací a záruční list – objednávka (.+)$~u', 'Dveře jsou Vaše. Ať dobře slouží!', 'buldok-predani', 'Krátké video: buldoček v přilbě přináší klíče od nových dveří',
       '<b>Klíče předány.</b> Náš vedoucí předávky je pouštěl z tlamy jen nerad. Dveře jsou teď Vaše.'],
+    ['~^Záruka prodloužena – objednávka (.+)$~u', 'Záruka je prodloužená', 'buldok-zaruka', 'Krátké video: buldoček v přilbě a s medailí hlídá dveře',
+      '<b>Hlídač záruky má delší službu.</b> Vaše dveře hlídá dál, jen o pár let déle.'],
+    ['~^Jak jste spokojeni s novými dveřmi\? \(objednávka (.+)\)$~u', 'Jak se Vám s novými dveřmi bydlí?', 'buldok-predani', 'Krátké video: buldoček v přilbě přináší klíče od nových dveří',
+      '<b>Klíče jsme předali, teď je řada na Vás.</b> Stačí jedno kliknutí od 1 do 5.'],
+    ['~^Přijali jsme váš požadavek – (.+)$~u', 'Požadavek máme. Jdeme na to', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
+      '<b>Servisní technik si bere kufřík.</b> Váš požadavek máme a ozveme se s termínem.', 'Servis č. '],
+    ['~^Termín návštěvy – (.+)$~u', 'Termín servisní návštěvy', 'buldok-servis', 'Krátké video: buldoček v přilbě se šroubovákem a kufříkem nářadí u dveří',
+      '<b>Kufřík je sbalený.</b> Technik dorazí v domluvený čas, buldok zatím pohlídá vzorkovnu.', 'Servis č. '],
   ];
-  foreach ($bul as [$re, $nadpis, $soubor, $alt, $popis]) {
+  foreach ($bul as $b) {
+    [$re, $nadpis, $soubor, $alt, $popis] = $b;
     if (!preg_match($re, $predmet, $m)) continue;
     if ($htmlTelo !== '') return false;                                       // hotové HTML se nemění
     $bloky = preg_split('/\n{2,}/', trim(preg_replace('/^[ \t]+•/mu', '•', str_replace("\r", '', $telo))));
     $n = (count($bloky) > 2 && preg_match('~^Dobrý den~u', $bloky[0])) ? 2 : 1;
     if (count($bloky) > $n + 1 && substr(rtrim($bloky[$n - 1]), -1) === ':') $n++;   // úvod končí dvojtečkou → výčet patří k němu
-    $htmlTelo = mailh_sablona('Objednávka č. ' . trim($m[1]), $nadpis,
+    $htmlTelo = mailh_sablona(($b[5] ?? 'Objednávka č. ') . trim($m[1]), $nadpis,
       mailh_text_html(implode("\n\n", array_slice($bloky, 0, $n))) . mailh_video($web, $soubor, $alt, $popis) . mailh_text_html(implode("\n\n", array_slice($bloky, $n))));
+    return true;
+  }
+
+  // 4) poděkování po předání (hotové HTML z podekovani_html v lib/posta.php): nad nadpis přidá maskota
+  if (preg_match('~^Děkujeme – objednávka ~u', $predmet) && $htmlTelo !== '') {
+    $kotva = '<div style="font-size:26px;line-height:1.2;font-weight:bold;color:#123d27">Děkujeme za důvěru!</div>';
+    if (strpos($htmlTelo, $kotva) !== false) $htmlTelo = str_replace($kotva, '<img src="' . mailh_h($web) . '/userFiles/maskot/buldok-hotovo.png" width="96" height="150" alt="Náš maskot, buldoček v přilbě, zvedá tlapku" style="display:block;border:0;width:96px;height:150px;margin:0 0 10px">' . $kotva, $htmlTelo);
     return true;
   }
   return false;
