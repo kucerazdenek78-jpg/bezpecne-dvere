@@ -14,17 +14,21 @@
   function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} return null; }
   function zamQ() { try { var z = (location.search.match(/[?&]zam=([^&]+)/) || [])[1] || (JSON.parse(localStorage.getItem('bd-zam') || 'null') || {}).t; return z ? '?zam=' + encodeURIComponent(z) : ''; } catch (e) { return ''; } }
 
+  /* maskot (šedý buldoček v přilbě) jako tvář pomocníka; obrázky v userFiles/maskot/ */
+  var MASKOT = (((document.currentScript || {}).src || '').replace(/konfigurator-erkado\/pomocnik\.js.*$/, '')) + 'userFiles/maskot/';
+  var HLAVA = '<img src="' + MASKOT + 'buldok-hlava-96.png" width="34" height="34" alt="" decoding="async">';
+
   var css = document.createElement('style');
   css.textContent = '#pomWebBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:8px;border:0;border-radius:999px;background:#123d27;color:#fff;font:600 14px/1 system-ui,Arial,sans-serif;padding:10px 16px 10px 10px;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:pointer}'
-    + '#pomWebBtn svg{width:34px;height:34px;background:#fff;border-radius:50%;padding:5px;box-sizing:border-box}#pomWebBtn small{display:block;font-weight:400;font-size:11px;opacity:.85;margin-top:2px}'
+    + '#pomWebBtn img{width:38px;height:38px;border-radius:50%;background:#e8f0ea;display:block}#pomWebBtn small{display:block;font-weight:400;font-size:11px;opacity:.85;margin-top:2px}'
     + '@media (max-width:980px){#pomWebBtn{bottom:calc(76px + env(safe-area-inset-bottom,0px))}#pomWebBtn small{display:none}}'
     /* konfigurátor na telefonu: tlačítko v pravém horním rohu (v liště vedle loga), ať nepřekáží dole u ceny a tlačítka Vyzkoušet na fotce (17. 11. 2026) */
-    + '@media (max-width:980px){#pomWebBtn.pw-top{top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;z-index:1200;padding:6px 13px 6px 6px;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.22)}#pomWebBtn.pw-top svg{width:30px;height:30px}}'
+    + '@media (max-width:980px){#pomWebBtn.pw-top{top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;z-index:1200;padding:6px 13px 6px 6px;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.22)}#pomWebBtn.pw-top img{width:32px;height:32px}}'
     + '@media (hover:hover){#pomWebBtn:hover{background:#1b5a39}}'
     + '#pomWeb{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));z-index:80;width:min(400px,calc(100vw - 32px));height:min(600px,calc(100vh - 32px));display:flex;flex-direction:column;background:#fff;color:#1b2430;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);overflow:hidden;font:15px/1.45 system-ui,Arial,sans-serif}'
     + '#pomWeb[hidden]{display:none}'
     + '@media (max-width:980px){#pomWeb{right:8px;left:8px;width:auto;bottom:8px;height:min(78vh,620px)}}'
-    + '.pw-h{display:flex;align-items:center;gap:10px;background:#123d27;color:#fff;padding:12px 14px}.pw-h b{flex:1;font-size:15px}.pw-h small{display:block;font-weight:400;font-size:12px;opacity:.85}'
+    + '.pw-h{display:flex;align-items:center;gap:10px;background:#123d27;color:#fff;padding:12px 14px}.pw-h b{flex:1;font-size:15px}.pw-h img{width:40px;height:40px;border-radius:50%;background:#e8f0ea;flex:none}.pw-r{display:flex;align-items:flex-end;gap:7px;align-self:flex-start;max-width:94%}.pw-r img{width:28px;height:28px;border-radius:50%;background:#e8f0ea;flex:none}.pw-r .pw-m{max-width:none}.pw-h small{display:block;font-weight:400;font-size:12px;opacity:.85}'
     + '.pw-x{background:none;border:0;color:#fff;font-size:24px;line-height:1;cursor:pointer;padding:0 4px}'
     + '.pw-b{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#f4f7f5}'
     + '.pw-m{max-width:88%;padding:9px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}.pw-m.a{background:#fff;border:1px solid #dbe5df;align-self:flex-start}.pw-m.u{background:#123d27;color:#fff;align-self:flex-end}'
@@ -41,7 +45,7 @@
 
   var btn = document.createElement('button');
   btn.id = 'pomWebBtn'; btn.type = 'button'; btn.setAttribute('aria-label', 'Otevřít pomocníka AI pro výběr dveří');
-  btn.innerHTML = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="9" y="4" width="22" height="32" rx="2" fill="#123d27"/><rect x="12" y="7" width="16" height="26" rx="1" fill="#2f7d52"/><circle cx="25" cy="21" r="1.8" fill="#fff"/><text x="20" y="19" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,Arial,sans-serif" fill="#fff">AI</text></svg><span>Poradí s výběrem<small>Pomocník AI</small></span>';
+  btn.innerHTML = HLAVA + '<span>Poradí s výběrem<small>Pomocník AI</small></span>';
   if (hasKF) btn.className = 'pw-top';
   document.body.appendChild(btn);
 
@@ -52,7 +56,7 @@
   function ulozHist() { ss(HIST, JSON.stringify(hist.slice(-24))); }
   function build() {
     box = document.createElement('div'); box.id = 'pomWeb'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Pomocník AI pro výběr dveří'); box.hidden = true;
-    box.innerHTML = '<div class="pw-h"><b>Pomocník AI<small>' + (byt ? 'Poradí s výběrem dveří do bytu' : 'Poradí a dveře za vás nastaví') + '</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
+    box.innerHTML = '<div class="pw-h">' + HLAVA + '<b>Pomocník AI<small>' + (byt ? 'Poradí s výběrem dveří do bytu' : 'Poradí a dveře za vás nastaví') + '</small></b><button type="button" class="pw-x" aria-label="Zavřít">×</button></div><div id="pwBody" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
     document.body.appendChild(box);
     $('.pw-x', box).addEventListener('click', function () { box.hidden = true; btn.hidden = false; });
     return box;
@@ -109,7 +113,10 @@
     return fetch(URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) }).then(function (r) { return r.json(); });
   }
   function bubble(role, text) {
-    var l = $('#pwList', box); var d = document.createElement('div'); d.className = 'pw-m ' + role; d.textContent = text; l.appendChild(d); l.scrollTop = l.scrollHeight; return d;
+    var l = $('#pwList', box); var d = document.createElement('div'); d.className = 'pw-m ' + role; d.textContent = text;
+    if (role === 'a') { var r = document.createElement('div'); r.className = 'pw-r'; r.innerHTML = HLAVA; r.appendChild(d); l.appendChild(r); }   // odpověď pomocníka s tváří maskota
+    else l.appendChild(d);
+    l.scrollTop = l.scrollHeight; return d;
   }
   function chat() {
     var b = $('#pwBody', box);

@@ -728,7 +728,7 @@
           files: [{ name: 'vizualizace', file: 'vizualizace-' + cislo + '.jpg', blob: b[0] }, { name: 'puvodni_foto', file: 'puvodni-dvere-' + cislo + '.jpg', blob: b[1] }] };
       });
     }, function (x) {
-      return '<h2>Děkujeme, poptávka je odeslaná ✓</h2><p>Číslo poptávky <b>' + esc(x.cislo) + '</b>. Ozveme se vám obvykle do jednoho pracovního dne.</p>' +
+      return '<img src="../userFiles/maskot/buldok-hotovo.webp" width="307" height="480" alt="" style="display:block;width:auto;height:120px;margin:0 auto .5rem"><h2>Děkujeme, poptávka je odeslaná ✓</h2><p>Číslo poptávky <b>' + esc(x.cislo) + '</b>. Ozveme se vám obvykle do jednoho pracovního dne.</p>' +
         '<p class="small">Spěcháte? Volejte <a href="tel:+420725559235">725 559 235</a>.</p><button class="b wide" onclick="this.closest(\'dialog\').close()">Zavřít</button>';
     });
   }

@@ -22,7 +22,7 @@
         var sub = (form.querySelector('[name=_subject]') || {}).value || 'Formulář z webu';
         form.reset();
         if (window.bdTrack) window.bdTrack('Lead', { content_name: sub });
-        show(true, '<strong>Děkujeme, poptávka byla odeslána.</strong> Ozveme se Vám co nejdříve.');
+        show(true, '<span style="display:flex;align-items:center;gap:.9rem"><img src="userFiles/maskot/buldok-hotovo.webp" width="307" height="480" alt="" style="width:auto;height:84px;flex:none"><span><strong>Děkujeme, poptávka byla odeslána.</strong> Ozveme se Vám co nejdříve. Buldok už ji nese kolegům.</span></span>');
       }).catch(function () {
         show(false, 'Odeslání se nepodařilo. Napište nám prosím na <a href="mailto:' + PUBLIC + '">' + PUBLIC + '</a> nebo zavolejte na <a href="tel:+420725559235">+420 725 559 235</a>.');
       }).then(function () {

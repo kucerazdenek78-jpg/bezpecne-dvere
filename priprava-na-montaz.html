@@ -41,7 +41,9 @@
     .pm-cedulka small{display:block;margin-top:.8rem;color:#4b5d52;font-size:.85rem}
     section[id]{scroll-margin-top:90px}
     @media print{.navbar,.page-header,.cta-section,.partners-band,footer,.cookie-bar,.pm-fact,.pm-box:not(#cedulka-box),.pm-wrap>p,#cedulka-box h2,#cedulka-box>p{display:none!important}#cedulka-box{border:0;padding:0;margin:0}.pm-cedulka{max-width:none;margin:2cm auto 0;font-size:1.25em}section{padding:0!important}}
-  </style>
+    .pm-maskot{margin:0 0 1.4rem;text-align:center}.pm-maskot video{display:block;width:100%;max-width:560px;height:auto;margin:0 auto;border-radius:14px}.pm-maskot figcaption{font-size:.9rem;color:#4f6a5b;margin-top:.5rem}
+  @media print{.pm-maskot{display:none}}
+</style>
 <link rel="stylesheet" href="motivy.css?v=1">
 <script src="motivy.js?v=3"></script>
 </head>
@@ -95,6 +97,7 @@
 
 <section>
   <div class="container pm-wrap">
+    <figure class="pm-maskot"><video autoplay muted loop playsinline preload="metadata" poster="userFiles/email/buldok-pri-montazi.jpg" width="960" height="540" aria-label="Krátké video: buldoček v přilbě a ochranných brýlích sedí na zakrytém gauči při montáži dveří"><source src="userFiles/email/buldok-pri-montazi.mp4" type="video/mp4"></video><figcaption><b>Takhle vypadá dobře připravený byt.</b> Gauč má prostěradlo a stavbyvedoucí brýle. Brýle pro psa nejsou podmínkou.</figcaption></figure>
     <div class="pm-fact">
       <div><b>Příjezd 8:30–9:15</b><span>Pokud je místo montáže více než 40 km od naší pobočky v Mostě, přijedeme o 30 minut později (9:00–9:45). Termín s vámi vždy nejdřív domluvíme telefonicky a pak ho potvrdíme e-mailem.</span></div>
       <div><b>4–6 hodin</b><span>Odhad délky montáže podle složitosti.</span></div>
@@ -223,7 +226,7 @@
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
   document.getElementById('navToggle').addEventListener('click', () => navbar.classList.toggle('open'));
 </script>
-<script src="form-submit.js?v=20261024a"></script>
+<script src="form-submit.js?v=20261117a"></script>
 <script src="cookies.js?v=5" defer></script>
 <script src="moje-dvere-stitek.js?v=20261025c" defer></script>
 </body>

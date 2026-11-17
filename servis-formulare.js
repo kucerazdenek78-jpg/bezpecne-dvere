@@ -144,7 +144,7 @@
         pro_koho: pro, jmeno: i > 0 ? cele.slice(0, i) : cele, prijmeni: i > 0 ? cele.slice(i + 1) : '', telefon: v('telefon'), email: v('email'), mesto: v('adresa'), poznamka: v('popis') }
     }).then(function (cislo) {
       if (window.bdTrack) window.bdTrack('Lead', { content_name: 'Poptávka servisu oken' });
-      return '<strong>Děkujeme, poptávka byla odeslána.</strong> Číslo poptávky: <strong>' + esc(cislo) + '</strong>. Ozveme se Vám co nejdříve.';
+      return '<span style="display:flex;align-items:center;gap:.9rem"><img src="userFiles/maskot/buldok-servis.webp" width="398" height="480" alt="" style="width:auto;height:84px;flex:none"><span><strong>Děkujeme, poptávka byla odeslána.</strong> Číslo poptávky: <strong>' + esc(cislo) + '</strong>. Ozveme se Vám co nejdříve.</span></span>';
     });
   });
 
@@ -159,7 +159,7 @@
     var ctl = typeof AbortController === 'function' ? new AbortController() : null, t = ctl ? setTimeout(function () { ctl.abort(); }, 60000) : 0;
     var ok = function (cislo, kde) {
       if (window.bdTrack) window.bdTrack('Lead', { content_name: 'Servis dveří' });
-      return '<strong>Děkujeme, požadavek byl odeslán.</strong> Číslo: <strong>' + esc(cislo) + '</strong>. ' + (kde ? kde + ' ' : '') + 'Ozveme se Vám do 48 hodin (neplatí o svátky a víkendy).';
+      return '<span style="display:flex;align-items:center;gap:.9rem"><img src="userFiles/maskot/buldok-servis.webp" width="398" height="480" alt="" style="width:auto;height:84px;flex:none"><span>' + '<strong>Děkujeme, požadavek byl odeslán.</strong> Číslo: <strong>' + esc(cislo) + '</strong>. ' + (kde ? kde + ' ' : '') + 'Ozveme se Vám do 48 hodin (neplatí o svátky a víkendy).</span></span>';
     };
     return fetch(API, { method: 'POST', headers: { 'Accept': 'application/json' }, body: body, signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }, function () { return { s: r.status, j: null }; }); }, function () { return { s: 0, j: null }; })
