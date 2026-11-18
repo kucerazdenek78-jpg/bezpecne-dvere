@@ -13,6 +13,7 @@ const NB_PRIPLATKY = ['' => 'bez příplatku', 'vecer' => 'servis po 18. hodině
 if (!in_array('odeslano', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN odeslano TEXT');
 $nbDir = fn() => $DATA . '/okna/nabidky';
 if (!in_array('zadani', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN zadani TEXT');
+if (!in_array('objednavka_id', array_column($pdo->query('PRAGMA table_info(ok_nabidka)')->fetchAll(PDO::FETCH_ASSOC), 'name'), true)) $pdo->exec('ALTER TABLE ok_nabidka ADD COLUMN objednavka_id INTEGER');
 // přílohy zadání (tabulka s byty a nájemníky, výkresy, fotky…): $DATA/okna/nabidky/p<id nabídky>/
 const NB_PRIL_EXT = ['xlsx', 'xls', 'xlsm', 'ods', 'csv', 'pdf', 'doc', 'docx', 'odt', 'txt', 'jpg', 'jpeg', 'png', 'heic', 'webp', 'eml', 'msg', 'zip'];
 $prilDir = fn(int $id) => $DATA . '/okna/nabidky/p' . $id;
@@ -153,6 +154,26 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     header('Location: nabidky.php?id=' . (int)$pdo->lastInsertId() . '&upravit=1'); exit;
   }
   if ($a === 'smazat') { uziv_jen_admin('Nabídku smí smazat jen administrátor.'); $pdo->prepare('DELETE FROM ok_nabidka WHERE id=?')->execute([$id]); header('Location: nabidky.php'); exit; }
+  if ($a === 'objednavka' && ($x = $nacti($id))) {   // z přijaté nabídky vytvoří servis k provedení (so_jed, stav K vyřízení) – odtud zápis, provedení a fakturace
+    if (!empty($x['objednavka_id']) && sj_nacti($pdo, (int)$x['objednavka_id'])) { header('Location: index.php?id=' . (int)$x['objednavka_id'] . '&ok=objednavka'); exit; }
+    $v = $vypocet($x); $pol = [];
+    foreach ($v['radky'] as $r) { $cs = round((float)$r['jedn_po'] * (1 + (float)$r['dph'] / 100), 2);
+      $pol[] = ['kod' => (string)($r['kod'] ?? ''), 'nazev' => (string)$r['nazev'], 'mn' => (float)$r['mnozstvi'], 'jedn' => (string)$r['jednotka'], 'cena' => $cs, 'dph' => (int)round((float)$r['dph'])]; }
+    $naSvj = $x['typ'] === 'svj' && $x['svj_id']; $cena = round((float)$v['sum']['s'], 2);
+    $pozn = 'Objednávka z nabídky ' . $x['cislo'] . ' ze dne ' . so_datum($x['datum']) . '.'
+      . ((int)$x['smlouva'] ? ' Servisní smlouva ' . (int)$x['smlouva'] . '× (' . ((int)$x['interval_let'] === 2 ? 'jednou za 2 roky' : 'ročně') . ').' : '')
+      . ($v['sleva'] > 0 ? ' Sleva ' . str_replace('.', ',', (string)$v['sleva']) . ' %.' : '') . ($v['priplatek'] > 0 ? ' Příplatek ' . $v['priplatek'] . ' %.' : '')
+      . ($x['kontakt'] ? ' Kontakt: ' . $x['kontakt'] . '.' : '') . ($x['poznamka'] ? ' ' . $x['poznamka'] : '');
+    $klic = ok_klic((string)$x['telefon'], (string)$x['email'], (string)$x['nazev'], '');
+    $pdo->prepare('INSERT INTO so_jed (klic, jmeno, telefon, email, ulice, mesto, popis, stav, svj_id, byt, plati, polozky, cena, kategorie, nabidka_id, predchozi_id, poznamka, vytvoril, vytvoreno, upraveno) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      ->execute([$klic, $x['nazev'], $x['telefon'], $x['email'], $x['adresa'], '', 'Objednáno z nabídky ' . $x['cislo'] . ($x['typ'] === 'oprava' ? ' – oprava' : ''), 'nova',
+        $naSvj ? (int)$x['svj_id'] : null, '', $naSvj ? 'svj' : null, json_encode($pol, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $cena, $pol[0]['kod'] ?? '', $id, $x['jed_id'] ?: null, $pozn, uziv_jmeno(), $ted, $ted]);
+    $nid = (int)$pdo->lastInsertId();
+    $pdo->prepare("UPDATE ok_nabidka SET objednavka_id=?, stav=CASE WHEN stav IN ('koncept','odeslana') THEN 'prijata' ELSE stav END, upraveno=? WHERE id=?")->execute([$nid, $ted, $id]);
+    if ($naSvj) $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
+      ->execute([(int)$x['svj_id'], date('Y-m-d'), 'jine', 'Objednávka z nabídky ' . $x['cislo'] . ' – servis k provedení (' . ok_kc($cena) . ' s DPH)', 'jednotlivec #' . $nid, $ted, uziv_jmeno()]);
+    header('Location: index.php?id=' . $nid . '&ok=objednavka'); exit;
+  }
   http_response_code(400); exit('Neznámá akce');
 }
 
@@ -206,6 +227,12 @@ if ($nb):
 <tr><th colspan="3">Celkem s DPH<?= (int)$nb['smlouva'] ? ' (jeden servis)' : '' ?></th><th class="r nowrap"><?= $e(ok_kc($v['sum']['s'], 2)) ?></th></tr></table>
 <p class="mut"><?= $v['sleva'] > 0 ? 'Sleva ' . $e(str_replace('.', ',', (string)$v['sleva'])) . ' % – ' . $e($v['sleva_txt']) . '. ' : 'Bez slevy. ' ?><?= $v['priplatek'] > 0 ? 'Příplatek ' . $e($v['priplatek']) . ' %. ' : '' ?><?= (int)$nb['smlouva'] ? 'Smlouva ' . (int)$nb['smlouva'] . '× – celkem ' . $e(ok_kc($v['sum']['s'] * (int)$nb['smlouva'], 2)) . ' s DPH.' : '' ?></p>
 <p><a class="btn" href="?id=<?= $id ?>&amp;tisk=1" target="_blank">🖨 Tisk / PDF</a> <a class="btn sec" href="?id=<?= $id ?>&amp;upravit=1">✏️ Upravit</a></p></div>
+<?php $obj = !empty($nb['objednavka_id']) ? sj_nacti($pdo, (int)$nb['objednavka_id']) : null; ?>
+<div class="box" id="objednavka" style="border-left:5px solid #15803d"><h2 style="margin-top:0">➡ Objednávka ze servisu</h2>
+<?php if ($obj): ?><p>Z této nabídky je vytvořená objednávka – servis k provedení <b><?= $e(SJ_STAVY[$obj['stav']] ?? $obj['stav']) ?></b>.</p>
+<p style="margin-bottom:0"><a class="btn ok" href="index.php?id=<?= (int)$obj['id'] ?>">Otevřít servis k provedení →</a></p>
+<?php else: ?><p class="mut" style="margin-top:0">Když zákazník nabídku přijme, vytvořte z ní objednávku. Přenese se do <b>Jednotlivci</b> jako servis k provedení (položky, cena, kdo platí<?= $nb['typ'] === 'svj' ? ', pod tímto SVJ' : '' ?>) – odtud se po provedení fakturuje. Nabídka se tím označí jako Přijatá.</p>
+<form method="post" onsubmit="return confirm('Vytvořit z nabídky <?= $e($nb['cislo']) ?> objednávku (servis k provedení)?')"><input type="hidden" name="akce" value="objednavka"><input type="hidden" name="id" value="<?= $id ?>"><button class="ok">➡ Vytvořit objednávku (servis k provedení)</button></form><?php endif; ?></div>
 <?php $pl = $prilohy($id); ?>
 <div class="box" id="zadani"><h2 style="margin-top:0">📎 Zadání od zákazníka <span class="mut" style="font-size:14px;font-weight:400">(jen pro nás, do PDF nejde)</span></h2>
 <?php if (isset($_GET['pril'])): ?><div class="msg">Nahráno souborů: <?= (int)$_GET['pril'] ?><?= !empty($_GET['prilchyba']) ? ' · nenahráno: ' . $e($_GET['prilchyba']) : '' ?></div><?php endif; ?>
@@ -325,6 +352,7 @@ else:
   <td><?php if ($x['stav'] === 'koncept'): ?><span class="st st-nova">📝 neodesláno</span><?php else: ?><span class="st st-hotovo">odesláno</span><?php if (!empty($x['odeslano'])): ?><div class="mut"><?= $e(mb_strimwidth((string)$x['odeslano'], 0, 46, '…')) ?></div><?php endif; endif; ?></td>
   <td class="nowrap"><?php if (!$pl): ?><span class="mut">–</span><?php elseif ($dni < 0): ?><span class="st st-odmitl">vypršela <?= $e(so_datum($x['platnost'])) ?></span><?php elseif ($dni <= 7): ?><span class="st st-nebyl">vyprší za <?= $dni ?> dní</span><?php else: ?><?= $e(so_datum($x['platnost'])) ?><?php endif; ?></td>
   <td class="nowrap"><a class="btn sec" style="padding:5px 10px;font-size:13px" href="?id=<?= (int)$x['id'] ?>"><?= $x['stav'] === 'koncept' ? 'Otevřít / odeslat' : 'Otevřít' ?></a>
+  <?php if (empty($x['objednavka_id'])): ?><form method="post" style="display:inline" onsubmit="return confirm('Vytvořit z nabídky <?= $e($x['cislo']) ?> objednávku (servis k provedení)?')"><input type="hidden" name="akce" value="objednavka"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><button class="ok" style="padding:5px 10px;font-size:13px;background:#15803d">➡ Objednávka</button></form><?php else: ?><a class="btn" style="padding:5px 10px;font-size:13px;background:#15803d" href="index.php?id=<?= (int)$x['objednavka_id'] ?>">➡ servis</a><?php endif; ?>
   <?php if ($x['stav'] === 'odeslana'): ?><form method="post" style="display:inline" onsubmit="return confirm('Označit nabídku <?= $e($x['cislo']) ?> jako přijatou?')"><input type="hidden" name="akce" value="stav"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><input type="hidden" name="stav" value="prijata"><input type="hidden" name="zpet" value="1"><button class="ok" style="padding:5px 10px;font-size:13px">✔ Přijatá</button></form>
   <form method="post" style="display:inline" onsubmit="return confirm('Označit nabídku <?= $e($x['cislo']) ?> jako odmítnutou?')"><input type="hidden" name="akce" value="stav"><input type="hidden" name="id" value="<?= (int)$x['id'] ?>"><input type="hidden" name="stav" value="odmitnuta"><input type="hidden" name="zpet" value="1"><button class="del" style="padding:5px 10px;font-size:13px">✕ Odmítnutá</button></form><?php endif; ?></td></tr>
 <?php endforeach; ?></table></div></div><?php endif; ?>

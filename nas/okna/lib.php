@@ -237,6 +237,8 @@ function sj_tabulka(PDO $pdo): void {
     opakovat INTEGER DEFAULT 0, protokol TEXT, protokol_poslan TEXT, poznamka TEXT, vytvoril TEXT, vytvoreno TEXT, upraveno TEXT)");
   $pdo->exec('CREATE INDEX IF NOT EXISTS so_jed_klic ON so_jed(klic)');
   $pdo->exec('CREATE INDEX IF NOT EXISTS so_jed_zadost ON so_jed(zadost_id)');
+  $sl = array_column($pdo->query('PRAGMA table_info(so_jed)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+  foreach (['vysledek' => 'TEXT', 'svj_id' => 'INTEGER', 'byt' => 'TEXT', 'plati' => 'TEXT', 'fakturace' => 'TEXT', 'polozky' => 'TEXT', 'kategorie' => 'TEXT', 'nabidka_id' => 'INTEGER'] as $k => $d) if (!in_array($k, $sl, true)) $pdo->exec("ALTER TABLE so_jed ADD COLUMN $k $d");
 }
 function sj_dir(int $id): string { global $DATA; return $DATA . '/okna/j' . $id; }
 function sj_fotky(int $id): array {

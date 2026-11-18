@@ -207,7 +207,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 // ───── zobrazení ─────
 $id = (int)($_GET['id'] ?? 0);
-$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'zalozeno' => 'Servis založen.'];
+$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'zalozeno' => 'Servis založen.', 'objednavka' => 'Objednávka vytvořena z nabídky – tohle je servis k provedení. Naplánujte termín a po provedení udělejte zápis; cena a položky jsou z nabídky (lze upravit).'];
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0e4f5c"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="okna-192.png"><link rel="apple-touch-icon" href="okna-192.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Servis oken"><title>Jednotlivci – Servis oken</title><style>
@@ -336,6 +336,7 @@ elseif ($id):
 </div><?php endif; ?>
 <div class="box"><h1 style="margin-bottom:4px"><?= $r['klic'] ? '<a href="zakaznici.php?k=' . $e(rawurlencode($r['klic'])) . '" style="color:inherit" title="Zákazník – všechny servisy">' . $e($r['jmeno']) . '</a>' : $e($r['jmeno']) ?> <span class="st st-<?= $e($r['stav']) ?>"><?= $e(SJ_STAVY[$r['stav']] ?? $r['stav']) ?></span></h1>
 <div style="font-size:17px"><?= $e(sj_adresa($r)) ?><?= $r['byt'] ? ', byt ' . $e($r['byt']) : '' ?><?= ok_mapa(sj_adresa($r)) ?></div>
+<?php if (!empty($r['nabidka_id'])): $nbc = $pdo->prepare('SELECT cislo FROM ok_nabidka WHERE id=?'); $nbc->execute([(int)$r['nabidka_id']]); if ($nbc = $nbc->fetchColumn()): ?><div class="mut">📄 Z nabídky <a href="nabidky.php?id=<?= (int)$r['nabidka_id'] ?>"><?= $e($nbc) ?></a></div><?php endif; endif; ?>
 <?php if ($r['svj_id'] && isset($svjSeznam[(int)$r['svj_id']])): ?><div>🏢 <a href="svj.php?svj=<?= (int)$r['svj_id'] ?>#historie"><?= $e($svjSeznam[(int)$r['svj_id']]) ?></a> ·
   <?= isset(SJ_PLATI[$r['plati'] ?? '']) ? '💳 platí <b>' . $e(SJ_PLATI[$r['plati']]) . '</b>' : '<span class="st st-zruseno">vyberte, kdo platí (SVJ / nájemník)</span>' ?></div><?php endif; ?>
 <?php if (!empty($r['vysledek']) && isset(SJ_VYSLEDKY[$r['vysledek']])): ?><div style="margin-top:4px"><span class="st <?= $r['vysledek'] === 'serizeno' ? 'st-hotovo' : 'st-nova' ?>"><?= $e(SJ_VYSLEDKY[$r['vysledek']]) ?></span></div><?php endif; ?>
