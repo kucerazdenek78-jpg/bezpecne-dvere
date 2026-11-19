@@ -624,6 +624,8 @@
       d.termin = fv('termin_text'); d.z_nabidky = st.fromRef || '';
       var hex = function () { var b = new Uint8Array(12); (window.crypto || window.msCrypto).getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); };
       d.predani_token = hex(); d.zakaznik_token = hex();
+      /* délka záruky pro předání v kartotéce (predani.php počítá „záruka do“ z čísla let); základní záruka 2 roky jako u dveří do bytu (reklamační řád: 24 měsíců) */
+      d.zaruka = 'Základní záruka 2 roky';
     }
     if (d.doprava_schody_kc != null) {
       if (d.doprava_km != null || d.doprava_rucne !== '') d.polozky.push({ co: 'Doprava', volba: d.doprava_km != null ? String(d.doprava_km).replace('.', ',') + ' km od vzorkovny' + (d.doprava_cena ? '' : ' – zdarma') : 'dle dohody', priplatek: d.doprava_cena || 0 });
@@ -948,19 +950,23 @@
     st.podpis = OBJ && st.podpisUI ? { zak: st.podpisUI.zakaznik(), zhot: st.podpisUI.zhotovitel(), cas: new Date().toLocaleString('cs-CZ') } : null;
     d = podpisDo(d);
     var btn = $('#nbSubmit'); btn.disabled = true; btn.textContent = 'Připravuji PDF…';
-    var pdf = null, extraFiles = [], custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
+    var pdf = null, plist = null, extraFiles = [], custOk = true, fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf';
     var TYP = OBJ ? 'objednavka_interni' : 'nabidka';
     var cisloZmena = '';
     kOverCislo(d.obj_cislo).then(function (nove) {   /* číslo nesmí mít jiná odeslaná ani rozpracovaná nabídka – jinak přidělit další volné */
       if (nove) { cisloZmena = d.obj_cislo + ' → ' + nove; form.obj_cislo.value = nove; d = podpisDo(collect()); fn = (OBJ ? 'Objednavka-' : 'Nabidka-') + d.obj_cislo + '.pdf'; }
       btn.textContent = 'Připravuji PDF…';
-      return buildPdf(d);
+      var P = window.PoptavkaPDF;   /* objednávka: předvyplněný předávací a záruční list (s QR předání a Moje dveře) jako u dveří do bytu – jen pro prodejce */
+      var plP = OBJ && P && P.buildHandover ? P.buildHandover(d).then(function (b) { plist = b; }).catch(function (er) { try { console.error(er); } catch (e2) {} plist = null; }) : Promise.resolve();
+      return plP.then(function () { return buildPdf(d); });
     }).catch(function (er) { try { console.error(er); } catch (e2) {} return null; }).then(function (b) {
       pdf = b ? b.blob : null; window.__nbPages = b ? b.pages : 0; btn.textContent = 'Odesílám…';
       if (d.rozpocet && st.rozpBuf && !(b && b.merged)) extraFiles = [{ name: 'rozpocet_pdf', file: 'Rozpocet-' + d.obj_cislo + '.pdf', blob: new Blob([st.rozpBuf], { type: 'application/pdf' }) }];
       var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
+      if (plist) files.push({ name: 'predavaci_list_pdf', file: 'Predavaci-list-' + d.obj_cislo + '.pdf', blob: plist });   /* jen do interního e-mailu a kartotéky, zákazník ho nedostane */
+      var il = internalList(d); if (OBJ) il.push(['Předávací list', plist ? 'v příloze – předvyplněný, jen pro prodejce' : 'nepodařilo se vytvořit – v kartotéce: Záznam dveří → Předávací list']);
       var ix = d.email ? { reply_to: d.email } : {};
-      return send(TYP, internalList(d), files, d.obj_cislo, ix).catch(function () { return send(TYP, internalList(d), [], d.obj_cislo, ix); });
+      return send(TYP, il, files, d.obj_cislo, ix).catch(function () { return send(TYP, il, [], d.obj_cislo, ix); });
     }).then(function () {
       if (!d.email) return;
       var files = (pdf ? [{ name: 'objednavka_pdf', file: fn, blob: pdf }] : []).concat(extraFiles);
@@ -979,6 +985,7 @@
       if (!d.email) { w.textContent = 'Zákazník nemá vyplněný e-mail – nabídka odešla jen vám. PDF si vytiskněte a předejte mu ho.'; w.hidden = false; }
       if (cisloZmena) { w.textContent = (w.hidden ? '' : w.textContent + ' ') + 'Číslo bylo mezitím obsazené jinou ' + (OBJ ? 'objednávkou' : 'nabídkou') + ', proto se změnilo: ' + cisloZmena + '.'; w.hidden = false; }
       else if (!custOk) { w.textContent = 'E-mail zákazníkovi odešel bez přiloženého PDF. Stáhněte si PDF a pošlete mu ho ručně.'; w.hidden = false; }
+      if (plist) { var hl = $('#nbHandover'); if (hl) { hl.href = URL.createObjectURL(plist); hl.download = 'Predavaci-list-' + d.obj_cislo + '.pdf'; hl.hidden = false; } }
       if (pdf) { var u = URL.createObjectURL(pdf), a = $('#nbPdf'); a.href = u; a.download = fn; a.hidden = false; var pr = $('#nbPrint'); pr.hidden = false; pr.onclick = function () { var wn = window.open(u, '_blank'); if (wn) wn.focus(); }; }
       form.hidden = true; $('.pq-hero').hidden = true; $('#nbDone').hidden = false; window.scrollTo(0, 0);
       kAutoDalsi(d);

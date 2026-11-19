@@ -28,6 +28,8 @@ if (preg_match('/^[a-f0-9]{24}$/', $t)) {
 }
 function json_ven(int $kod, array $x) { http_response_code($kod); header('Content-Type: application/json; charset=utf-8'); echo json_encode($x, JSON_UNESCAPED_UNICODE); exit; }
 $d = $z ? (json_decode((string)$z['data_json'], true) ?: []) : [];
+// objednávky dveří do domu / interiéru (objednavka-vice) do 19. 11. 2026 neměly pole zaruka → základní záruka 2 roky (jako predani.php zaruka_text)
+if ($z && empty($d['zaruka']) && in_array($d['kategorie'] ?? '', ['dum', 'interier'], true)) $d['zaruka'] = 'Základní záruka 2 roky';
 
 // stažení uloženého listu
 if ($z && isset($_GET['pdf'])) {
@@ -132,7 +134,7 @@ a.btn{display:block;text-align:center;background:#1d8a4a;color:#fff;border-radiu
 <script>window.__D=<?= $J($dd) ?>;window.__T=<?= $J($t) ?>;window.__EMAIL=<?= $J((string)($d['email'] ?? '')) ?>;window.__ZARUKA=<?= (int)$roky ?>;window.__REZIM=<?= $J($vychozi) ?>;window.__PREDANO=<?= $predano ? 'true' : 'false' ?>;</script>
 <script src="<?= $e($web) ?>/platba/qrcode.js"></script>
 <script src="<?= $e($web) ?>/platba/platba.js?v=2"></script>
-<script src="<?= $e($web) ?>/poptavka-pdf/poptavka-pdf-nova.js?v=20261030a"></script>
+<script src="<?= $e($web) ?>/poptavka-pdf/poptavka-pdf-nova.js?v=20261119a"></script>
 <script src="<?= $e($web) ?>/podpis/podpis.js?v=20261030a"></script>
 <script>
 (function () {

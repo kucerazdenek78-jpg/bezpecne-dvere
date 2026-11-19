@@ -22,7 +22,9 @@ if (preg_match('/^[a-f0-9]{24}$/', $t)) {
   $st = $pdo->prepare("SELECT * FROM zadosti WHERE typ='objednavka_interni' AND data_json LIKE ?");
   $st->execute(['%"predani_token":"' . $t . '"%']); $z = $st->fetch(PDO::FETCH_ASSOC);
 }
-function roky_zaruky(array $d): ?int { return preg_match('/(\d+)\s*(?:rok|let)/u', (string)($d['zaruka'] ?? ''), $m) ? (int)$m[1] : null; }
+// objednávky dveří do domu / interiéru (objednavka-vice) do 19. 11. 2026 neměly pole zaruka → základní záruka 2 roky jako u ostatních dveří (reklamační řád 24 měsíců)
+function zaruka_text(array $d): string { $z = (string)($d['zaruka'] ?? ''); if ($z === '' && in_array($d['kategorie'] ?? '', ['dum', 'interier'], true)) $z = 'Základní záruka 2 roky'; return $z; }
+function roky_zaruky(array $d): ?int { return preg_match('/(\d+)\s*(?:rok|let)/u', zaruka_text($d), $m) ? (int)$m[1] : null; }
 
 // Registrace záruky od zákazníka (formulář na webu, typ „registrace“): +12 měsíců k základní záruce, jen PREMIUM 60 / EXTREME 54, do 30 dnů od předání.
 function registrace_info(PDO $pdo, array $z, array $d): array {
@@ -125,7 +127,7 @@ input[type=date]{font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius
       <dt>Cena</dt><dd><?= $e($kc($d['cena_celkem'] ?? null)) ?></dd>
       <dt>Záloha</dt><dd><?= !empty($z['zaloha_prijata_dne']) ? 'přijata ' . $e($kc($z['zaloha_prijata_kc'])) : 'zatím nezaevidována' ?></dd>
       <dt>K doplacení</dt><dd><?= $e($kc($d['doplatek'] ?? null)) ?></dd>
-      <dt>Záruka</dt><dd><?= $e($d['zaruka'] ?? '–') ?></dd></dl></div>
+      <dt>Záruka</dt><dd><?= $e(zaruka_text($d) ?: '–') ?></dd></dl></div>
   <?php if ($predano): ?>
     <?php $dnes = date('Y-m-d'); $ri = registrace_info($pdo, $z, $d);
       if (empty($z['zaruka_do'])) { $zst = ['Délka záruky neurčena', '#7a5200', '#fff0cc']; }

@@ -281,6 +281,8 @@
       return extra ? m + ' + ' + extra + ' navíc' : m;
     }
     if (k === 'securido65') return extra ? (6 + extra) + ' + 2 montážní' + tail : '6 + 2 montážní';
+    /* dveře do domu ERKADO (objednávka s více položkami): v základu 3 klíče, volba „Počet klíčů 5 ks“ z konfigurátoru */
+    if (d.kategorie === 'dum') { var mk = /Počet klíčů (\d+) ks/.exec(JSON.stringify(d.polozky || [])); return mk ? mk[1] : '3'; }
     return '';
   }
   /* o (volitelné, online předání s podpisem): { datum, zarukaDo (YYYY-MM-DD), montaznik, vyhrady, podpisZak, podpisZhot (PNG data URL) } */
@@ -305,6 +307,11 @@
           (function () { var t = 'PŘEDÁVACÍ A ZÁRUČNÍ LIST', sz = 7.5, w = f[0].widthOfTextAtSize(t, sz); page.drawText(t, { x: 559 - w, y: H - 43.5, size: sz, font: f[0], color: L.rgb(0.07, 0.24, 0.15) }); })();
           put('Tento list slouží zároveň jako záruční list.', 51, 719, 400, 8, false);
           var prov = [d.model, d.odstin].filter(Boolean).join(' · ');   // jen model a barva
+          /* objednávka s více položkami (dveře do domu / interiér, nabidka.js): model a odstín z položek dveří, bez kování, dopravy a slev */
+          if (!d.odstin && d.kategorie && d.kategorie !== 'byt' && d.polozky && !d.rozpocet) {
+            var pz = d.polozky.filter(function (p) { return p.nazev && p.kovani_id == null; }).map(function (p) { return (p.ks > 1 ? p.ks + '× ' : '') + p.nazev + (p.odstin && p.nazev.indexOf(p.odstin) < 0 ? ' ' + p.odstin : ''); });
+            if (pz.length) prov = pz.join(', ');
+          }
           put(prov, 136, 216.5, 148);                    // Model a provedení
           put(d.obj_cislo, 389, 216.5, 154);             // Číslo objednávky
           put(keysText(d), 103, 267.5, 181);             // Počet klíčů
@@ -330,7 +337,7 @@
           (function () {
             var on = Date.now() >= new Date('2026-10-25T00:00:00+01:00').getTime();
             try { if (localStorage.getItem('bd-bonus') === '1') on = true; } catch (e) {}
-            if (!on) return;
+            if (!on || d.kategorie === 'interier') return;   /* u interiérových dveří štítek „aplikace v ceně“ není */
             var t = 'V ceně dveří: aplikace Moje dveře', sz = 7.5, w = f[0].widthOfTextAtSize(t, sz);
             page.drawText(t, { x: 539 - w, y: H - 290, size: sz, font: f[0], color: L.rgb(0.07, 0.24, 0.15) });
           })();
