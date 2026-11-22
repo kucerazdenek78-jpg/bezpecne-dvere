@@ -144,6 +144,18 @@
   "cta_label": "Příprava na montáž"
  },
  {
+  "den": "2026-11-22",
+  "slug": "jak-to-u-nas-chodi-video",
+  "kat": "Naše firma",
+  "titulek": "Jak to u nás chodí: od poptávky po servis (video)",
+  "perex": "Krátké video s maskotem Falkem: jak probíhá cesta od poptávky přes nabídku, objednávku a montáž až po servis bezpečnostních dveří do bytu.",
+  "obsah": "<p>Jak vlastně probíhá cesta od prvního dotazu až po nové bezpečnostní dveře do bytu? Natočili jsme o tom krátké video. Provází jím Falko, náš firemní maskot.</p>\n<div style=\"max-width:340px;margin:1.4rem auto\"><video controls playsinline preload=\"none\" poster=\"../userFiles/reklama/jak-to-u-nas-chodi-nahled.jpg\" style=\"width:100%;height:auto;aspect-ratio:9/16;display:block;border-radius:16px;background:#f4e6d2\"><source src=\"../userFiles/reklama/jak-to-u-nas-chodi-web.mp4\" type=\"video/mp4\"></video><p style=\"text-align:center;font-size:.85rem;color:var(--gray-500);margin-top:.5rem\">Video má necelou minutu a je se zvukem. Údaje v ukázkách ze systému jsou smyšlené.</p></div>\n<h2>Osm kroků, které ve videu uvidíte</h2>\n<ol>\n<li style=\"list-style:decimal\"><strong>Pošlete poptávku z webu.</strong> Vyberete dveře do bytu a odešlete. Potvrzení přijde hned e-mailem.</li>\n<li style=\"list-style:decimal\"><strong>Připravíme nabídku.</strong> Dostanete ji e-mailem, přehledně, s cenou a fotkou dveří.</li>\n<li style=\"list-style:decimal\"><strong>Něco chybí? Doplníte to mobilem.</strong> Pošleme odkaz, vyfotíte dveře, připíšete rozměry a odešlete.</li>\n<li style=\"list-style:decimal\"><strong>Objednávka a záloha.</strong> Zálohu zaplatíte QR kódem, podepsanou objednávku pošleme e-mailem.</li>\n<li style=\"list-style:decimal\"><strong>Termín montáže do 14 dnů.</strong> Přijde e-mailem, i s událostí do kalendáře a cedulkou pro sousedy.</li>\n<li style=\"list-style:decimal\"><strong>Předání s podpisem na displeji.</strong> Podepíšete prstem na tabletu nebo mobilu, předávací list dorazí e-mailem.</li>\n<li style=\"list-style:decimal\"><strong>Aplikace Moje dveře.</strong> Záruka, historie dveří a registrace na jednom místě, kdykoli v mobilu.</li>\n<li style=\"list-style:decimal\"><strong>Servis na pár kliknutí.</strong> Záruční i placený servis objednáte přímo v aplikaci a my se ozveme s termínem.</li>\n</ol>\n<h2>Proč to děláme takhle</h2>\n<p>Chceme, abyste v každé chvíli věděli, co se s vaší zakázkou děje, a nemuseli nic tisknout ani nosit. Kdo má radši osobní jednání, toho rádi uvidíme ve vzorkovně v Mostě na adrese Obchodní 36.</p>",
+  "cta_titulek": "Chcete to vyzkoušet na vlastní kůži?",
+  "cta_text": "Pošlete nezávaznou poptávku. Zabere to pár minut a potvrzení vám přijde e-mailem.",
+  "cta_href": "../poptavka-dvere.html",
+  "cta_label": "Nezávazná poptávka"
+ },
+ {
   "den": "2026-11-23",
   "slug": "pece-o-povrch-dveri",
   "kat": "Údržba",
