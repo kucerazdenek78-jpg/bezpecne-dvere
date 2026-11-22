@@ -14,7 +14,7 @@
   if (!MOTIVY_ZAPNUTO && !get() && !/[?&]motivy=1/.test(location.search)) return;
   function auto() {
     var d = new Date(), m = d.getMonth() + 1, den = d.getDate(), md = m * 100 + den, h = d.getHours();
-    var s = md >= 320 && md < 621 ? 'jaro' : md >= 621 && md < 923 ? 'leto' : md >= 923 && md < 1221 ? 'podzim' : 'zima';
+    var s = md >= 320 && md < 621 ? 'jaro' : md >= 621 && md < 923 ? 'leto' : md >= 923 && md < 1122 ? 'podzim' : 'zima'; /* zima už od 22. 11. (Zdeněk 22. 11. 2026: má začít sněžit), dřív od 21. 12. */
     return s + '-' + (NOC_ZAPNUTA && (h >= NOC_OD || h < NOC_DO) ? 'noc' : 'den');
   }
   function apply() {

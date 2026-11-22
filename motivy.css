@@ -52,6 +52,7 @@ html[data-doba="noc"] .nav-logo-img{filter:none}
 @keyframes mt-fall{0%{transform:translate3d(0,-8vh,0) rotate(0)}50%{transform:translate3d(var(--dx),55vh,0) rotate(var(--rot))}100%{transform:translate3d(calc(var(--dx)*-.5),112vh,0) rotate(calc(var(--rot)*2))}}
 .mt-fx.slunce::before{content:"";position:absolute;right:-10vw;top:-14vw;width:42vw;height:42vw;max-width:520px;max-height:520px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,90,.55) 0%,rgba(255,214,90,.18) 45%,transparent 70%);animation:mt-pulse 7s ease-in-out infinite}
 @keyframes mt-pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+html[data-sezona="zima"][data-doba="den"] .mt-fx i{color:#e3effb;text-shadow:0 0 3px rgba(30,75,125,.75),0 0 1px rgba(30,75,125,.9);opacity:.95}
 .mt-fx.hvezdy i{top:auto;animation:mt-twinkle ease-in-out infinite;color:#fff;opacity:.3}
 @keyframes mt-twinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.9;transform:scale(1.2)}}
 .mt-fx.mesic::after{content:"";position:absolute;right:6vw;top:12vh;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fffbe6,#e8e2b8 60%,#cfc890);box-shadow:0 0 40px 10px rgba(255,250,210,.25)}
