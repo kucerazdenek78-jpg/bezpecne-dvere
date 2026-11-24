@@ -352,6 +352,7 @@
     if (d.platce_dph && form.platce_dph) form.platce_dph.checked = true;
     if (d.dph_rezim) setRadio('dph_rezim', d.dph_rezim);
     if (d.patro != null) { form.patro.value = String(d.patro); $('#pqLift').hidden = !(+d.patro > 0); }
+    if (d.tl_zdi && form.elements.tl_zdi) form.elements.tl_zdi.value = d.tl_zdi;   /* tloušťka zdi (cm) z nabídky */
     $('#pqBillingFields').hidden = val('fakturace') === BILLING[0] || !val('fakturace');
     $('#pqCompany').hidden = val('fakturace') !== BILLING[2];
     if (d.souradnice) state.addr = { lon: d.souradnice[0], lat: d.souradnice[1], picked: true, key: addrKey() };

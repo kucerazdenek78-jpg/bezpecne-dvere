@@ -216,7 +216,8 @@ function bd_odkazy(array $r, array $d): array {
   // nabídka na dveře do bytu: přenést celou konfiguraci z první položky (cfg) a zákazníka – jako orderLink() v nabidka.js
     if (($d['typ'] ?? '') === 'nabidka' && ($d['kategorie'] ?? '') === 'byt' && is_array($d['polozky'][0]['cfg'] ?? null)) {
         $o = [];
-        foreach (['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka'] as $k) { if (!empty($d[$k])) $o[$k] = $d[$k]; }
+        foreach (['jmeno', 'prijmeni', 'telefon', 'email', 'ulice', 'mesto', 'psc', 'poznamka', 'vytah', 'zed', 'tl_zdi', 'vyska_cm', 'souradnice', 'doprava_km', 'doprava_cena', 'fakturace', 'fak_jmeno', 'fak_adresa', 'ic', 'platce_dph', 'zvonek'] as $k) { if (isset($d[$k]) && $d[$k] !== '' && $d[$k] !== null && $d[$k] !== false) $o[$k] = $d[$k]; }
+        if (isset($d['patro']) && $d['patro'] !== '' && $d['patro'] !== null) $o['patro'] = $d['patro'];   /* 0 = přízemí se nesmí ztratit */
         $o['cislo'] = (string)($d['cislo'] ?? $d['obj_cislo'] ?? $r['cislo'] ?? '');
         foreach (['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'] as $k) { $v = $d['polozky'][0]['cfg'][$k] ?? ''; if ($v !== '' && $v !== null) $o[$k] = $v; }
     }
