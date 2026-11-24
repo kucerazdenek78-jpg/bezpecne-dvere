@@ -38,7 +38,8 @@
         var b = document.getElementById('add_nabidka_polozka_konstrukter');
         if (!b) { panel('Nenašel jsem tlačítko „na objednání (F4)“. Otevřete konfigurátor ocelových dveří ručně a klikněte na záložku znovu.', '#e8650a'); return KONEC(); }
         b.click();
-        if (!(await az(function () { var c = document.querySelector('.typ_zbozi_cube_ocelove_dvere'); return c && c.offsetParent !== null; }, 30))) { panel('Nepodařilo se otevřít výběr zboží. Otevřete konfigurátor ocelových dveří ručně a klikněte na záložku znovu.', '#e8650a'); return KONEC(); }
+        /* dlaždice „ocelové dveře“ bývá ve skryté záložce výběru – stačí, že je výběr otevřený */
+        if (!(await az(function () { return document.querySelector('#modal2.in, #modal2.show') && document.querySelector('.typ_zbozi_cube_ocelove_dvere'); }, 30))) { panel('Nepodařilo se otevřít výběr zboží. Otevřete konfigurátor ocelových dveří ručně a klikněte na záložku znovu.', '#e8650a'); return KONEC(); }
         document.querySelector('.typ_zbozi_cube_ocelove_dvere').click();
       }
       if (!(await az(function () { return otevreno() && typeof recalculate === 'function' && !!lastStructure; }, 80))) { panel('Konfigurátor TRALu se nenačetl.', '#c81e1e'); return KONEC(); }
