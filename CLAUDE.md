@@ -130,3 +130,8 @@ Při změně cen, příplatků nebo akcí upravit `cenik.php` na NAS a PDF cení
 ## Motivy webu podle ročního období (`motivy.js`, `motivy.css`)
 - Sezóna se přepíná sama podle data: jaro od 20. 3., léto od 21. 6., podzim od 23. 9., **zima už od 22. 11.** (Zdeněk 22. 11. 2026, dřív od 21. 12.). Zkoušení: `?motiv=zima-den`, `?motiv=auto`.
 - Denní vločky jsou světlé se stínem (pravidlo `html[data-sezona="zima"][data-doba="den"] .mt-fx i`), aby byly vidět na tmavém i světlém pozadí. Po změně zvýšit `motivy.js?v=` / `motivy.css?v=` ve všech HTML.
+
+## Kartotéka: zvýraznění nezaplacené zálohy v seznamu objednávek (od 24. 11. 2026)
+- NAS `lib/platba-termin.php`: objednávka s termínem montáže (`montaz_dne` / `termin_datum`) a bez přijaté zálohy = **oranžový řádek** + štítek „💰 Záloha nezaplacena“; záloha nedorazila do termínu = **celý řádek červeně** + „⛔ Záloha po termínu“ (i bez termínu montáže). Termín = den objednání + lhůta z nastavení hlídání zálohy (výchozí 4 dny), nejpozději den před montáží; v den montáže vždy červeně. Objednávky bez požadované zálohy a stavy storno / vyřízeno / namontováno se neznačí.
+- Zapojeno přes `dodavatel_box_html()` v `lib/terminy-dodavatel.php` (původní box je `dodavatel_box_html0()`): vypíše styl a krátký skript, který řádky obarví až v prohlížeči podle odkazu `?id=N`. Důvod: `kartoteka.php` (39 kB) účet MCP nepřepíše spolehlivě a webový server do `app/` nezapisuje (jednorázový PHP „patcher“ tedy nejde). Kopie `nas/kartoteka.php` v repu je starší než NAS.
+- Ověření nasazení malých souborů: dočasné PHP v `app/`, které vypíše sha256 a zkontroluje syntaxi (`token_get_all(..., TOKEN_PARSE)`), porovnat s lokálem, pak smazat.
