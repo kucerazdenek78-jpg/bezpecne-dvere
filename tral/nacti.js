@@ -8,7 +8,7 @@
   function panel(html, barva) {
     var p = document.getElementById('bdTralPanel');
     if (!p) { p = document.createElement('div'); p.id = 'bdTralPanel'; document.body.appendChild(p);
-      p.style.cssText = 'position:fixed;right:14px;top:14px;z-index:2147483000;max-width:380px;background:#fff;border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.35);padding:12px 14px;font:14px/1.45 system-ui,Arial,sans-serif;color:#16233a'; }
+      p.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:2147483000;max-width:380px;background:#fff;border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.35);padding:12px 14px;font:14px/1.45 system-ui,Arial,sans-serif;color:#16233a'; }
     p.style.borderLeft = '7px solid ' + (barva || '#1d5fb8');
     p.innerHTML = '<div style="font-weight:700;margin-bottom:4px">Bezpečné dveře → TRAL <span id="bdTralX" style="float:right;cursor:pointer;color:#64708a">✕</span></div>' + html;
     document.getElementById('bdTralX').onclick = function () { p.remove(); };

@@ -65,5 +65,6 @@ function dodavatel_box_html0(PDO $pdo, ?int $ted = null): string {
 function dodavatel_box_html(PDO $pdo, ?int $ted = null): string {
   $h = dodavatel_box_html0($pdo, $ted);
   try { require_once __DIR__ . '/platba-termin.php'; $h .= platba_termin_seznam_html($pdo, $ted); } catch (Throwable $e) {}
+  try { require_once __DIR__ . '/tral-prenos.php'; $h .= tral_seznam_html($pdo); } catch (Throwable $e) {}   // tlačítko „Do TRALu“ u objednávek ERKADO
   return $h;
 }
