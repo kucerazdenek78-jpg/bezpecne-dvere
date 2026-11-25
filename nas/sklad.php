@@ -3,6 +3,9 @@
 // list pro sklad (obrázek / text / WhatsApp) a evidence vyzvednutí. Stejná ochrana jako kartoteka.php.
 // 10. 11. 2026: na listu pro sklad (stránka, obrázek i tisk) je QR kód. Kdo dveře vyzvedává, naskenuje ho mobilem (přihlášený do kartotéky)
 //   → sklad.php?prevzit=<číslo listu>: dveře z listu, které ještě nejsou převzaté, jsou předvybrané a tlačítkem se zapíšou jako vyzvednuté (= skladem u nás).
+// 10. 11. 2026: zárubeň se strana určuje podle dveří (pravé dveře = pravá zárubeň, levé = levá); když objednávka zárubeň nemá vyplněnou, ukáže se jen strana,
+//   když je vyplněná bez strany, strana se k ní připíše (kromě „bez zárubně“). Týká se Kontroly skladu (souhrn i po kusech).
+// 23. 11. 2026: převzetí přes QR je navíc chráněné PINem (výchozí 9767, přepis v config.php jako 'sklad_pin'), aby se dveře neodepsaly omylem.
 require __DIR__ . '/lib/start.php';
 if (pres_tunel()) {
   $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
@@ -21,13 +24,17 @@ function sk_datum($d) { $t = strtotime((string)$d); return $t ? date('j. n. Y', 
 function sk_radek(array $z): array {
   $d = json_decode((string)$z['data_json'], true) ?: [];
   $ot = (string)($d['otevirani'] ?? '');
-  $dvere = preg_match('/prav/iu', $ot) ? 'Pravé' : (preg_match('/lev/iu', $ot) ? 'Levé' : $ot);
+  $dvere = preg_match('/^\s*prav/iu', $ot) ? 'Pravé' : (preg_match('/^\s*lev/iu', $ot) ? 'Levé' : $ot);
   $k = (string)($d['kovani'] ?? '');
   $tvar = preg_match('/hranat/iu', $k) ? 'Hranaté ' : (preg_match('/zaoblen/iu', $k) ? 'Zaoblené ' : '');
   $bar = preg_match('/inox/iu', $k) ? 'INOX' : (preg_match('/černé|cerne/iu', $k) ? ($tvar ? 'černé' : 'Černé') : $k);
   $mont = trim(sk_datum($d['termin_datum'] ?? '') . (!empty($d['termin']) ? (!empty($d['termin_datum']) ? ' · ' : '') . $d['termin'] : ''));
+  // zárubeň: strana jako u dveří (pravé dveře = pravá zárubeň)
+  $zar = trim((string)($d['zarubne'] ?? ''));
+  $strana = $dvere === 'Pravé' ? 'pravá' : ($dvere === 'Levé' ? 'levá' : '');
+  if ($strana !== '' && !preg_match('/prav|lev|bez/iu', $zar)) $zar = $zar === '' ? ucfirst($strana) : $zar . ' ' . $strana;
   return ['id' => (int)$z['id'], 'dvere' => $dvere, 'odstin' => (string)($d['odstin'] ?? ''), 'kovani' => $tvar . $bar, 'cislo' => (string)($d['obj_cislo'] ?? $z['cislo']),
-    'montaz' => $mont, 'razeni' => (string)($d['termin_datum'] ?? '9999-12-31'), 'zakaznik' => trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')), 'mesto' => (string)($d['mesto'] ?? ''), 'sirka' => (string)($d['sire'] ?? ''), 'zarubne' => (string)($d['zarubne'] ?? ''),
+    'montaz' => $mont, 'razeni' => (string)($d['termin_datum'] ?? '9999-12-31'), 'zakaznik' => trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')), 'mesto' => (string)($d['mesto'] ?? ''), 'sirka' => (string)($d['sire'] ?? ''), 'zarubne' => $zar,
     'stav' => (string)$z['stav'], 'sklad_stav' => (string)($z['sklad_stav'] ?? ''), 'davka' => (int)($z['sklad_davka'] ?? 0)];
 }
 function sk_nacti($pdo): array {
@@ -52,8 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($ids as $i) $up->execute([$did, $i]);
     header('Location: sklad.php?davka=' . $did); exit;
   }
-  if ($akce === 'vyzvednuto' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav='vyzvednuto' WHERE id=?"); foreach ($ids as $i) $up->execute([$i]);
-    if (!empty($_POST['qr'])) { header('Location: sklad.php?prevzato=' . count($ids)); exit; } }   // převzetí přes QR z listu pro sklad
+  if ($akce === 'vyzvednuto' && $ids) {
+    if (!empty($_POST['qr'])) {   // převzetí přes naskenovaný QR z listu pro sklad – chráněno PINem (aby se dveře neodepsaly omylem)
+      $ipk = klient_ip(); $listId = (int)($_POST['list'] ?? 0);
+      $q = $pdo->prepare("SELECT COUNT(*) FROM pokusy WHERE ip=? AND typ='skladpin' AND cas>?"); $q->execute([$ipk, time() - 600]);
+      if ((int)$q->fetchColumn() >= 12) { header('Location: sklad.php?prevzit=' . $listId . '&pinblok=1'); exit; }
+      $pin = preg_replace('/\D+/', '', (string)($_POST['pin'] ?? ''));
+      if ($pin === '' || !hash_equals((string)($cfg['sklad_pin'] ?? '9767'), $pin)) {
+        $pdo->prepare("INSERT INTO pokusy (ip, typ, cas) VALUES (?, 'skladpin', ?)")->execute([$ipk, time()]);
+        header('Location: sklad.php?prevzit=' . $listId . '&pinchyba=1'); exit;
+      }
+      $pdo->prepare("DELETE FROM pokusy WHERE ip=? AND typ='skladpin'")->execute([$ipk]);
+    }
+    $up = $pdo->prepare("UPDATE zadosti SET sklad_stav='vyzvednuto' WHERE id=?"); foreach ($ids as $i) $up->execute([$i]);
+    if (!empty($_POST['qr'])) { header('Location: sklad.php?prevzato=' . count($ids)); exit; }
+  }
   if ($akce === 'zpet' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav=NULL, sklad_davka=NULL WHERE id=?"); foreach ($ids as $i) $up->execute([$i]); }
   header('Location: sklad.php'); exit;
 }
@@ -74,6 +94,7 @@ table{border-collapse:collapse;width:100%}th,td{padding:7px 8px;border-bottom:1p
 .chip.ok{background:#d9f2e0;color:#14653a}.chip.warn{background:#fff0cc;color:#7a5200}
 textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius:8px}
 .list{background:#d9ead3;border-radius:6px;padding:14px 18px;max-width:640px}.list table td,.list table th{border:0;font-size:18px;padding:3px 10px 3px 0;color:#2d4a1f}.list th{background:#f3e0d0;color:#442;font-size:17px;padding:5px 10px 5px 4px}
+.pinbox{margin:14px 0 4px}.pinbox input{font-size:22px;letter-spacing:6px;padding:10px 12px;border:1px solid #c9d1dc;border-radius:8px;width:180px}
 @media(max-width:700px){.hide-m{display:none}}@media print{header,.nop{display:none}body{background:#fff}.box{box-shadow:none}}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('sklad'); ?><main>
 <?php if (isset($_GET['prevzato'])): ?><div class="box" style="background:#d9f2e0;color:#14653a;font-size:17px">✅ Zapsáno: <?= (int)$_GET['prevzato'] ?> ks dveří je u nás (vyzvednuto, skladem).</div><?php endif; ?>
@@ -81,12 +102,15 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
   $rad = array_values(array_filter($vse, fn($r) => $r['davka'] === $prevzit));
   $zbyva = array_values(array_filter($rad, fn($r) => $r['sklad_stav'] === 'objednano')); ?>
   <div class="box"><h2 style="margin-top:0">📦 Převzetí dveří ze skladu – list č. <?= $prevzit ?></h2>
+  <?php if (isset($_GET['pinchyba'])): ?><div style="background:#fde2e2;color:#9b1c1c;border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:16px">Špatný PIN. Zkuste to prosím znovu.</div><?php endif; ?>
+  <?php if (isset($_GET['pinblok'])): ?><div style="background:#fde2e2;color:#9b1c1c;border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:16px">Příliš mnoho pokusů. Zkuste to prosím za 10 minut.</div><?php endif; ?>
   <?php if (!$rad): ?><p>List č. <?= $prevzit ?> nenalezen (nebo už v něm nic není). <a href="sklad.php">Sklad</a></p>
   <?php elseif (!$zbyva): ?><p>Všechny dveře z tohoto listu už jsou zapsané jako vyzvednuté (u nás). <a href="sklad.php">Sklad</a></p>
   <?php else: ?><p>Zkontroluj, které dveře opravdu bereš, a potvrď. Zapíšou se jako <b>vyzvednuté – skladem u nás</b>.</p>
-    <form method="post"><input type="hidden" name="akce" value="vyzvednuto"><input type="hidden" name="qr" value="1">
+    <form method="post"><input type="hidden" name="akce" value="vyzvednuto"><input type="hidden" name="qr" value="1"><input type="hidden" name="list" value="<?= $prevzit ?>">
     <?php foreach ($zbyva as $r): ?><label style="display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid #e4e8ee;font-size:17px"><input type="checkbox" name="ids[]" value="<?= $r['id'] ?>" checked style="width:26px;height:26px;flex:none">
       <span><b><?= $e($r['dvere'] . ' · ' . $r['odstin'] . ' · ' . $r['kovani']) ?></b><?= $r['sirka'] ? ' · šířka ' . $e($r['sirka']) : '' ?><br><span class="mut">obj. <?= $e($r['cislo']) ?><?= $r['zakaznik'] ? ' · ' . $e($r['zakaznik']) : '' ?><?= $r['montaz'] ? ' · montáž ' . $e($r['montaz']) : '' ?></span></span></label><?php endforeach; ?>
+    <p class="pinbox"><label><b>PIN pro převzetí</b><br><input name="pin" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required placeholder="PIN"></label></p>
     <p><button style="width:100%;padding:16px;font-size:18px;background:#16a34a">✅ Převzato – dveře jsou u nás</button></p></form>
     <?php if (count($zbyva) < count($rad)): ?><p class="mut"><?= count($rad) - count($zbyva) ?> ks z listu už bylo zapsáno dřív.</p><?php endif; ?>
   <?php endif; ?></div>
