@@ -214,13 +214,6 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
         <td><a href="kartoteka.php?id=<?= $r['id'] ?>"><?= $e($r['cislo']) ?></a></td><td class="hide-m"><?= $e(trim($r['zakaznik'] . ($r['mesto'] ? ', ' . $r['mesto'] : ''))) ?></td></tr><?php endforeach; ?></table>
       <p><textarea name="poznamka" rows="2" placeholder="Poznámka pro sklad (např. Všechny nové kování hranaté INOX)"></textarea></p>
       <button>Vytvořit list pro sklad z označených</button></form><?php endif; ?></div>
-  <?php if ($davky): ?><div class="box"><h2 style="margin-top:0">📋 Historie listů pro sklad (<?= count($davky) ?>)</h2>
-    <p class="mut">Všechny vytvořené listy pro sklad. Každý jde znovu otevřít, vytisknout, stáhnout jako obrázek nebo text. Soubory se ukládají i bokem na NAS (složka <b>sklad-listy</b>, projdeš i ve File Station).</p>
-    <div style="overflow-x:auto"><table><tr><th>List</th><th>Datum</th><th>Ks</th><th class="hide-m">Poznámka</th><th>Akce</th></tr>
-    <?php foreach ($davky as $dd): $dn = (int)$dd['id']; $maPng = is_file(listy_soubor($LISTY_DIR, $dn, 'png')); $maTxt = is_file(listy_soubor($LISTY_DIR, $dn, 'txt')); ?>
-      <tr><td><b>č. <?= $dn ?></b></td><td><?= $e(sk_datum($dd['vytvoreno'])) ?></td><td><?= (int)$dd['n'] ?></td><td class="hide-m"><?= $e((string)$dd['poznamka']) ?></td>
-      <td style="white-space:nowrap"><a class="btn sec" href="sklad.php?davka=<?= $dn ?>">Otevřít</a> <?= $maPng ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=png">Obrázek</a> ' : '' ?><?= $maTxt ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=txt">Text</a>' : '' ?></td></tr>
-    <?php endforeach; ?></table></div></div><?php endif; ?>
   <?php if ($ve_skladu): ?><div class="box"><h2 style="margin-top:0">Objednáno ve skladu – k vyzvednutí (<?= count($ve_skladu) ?>)</h2>
     <form method="post"><input type="hidden" name="akce" value="vyzvednuto"><table>
       <tr><th></th><th>Montáž</th><th>Dveře</th><th>Odstín</th><th>Kování</th><th>Č. obj.</th><th>List</th></tr>
@@ -246,4 +239,12 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
       <?php foreach ($kontrola as $r): ?><tr><td><?= $e($r['dvere']) ?></td><td><?= $e($r['zarubne']) ?></td><td><?= $e($r['odstin']) ?></td><td><?= $e($r['kovani']) ?></td><td><?= $e($r['sirka']) ?></td>
         <td><a href="kartoteka.php?id=<?= $r['id'] ?>"><?= $e($r['cislo']) ?></a></td><td class="hide-m"><?= $e(trim($r['zakaznik'] . ($r['mesto'] ? ', ' . $r['mesto'] : ''))) ?></td><td><?= $e($r['montaz'] ?: '–') ?></td></tr><?php endforeach; ?></table>
     <?php endif; ?></div>
+  <?php if ($davky): ?><details class="box" style="padding:0"><summary style="padding:14px 16px;cursor:pointer;font-weight:600;font-size:18px">📋 Historie listů pro sklad (<?= count($davky) ?>)</summary>
+    <div style="padding:0 16px 16px">
+    <p class="mut" style="margin-top:0">Všechny vytvořené listy pro sklad. Každý jde znovu otevřít, vytisknout, stáhnout jako obrázek nebo text. Soubory se ukládají i bokem na NAS (složka <b>sklad-listy</b>, projdeš i ve File Station).</p>
+    <div style="overflow-x:auto"><table><tr><th>List</th><th>Datum</th><th>Ks</th><th class="hide-m">Poznámka</th><th>Akce</th></tr>
+    <?php foreach ($davky as $dd): $dn = (int)$dd['id']; $maPng = is_file(listy_soubor($LISTY_DIR, $dn, 'png')); $maTxt = is_file(listy_soubor($LISTY_DIR, $dn, 'txt')); ?>
+      <tr><td><b>č. <?= $dn ?></b></td><td><?= $e(sk_datum($dd['vytvoreno'])) ?></td><td><?= (int)$dd['n'] ?></td><td class="hide-m"><?= $e((string)$dd['poznamka']) ?></td>
+      <td style="white-space:nowrap"><a class="btn sec" href="sklad.php?davka=<?= $dn ?>">Otevřít</a> <?= $maPng ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=png">Obrázek</a> ' : '' ?><?= $maTxt ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=txt">Text</a>' : '' ?></td></tr>
+    <?php endforeach; ?></table></div></div></details><?php endif; ?>
 <?php endif; ?></main></body></html>
