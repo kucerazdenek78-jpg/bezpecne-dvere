@@ -36,15 +36,23 @@ function dd_vychozi(array $d, array $VYCHOZI_MODEL): string {
 }
 function dd_datum($d) { $t = strtotime((string)$d); return ($d && $t) ? date('j. n. Y', $t) : ''; }
 function dd_iso($d) { return preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$d) ? (string)$d : ''; }
+// Celý popis dveří: šířka + strana + směr, např. „80 Pravé dovnitř" (ze sire + otevirani; bez závorky s klikou).
+function dd_cele_dvere(array $d): string {
+  $s = trim((string)($d['sire'] ?? '')); $o = trim((string)($d['otevirani'] ?? ''));
+  if ($o !== '') { $o = trim(explode('(', $o)[0]); if ($o !== '') $o = mb_strtoupper(mb_substr($o, 0, 1)) . mb_substr($o, 1); }
+  if ($s === '' || mb_strtolower($s) === 'nevím') $s = '';
+  return trim($s . ' ' . $o);
+}
 function dd_radek(array $z, array $VYCHOZI_MODEL): array {
   $d = json_decode((string)$z['data_json'], true) ?: [];
   $kod = (string)($d['model_kod'] ?? '');
   $ot = (string)($d['otevirani'] ?? '');
   $montazIso = dd_iso($d['montaz_dne'] ?? '') ?: dd_iso($d['termin_datum'] ?? '');
   $dod = trim((string)($z['dodavatel'] ?? ''));
+  $dvere = preg_match('/^\s*prav/iu', $ot) ? 'Pravé' : (preg_match('/^\s*lev/iu', $ot) ? 'Levé' : $ot);
   return ['id' => (int)$z['id'], 'kod' => $kod, 'model' => (string)($d['model'] ?? $kod),
     'dodavatel' => $dod !== '' ? $dod : dd_vychozi($d, $VYCHOZI_MODEL), 'dod_ulozen' => $dod !== '',
-    'dvere' => preg_match('/^\s*prav/iu', $ot) ? 'Pravé' : (preg_match('/^\s*lev/iu', $ot) ? 'Levé' : $ot),
+    'dvere' => $dvere, 'popis' => (dd_cele_dvere($d) ?: $dvere),
     'odstin' => (string)($d['odstin'] ?? ''), 'zarubne' => (string)($d['zarubne'] ?? ''), 'kovani' => (string)($d['kovani'] ?? ''), 'sirka' => (string)($d['sire'] ?? ''),
     'rozpocet' => is_array($d['rozpocet'] ?? null) ? trim('rozpočet ' . ($d['rozpocet']['cislo'] ?? '')) : '',
     'cislo' => (string)($d['obj_cislo'] ?? $z['cislo']), 'zakaznik' => trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')), 'mesto' => (string)($d['mesto'] ?? ''),
@@ -137,7 +145,7 @@ function dd_tabulka(array $rows, string $sekce, $e, string $dnes, callable $za, 
       <td><?= $e($r['zakaznik']) ?><div class="mut"><?= $e($r['mesto']) ?></div></td>
       <td><?= $r['dodavatel'] !== '' ? $e($r['dodavatel']) . (!$r['dod_ulozen'] && $sekce === 'k' ? ' <span class="mut">(výchozí)</span>' : '') : '<span class="mut">vybrat</span>' ?></td>
       <td><?= $e($r['model']) ?><?= $r['rozpocet'] ? '<div class="mut">' . $e($r['rozpocet']) . '</div>' : '' ?><?php if ($bezZ): ?><div class="zal-ne">⛔ ZÁLOHA NEZAPLACENA<?= $sekce === 'k' ? ' – zatím neobjednávat' : '' ?></div><?php endif; ?><?= $tt ? '<div class="var ' . $tr . '">⚠ ' . $e($tt) . '</div>' : '' ?></td>
-      <td class="hide-m"><?= $e(implode(' · ', array_filter([$r['dvere'], $r['odstin'], $r['zarubne'], $r['kovani'], $r['sirka'] ? $r['sirka'] . ' cm' : '']))) ?: '–' ?></td>
+      <td class="hide-m"><?= $e(implode(' · ', array_filter([$r['popis'], $r['odstin'], $r['zarubne'], $r['kovani']]))) ?: '–' ?></td>
       <?php if ($sekce !== 'k'): ?><td><?= $e($r['ref'] ?: '–') ?></td><td><?= $e(dd_datum($r['objednano']) ?: '–') ?></td><?php endif; ?>
       <?php if ($sekce !== 'd'): ?><td><?= $e(dd_datum($r['termin']) ?: '–') ?></td><?php else: ?><td><?= $e(dd_datum($r['dodano']) ?: '–') ?></td><?php endif; ?>
       <td><?= $e($r['montaz'] ?: '–') ?></td>

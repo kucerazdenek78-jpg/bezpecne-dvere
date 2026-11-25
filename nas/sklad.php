@@ -21,6 +21,13 @@ $pdo = db(); require_once __DIR__ . '/lib/stav.php'; bd_stavy_sync($pdo);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
 function sk_datum($d) { $t = strtotime((string)$d); return $t ? date('j. n. Y', $t) : ''; }
+// Celý popis dveří pro list KV DOORS: šířka + strana + směr, např. „80 Levé dovnitř" (ze sire + otevirani; směr je za stranou, bez závorky s klikou).
+function sk_cele_dvere(array $d): string {
+  $s = trim((string)($d['sire'] ?? '')); $o = trim((string)($d['otevirani'] ?? ''));
+  if ($o !== '') { $o = trim(explode('(', $o)[0]); if ($o !== '') $o = mb_strtoupper(mb_substr($o, 0, 1)) . mb_substr($o, 1); }
+  if ($s === '' || mb_strtolower($s) === 'nevím') $s = '';
+  return trim($s . ' ' . $o);
+}
 function sk_radek(array $z): array {
   $d = json_decode((string)$z['data_json'], true) ?: [];
   $ot = (string)($d['otevirani'] ?? '');
@@ -33,7 +40,7 @@ function sk_radek(array $z): array {
   $zar = trim((string)($d['zarubne'] ?? ''));
   $strana = $dvere === 'Pravé' ? 'pravá' : ($dvere === 'Levé' ? 'levá' : '');
   if ($strana !== '' && !preg_match('/prav|lev|bez/iu', $zar)) $zar = $zar === '' ? ucfirst($strana) : $zar . ' ' . $strana;
-  return ['id' => (int)$z['id'], 'dvere' => $dvere, 'odstin' => (string)($d['odstin'] ?? ''), 'kovani' => $tvar . $bar, 'cislo' => (string)($d['obj_cislo'] ?? $z['cislo']),
+  return ['id' => (int)$z['id'], 'dvere' => $dvere, 'popis' => (sk_cele_dvere($d) ?: $dvere), 'odstin' => (string)($d['odstin'] ?? ''), 'kovani' => $tvar . $bar, 'cislo' => (string)($d['obj_cislo'] ?? $z['cislo']),
     'montaz' => $mont, 'razeni' => (string)($d['termin_datum'] ?? '9999-12-31'), 'zakaznik' => trim(($d['jmeno'] ?? '') . ' ' . ($d['prijmeni'] ?? '')), 'mesto' => (string)($d['mesto'] ?? ''), 'sirka' => (string)($d['sire'] ?? ''), 'zarubne' => $zar,
     'stav' => (string)$z['stav'], 'sklad_stav' => (string)($z['sklad_stav'] ?? ''), 'davka' => (int)($z['sklad_davka'] ?? 0)];
 }
@@ -93,7 +100,7 @@ table{border-collapse:collapse;width:100%}th,td{padding:7px 8px;border-bottom:1p
 .btn.sec,button.sec{background:#e6ebf3;color:#1b2430}.mut{color:#6b7787;font-size:13px}.chip{border-radius:999px;padding:2px 9px;font-size:12px;background:#e6ebf3}
 .chip.ok{background:#d9f2e0;color:#14653a}.chip.warn{background:#fff0cc;color:#7a5200}
 textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #c9d1dc;border-radius:8px}
-.list{background:#d9ead3;border-radius:6px;padding:14px 18px;max-width:640px}.list table td,.list table th{border:0;font-size:18px;padding:3px 10px 3px 0;color:#2d4a1f}.list th{background:#f3e0d0;color:#442;font-size:17px;padding:5px 10px 5px 4px}
+.list{background:#d9ead3;border-radius:6px;padding:14px 18px;max-width:760px}.list table td,.list table th{border:0;font-size:18px;padding:3px 10px 3px 0;color:#2d4a1f}.list th{background:#f3e0d0;color:#442;font-size:17px;padding:5px 10px 5px 4px}
 .pinbox{margin:14px 0 4px}.pinbox input{font-size:22px;letter-spacing:6px;padding:10px 12px;border:1px solid #c9d1dc;border-radius:8px;width:180px}
 @media(max-width:700px){.hide-m{display:none}}@media print{header,.nop{display:none}body{background:#fff}.box{box-shadow:none}}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('sklad'); ?><main>
@@ -119,13 +126,13 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
   $rad = array_values(array_filter($vse, fn($r) => $r['davka'] === $davka));
   if (!$dv || !$rad): ?><p>Dávka nenalezena. <a href="sklad.php">Zpět</a></p><?php else:
   $datum = sk_datum($dv['vytvoreno']); $pozn = (string)$dv['poznamka'];
-  $text = "Objednávka dveří PREMIUM 60 – $datum\n\n" . implode("\n", array_map(fn($r) => '• ' . trim($r['dvere'] . ' – ' . $r['odstin'] . ' – ' . $r['kovani'] . ' – č. obj. ' . $r['cislo'] . ($r['sirka'] ? ' – šířka ' . $r['sirka'] : '')), $rad)) . ($pozn !== '' ? "\n\n$pozn" : ''); ?>
+  $text = "Objednávka dveří PREMIUM 60 – $datum\n\n" . implode("\n", array_map(fn($r) => '• ' . trim($r['popis'] . ' – ' . $r['odstin'] . ' – ' . $r['kovani'] . ' – č. obj. ' . $r['cislo']), $rad)) . ($pozn !== '' ? "\n\n$pozn" : ''); ?>
   <div class="box nop"><b>List pro sklad</b> – vytvořeno <?= $e($datum) ?>. Dveře jsou označeny jako „objednáno ve skladu".
     <p><button id="bShare">Sdílet obrázek (WhatsApp…)</button> <button class="sec" id="bPng">Stáhnout obrázek</button> <button class="sec" id="bCopy">Kopírovat text</button>
     <a class="btn sec" target="_blank" rel="noopener" href="https://wa.me/?text=<?= rawurlencode($text) ?>">Poslat textem přes WhatsApp</a> <button class="sec" onclick="print()">Tisk</button></p>
     <div class="mut" id="msg"></div></div>
   <div class="list"><table><tr><th>Dveře</th><th>Odstín</th><th>Kování</th><th>Číslo obj.</th></tr>
-    <?php foreach ($rad as $r): ?><tr><td><?= $e($r['dvere']) ?></td><td><?= $e($r['odstin']) ?></td><td><?= $e($r['kovani']) ?></td><td><?= $e($r['cislo']) ?></td></tr><?php endforeach; ?></table>
+    <?php foreach ($rad as $r): ?><tr><td><?= $e($r['popis']) ?></td><td><?= $e($r['odstin']) ?></td><td><?= $e($r['kovani']) ?></td><td><?= $e($r['cislo']) ?></td></tr><?php endforeach; ?></table>
     <?php if ($pozn !== ''): ?><p style="font-size:19px;margin:16px 0 4px"><?= nl2br($e($pozn)) ?></p><?php endif; ?><p class="mut" style="margin:8px 0 0">Ze dne <?= $e($datum) ?></p>
     <div style="display:flex;gap:14px;align-items:center;margin-top:12px;background:#fff;border-radius:6px;padding:10px"><img id="qrImg" alt="QR kód pro převzetí" width="132" height="132">
       <div style="font-size:15px;color:#2d4a1f"><b>Při vyzvednutí naskenujte mobilem</b><br>dveře se zapíšou jako převzaté – skladem u nás (list č. <?= $davka ?>).</div></div></div>
@@ -133,9 +140,9 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
   <script>
   var QRURL = <?= json_encode($qrUrl) ?>, QR = null;
   try { QR = qrcode(0, 'M'); QR.addData(QRURL); QR.make(); document.getElementById('qrImg').src = QR.createDataURL(4, 2); } catch (e) { QR = null; }
-  var ROWS = <?= json_encode(array_map(fn($r) => [$r['dvere'], $r['odstin'], $r['kovani'], $r['cislo']], $rad), JSON_UNESCAPED_UNICODE) ?>, POZN = <?= json_encode($pozn, JSON_UNESCAPED_UNICODE) ?>, DATUM = <?= json_encode($datum) ?>, TEXT = <?= json_encode($text, JSON_UNESCAPED_UNICODE) ?>;
+  var ROWS = <?= json_encode(array_map(fn($r) => [$r['popis'], $r['odstin'], $r['kovani'], $r['cislo']], $rad), JSON_UNESCAPED_UNICODE) ?>, POZN = <?= json_encode($pozn, JSON_UNESCAPED_UNICODE) ?>, DATUM = <?= json_encode($datum) ?>, TEXT = <?= json_encode($text, JSON_UNESCAPED_UNICODE) ?>;
   function kresli() {
-    var f = '34px Arial,Helvetica,sans-serif', pad = 28, rh = 56, cols = [0, 190, 520, 820], W = 1080, notes = POZN ? POZN.split('\n') : [];
+    var f = '34px Arial,Helvetica,sans-serif', pad = 28, rh = 56, cols = [0, 330, 690, 1030], W = 1320, notes = POZN ? POZN.split('\n') : [];
     var H = pad + rh * (ROWS.length + 1) + (notes.length ? 40 + notes.length * 50 : 0) + 90 + (QR ? 250 : 0);
     var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
     x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.fillStyle = '#d9ead3'; x.fillRect(40, 20, W - 80, H - (QR ? 40 : 90)); x.fillStyle = '#f3e0d0'; x.fillRect(40, 20, W - 80, rh);
