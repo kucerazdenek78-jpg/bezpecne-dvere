@@ -19,6 +19,9 @@ if (!($UZ = uziv_overit($u, $pw))) {
 header('X-Robots-Tag: noindex'); header('Cache-Control: no-store');
 $pdo = db(); require_once __DIR__ . '/lib/stav.php'; bd_stavy_sync($pdo);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+// Archiv Listů pro sklad: každý list se ukládá jako obrázek + text do /data/sklad-listy (projít i ve File Station) a je v „Historii listů" na stránce Sklad.
+$LISTY_DIR = ($DATA ?: '/data') . '/sklad-listy';
+function listy_soubor(string $dir, int $n, string $typ): string { return $dir . '/list-' . $n . '.' . ($typ === 'txt' ? 'txt' : 'png'); }
 
 function sk_datum($d) { $t = strtotime((string)$d); return $t ? date('j. n. Y', $t) : ''; }
 // Celý popis dveří pro list KV DOORS: šířka + strana + směr, např. „80 Levé dovnitř" (ze sire + otevirani; směr je za stranou, bez závorky s klikou).
@@ -59,6 +62,19 @@ function sk_nacti($pdo): array {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $ids = array_values(array_filter(array_map('intval', (array)($_POST['ids'] ?? []))));
   $akce = $_POST['akce'] ?? '';
+  if ($akce === 'ulozit_png') {   // archiv: obrázek listu vygenerovaný v prohlížeči se uloží na server (bez přesměrování)
+    header('Content-Type: application/json');
+    $dv = (int)($_POST['davka'] ?? 0); $png = (string)($_POST['png'] ?? '');
+    if ($dv > 0 && strncmp($png, 'data:image/png;base64,', 22) === 0) {
+      $bin = base64_decode(substr($png, 22), true);
+      if ($bin !== false && strlen($bin) > 100) {
+        if (!is_dir($LISTY_DIR)) @mkdir($LISTY_DIR, 0775, true);
+        @file_put_contents(listy_soubor($LISTY_DIR, $dv, 'png'), $bin);
+        echo json_encode(['ok' => true]); exit;
+      }
+    }
+    echo json_encode(['ok' => false]); exit;
+  }
   if ($akce === 'davka' && $ids) {
     $pdo->prepare('INSERT INTO sklad_davky (vytvoreno, poznamka) VALUES (?,?)')->execute([date('Y-m-d H:i:s'), mb_substr(trim((string)($_POST['poznamka'] ?? '')), 0, 500)]);
     $did = (int)$pdo->lastInsertId();
@@ -83,6 +99,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   if ($akce === 'zpet' && $ids) { $up = $pdo->prepare("UPDATE zadosti SET sklad_stav=NULL, sklad_davka=NULL WHERE id=?"); foreach ($ids as $i) $up->execute([$i]); }
   header('Location: sklad.php'); exit;
+}
+
+if (isset($_GET['stahni'])) {   // stažení uloženého listu z archivu (obrázek / text)
+  $n = (int)$_GET['stahni']; $typ = (($_GET['typ'] ?? '') === 'txt') ? 'txt' : 'png';
+  $f = listy_soubor($LISTY_DIR, $n, $typ);
+  if ($n > 0 && is_file($f)) {
+    header('Content-Type: ' . ($typ === 'txt' ? 'text/plain; charset=utf-8' : 'image/png'));
+    header('Content-Disposition: attachment; filename="List-pro-sklad-' . $n . '.' . $typ . '"');
+    header('Content-Length: ' . filesize($f)); readfile($f); exit;
+  }
+  http_response_code(404); exit('Soubor nenalezen');
 }
 
 $vse = sk_nacti($pdo);
@@ -126,8 +153,10 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
   $rad = array_values(array_filter($vse, fn($r) => $r['davka'] === $davka));
   if (!$dv || !$rad): ?><p>Dávka nenalezena. <a href="sklad.php">Zpět</a></p><?php else:
   $datum = sk_datum($dv['vytvoreno']); $pozn = (string)$dv['poznamka'];
-  $text = "Objednávka dveří PREMIUM 60 – $datum\n\n" . implode("\n", array_map(fn($r) => '• ' . trim($r['popis'] . ' – ' . $r['odstin'] . ' – ' . $r['kovani'] . ' – č. obj. ' . $r['cislo']), $rad)) . ($pozn !== '' ? "\n\n$pozn" : ''); ?>
-  <div class="box nop"><b>List pro sklad</b> – vytvořeno <?= $e($datum) ?>. Dveře jsou označeny jako „objednáno ve skladu".
+  $text = "Objednávka dveří PREMIUM 60 – $datum\n\n" . implode("\n", array_map(fn($r) => '• ' . trim($r['popis'] . ' – ' . $r['odstin'] . ' – ' . $r['kovani'] . ' – č. obj. ' . $r['cislo']), $rad)) . ($pozn !== '' ? "\n\n$pozn" : '');
+  if (!is_file(listy_soubor($LISTY_DIR, $davka, 'txt'))) { if (!is_dir($LISTY_DIR)) @mkdir($LISTY_DIR, 0775, true); @file_put_contents(listy_soubor($LISTY_DIR, $davka, 'txt'), $text); }   // archiv: text listu
+  $pngJeUlozen = is_file(listy_soubor($LISTY_DIR, $davka, 'png')); ?>
+  <div class="box nop"><a href="sklad.php" style="float:right">← Sklad (historie listů)</a><b>List pro sklad č. <?= (int)$davka ?></b> – vytvořeno <?= $e($datum) ?>. Dveře jsou označeny jako „objednáno ve skladu".
     <p><button id="bShare">Sdílet obrázek (WhatsApp…)</button> <button class="sec" id="bPng">Stáhnout obrázek</button> <button class="sec" id="bCopy">Kopírovat text</button>
     <a class="btn sec" target="_blank" rel="noopener" href="https://wa.me/?text=<?= rawurlencode($text) ?>">Poslat textem přes WhatsApp</a> <button class="sec" onclick="print()">Tisk</button></p>
     <div class="mut" id="msg"></div></div>
@@ -166,11 +195,16 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
     var file = new File([b], 'objednavka-dveri.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], text: 'Objednávka dveří ' + DATUM }).catch(function () {});
     else { m.textContent = 'Sdílení obrázku tenhle prohlížeč neumí – obrázek se stáhl, pošlete ho z galerie.'; document.getElementById('bPng').click(); } }); };
+  <?php if (!$pngJeUlozen): ?>
+  // archiv: obrázek listu ještě není uložený na serveru → vygeneruj a tiše ulož (do složky sklad-listy)
+  try { var du = kresli().toDataURL('image/png'); var fd = new FormData(); fd.append('akce', 'ulozit_png'); fd.append('davka', '<?= (int)$davka ?>'); fd.append('png', du); fetch('sklad.php', { method: 'POST', body: fd, credentials: 'same-origin' }); } catch (e) {}
+  <?php endif; ?>
   </script>
 <?php endif; else:
   $k_obj = array_values(array_filter($vse, fn($r) => $r['sklad_stav'] === '' && !in_array($r['stav'], ['namontovano', 'vyrizeno'], true)));
   $ve_skladu = array_values(array_filter($vse, fn($r) => $r['sklad_stav'] === 'objednano'));
-  $vyz = array_values(array_filter($vse, fn($r) => $r['sklad_stav'] === 'vyzvednuto' && !in_array($r['stav'], ['namontovano', 'vyrizeno'], true))); ?>
+  $vyz = array_values(array_filter($vse, fn($r) => $r['sklad_stav'] === 'vyzvednuto' && !in_array($r['stav'], ['namontovano', 'vyrizeno'], true)));
+  $davky = $pdo->query('SELECT d.id, d.vytvoreno, d.poznamka, (SELECT COUNT(*) FROM zadosti z WHERE z.sklad_davka = d.id) AS n FROM sklad_davky d ORDER BY d.id DESC')->fetchAll(PDO::FETCH_ASSOC); ?>
   <div class="box"><h2 style="margin-top:0">K objednání ve skladu (<?= count($k_obj) ?>)</h2>
     <p class="mut">Objednávky dveří PREMIUM 60 od zákazníků, seřazené podle slíbeného termínu montáže. Označ, co si chceš připravit, a vytvoř list pro sklad.</p>
     <?php if (!$k_obj): ?><p>Nic k objednání.</p><?php else: ?>
@@ -180,6 +214,13 @@ textarea{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px so
         <td><a href="kartoteka.php?id=<?= $r['id'] ?>"><?= $e($r['cislo']) ?></a></td><td class="hide-m"><?= $e(trim($r['zakaznik'] . ($r['mesto'] ? ', ' . $r['mesto'] : ''))) ?></td></tr><?php endforeach; ?></table>
       <p><textarea name="poznamka" rows="2" placeholder="Poznámka pro sklad (např. Všechny nové kování hranaté INOX)"></textarea></p>
       <button>Vytvořit list pro sklad z označených</button></form><?php endif; ?></div>
+  <?php if ($davky): ?><div class="box"><h2 style="margin-top:0">📋 Historie listů pro sklad (<?= count($davky) ?>)</h2>
+    <p class="mut">Všechny vytvořené listy pro sklad. Každý jde znovu otevřít, vytisknout, stáhnout jako obrázek nebo text. Soubory se ukládají i bokem na NAS (složka <b>sklad-listy</b>, projdeš i ve File Station).</p>
+    <div style="overflow-x:auto"><table><tr><th>List</th><th>Datum</th><th>Ks</th><th class="hide-m">Poznámka</th><th>Akce</th></tr>
+    <?php foreach ($davky as $dd): $dn = (int)$dd['id']; $maPng = is_file(listy_soubor($LISTY_DIR, $dn, 'png')); $maTxt = is_file(listy_soubor($LISTY_DIR, $dn, 'txt')); ?>
+      <tr><td><b>č. <?= $dn ?></b></td><td><?= $e(sk_datum($dd['vytvoreno'])) ?></td><td><?= (int)$dd['n'] ?></td><td class="hide-m"><?= $e((string)$dd['poznamka']) ?></td>
+      <td style="white-space:nowrap"><a class="btn sec" href="sklad.php?davka=<?= $dn ?>">Otevřít</a> <?= $maPng ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=png">Obrázek</a> ' : '' ?><?= $maTxt ? '<a class="btn sec" href="sklad.php?stahni=' . $dn . '&amp;typ=txt">Text</a>' : '' ?></td></tr>
+    <?php endforeach; ?></table></div></div><?php endif; ?>
   <?php if ($ve_skladu): ?><div class="box"><h2 style="margin-top:0">Objednáno ve skladu – k vyzvednutí (<?= count($ve_skladu) ?>)</h2>
     <form method="post"><input type="hidden" name="akce" value="vyzvednuto"><table>
       <tr><th></th><th>Montáž</th><th>Dveře</th><th>Odstín</th><th>Kování</th><th>Č. obj.</th><th>List</th></tr>
