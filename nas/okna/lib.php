@@ -172,7 +172,15 @@ function so_rozsireni(PDO $pdo): void {
   $s = $sl('so_smlouva'); foreach (['stav_podpisu' => "TEXT DEFAULT 'podepsana'", 'platnost_do' => 'TEXT', 'dokument' => 'TEXT', 'pripomenout_dni' => 'INTEGER DEFAULT 60'] as $k => $d) if (!in_array($k, $s, true)) $pdo->exec("ALTER TABLE so_smlouva ADD COLUMN $k $d");
   $pdo->exec("CREATE TABLE IF NOT EXISTS so_historie (id INTEGER PRIMARY KEY AUTOINCREMENT, svj_id INTEGER NOT NULL, smlouva_id INTEGER, datum TEXT, druh TEXT DEFAULT 'servis', popis TEXT, dokument TEXT, vytvoreno TEXT, kdo TEXT)");
   $pdo->exec('CREATE INDEX IF NOT EXISTS so_historie_svj ON so_historie(svj_id)');
+  $s = $sl('so_historie'); if (!in_array('soubor', $s, true)) $pdo->exec("ALTER TABLE so_historie ADD COLUMN soubor TEXT");
 }
+// nahrané dokumenty k historii SVJ (PDF, fotky zápisů…): $DATA/okna/dok/<svj id>/
+function so_dok_dir(int $svj): string { global $DATA; return $DATA . '/okna/dok/' . $svj; }
+// povolené přípony nahraných dokumentů + jejich MIME pro servírování
+const SO_DOK_MIME = ['pdf' => 'application/pdf', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif',
+  'webp' => 'image/webp', 'heic' => 'image/heic', 'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'xls' => 'application/vnd.ms-excel', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+  'odt' => 'application/vnd.oasis.opendocument.text', 'txt' => 'text/plain', 'eml' => 'message/rfc822', 'zip' => 'application/zip'];
 function so_historie(PDO $pdo, int $svj): array { $st = $pdo->prepare('SELECT * FROM so_historie WHERE svj_id=? ORDER BY datum DESC, id DESC'); $st->execute([$svj]); return $st->fetchAll(PDO::FETCH_ASSOC); }
 // poslední provedený servis: z historie nebo uzavřený servis v aplikaci
 function so_posledni_servis(PDO $pdo, int $svj): string {

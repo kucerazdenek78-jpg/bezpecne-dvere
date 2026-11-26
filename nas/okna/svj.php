@@ -30,6 +30,15 @@ if (isset($_GET['foto']) || isset($_GET['podpis'])) {
   if (!is_file($c)) { http_response_code(404); exit('Nenalezeno'); }
   header('Content-Type: ' . $typ); header('X-Content-Type-Options: nosniff'); header('Cache-Control: private, max-age=86400'); readfile($c); exit;
 }
+if (isset($_GET['dok'])) {   // nahraný dokument historie SVJ (PDF, fotka zápisu…)
+  $svj = (int)$_GET['dok']; $n = basename((string)($_GET['f'] ?? '')); $ext = strtolower(pathinfo($n, PATHINFO_EXTENSION));
+  if ($n === '' || strpos($n, "\0") !== false || !isset(SO_DOK_MIME[$ext])) { http_response_code(404); exit('Nenalezeno'); }
+  $c = so_dok_dir($svj) . '/' . $n; if (!is_file($c)) { http_response_code(404); exit('Nenalezeno'); }
+  $inline = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'txt'], true);
+  header('Content-Type: ' . SO_DOK_MIME[$ext]); header('X-Content-Type-Options: nosniff');
+  header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' . rawurlencode($n) . '"');
+  header('Cache-Control: private, max-age=86400'); readfile($c); exit;
+}
 
 // zápis bytu v servisu (založí prázdný, když ještě není)
 function so_zaznam(PDO $pdo, int $servis, int $byt, bool $zalozit = false): ?array {
@@ -73,9 +82,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   if ($a === 'historie_ulozit') {
     $id = (int)($_POST['id'] ?? 0); $svj = (int)$_POST['svj_id'];
     $f = [($_POST['smlouva_id'] ?? '') === '' ? null : (int)$_POST['smlouva_id'], $P('datum', 10), isset(SO_HIST[$_POST['druh'] ?? '']) ? $_POST['druh'] : 'jine', $P('popis', 1000), $P('dokument', 500)];
+    // nahraný dokument (PDF, fotka…): uloží se na NAS do $DATA/okna/dok/<svj>/ a cesta se nemusí opisovat ručně
+    $stary = $id ? (string)($pdo->query('SELECT soubor FROM so_historie WHERE id=' . $id . ' AND svj_id=' . $svj)->fetchColumn() ?: '') : '';
+    $soubor = $stary;
+    $up = $_FILES['soubor'] ?? null;
+    if ($up && ($up['error'] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file($up['tmp_name'])) {
+      $ext = strtolower(pathinfo((string)$up['name'], PATHINFO_EXTENSION));
+      if (!isset(SO_DOK_MIME[$ext])) so_jdi('svj.php?svj=' . $svj . '&chyba=doktyp#historie');
+      if (($up['size'] ?? 0) > 16 * 1048576) so_jdi('svj.php?svj=' . $svj . '&chyba=dokvel#historie');
+      $dir = so_dok_dir($svj); if (!is_dir($dir)) @mkdir($dir, 0775, true);
+      $zaklad = mb_substr(trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', pathinfo((string)$up['name'], PATHINFO_FILENAME))), 0, 80) ?: 'dokument';
+      $novy = date('Ymd-His') . '_' . $zaklad . '.' . $ext;
+      if (!move_uploaded_file($up['tmp_name'], $dir . '/' . $novy)) so_jdi('svj.php?svj=' . $svj . '&chyba=dok#historie');
+      if ($stary !== '' && is_file(so_dok_dir($svj) . '/' . $stary)) @unlink(so_dok_dir($svj) . '/' . $stary);
+      $soubor = $novy;
+    } elseif (!empty($_POST['soubor_smazat']) && $stary !== '') {
+      if (is_file(so_dok_dir($svj) . '/' . $stary)) @unlink(so_dok_dir($svj) . '/' . $stary);
+      $soubor = '';
+    }
     if ($f[1] !== '') {
-      if ($id) $pdo->prepare('UPDATE so_historie SET smlouva_id=?, datum=?, druh=?, popis=?, dokument=? WHERE id=? AND svj_id=?')->execute(array_merge($f, [$id, $svj]));
-      else $pdo->prepare('INSERT INTO so_historie (smlouva_id, datum, druh, popis, dokument, svj_id, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?,?)')->execute(array_merge($f, [$svj, $ted, uziv_jmeno()]));
+      if ($id) $pdo->prepare('UPDATE so_historie SET smlouva_id=?, datum=?, druh=?, popis=?, dokument=?, soubor=? WHERE id=? AND svj_id=?')->execute(array_merge($f, [$soubor, $id, $svj]));
+      else $pdo->prepare('INSERT INTO so_historie (smlouva_id, datum, druh, popis, dokument, soubor, svj_id, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?,?,?)')->execute(array_merge($f, [$soubor, $svj, $ted, uziv_jmeno()]));
     }
     so_jdi('svj.php?svj=' . $svj . '&ok=ulozeno#historie');
   }
@@ -300,7 +327,7 @@ details>summary{cursor:pointer;color:#1f5fbf;font-weight:600;margin:6px 0}.r{tex
 </style></head><body><?php if (!$tisk) ok_bar('svj'); ?><main>
 <?php if (!$tisk): ?><div class="zk noprint">🧪 <b>Zkušební verze aplikace Servis oken.</b> Má vlastní databázi – se systémem dveří se nemíchá. Jotformové protokoly zatím běží dál.</div><?php endif; ?>
 <?php if (isset($_GET['ok'], $OK[$_GET['ok']])): ?><div class="msg noprint"><?= $e($OK[$_GET['ok']]) ?><?php if ($_GET['ok'] === 'import'): ?> Nové: <?= (int)($_GET['n'] ?? 0) ?>, aktualizované: <?= (int)($_GET['a'] ?? 0) ?>, nových vchodů: <?= (int)($_GET['v'] ?? 0) ?>.<?php endif; ?></div><?php endif; ?>
-<?php if (!empty($_GET['chyba'])): ?><div class="msg err noprint"><?= ['nazev' => 'Vyplňte název SVJ.', 'email' => 'Zadejte platný e-mail příjemce.', 'navrh' => 'Není co poslat – žádný byt k vyřízení.', 'mail' => 'E-mail se nepodařilo odeslat. Zkuste to prosím znovu.'][$_GET['chyba']] ?? 'Import se nepodařil.' ?></div><?php endif; ?>
+<?php if (!empty($_GET['chyba'])): ?><div class="msg err noprint"><?= ['nazev' => 'Vyplňte název SVJ.', 'email' => 'Zadejte platný e-mail příjemce.', 'navrh' => 'Není co poslat – žádný byt k vyřízení.', 'mail' => 'E-mail se nepodařilo odeslat. Zkuste to prosím znovu.', 'doktyp' => 'Nepovolený typ souboru (povolené: PDF, obrázky, Office, txt, zip).', 'dokvel' => 'Soubor je větší než 16 MB.', 'dok' => 'Dokument se nepodařilo nahrát.'][$_GET['chyba']] ?? 'Import se nepodařil.' ?></div><?php endif; ?>
 <?php
 // ═════════ PŘEHLED ═════════
 if ($svjId === null && !$servisId):
@@ -508,15 +535,17 @@ elseif ($svjId !== null):
 <div class="box" id="historie"><h2 style="margin-top:0">Historie – provedené servisy, zápisy a dokumenty</h2>
 <?php $hist = so_historie($pdo, $sid); $smNazev = []; foreach ($smlouvy as $sm) $smNazev[(int)$sm['id']] = ($sm['cislo'] ?: 'smlouva') . ' od ' . so_datum($sm['od']);
   $hForm = function ($h) use ($e, $sid, $smNazev) { ?>
-  <form method="post"><input type="hidden" name="akce" value="historie_ulozit"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>">
+  <form method="post" enctype="multipart/form-data"><input type="hidden" name="akce" value="historie_ulozit"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>">
   <div class="ln"><label>Datum<input type="date" name="datum" value="<?= $e($h['datum']) ?>" required></label><label>Druh<select name="druh"><?php foreach (SO_HIST as $k => $t): ?><option value="<?= $k ?>"<?= $h['druh'] === $k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label>
   <label>Podle smlouvy<select name="smlouva_id"><option value="">–</option><?php foreach ($smNazev as $k => $t): ?><option value="<?= $k ?>"<?= (int)$h['smlouva_id'] === $k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label></div>
   <div class="ln"><label class="w">Popis<input name="popis" value="<?= $e($h['popis']) ?>"></label></div>
-  <div class="ln"><label class="w">Dokument / zápis na NASu (cesta)<input name="dokument" value="<?= $e($h['dokument']) ?>"></label></div><button>Uložit</button></form>
+  <div class="ln"><label class="w">📎 Nahrát dokument (PDF, fotka) – uloží se rovnou na NAS<input type="file" name="soubor" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.gif,.doc,.docx,.xls,.xlsx,.ods,.odt,.txt,.eml,.zip"></label></div>
+  <?php if (!empty($h['soubor'])): ?><div class="ln" style="align-items:center"><span class="mut">📄 nahráno: <a href="?dok=<?= $sid ?>&amp;f=<?= $e(rawurlencode((string)$h['soubor'])) ?>" target="_blank"><?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?></a></span> <label class="mut" style="flex-direction:row;gap:4px;align-items:center"><input type="checkbox" name="soubor_smazat" value="1"> smazat soubor</label></div><?php endif; ?>
+  <div class="ln"><label class="w">…nebo jen odkaz / cesta na NASu (SharePoint)<input name="dokument" value="<?= $e($h['dokument']) ?>" placeholder="když dokument nenahráváš"></label></div><button>Uložit</button></form>
 <?php };
   if (!$hist): ?><p class="mut">Zatím nic.</p><?php else: ?><div style="overflow-x:auto"><table><tr><th>Datum</th><th>Co</th><th>Popis a dokument</th><th></th></tr>
 <?php foreach ($hist as $h): ?><tr><td class="nowrap"><?= $e(so_datum($h['datum'])) ?></td><td class="nowrap"><?= $e(SO_HIST[$h['druh']] ?? $h['druh']) ?></td>
-  <td><?= $e($h['popis']) ?><?= $h['smlouva_id'] && isset($smNazev[(int)$h['smlouva_id']]) ? ' <span class="st">' . $e($smNazev[(int)$h['smlouva_id']]) . '</span>' : '' ?><?php if ($h['dokument']): ?><div class="mut" style="word-break:break-all">📎 <?= $e(preg_replace('#^.*/ZÁKAZNÍCI/[^/]+/#u', '', (string)$h['dokument'])) ?></div><?php endif; ?></td>
+  <td><?= $e($h['popis']) ?><?= $h['smlouva_id'] && isset($smNazev[(int)$h['smlouva_id']]) ? ' <span class="st">' . $e($smNazev[(int)$h['smlouva_id']]) . '</span>' : '' ?><?php if ($h['dokument']): ?><div class="mut" style="word-break:break-all">📎 <?= $e(preg_replace('#^.*/ZÁKAZNÍCI/[^/]+/#u', '', (string)$h['dokument'])) ?></div><?php endif; ?><?php if (!empty($h['soubor'])): ?><div><a href="?dok=<?= $sid ?>&amp;f=<?= $e(rawurlencode((string)$h['soubor'])) ?>" target="_blank">📄 <?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?></a></div><?php endif; ?></td>
   <td class="noprint"><details><summary>upravit</summary><?php $hForm($h); ?><?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Smazat záznam?')" style="margin-top:6px"><input type="hidden" name="akce" value="historie_smazat"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>"><input type="hidden" name="svj_id" value="<?= $sid ?>"><button class="del">Smazat</button></form><?php endif; ?></details></td></tr>
 <?php endforeach; ?></table></div><?php endif; ?>
 <details class="noprint"><summary>+ Zapsat provedený servis / dokument</summary><?php $hForm(['id' => 0, 'datum' => date('Y-m-d'), 'druh' => 'servis', 'smlouva_id' => $smlouvy && $smlouvy[0]['aktivni'] ? $smlouvy[0]['id'] : null, 'popis' => '', 'dokument' => (string)($j['slozka'] ?? '') !== '' ? $j['slozka'] . '/' : '']); ?>
