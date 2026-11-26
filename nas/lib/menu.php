@@ -220,6 +220,11 @@ function bd_odkazy(array $r, array $d): array {
         if (isset($d['patro']) && $d['patro'] !== '' && $d['patro'] !== null) $o['patro'] = $d['patro'];   /* 0 = přízemí se nesmí ztratit */
         $o['cislo'] = (string)($d['cislo'] ?? $d['obj_cislo'] ?? $r['cislo'] ?? '');
         foreach (['model_kod', 'odstin', 'zarubne', 'kovani', 'kukatko', 'vlozky', 'otevirani', 'sire', 'zaruka', 'tl_zarubne'] as $k) { $v = $d['polozky'][0]['cfg'][$k] ?? ''; if ($v !== '' && $v !== null) $o[$k] = $v; }
+        // kontrola v objednávce: kolik dveří nabídka měla (objednávka přenese jen první) + krátký přehled
+        $o['pol_count'] = count($d['polozky']);
+        if ($o['pol_count'] > 1) {
+            $o['pol_prehled'] = array_values(array_map(function ($p) { $c = is_array($p['cfg'] ?? null) ? $p['cfg'] : []; return trim(implode(' / ', array_filter([(string)($c['odstin'] ?? ''), (string)($c['kovani'] ?? ''), ($c['sire'] ?? '') !== '' ? $c['sire'] . ' cm' : '']))); }, $d['polozky']));
+        }
     }
     $pf = rtrim(strtr(base64_encode(json_encode($o, JSON_UNESCAPED_UNICODE)), '+/', '-_'), '=');
   // náhledy fotek (&f=…) z odkazu v těle e-mailu poptávky, pokud tam jsou

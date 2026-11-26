@@ -370,11 +370,35 @@
     });
     state.photosFromLink = nPh;
     setZaloha();
-    var info = $('#poLoaded'); info.hidden = false;
-    info.innerHTML = '✓ Načteno z poptávky <b>' + esc(d.cislo || '') + '</b> – ' + esc((d.jmeno || '') + ' ' + (d.prijmeni || '')) + '. Vše můžete upravit.' +
-      (nPh ? ' Načteny i fotky z poptávky (' + nPh + ').' : '') +
-      (state.missing.length ? '<br><small>Nenašel jsem volbu (mezitím se mohla změnit nabídka): ' + esc(state.missing.join('; ')) + ' – vyberte prosím znovu.</small>' : '');
+    buildKontrola(d, nPh);
     return true;
+  }
+  /* Kontrola objednávky proti nabídce: ukáže převzaté volby (✓/⚠) a varuje, když měla nabídka víc dveří (přenese se jen první). Při červeném nálezu je potřeba zaškrtnout potvrzení. */
+  function buildKontrola(d, nPh) {
+    var info = $('#poLoaded'); if (!info) return;
+    var SPEC = [['odstin', 'Barva'], ['zarubne', 'Zárubeň'], ['kovani', 'Kování'], ['kukatko', 'Kukátko'], ['vlozky', 'Vložky'], ['otevirani', 'Otevírání'], ['sire', 'Šířka'], ['zaruka', 'Záruka']];
+    var radky = [], chybi = [];
+    SPEC.forEach(function (s) {
+      var rv = d[s[0]]; if (rv == null || rv === '') return;
+      var ok = val(s[0]) === String(rv);
+      if (!ok) chybi.push(s[1]);
+      radky.push('<tr><td style="padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.08)">' + s[1] + '</td><td style="padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.08)">' + esc(String(rv)) + (s[0] === 'sire' && /^\d+$/.test(String(rv)) ? ' cm' : '') + '</td><td style="padding:3px 6px;border-bottom:1px solid rgba(0,0,0,.08);text-align:center">' + (ok ? '✓' : '⚠') + '</td></tr>');
+    });
+    var vice = +d.pol_count > 1, warn = chybi.length > 0 || vice, W = 'margin:.5rem 0 0;color:#8a4b00';
+    var html = '<div style="font-weight:600">' + (warn ? '⚠ Zkontroluj objednávku proti nabídce ' : '✓ Načteno z nabídky ') + '<b>' + esc(d.cislo || '') + '</b> – ' + esc((d.jmeno || '') + ' ' + (d.prijmeni || '')) + '. Vše můžeš upravit.</div>';
+    if (vice) {
+      html += '<p style="' + W + '">Nabídka obsahovala <b>' + (+d.pol_count) + ' ks dveří</b>, ale objednávka přenese <b>jen první</b>. Ověř, že volby níže patří ke správným dveřím; ostatní dveře zadej jako samostatné objednávky.';
+      if (d.pol_prehled && d.pol_prehled.length) html += '<br><small>Dveře v nabídce: ' + d.pol_prehled.map(function (x, i) { return (i + 1) + ') ' + esc(String(x)); }).join(' · ') + '</small>';
+      html += '</p>';
+    }
+    if (radky.length) html += '<table style="width:100%;border-collapse:collapse;margin:.5rem 0;font-size:14px"><tr><th style="text-align:left;padding:3px 6px">Volba</th><th style="text-align:left;padding:3px 6px">Z nabídky</th><th style="padding:3px 6px"></th></tr>' + radky.join('') + '</table>';
+    if (chybi.length) html += '<p style="' + W + '">Tyhle volby se z nabídky nenačetly (text se mezitím mohl změnit): <b>' + chybi.map(esc).join(', ') + '</b> – vyber je prosím ručně.</p>';
+    if (nPh) html += '<p style="margin:.4rem 0 0"><small>Načteny i fotky z nabídky (' + nPh + ').</small></p>';
+    if (warn) html += '<label id="poAckLab" style="display:block;margin:.6rem 0 0;font-weight:600"><input type="checkbox" id="poAck"> Zkontroloval(a) jsem volby proti nabídce a souhlasí.</label>';
+    info.hidden = false;
+    info.className = 'pq-note' + (warn ? ' pq-note-warn' : '');
+    info.innerHTML = html;
+    state.ackNeeded = !!warn;
   }
   function orderNumber() {
     var t = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
@@ -475,6 +499,7 @@
     var first = null;
     if (step === 1) {
       required1().forEach(function (n) { var bad = !val(n); markBlock(n, bad); if (bad && !first) first = (form.querySelector('input[name="' + n + '"]') || $('#pqModels')).closest('.pq-block'); });
+      if (state.ackNeeded) { var ack = $('#poAck'), lab = $('#poAckLab'), bad = !ack || !ack.checked; if (lab) lab.style.color = bad ? '#c0392b' : ''; if (bad && !first) first = $('#poLoaded'); }
     }
     if (step === 2) {
       var bill = val('fakturace');
