@@ -147,10 +147,10 @@
     .colors-section h4 { font-size:0.85rem; font-weight:700; color:var(--head); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:0.8rem; }
     .colors-grid { display:flex; flex-wrap:wrap; gap:0.6rem; }
     .color-thumb {
-      width:60px; text-align:center; font-size:0.7rem; color:var(--text-muted);
+      width:60px; text-align:center; font-size:0.7rem; color:var(--text-muted); position:relative;
     }
     .color-thumb img { width:56px; height:56px; object-fit:cover; border-radius:var(--radius); border:1.5px solid var(--gray-200); display:block; margin:0 auto 0.25rem; }
-    .cstav { display:inline-block; margin-top:2px; padding:1px 6px; border-radius:999px; font-size:0.6rem; font-weight:700; line-height:1.45; white-space:nowrap; letter-spacing:.01em; }
+    .cstav { position:absolute; left:50%; top:38px; transform:translateX(-50%); z-index:2; padding:1px 6px; border-radius:999px; font-size:0.58rem; font-weight:700; line-height:1.4; white-space:nowrap; letter-spacing:.01em; box-shadow:0 1px 2px rgba(0,0,0,.28); }
     .cstav.sk { background:#d9f2e0; color:#14653a; }
     .cstav.obj { background:#fdecd2; color:#8a5200; }
 
@@ -339,38 +339,38 @@
           <div class="colors-grid">
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-cerna-perlet.png" alt="Černá perleť">
-              Černá perleť<br><span class="cstav sk">skladem</span>
+              Černá perleť<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-dub.png" alt="Dub">
-              Dub<br><span class="cstav sk">skladem</span>
+              Dub<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-brazilsky-orech.png" alt="Ořech brazil">
-              Ořech brazil<br><span class="cstav sk">skladem</span>
+              Ořech brazil<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-svetla-wenge.png" alt="Světlé wenge">
-              Světlé wenge<br><span class="cstav sk">skladem</span>
+              Světlé wenge<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-bila.png" alt="Bílá">
-              Bílá<br><span class="cstav sk">skladem</span>
+              Bílá<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-antracit.png" alt="Antracit">
-              Antracit<br><span class="cstav sk">skladem</span>
+              Antracit<span class="cstav sk">skladem</span>
             </div>
           </div>
           <h4 style="margin-top:1.2rem;">Příplatkové odstíny na objednávku</h4>
           <div class="colors-grid">
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-bila-wenge.png" alt="Bílá wenge">
-              Bílá wenge<br><span class="cstav obj">na obj.</span>
+              Bílá wenge<span class="cstav obj">na obj.</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/premium60/ctverce/premium-60-ocelove-seda.png" alt="Ocelově šedá">
-              Ocelově šedá<br><span class="cstav obj">na obj.</span>
+              Ocelově šedá<span class="cstav obj">na obj.</span>
             </div>
           </div>
           <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;">Příplatkové odstíny (Bílá wenge, Ocelově šedá) — příplatek 4 000 Kč, dodací lhůta 8–12 týdnů.</p>
@@ -495,23 +495,23 @@
           <div class="colors-grid">
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/extreme50/extreme-rc3-orech-naturalny.png.tn.jpg" alt="Ořech naturální">
-              Ořech naturální<br><span class="cstav sk">skladem</span>
+              Ořech naturální<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/extreme50/extreme-rc3-dub-naturalny.png.tn.jpg" alt="Dub naturální">
-              Dub naturální<br><span class="cstav sk">skladem</span>
+              Dub naturální<span class="cstav sk">skladem</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/extreme50/extreme-rc3-antracit.png.tn.jpg" alt="Antracit">
-              Antracit<br><span class="cstav obj">na obj.</span>
+              Antracit<span class="cstav obj">na obj.</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/extreme50/extreme-rc3-bila.png.tn.jpg" alt="Bílá">
-              Bílá<br><span class="cstav obj">na obj.</span>
+              Bílá<span class="cstav obj">na obj.</span>
             </div>
             <div class="color-thumb">
               <img src="userFiles/barva-dveri/extreme50/extreme-rc3-orech-beleny.png.tn.jpg" alt="Ořech bělený">
-              Ořech bělený<br><span class="cstav obj">na obj.</span>
+              Ořech bělený<span class="cstav obj">na obj.</span>
             </div>
           </div>
           <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem;">Antracit, Bílá a Ořech bělený na objednání — dodací lhůta cca 6–8 týdnů. Příplatkové barvy (Beton tmavý, Dub Milano 4) — příplatek 5 000 Kč.</p>
