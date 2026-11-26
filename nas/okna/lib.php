@@ -409,6 +409,7 @@ function ok_nabidka_cislo(PDO $pdo): string {
   return $c;
 }
 
-$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo); ok_cenik_migrace3($pdo); so_rozsireni($pdo);
+require_once __DIR__ . '/navrh.php';
+$pdo = ok_db(); so_tabulky($pdo); sj_tabulka($pdo); ok_cenik_tabulky($pdo); ok_cenik_migrace($pdo); ok_cenik_migrace3($pdo); so_rozsireni($pdo); ok_navrh_tabulka($pdo);
 // jednorázový import zákazníků ze složek 7 SERVIS/ZÁKAZNÍCI na firemním NASu (3. 11. 2026)
 if (is_file(__DIR__ . '/import-nas.php')) { $st = $pdo->prepare('SELECT hodnota FROM ok_nastaveni WHERE klic=?'); $st->execute(['import_nas']); if (!$st->fetchColumn()) require __DIR__ . '/import-nas.php'; }
