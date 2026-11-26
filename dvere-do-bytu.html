@@ -280,6 +280,7 @@
 #akceBar.on{display:flex;position:fixed;left:0;right:0;z-index:900;box-shadow:0 2px 6px rgba(0,0,0,.15)}  /* pod navbar (1000), ať přesah loga firmy zůstane nad pruhem */
 #akceBar .ab-dni{background:#fff;color:#c2410c;border-radius:999px;padding:.12rem .65rem;font-weight:800;white-space:nowrap}
 #akceBar a{color:#fff;text-decoration:underline;white-space:nowrap}
+@media (max-width:700px){#akceBar{font-size:.8rem;padding:.4rem .6rem;gap:.2rem .5rem;line-height:1.25}#akceBar .ab-dni{padding:.08rem .5rem}}
 </style>
 <div id="akceBar"></div>
 
@@ -1130,7 +1131,8 @@
     if (dnu < 0) return;
     var datum = konec.getDate() + '. ' + (konec.getMonth() + 1) + '. ' + konec.getFullYear();
     var dniTxt = dnu <= 0 ? 'poslední den!' : (dnu === 1 ? 'už jen 1 den' : 'už jen ' + dnu + ' dní');
-    bar.innerHTML = '⏳ <span>' + (a.nadpis ? esc(a.nadpis) + ' — ' : '') + esc(a.text || 'Akce platí do') + ' <b>' + esc(datum) + '</b></span> <span class="ab-dni">' + esc(dniTxt) + '</span> <a href="poptavka-dvere.html?model=premium60">Chci dveře →</a>';
+    var mob = window.innerWidth < 700;   // na mobilu vynechat dlouhý nadpis, ať se pruh neláme na moc řádků
+    bar.innerHTML = '⏳ <span>' + (!mob && a.nadpis ? esc(a.nadpis) + ' — ' : '') + esc(a.text || 'Akce platí do') + ' <b>' + esc(datum) + '</b></span> <span class="ab-dni">' + esc(dniTxt) + '</span> <a href="poptavka-dvere.html?model=premium60">Chci dveře →</a>';
     bar.classList.add('on');
     /* navbar je fixní – pruh posadíme hned pod ni a obsah posuneme o výšku pruhu */
     var umisti = function () {
@@ -1144,7 +1146,7 @@
       var logoR = logo ? Math.round(logo.getBoundingClientRect().right) : 0;
       var padL = 0;   // odsazení obsahu pruhu doprava, ať logo/štítek nekryjí text
       if (lst) {
-        if (window.innerWidth < 1000) { lst.style.display = 'none'; padL = logoR; }   // užší okna: štítek schovat (na fotce dveří zůstává), jen odsadit za logo
+        if (window.innerWidth < 1000) { lst.style.display = 'none'; padL = window.innerWidth < 700 ? 0 : logoR; }   // mobil: bez odsazení (pruh na celou šířku); tablet: odsadit za logo; štítek schovat (na fotce dveří zůstává)
         else {
           lst.style.display = '';
           if (lst.parentElement !== document.body) document.body.appendChild(lst);   // ven z lišty, ať je nad pruhem (jiný stacking kontext)
