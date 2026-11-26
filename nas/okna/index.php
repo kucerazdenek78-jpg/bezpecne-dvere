@@ -109,6 +109,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $id = (int)$_POST['id']; $pdo->prepare('UPDATE so_jed SET fakturace=?, upraveno=? WHERE id=?')->execute([($_POST['k'] ?? '') === 'vratit' ? null : date('j. n. Y') . ' – ' . uziv_jmeno(), $ted, $id]);
     sj_jdi('index.php?id=' . $id . '&ok=ulozeno');
   }
+  if ($a === 'prirad_svj') {   // dodatečně přiřadit samostatný servis k SVJ / firmě (kdo platí) – nebo odpojit
+    $id = (int)$_POST['id']; $r = sj_nacti($pdo, $id); if (!$r) sj_jdi('index.php');
+    $vSvj = (int)($_POST['svj_id'] ?? 0); $vSvj = isset($svjSeznam[$vSvj]) ? $vSvj : null;
+    $vPl = $vSvj && isset(SJ_PLATI[$_POST['plati'] ?? '']) ? $_POST['plati'] : null;
+    $vByt = $P('byt', 60);
+    $pdo->prepare('UPDATE so_jed SET svj_id=?, plati=?, byt=?, upraveno=? WHERE id=?')->execute([$vSvj, $vPl, $vByt, $ted, $id]);
+    sj_jdi('index.php?id=' . $id . '&ok=' . ($vSvj ? 'prirazeno' : 'odpojeno'));
+  }
   if ($a === 'oprava_zalozit') {   // navazující oprava po „Nutná oprava“: stejný zákazník, byt a SVJ; kdo platí se vybere znovu
     $p = sj_nacti($pdo, (int)$_POST['id']); if (!$p) sj_jdi('index.php');
     $st = $pdo->prepare('SELECT id FROM so_jed WHERE predchozi_id=?'); $st->execute([$p['id']]); if ($x = (int)$st->fetchColumn()) sj_jdi('index.php?id=' . $x);
@@ -207,7 +215,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 // ───── zobrazení ─────
 $id = (int)($_GET['id'] ?? 0);
-$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'zalozeno' => 'Servis založen.', 'objednavka' => 'Objednávka vytvořena z nabídky – tohle je servis k provedení. Naplánujte termín a po provedení udělejte zápis; cena a položky jsou z nabídky (lze upravit).'];
+$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'zalozeno' => 'Servis založen.', 'prirazeno' => 'Servis přiřazen k SVJ / firmě. Teď se objeví i u SVJ a dá se poslat ke schválení.', 'odpojeno' => 'Servis odpojen od SVJ.', 'objednavka' => 'Objednávka vytvořena z nabídky – tohle je servis k provedení. Naplánujte termín a po provedení udělejte zápis; cena a položky jsou z nabídky (lze upravit).'];
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0e4f5c"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="okna-192.png"><link rel="apple-touch-icon" href="okna-192.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Servis oken"><title>Jednotlivci – Servis oken</title><style>
@@ -339,6 +347,13 @@ elseif ($id):
 <?php if (!empty($r['nabidka_id'])): $nbc = $pdo->prepare('SELECT cislo FROM ok_nabidka WHERE id=?'); $nbc->execute([(int)$r['nabidka_id']]); if ($nbc = $nbc->fetchColumn()): ?><div class="mut">📄 Z nabídky <a href="nabidky.php?id=<?= (int)$r['nabidka_id'] ?>"><?= $e($nbc) ?></a></div><?php endif; endif; ?>
 <?php if ($r['svj_id'] && isset($svjSeznam[(int)$r['svj_id']])): ?><div>🏢 <a href="svj.php?svj=<?= (int)$r['svj_id'] ?>#historie"><?= $e($svjSeznam[(int)$r['svj_id']]) ?></a> ·
   <?= isset(SJ_PLATI[$r['plati'] ?? '']) ? '💳 platí <b>' . $e(SJ_PLATI[$r['plati']]) . '</b>' : '<span class="st st-zruseno">vyberte, kdo platí (SVJ / nájemník)</span>' ?></div><?php endif; ?>
+<?php if ($svjSeznam): ?><details class="noprint" style="margin-top:5px"><summary style="cursor:pointer;color:#0f2747;font-weight:600"><?= $r['svj_id'] ? '🏢 Změnit SVJ / firmu a kdo platí' : '🏢 Přiřadit k SVJ / firmě (kdo to platí)' ?></summary>
+<p class="mut" style="margin:6px 0 0">Když opravu platí SVJ/firma, přiřaďte sem servis – objeví se pak i u toho SVJ a jde poslat ke schválení.</p>
+<form method="post" class="ln" style="align-items:flex-end;margin-top:6px"><input type="hidden" name="akce" value="prirad_svj"><input type="hidden" name="id" value="<?= $id ?>">
+<label class="w">SVJ / firma<select name="svj_id"><option value="">– žádné (samostatný zákazník) –</option><?php foreach ($svjSeznam as $k => $t): ?><option value="<?= (int)$k ?>"<?= (int)$r['svj_id'] === (int)$k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label>
+<label>Byt / patro<input name="byt" value="<?= $e($r['byt']) ?>" size="10" placeholder="např. 12"></label>
+<label>Platí<select name="plati"><option value="">– vyberte –</option><?php foreach (SJ_PLATI as $k => $t): ?><option value="<?= $k ?>"<?= ($r['plati'] ?? '') === $k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label>
+<button class="ok">Uložit</button></form></details><?php endif; ?>
 <?php if (!empty($r['vysledek']) && isset(SJ_VYSLEDKY[$r['vysledek']])): ?><div style="margin-top:4px"><span class="st <?= $r['vysledek'] === 'serizeno' ? 'st-hotovo' : 'st-nova' ?>"><?= $e(SJ_VYSLEDKY[$r['vysledek']]) ?></span></div><?php endif; ?>
 <div><?= $r['telefon'] ? '📞 <a href="tel:' . $e(preg_replace('/[^\d+]/', '', $r['telefon'])) . '">' . $e($r['telefon']) . '</a>' : '' ?><?= $r['email'] ? ' · ✉ <a href="mailto:' . $e($r['email']) . '">' . $e($r['email']) . '</a>' : '' ?></div>
 <?php if ($r['termin']): ?><p style="margin:6px 0 0"><b>Termín:</b> <?= $e(so_datum($r['termin'])) ?> <?= $e($r['cas']) ?></p><?php endif; ?>
