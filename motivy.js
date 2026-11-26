@@ -54,5 +54,8 @@
     });
     document.body.appendChild(p);
   }
-  document.addEventListener('DOMContentLoaded', function () { fx(m); if (/[?&]motivy=1/.test(location.search) || get()) { if (/[?&]motivy=1/.test(location.search)) panel(); } });
+  /* efekty (sněžení, listí…) jen na úvodní stránce; jinde se barevný motiv (data-sezona) nechá, ale částice ne (Zdeněk 26. 11. 2026) */
+  function jeUvod() { var p = location.pathname; return p === '' || p === '/' || /(^|\/)index\.html?$/i.test(p); }
+  var test = /[?&]motiv=/.test(location.search) || /[?&]motivy=1/.test(location.search);
+  document.addEventListener('DOMContentLoaded', function () { if (jeUvod() || test) fx(m); if (/[?&]motivy=1/.test(location.search)) panel(); });
 })();
