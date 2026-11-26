@@ -233,7 +233,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 // ───── zobrazení ─────
 $svjId = isset($_GET['svj']) ? $_GET['svj'] : null; $servisId = (int)($_GET['servis'] ?? 0);
-$tisk = isset($_GET['tisk']) || isset($_GET['report']);
+$tisk = isset($_GET['tisk']) || isset($_GET['report']) || isset($_GET['navrh']);
 $OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'smlouva' => 'Smlouva uložena.', 'import' => 'Seznam nahrán.'];
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0e4f5c"><title>SVJ a družstva – Servis oken</title><style>
@@ -319,6 +319,33 @@ elseif ($svjId !== null):
 <p><button>Uložit</button></p></form>
 <?php if ($bid && uziv_admin()): ?><form method="post" onsubmit="return confirm('Odebrat ze seznamu? (Zápisy ze servisů zůstanou.)')"><input type="hidden" name="akce" value="byt_smazat"><input type="hidden" name="id" value="<?= $bid ?>"><input type="hidden" name="svj_id" value="<?= $sid ?>"><button class="del">Odebrat ze seznamu</button></form><?php endif; ?>
 </div>
+<?php // ── návrh oprav bytů ke schválení pro SVJ (tisk) ──
+  elseif ($sid && isset($_GET['navrh'])):
+    $nb = $pdo->prepare("SELECT * FROM so_jed WHERE svj_id=? AND stav='nova' ORDER BY ulice, CAST(byt AS INTEGER), byt, jmeno");
+    $nb->execute([$sid]); $nb = $nb->fetchAll(PDO::FETCH_ASSOC);
+    $HRADI = ['svj' => 'SVJ', 'najemnik' => 'nájemník'];
+    $navrhText = function ($x) {
+      $t = trim((string)$x['oprava']);
+      if ($t === '' && !empty($x['polozky'])) { $p = json_decode((string)$x['polozky'], true); if (is_array($p)) $t = implode(', ', array_filter(array_map(fn($r) => trim(rtrim(rtrim((string)($r['mn'] ?? 1), '0'), '.') . '× ' . (string)($r['nazev'] ?? '')), $p))); }
+      return $t;
+    };
+    $cenaB = fn($x) => $x['max_cena'] !== null && $x['max_cena'] !== '' ? (float)$x['max_cena'] : (float)$x['cena'];
+    $cenaTxt = fn($x) => $x['max_cena'] !== null && $x['max_cena'] !== '' ? 'do ' . $kc($x['max_cena']) : ($x['cena'] > 0 ? $kc($x['cena']) : '');
+?>
+<p class="noprint"><a href="?svj=<?= $sid ?>#byty">← zpět</a> · <button type="button" onclick="window.print()">🖨 Tisk / uložit jako PDF</button></p>
+<div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;border-bottom:2px solid #0f2747;padding-bottom:6px"><div><b>Zdeněk Kučera – KK SYSTEM · BEZPEČNÉ DVEŘE CZ</b><br>Zd. Štěpánka 2764/1, 434 01 Most · IČ 64682676, DIČ CZ7801242768</div><div class="r">+420 725 559 235 · +420 471 008 994<br>info@kksystem.cz · www.bezpecne-dvere.cz</div></div>
+<h1 style="margin-top:12px">Návrh oprav ke schválení</h1>
+<p><b>Zadavatel:</b> <?= $e($j['nazev']) ?><?= $j['adresa'] ? ', ' . $e($j['adresa']) : '' ?><?= $j['kontakt'] ? '<br><b>Kontakt:</b> ' . $e($j['kontakt']) . ($j['telefon'] ? ', ' . $e($j['telefon']) : '') : '' ?>
+<br><b>Zpracováno:</b> <?= date('j. n. Y') ?>, <?= $e(uziv_jmeno()) ?></p>
+<?php if (!$nb): ?><p>Žádné byty čekající na vyřízení.</p><?php else: ?>
+<table><tr><th>Byt / nájemník</th><th>Adresa</th><th>Zjištěná závada</th><th>Návrh opravy</th><th class="r">Cena s DPH</th><th>Hradí</th><th>Souhlas s provedením</th><th>Telefon</th></tr>
+<?php $celk = 0; $vse = true; foreach ($nb as $x): $celk += $cenaB($x); if (!($x['max_cena'] !== null && $x['max_cena'] !== '')) $vse = false; ?>
+<tr><td><b><?= $e($x['jmeno']) ?></b><?= $x['byt'] ? '<br><span class="mut">byt ' . $e($x['byt']) . '</span>' : '' ?></td><td><?= $e($x['ulice']) ?></td><td><?= nl2br($e($x['zavada'])) ?></td><td><?= nl2br($e($navrhText($x))) ?></td><td class="r nowrap"><?= $cenaTxt($x) ?></td><td class="nowrap"><?= $e($HRADI[$x['plati'] ?? ''] ?? '') ?></td><td style="min-width:70px"></td><td class="nowrap"><?= $e($x['telefon']) ?></td></tr>
+<?php endforeach; ?>
+<tr><th colspan="4">Cena všech oprav s DPH</th><th class="r nowrap"><?= $celk ? ($vse ? 'do ' : '') . $kc($celk) : '' ?></th><th></th><th></th><th></th></tr></table>
+<p>V případě zájmu o provedení označte <b>ANO</b> u řádku s cenou opravy, doplňte telefonní spojení a zašlete zpět na info@kksystem.cz. Uvedené ceny jsou maximální a budou vyčísleny dle skutečných nákladů, hranici maximální ceny nepřesáhnou. Opravu provedeme až po Vašem odsouhlasení.</p>
+<div style="display:flex;justify-content:space-between;gap:40px;margin-top:40px;font-size:13px"><div style="flex:1">Za zhotovitele: <?= $e(uziv_jmeno()) ?><br><br>Datum a podpis: ..............................</div><div style="flex:1">Za SVJ / družstvo: <?= $e($j['kontakt']) ?><br><br>Datum a podpis: ..............................</div></div>
+<?php endif; ?>
 <?php else: ?>
 <p class="noprint"><a href="svj.php">← Servis oken</a></p>
 <h1><?= $sid ? $e($j['nazev']) : 'Nový zákazník' ?> <?= $sid ? '<span class="st">' . $e(SO_TYPY_ZAK[$j['typ'] ?? 'svj'] ?? '') . '</span>' : '' ?></h1>
@@ -409,7 +436,8 @@ elseif ($svjId !== null):
   <td><a href="index.php?id=<?= (int)$x['id'] ?>"><b><?= $e($x['jmeno']) ?></b></a><div class="mut"><?= $e(implode(', ', array_filter([(string)$x['ulice'], $x['byt'] ? 'byt ' . $x['byt'] : '', (string)$x['telefon']]))) ?></div></td>
   <td><span class="st <?= $x['stav'] === 'hotovo' ? 'st-hotovo' : 'st-nebyl' ?>"><?= $x['stav'] === 'hotovo' ? 'hotovo' : ($x['stav'] === 'zruseno' ? 'zrušeno' : 'k vyřízení') ?></span><?php $vy = ['oprava' => 'nutná oprava', 'dily' => 'objednat díly'][$x['vysledek'] ?? ''] ?? ''; ?><?= $vy ? ' <span class="st st-odmitl">' . $vy . '</span>' : '' ?><div class="mut"><?= ($x['plati'] ?? '') === 'svj' ? '💳 platí SVJ' : (($x['plati'] ?? '') === 'najemnik' ? '💳 platí nájemník' : '💳 neurčeno') ?></div></td></tr>
 <?php endforeach; ?></table></div><?php endif; ?>
-<p style="margin-bottom:0"><a class="btn ok" href="index.php?nove=1&amp;svj=<?= $sid ?>">+ Seřízení / oprava bytu</a></p></div>
+<?php $kVyr = array_filter($jb, fn($x) => $x['stav'] === 'nova'); ?>
+<p style="margin-bottom:0"><a class="btn ok" href="index.php?nove=1&amp;svj=<?= $sid ?>">+ Seřízení / oprava bytu</a><?php if ($kVyr): ?> <a class="btn sec" href="?svj=<?= $sid ?>&amp;navrh=1" target="_blank">🖨 Návrh oprav ke schválení (pro SVJ)</a><?php endif; ?></p></div>
 
 <div class="box" id="historie"><h2 style="margin-top:0">Historie – provedené servisy, zápisy a dokumenty</h2>
 <?php $hist = so_historie($pdo, $sid); $smNazev = []; foreach ($smlouvy as $sm) $smNazev[(int)$sm['id']] = ($sm['cislo'] ?: 'smlouva') . ' od ' . so_datum($sm['od']);
