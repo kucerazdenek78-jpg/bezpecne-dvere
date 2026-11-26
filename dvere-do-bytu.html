@@ -69,10 +69,12 @@
     .price-note-bar {
       background:linear-gradient(135deg,#ffffff 0%, var(--orange-pale) 140%);
       border:1px solid #f1c79a; border-left:6px solid var(--orange);
-      border-radius:16px; padding:1.05rem 1.25rem;
-      box-shadow:0 10px 26px rgba(234,88,12,.16);
-      color:var(--text); font-size:0.9rem; margin-bottom:1.5rem;
+      border-radius:16px; padding:1.1rem 1.3rem;
+      box-shadow:0 22px 45px -12px rgba(234,88,12,.38), 0 8px 18px -8px rgba(15,23,42,.18);
+      color:var(--text); font-size:0.9rem; margin:.5rem 0 2rem;
+      transform:translateY(-2px);
     }
+    @media (hover:hover){ .price-note-bar{ transition:box-shadow .25s, transform .25s; } .price-note-bar:hover{ transform:translateY(-5px); box-shadow:0 30px 55px -12px rgba(234,88,12,.45), 0 10px 22px -8px rgba(15,23,42,.2); } }
     .pnb-top { display:flex; flex-wrap:wrap; align-items:baseline; gap:.35rem .7rem; margin-bottom:.45rem; }
     .pnb-lbl { font-size:.68rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:#fff; background:var(--orange); border-radius:999px; padding:.22rem .62rem; align-self:center; box-shadow:0 2px 6px rgba(234,88,12,.3); }
     .pnb-cena { font-size:2rem; font-weight:800; color:var(--head); letter-spacing:-.02em; line-height:1; }
@@ -1137,8 +1139,17 @@
       bar.style.top = nh + 'px';
       var bh = Math.ceil(bar.getBoundingClientRect().height);
       document.body.style.paddingTop = bh + 'px';
-      var lst = document.querySelector('.md-logo-st');   // štítek „Moje dveře" pod logem posunout pod akční pruh, ať ho pruh nepřekrývá
-      if (lst) lst.style.marginTop = (bh + 8) + 'px';
+      var lst = document.querySelector('.md-logo-st');   // štítek „Moje dveře" posadit NA akční pruh (plave na něm, vlevo, svisle na střed)
+      if (lst) {
+        if (window.innerWidth < 760) { lst.style.display = 'none'; }   // na mobilu by kryl text pruhu – schovat (na fotce dveří štítek zůstává)
+        else {
+          lst.style.display = '';
+          if (lst.parentElement !== document.body) document.body.appendChild(lst);   // ven z lišty, ať je nad pruhem (jiný stacking kontext)
+          var lh = Math.ceil(lst.getBoundingClientRect().height);
+          lst.style.position = 'fixed'; lst.style.left = '14px'; lst.style.marginTop = '0'; lst.style.zIndex = '1101';
+          lst.style.top = (nh + Math.max(0, Math.round((bh - lh) / 2))) + 'px';
+        }
+      }
     };
     umisti(); window.addEventListener('resize', umisti);
     window.addEventListener('load', umisti);
