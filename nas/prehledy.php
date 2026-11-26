@@ -34,7 +34,12 @@ foreach ($pdo->query("SELECT stav, vytvoreno, data_json FROM zadosti WHERE typ='
   $m = date('Y-m', $t);
   if (!isset($mes[$m])) $mes[$m] = ['pocet' => 0, 'trzby' => 0.0];
   $mes[$m]['pocet']++; $mes[$m]['trzby'] += $cena;
-  $kkey = (string)($d['kategorie'] ?? ''); if (!isset($KAT[$kkey])) $kkey = 'jine';
+  $kkey = (string)($d['kategorie'] ?? '');
+  if (!isset($KAT[$kkey])) {   // bytové objednávky z objednavka-nova.html kategorii neukládají – poznáme je podle modelu dveří do bytu
+    $mk = strtolower((string)($d['model_kod'] ?? ''));
+    $mn = (string)($d['model'] ?? '');
+    $kkey = (in_array($mk, ['premium60', 'extreme54', 'magnum56', 'securido65'], true) || preg_match('/premium\s*60|extreme\s*54|magnum\s*56|securido\s*65/iu', $mn)) ? 'byt' : 'jine';
+  }
   if (!isset($kat[$kkey])) $kat[$kkey] = ['pocet' => 0, 'trzby' => 0.0];
   $kat[$kkey]['pocet']++; $kat[$kkey]['trzby'] += $cena;
   $celkPocet++; $celkTrzby += $cena;
