@@ -147,10 +147,10 @@
     .colors-section h4 { font-size:0.85rem; font-weight:700; color:var(--head); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:0.8rem; }
     .colors-grid { display:flex; flex-wrap:wrap; gap:0.6rem; }
     .color-thumb {
-      width:60px; text-align:center; font-size:0.7rem; color:var(--text-muted); position:relative;
+      width:60px; text-align:center; font-size:0.7rem; color:var(--text-muted); display:flex; flex-direction:column; align-items:center;
     }
     .color-thumb img { width:56px; height:56px; object-fit:cover; border-radius:var(--radius); border:1.5px solid var(--gray-200); display:block; margin:0 auto 0.25rem; }
-    .cstav { position:absolute; left:50%; top:38px; transform:translateX(-50%); z-index:2; padding:1px 6px; border-radius:999px; font-size:0.58rem; font-weight:700; line-height:1.4; white-space:nowrap; letter-spacing:.01em; box-shadow:0 1px 2px rgba(0,0,0,.28); }
+    .cstav { order:-1; display:inline-block; margin:0 0 3px; padding:1px 7px; border-radius:999px; font-size:0.58rem; font-weight:700; line-height:1.4; white-space:nowrap; letter-spacing:.01em; }
     .cstav.sk { background:#d9f2e0; color:#14653a; }
     .cstav.obj { background:#fdecd2; color:#8a5200; }
 
