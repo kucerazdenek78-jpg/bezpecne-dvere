@@ -317,13 +317,71 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($komuTyp === 'svj' && !$j['email']) $pdo->prepare("UPDATE so_svj SET email=?, upraveno=? WHERE id=? AND (email IS NULL OR email='')")->execute([$komu[0], $ted, $id]);
     so_jdi('svj.php?svj=' . $id . '&ok=navrh_poslano#byty');
   }
+  if ($a === 'vyuct_poslat') {   // poslat SVJ vyúčtování provedeného servisu (dle SoD) e-mailem, s přílohami + potvrzením převzetí
+    $id = (int)$_POST['svj_id']; $j = so_svj($pdo, $id); if (!$j) so_jdi('svj.php');
+    $hid = (int)($_POST['hist_id'] ?? 0);
+    $h = $hid ? $pdo->query('SELECT * FROM so_historie WHERE id=' . $hid . ' AND svj_id=' . $id)->fetch(PDO::FETCH_ASSOC) : null;
+    $komu = array_values(array_filter(array_map('trim', preg_split('/[,;\s]+/', (string)($_POST['email'] ?? ''))), fn($m) => filter_var($m, FILTER_VALIDATE_EMAIL)));
+    if (!$komu) so_jdi('svj.php?svj=' . $id . '&chyba=email#historie');
+    // údaje o smlouvě / opakování
+    $smText = ''; $kolik = trim((string)$P('kolikaty', 10)); $poc = trim((string)$P('pocet_sml', 10)); $interText = trim((string)$P('interval_text', 60));
+    if ($h && $h['smlouva_id']) { $sm = $pdo->query('SELECT * FROM so_smlouva WHERE id=' . (int)$h['smlouva_id'])->fetch(PDO::FETCH_ASSOC);
+      if ($sm) { $smText = ($sm['cislo'] ?: 'Servisní smlouva') . ' od ' . so_datum($sm['od']); if ($interText === '') $interText = (int)$sm['interval_let'] === 2 ? 'jednou za 2 roky' : 'ročně'; if ($poc === '') $poc = (string)(int)$sm['pocet']; } }
+    $castka = $P('castka', 20); $castkaN = $castka !== '' ? (float)str_replace([' ', ','], ['', '.'], $castka) : 0.0;
+    $datumS = $h ? (string)$h['datum'] : date('Y-m-d');
+    // přílohy
+    $prilohy = []; $prilohyN = []; $dir = so_dok_dir($id);
+    if (!empty($_POST['priloha_zapis']) && $h && !empty($h['soubor']) && is_file($dir . '/' . $h['soubor'])) { $prilohy[] = [$dir . '/' . $h['soubor'], preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])]; $prilohyN[] = 'zápis o servisu'; }
+    foreach (['faktura' => 'faktura', 'dalsi' => 'příloha'] as $pole => $oznaceni) {
+      $up = $_FILES[$pole] ?? null;
+      if ($up && ($up['error'] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file($up['tmp_name'])) {
+        $ext = strtolower(pathinfo((string)$up['name'], PATHINFO_EXTENSION));
+        if (!isset(SO_DOK_MIME[$ext])) so_jdi('svj.php?svj=' . $id . '&chyba=doktyp#historie');
+        if (($up['size'] ?? 0) > 16 * 1048576) so_jdi('svj.php?svj=' . $id . '&chyba=dokvel#historie');
+        if (!is_dir($dir)) @mkdir($dir, 0775, true);
+        $zaklad = mb_substr(trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', pathinfo((string)$up['name'], PATHINFO_FILENAME))), 0, 80) ?: $oznaceni;
+        $novy = date('Ymd-His') . '_' . $zaklad . '.' . $ext;
+        if (move_uploaded_file($up['tmp_name'], $dir . '/' . $novy)) { $prilohy[] = [$dir . '/' . $novy, $zaklad . '.' . $ext]; $prilohyN[] = $pole === 'faktura' ? 'faktura' : $zaklad . '.' . $ext; }
+      }
+    }
+    $token = ok_navrh_token();
+    $snap = ['datum' => $datumS, 'smlouva' => $smText, 'kolikaty' => $kolik, 'pocet' => $poc, 'interval' => $interText, 'castka' => $castkaN, 'prilohy' => $prilohyN];
+    $pdo->prepare('INSERT INTO ok_navrh (svj_id, komu, komu_typ, druh, nazev, token, polozky, cena, stav, odeslal, odeslano) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+      ->execute([$id, implode(', ', $komu), 'svj', 'vyuctovani', (string)$j['nazev'], $token, json_encode($snap, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $castkaN, 'odeslano', uziv_jmeno(), $ted]);
+    require_once OK_APP . '/lib/posta.php';
+    $url = ok_navrh_url($cfg, $token);
+    $radky = ['<b>Provedený servis:</b> ' . so_datum($datumS)];
+    if ($smText !== '') $radky[] = '<b>Smlouva:</b> ' . htmlspecialchars($smText);
+    if ($kolik !== '' || $poc !== '') $radky[] = '<b>Pořadí servisu:</b> ' . htmlspecialchars(trim(($kolik !== '' ? $kolik . '.' : '') . ($poc !== '' ? ' z ' . $poc : '')) . ($interText !== '' ? ' (' . $interText . ')' : ''));
+    if ($castkaN > 0) $radky[] = '<b>Celkem k úhradě:</b> ' . ok_navrh_kc($castkaN);
+    $dod = trim((string)$P('text', 2000));
+    $tlac = '<div style="margin:22px 0"><a href="' . $url . '&a=ano" style="background:#15803d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">✔ Potvrzuji převzetí</a>'
+      . '<a href="' . $url . '&a=zavolat" style="background:#f1f5f9;color:#0f2747;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;border:1px solid #cbd5e1">☎ Mám dotaz</a></div>';
+    $htmlTelo = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f2747;max-width:640px">'
+      . '<p>Dobrý den,</p><p>zasíláme vyúčtování provedeného pravidelného servisu oken dle servisní smlouvy (SoD).</p>'
+      . ($dod !== '' ? '<p>' . nl2br(htmlspecialchars($dod)) . '</p>' : '')
+      . '<div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px;margin:10px 0">' . implode('<br>', $radky) . '</div>'
+      . ($prilohyN ? '<p>V příloze zasíláme: ' . htmlspecialchars(implode(', ', $prilohyN)) . '.</p>' : '')
+      . '<p>Prosíme o potvrzení převzetí vyúčtování níže.</p>' . $tlac
+      . '<p style="color:#64748b;font-size:13px">Pokud tlačítka nefungují, otevřete odkaz: <a href="' . $url . '">' . $url . '</a></p>'
+      . '<p style="margin-top:18px">Zdeněk Kučera – KK SYSTEM · BEZPEČNÉ DVEŘE CZ<br>+420 725 559 235 · info@kksystem.cz</p></div>';
+    $telo = "Dobrý den,\n\nzasíláme vyúčtování provedeného pravidelného servisu oken dle servisní smlouvy (SoD).\n\n"
+      . 'Servis: ' . so_datum($datumS) . ($smText !== '' ? "\nSmlouva: " . $smText : '') . ($castkaN > 0 ? "\nCelkem: " . ok_navrh_kc($castkaN) : '')
+      . ($prilohyN ? "\nPřílohy: " . implode(', ', $prilohyN) : '') . "\n\nPotvrďte převzetí na odkazu: " . $url . "\n\nZdeněk Kučera – KK SYSTEM · Bezpečné dveře CZ";
+    $predmet = 'Vyúčtování servisu oken – ' . $j['nazev'];
+    $ok = posli_mail($cfg, $DATA, $komu, [], $cfg['from'], $predmet, $telo, $prilohy, $htmlTelo);
+    if (!$ok) { $pdo->prepare('DELETE FROM ok_navrh WHERE token=?')->execute([$token]); so_jdi('svj.php?svj=' . $id . '&chyba=mail#historie'); }
+    $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
+      ->execute([$id, date('Y-m-d'), 'jine', 'Vyúčtování servisu (' . so_datum($datumS) . ') odesláno na ' . implode(', ', $komu) . ($castkaN > 0 ? ' – ' . ok_navrh_kc($castkaN) : '') . ($prilohyN ? ' (' . implode(', ', $prilohyN) . ')' : ''), '', $ted, uziv_jmeno()]);
+    so_jdi('svj.php?svj=' . $id . '&ok=vyuct_poslano#historie');
+  }
   http_response_code(400); exit('Neznámá akce');
 }
 
 // ───── zobrazení ─────
 $svjId = isset($_GET['svj']) ? $_GET['svj'] : null; $servisId = (int)($_GET['servis'] ?? 0);
 $tisk = isset($_GET['tisk']) || isset($_GET['report']) || isset($_GET['navrh']);
-$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'smlouva' => 'Smlouva uložena.', 'import' => 'Seznam nahrán.', 'navrh_poslano' => 'Návrh oprav odeslán ke schválení e-mailem.'];
+$OK = ['ulozeno' => 'Uloženo.', 'smazano' => 'Smazáno.', 'smlouva' => 'Smlouva uložena.', 'import' => 'Seznam nahrán.', 'navrh_poslano' => 'Návrh oprav odeslán ke schválení e-mailem.', 'vyuct_poslano' => 'Vyúčtování servisu odesláno SVJ e-mailem.'];
 ?><!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0e4f5c"><title>SVJ a družstva – Servis oken</title><style>
 body{font:16px/1.45 system-ui,Arial,sans-serif;margin:0;background:#f3f5f8;color:#1b2430}main{max-width:1000px;margin:0 auto;padding:14px}
@@ -543,20 +601,22 @@ elseif ($svjId !== null):
   <span><?= $tl('nájemníkovi') ?></span></form><?php endforeach; ?></div><?php endif; ?></div>
 <?php endif; ?>
 <?php $navrhy = $pdo->prepare('SELECT * FROM ok_navrh WHERE svj_id=? ORDER BY id DESC'); $navrhy->execute([$sid]); $navrhy = $navrhy->fetchAll(PDO::FETCH_ASSOC);
-  if ($navrhy): ?><div class="box noprint" id="navrhy" style="margin-top:14px"><h3 style="margin-top:0">📨 Odeslané návrhy ke schválení</h3>
-<div style="overflow-x:auto"><table><tr><th>Odesláno</th><th>Co / komu</th><th>Bytů</th><th class="r">Cena</th><th>Stav</th></tr>
-<?php foreach ($navrhy as $nv): $pz = json_decode((string)$nv['polozky'], true) ?: []; $stav = $nv['stav']; $jeZj = ($nv['druh'] ?? 'oprava') === 'zjisteni'; ?>
+  if ($navrhy): ?><div class="box noprint" id="navrhy" style="margin-top:14px"><h3 style="margin-top:0">📨 Odeslané ke schválení / potvrzení</h3>
+<div style="overflow-x:auto"><table><tr><th>Odesláno</th><th>Co / komu</th><th>Pol.</th><th class="r">Cena</th><th>Stav</th></tr>
+<?php foreach ($navrhy as $nv): $pz = json_decode((string)$nv['polozky'], true) ?: []; $stav = $nv['stav']; $dr = $nv['druh'] ?? 'oprava'; $jeVy = $dr === 'vyuctovani'; $jeZj = $dr === 'zjisteni'; ?>
 <tr><td class="nowrap"><?= $e(so_datum(substr((string)$nv['odeslano'], 0, 10))) ?><div class="mut"><?= $e($nv['odeslal']) ?></div></td>
-  <td><span class="st <?= $jeZj ? 'st-nebyl' : 'st-nova' ?>"><?= $jeZj ? '🔍 Zjištění závady' : '🛠 Oprava' ?></span><div class="mut"><?= $nv['komu_typ'] === 'najemnik' ? 'nájemník ' . $e($nv['nazev']) : 'SVJ' ?> · <?= $e($nv['komu']) ?></div></td>
-  <td><?= count($pz) ?></td>
+  <td><span class="st <?= $jeVy ? 'st-hotovo' : ($jeZj ? 'st-nebyl' : 'st-nova') ?>"><?= $jeVy ? '🧾 Vyúčtování' : ($jeZj ? '🔍 Zjištění závady' : '🛠 Oprava') ?></span><div class="mut"><?= $nv['komu_typ'] === 'najemnik' ? 'nájemník ' . $e($nv['nazev']) : 'SVJ' ?> · <?= $e($nv['komu']) ?></div></td>
+  <td><?= $jeVy ? '–' : count($pz) ?></td>
   <td class="r nowrap"><?= $e(ok_navrh_kc($nv['cena'])) ?></td>
-  <td><?php if ($stav === 'schvaleno'): ?><span class="st st-hotovo">✔ Schváleno</span><div class="mut"><?= $e(so_datum(substr((string)$nv['reakce_dne'], 0, 10))) ?></div>
-    <?php elseif ($stav === 'zavolat'): ?><span class="st st-nebyl">☎ Chce zavolat</span><div class="mut"><?= $e(trim(($nv['reakce_tel'] ? $nv['reakce_tel'] . ' ' : '') . substr((string)$nv['reakce_dne'], 0, 10))) ?></div>
+  <td><?php if ($stav === 'schvaleno'): ?><span class="st st-hotovo"><?= $jeVy ? '✔ Převzato' : '✔ Schváleno' ?></span><div class="mut"><?= $e(so_datum(substr((string)$nv['reakce_dne'], 0, 10))) ?></div>
+    <?php elseif ($stav === 'zavolat'): ?><span class="st st-nebyl"><?= $jeVy ? '☎ Má dotaz' : '☎ Chce zavolat' ?></span><div class="mut"><?= $e(trim(($nv['reakce_tel'] ? $nv['reakce_tel'] . ' ' : '') . substr((string)$nv['reakce_dne'], 0, 10))) ?></div>
     <?php else: ?><span class="st st-odmitl">čeká na odpověď</span><?php endif; ?><?= $nv['reakce_pozn'] ? '<div class="mut">' . $e($nv['reakce_pozn']) . '</div>' : '' ?></td></tr>
 <?php endforeach; ?></table></div></div><?php endif; ?>
 
 <div class="box" id="historie"><h2 style="margin-top:0">Historie – provedené servisy, zápisy a dokumenty</h2>
-<?php $hist = so_historie($pdo, $sid); $smNazev = []; foreach ($smlouvy as $sm) $smNazev[(int)$sm['id']] = ($sm['cislo'] ?: 'smlouva') . ' od ' . so_datum($sm['od']);
+<?php if (!isset($svjMail)) $svjMail = $j['email'] ?: (string)($pdo->query('SELECT email FROM so_jed WHERE svj_id=' . $sid . " AND email IS NOT NULL AND email<>'' AND (plati IS NULL OR plati<>'najemnik') ORDER BY id DESC LIMIT 1")->fetchColumn() ?: '');
+  $smStav = []; foreach ($smlouvy as $sm) $smStav[(int)$sm['id']] = so_smlouva_stav($pdo, $sm);
+  $hist = so_historie($pdo, $sid); $smNazev = []; foreach ($smlouvy as $sm) $smNazev[(int)$sm['id']] = ($sm['cislo'] ?: 'smlouva') . ' od ' . so_datum($sm['od']);
   $hForm = function ($h) use ($e, $sid, $smNazev) { ?>
   <form method="post" enctype="multipart/form-data"><input type="hidden" name="akce" value="historie_ulozit"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>">
   <div class="ln"><label>Datum<input type="date" name="datum" value="<?= $e($h['datum']) ?>" required></label><label>Druh<select name="druh"><?php foreach (SO_HIST as $k => $t): ?><option value="<?= $k ?>"<?= $h['druh'] === $k ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?></select></label>
@@ -569,7 +629,19 @@ elseif ($svjId !== null):
   if (!$hist): ?><p class="mut">Zatím nic.</p><?php else: ?><div style="overflow-x:auto"><table><tr><th>Datum</th><th>Co</th><th>Popis a dokument</th><th></th></tr>
 <?php foreach ($hist as $h): ?><tr><td class="nowrap"><?= $e(so_datum($h['datum'])) ?></td><td class="nowrap"><?= $e(SO_HIST[$h['druh']] ?? $h['druh']) ?></td>
   <td><?= $e($h['popis']) ?><?= $h['smlouva_id'] && isset($smNazev[(int)$h['smlouva_id']]) ? ' <span class="st">' . $e($smNazev[(int)$h['smlouva_id']]) . '</span>' : '' ?><?php if ($h['dokument']): ?><div class="mut" style="word-break:break-all">📎 <?= $e(preg_replace('#^.*/ZÁKAZNÍCI/[^/]+/#u', '', (string)$h['dokument'])) ?></div><?php endif; ?><?php if (!empty($h['soubor'])): ?><div><a href="?dok=<?= $sid ?>&amp;f=<?= $e(rawurlencode((string)$h['soubor'])) ?>" target="_blank">📄 <?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?></a></div><?php endif; ?></td>
-  <td class="noprint"><details><summary>upravit</summary><?php $hForm($h); ?><?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Smazat záznam?')" style="margin-top:6px"><input type="hidden" name="akce" value="historie_smazat"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>"><input type="hidden" name="svj_id" value="<?= $sid ?>"><button class="del">Smazat</button></form><?php endif; ?></details></td></tr>
+  <td class="noprint"><details><summary>upravit</summary><?php $hForm($h); ?><?php if (uziv_admin()): ?><form method="post" onsubmit="return confirm('Smazat záznam?')" style="margin-top:6px"><input type="hidden" name="akce" value="historie_smazat"><input type="hidden" name="id" value="<?= (int)$h['id'] ?>"><input type="hidden" name="svj_id" value="<?= $sid ?>"><button class="del">Smazat</button></form><?php endif; ?></details>
+<?php if (in_array($h['druh'], ['servis', 'faktura'], true)): $hss = $h['smlouva_id'] && isset($smStav[(int)$h['smlouva_id']]) ? $smStav[(int)$h['smlouva_id']] : null; ?>
+<details style="margin-top:5px"><summary style="cursor:pointer;color:#15803d;font-weight:600">✉ Poslat vyúčtování SVJ</summary>
+<form method="post" enctype="multipart/form-data" style="margin-top:6px"><input type="hidden" name="akce" value="vyuct_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="hist_id" value="<?= (int)$h['id'] ?>">
+<div class="ln"><label class="w">E-mail SVJ<input name="email" type="email" value="<?= $e($svjMail) ?>" required placeholder="e-mail SVJ"></label></div>
+<div class="ln"><label>Tento servis je<input name="kolikaty" value="<?= $hss ? (int)$hss['hotovo'] : '' ?>" size="3" inputmode="numeric"></label><label>z počtu<input name="pocet_sml" value="<?= $hss ? (int)$hss['pocet'] : '' ?>" size="3" inputmode="numeric"></label><label class="w">Interval<input name="interval_text" placeholder="doplní se ze smlouvy"></label></div>
+<div class="ln"><label>Částka k úhradě s DPH<input name="castka" placeholder="nepovinné" size="12"></label></div>
+<div class="ln"><label class="w">Úvodní text (nepovinné)<textarea name="text" rows="2" placeholder="nepovinná poznámka"></textarea></label></div>
+<p style="margin:6px 0 2px"><b>Přílohy:</b><?php if (empty($h['soubor'])): ?> <span class="mut">(zápis není nahraný – nahrajte ho výše u „upravit“, nebo přiložte fakturu/další soubor)</span><?php endif; ?></p>
+<?php if (!empty($h['soubor'])): ?><label class="mut" style="flex-direction:row;gap:5px;align-items:center;margin-bottom:4px"><input type="checkbox" name="priloha_zapis" value="1" checked style="width:auto"> přiložit zápis o servisu (<?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?>)</label><?php endif; ?>
+<div class="ln"><label class="w">Faktura (PDF)<input type="file" name="faktura" accept=".pdf,.jpg,.jpeg,.png"></label><label class="w">Další příloha<input type="file" name="dalsi" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></label></div>
+<button class="ok" onclick="return confirm('Poslat SVJ vyúčtování servisu e-mailem?')">✉ Poslat vyúčtování</button>
+</form></details><?php endif; ?></td></tr>
 <?php endforeach; ?></table></div><?php endif; ?>
 <details class="noprint"><summary>+ Zapsat provedený servis / dokument</summary><?php $hForm(['id' => 0, 'datum' => date('Y-m-d'), 'druh' => 'servis', 'smlouva_id' => $smlouvy && $smlouvy[0]['aktivni'] ? $smlouvy[0]['id'] : null, 'popis' => '', 'dokument' => (string)($j['slozka'] ?? '') !== '' ? $j['slozka'] . '/' : '']); ?>
 <p class="mut">Servis zapsaný „podle smlouvy“ se počítá do plnění smlouvy (další termín se posune). Servisy vedené v aplikaci (výše) se počítají samy.</p></details></div>
