@@ -14,6 +14,9 @@ function akce_nacti(string $f): array {
     'nadpis'   => (string)($d['nadpis'] ?? 'Akční ceny dveří do bytu'),
     'text'     => (string)($d['text'] ?? 'Akce platí do'),
     'plati_do' => (string)($d['plati_do'] ?? ''),
+    'nudge_aktivni' => !empty($d['nudge_aktivni']),
+    'nudge_castka'  => (int)($d['nudge_castka'] ?? 0),
+    'nudge_text'    => (string)($d['nudge_text'] ?? ''),
   ];
 }
 function akce_plati(array $a): bool {
@@ -56,6 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'nadpis'   => trim((string)($_POST['nadpis'] ?? '')),
     'text'     => trim((string)($_POST['text'] ?? '')),
     'plati_do' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($_POST['plati_do'] ?? '')) ? (string)$_POST['plati_do'] : '',
+    'nudge_aktivni' => !empty($_POST['nudge_aktivni']),
+    'nudge_castka'  => max(0, (int)preg_replace('/\D/', '', (string)($_POST['nudge_castka'] ?? '0'))),
+    'nudge_text'    => trim((string)($_POST['nudge_text'] ?? '')),
   ];
   if (@file_put_contents($AKCE_FILE, json_encode($nov, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) === false) $chyba = 'Nepodařilo se uložit soubor ' . $AKCE_FILE;
   else { $akce = akce_nacti($AKCE_FILE); $ulozeno = true; }
@@ -94,6 +100,16 @@ code{background:#eef1f5;padding:2px 6px;border-radius:5px;font-size:13px;word-br
       <input type="text" id="text" name="text" value="<?= $e($akce['text']) ?>" placeholder="např. Akce platí do">
       <label for="plati_do">Platí do</label>
       <input type="date" id="plati_do" name="plati_do" value="<?= $e($akce['plati_do']) ?>">
+
+      <hr style="border:0;border-top:1px solid #e3e8ef;margin:20px 0">
+      <h2 style="font-size:17px;margin:0 0 4px">🕒 24h pobídka pro váhající zákazníky</h2>
+      <p class="mut">Když zákazník do nabídky nereaguje, připomínka mu nabídne slevu navíc, pokud potvrdí zájem do 24 hodin. Propíše se do připomínkových e-mailů nabídek. Zákazník potvrdí jedním tlačítkem a v kartotéce na úvodu vyskočí „💰 MÁ ZÁJEM".</p>
+      <div class="row"><input type="checkbox" id="nudge_aktivni" name="nudge_aktivni" value="1"<?= $akce['nudge_aktivni'] ? ' checked' : '' ?>><label for="nudge_aktivni" style="margin:0">Pobídka zapnutá (nabízet slevu v připomínkách)</label></div>
+      <label for="nudge_castka">Sleva za rozhodnutí do 24 h (Kč)</label>
+      <input type="text" inputmode="numeric" id="nudge_castka" name="nudge_castka" value="<?= $akce['nudge_castka'] > 0 ? $e($akce['nudge_castka']) : '' ?>" placeholder="např. 1000">
+      <label for="nudge_text">Doplňující věta (nepovinné)</label>
+      <input type="text" id="nudge_text" name="nudge_text" value="<?= $e($akce['nudge_text']) ?>" placeholder="např. Platí jen pro objednávku do 24 hodin.">
+
       <button type="submit">Uložit</button>
     </form>
   </div>

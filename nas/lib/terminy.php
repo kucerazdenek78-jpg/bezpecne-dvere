@@ -197,9 +197,10 @@ function terminy_banner(): void {
   // zákazník v e-mailu klikl „chci upravit“ / „zavolejte mi“ → úkol, dokud ho někdo neoznačí jako vyřízený
   $ukoly = [];
   try {
-    foreach ($pdo->query("SELECT id, cislo, nab_reakce, nab_reakce_dne, nab_reakce_pozn, data_json FROM zadosti WHERE typ='nabidka' AND nab_reakce IN ('upravit','zavolat') AND (nab_reakce_hotovo IS NULL OR nab_reakce_hotovo='') ORDER BY nab_reakce_dne")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    foreach ($pdo->query("SELECT id, cislo, nab_reakce, nab_reakce_dne, nab_reakce_pozn, data_json FROM zadosti WHERE typ='nabidka' AND nab_reakce IN ('upravit','zavolat','zajem') AND (nab_reakce_hotovo IS NULL OR nab_reakce_hotovo='') ORDER BY nab_reakce_dne")->fetchAll(PDO::FETCH_ASSOC) as $r) {
       $d = json_decode((string)$r['data_json'], true) ?: []; $tel = (string)($d['telefon'] ?? '');
-      $ukoly[] = '<div class="or"><a href="kartoteka.php?id=' . (int)$r['id'] . '"><b>Nabídka ' . $h($r['cislo'] ?: ($d['cislo'] ?? '')) . '</b> ' . $h(terminy_jmeno($d)) . '</a> <span>' . ($r['nab_reakce'] === 'zavolat' ? '📞 chce zavolat / konzultaci' : '✏️ chce nabídku upravit') . ($tel !== '' ? ' · ☎ <a href="tel:' . $h(preg_replace('/[^\d+]/', '', $tel)) . '">' . $h($tel) . '</a>' : '')
+      $stitek = $r['nab_reakce'] === 'zavolat' ? '📞 chce zavolat / konzultaci' : ($r['nab_reakce'] === 'zajem' ? '💰 MÁ ZÁJEM – chce využít slevu, ozvěte se' : '✏️ chce nabídku upravit');
+      $ukoly[] = '<div class="or"><a href="kartoteka.php?id=' . (int)$r['id'] . '"><b>Nabídka ' . $h($r['cislo'] ?: ($d['cislo'] ?? '')) . '</b> ' . $h(terminy_jmeno($d)) . '</a> <span>' . $stitek . ($tel !== '' ? ' · ☎ <a href="tel:' . $h(preg_replace('/[^\d+]/', '', $tel)) . '">' . $h($tel) . '</a>' : '')
         . ((string)$r['nab_reakce_pozn'] !== '' ? ' · „' . $h(mb_substr((string)$r['nab_reakce_pozn'], 0, 160)) . '“' : '') . ' · ' . $h(date('j. n. H:i', strtotime((string)$r['nab_reakce_dne']))) . '</span><div class="bdt-t">' . $tl($r['id'], 'hotovo', '✓ Vyřízeno') . '</div></div>';
     }
   } catch (Throwable $e) {}
@@ -231,9 +232,23 @@ function terminy_banner(): void {
   echo '</div></div>';
 }
 
+// nastavení pobídky (sleva pro váhající zákazníky) z /data/akce.json – spravuje editor akce.php (Správa → Akce a slevy)
+function terminy_nudge(): array {
+  global $DATA;
+  $f = (($DATA ?? '') !== '' ? $DATA : '/data') . '/akce.json';
+  $d = is_file($f) ? (json_decode((string)@file_get_contents($f), true) ?: []) : [];
+  return ['aktivni' => !empty($d['nudge_aktivni']), 'castka' => (int)($d['nudge_castka'] ?? 0), 'text' => (string)($d['nudge_text'] ?? '')];
+}
 // texty připomínek zákazníkovi (lehce vtipné, bez slibů, které nevíme splnit)
 function terminy_hodnoceni_vyzva(string $url): string {
-  return "\n\nStačí jedno kliknutí, ať víme, na čem jsme:\n"
+  $pob = ''; $n = terminy_nudge();
+  if ($n['aktivni'] && $n['castka'] > 0) {
+    $kc = number_format($n['castka'], 0, ',', ' ') . ' Kč';
+    $pob = "\n\n🎁 Rozhodnete-li se teď, máme pro Vás slevu $kc. " . ($n['text'] !== '' ? trim($n['text']) . ' ' : '')
+      . "Když potvrdíte zájem do 24 hodin, odečteme Vám $kc z ceny. Stačí jedno kliknutí:\n"
+      . "• Mám zájem – využít slevu $kc: $url&a=zajem\n";
+  }
+  return $pob . "\n\nStačí jedno kliknutí, ať víme, na čem jsme:\n"
     . "• Chci nabídku upravit: $url&a=upravit\n"
     . "• Zavolejte mi, chci konzultaci: $url&a=zavolat\n"
     . "• Momentálně nemám zájem: $url&a=nezajem\n\n"

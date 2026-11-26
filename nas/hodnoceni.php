@@ -17,7 +17,7 @@ $d = $z ? (json_decode((string)$z['data_json'], true) ?: []) : [];
 $cislo = $z ? (string)($rezim === 'montaz' ? ($d['obj_cislo'] ?? $z['cislo']) : ($z['cislo'] ?: ($d['cislo'] ?? ''))) : '';
 $VOLBY = ['rozmysl' => 'Nabídka je v pořádku, ještě se rozmýšlím', 'upravit' => 'Chci nabídku upravit (jiný model, barva, rozměr, kování…)', 'zavolat' => 'Zavolejte mi – chci konzultaci', 'nezajem' => 'Momentálně nemám zájem'];
 $DUVODY = ['cena' => 'Cena je vyšší, než jsem čekal(a)', 'termin' => 'Termín nevyhovuje', 'jinde' => 'Vybral(a) jsem jinou firmu nebo jiné dveře', 'pozdeji' => 'Dveře zatím nepotřebuji / odkládám', 'jine' => 'Jiný důvod (napište do poznámky)'];
-$volba = (string)($_POST['volba'] ?? $_GET['a'] ?? ''); if (!isset($VOLBY[$volba])) $volba = ($z && $rezim === 'nabidka' && (string)$z['nab_reakce'] !== '' && isset($VOLBY[$z['nab_reakce']])) ? (string)$z['nab_reakce'] : 'rozmysl';
+$volba = (string)($_POST['volba'] ?? $_GET['a'] ?? ''); if ($volba !== 'zajem' && !isset($VOLBY[$volba])) $volba = ($z && $rezim === 'nabidka' && (string)$z['nab_reakce'] !== '' && isset($VOLBY[$z['nab_reakce']])) ? (string)$z['nab_reakce'] : 'rozmysl';
 $cisti = fn($s, $max) => mb_substr(trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string)$s)), 0, $max);
 
 if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -54,9 +54,9 @@ if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $u = $pdo->prepare("UPDATE zadosti SET stav='storno' WHERE id=? AND stav IN ('nove','rozpracovano','odeslana')"); $u->execute([$i]);
         if ($u->rowCount()) terminy_hist($pdo, $i, 'zákazník nemá zájem – stav změněn na Storno', $duvod);
       }
-      $txtVolba = ['rozmysl' => 'ještě se rozmýšlí', 'upravit' => 'CHCE NABÍDKU UPRAVIT', 'zavolat' => 'CHCE ZAVOLAT / KONZULTACI', 'nezajem' => 'nemá zájem'][$volba];
+      $txtVolba = ['rozmysl' => 'ještě se rozmýšlí', 'upravit' => 'CHCE NABÍDKU UPRAVIT', 'zavolat' => 'CHCE ZAVOLAT / KONZULTACI', 'nezajem' => 'nemá zájem', 'zajem' => 'MÁ ZÁJEM – chce využít slevu'][$volba] ?? 'reagoval';
       terminy_hist($pdo, (int)$z['id'], 'reakce zákazníka na nabídku: ' . $txtVolba, trim(($hv ? "$hv/5 " : '') . $reakcePozn . ($pozn !== '' ? ' – ' . $pozn : '')));
-      $predmet = ['rozmysl' => '', 'upravit' => '✏️ ', 'zavolat' => '📞 ', 'nezajem' => ''][$volba] . 'Nabídka č. ' . preg_replace('/[\r\n]+/', ' ', $cislo) . ': zákazník ' . $txtVolba . ($hv ? " ($hv/5)" : '');
+      $predmet = (['rozmysl' => '', 'upravit' => '✏️ ', 'zavolat' => '📞 ', 'nezajem' => '', 'zajem' => '💰 '][$volba] ?? '') . 'Nabídka č. ' . preg_replace('/[\r\n]+/', ' ', $cislo) . ': zákazník ' . $txtVolba . ($hv ? " ($hv/5)" : '');
       $telo = "Zákazník $jm reagoval na nabídku č. $cislo: $txtVolba.\n"
         . ($volba === 'zavolat' ? 'Telefon: ' . ($tel !== '' ? $tel : (string)($d['telefon'] ?? '(neuveden)')) . "\n" : (!empty($d['telefon']) ? 'Telefon: ' . $d['telefon'] . "\n" : ''))
         . ($duvod !== '' ? "Důvod: $duvod\n" : '') . ($hv ? "Hodnocení nabídky: $hv z 5\n" : '') . ($pozn !== '' ? "Poznámka: $pozn\n" : '')
@@ -73,7 +73,7 @@ if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 <?php elseif ($hotovo && $rezim === 'montaz'): ?><h1>Děkujeme!</h1>
   <?php if ($hv >= 4): ?><p>Moc nás těší, že jste spokojeni. Pomohli byste nám ještě krátkou recenzí na Googlu? Ostatním zákazníkům to hodně pomůže při výběru.</p><a class="g" href="<?= $h(TERM_GOOGLE_RECENZE) ?>">⭐ Napsat recenzi na Googlu</a>
   <?php else: ?><p>Mrzí nás, že nejste úplně spokojeni. Vaše hodnocení jsme předali a ozveme se Vám, abychom to dali do pořádku. Kdyby to spěchalo, volejte +420 725 559 235.</p><?php endif; ?>
-<?php elseif ($hotovo): ?><h1>Děkujeme!</h1><p><?= ['rozmysl' => 'Vaši odpověď jsme přijali. Kdybyste cokoli potřebovali, jsme tu.', 'upravit' => 'Ozveme se Vám ohledně úpravy nabídky, obvykle do jednoho pracovního dne.', 'zavolat' => 'Zavoláme Vám, obvykle do jednoho pracovního dne.', 'nezajem' => 'Děkujeme za upřímnost, už Vás nebudeme připomínkami obtěžovat. Kdybyste si to rozmysleli, stačí se ozvat.'][$volba] ?></p>
+<?php elseif ($hotovo): ?><h1>Děkujeme!</h1><p><?= ['rozmysl' => 'Vaši odpověď jsme přijali. Kdybyste cokoli potřebovali, jsme tu.', 'upravit' => 'Ozveme se Vám ohledně úpravy nabídky, obvykle do jednoho pracovního dne.', 'zavolat' => 'Zavoláme Vám, obvykle do jednoho pracovního dne.', 'nezajem' => 'Děkujeme za upřímnost, už Vás nebudeme připomínkami obtěžovat. Kdybyste si to rozmysleli, stačí se ozvat.', 'zajem' => 'Super! Zaznamenali jsme Váš zájem. Brzy se Vám ozveme a slevu Vám odečteme z ceny. Kdyby to spěchalo, volejte +420 725 559 235.'][$volba] ?? 'Vaši odpověď jsme přijali.' ?></p>
 <?php elseif ($rezim === 'montaz'): ?><h1>Jak jste spokojeni s dveřmi a montáží?</h1><p class="m">Objednávka č. <?= $h($cislo) ?> · zabere to půl minuty · Bezpečné dveře · KK SYSTEM</p>
 <?php if ($zprava): ?><p class="c"><?= $h($zprava) ?></p><?php endif; ?>
 <?php if ($z['mont_hodnoceni']): ?><p class="m">Už jste nás ohodnotili (<?= (int)$z['mont_hodnoceni'] ?>/5). Můžete hodnocení změnit.</p><?php endif; ?>
@@ -81,6 +81,14 @@ if ($z && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 <fieldset><legend>Celková spokojenost (1 = špatně, 5 = výborně)</legend><div class="s"><?php for ($i = 1; $i <= 5; $i++): ?><label><input type="radio" name="h" value="<?= $i ?>" required><?= $i ?></label><?php endfor; ?></div></fieldset>
 <fieldset><legend>Co se nám povedlo, nebo co můžeme zlepšit? (nepovinné)</legend><textarea name="pozn" maxlength="1000" placeholder="Montáž, čistota, dochvilnost, dveře samotné…"></textarea></fieldset>
 <button type="submit">Odeslat hodnocení</button></form>
+<?php elseif ($rezim === 'nabidka' && ($_GET['a'] ?? '') === 'zajem' && ($nd = terminy_nudge()) && $nd['aktivni'] && $nd['castka'] > 0): $kc = number_format($nd['castka'], 0, ',', ' ') . ' Kč'; ?>
+<h1>🎁 Sleva <?= $h($kc) ?> na Vaši nabídku č. <?= $h($cislo) ?></h1>
+<p>Rozhodli jste se pro nové dveře? Potvrďte prosím zájem jediným tlačítkem a my Vám z ceny odečteme slevu <strong><?= $h($kc) ?></strong>.<?= $nd['text'] !== '' ? ' ' . $h(trim($nd['text'])) : '' ?></p>
+<p class="m">Ozveme se Vám obvykle do jednoho pracovního dne a domluvíme další postup. Bezpečné dveře · KK SYSTEM</p>
+<?php if ($zprava): ?><p class="c"><?= $h($zprava) ?></p><?php endif; ?>
+<form method="post"><input type="hidden" name="t" value="<?= $h($t) ?>"><input type="hidden" name="volba" value="zajem">
+<button type="submit">✅ Ano, mám zájem – chci slevu <?= $h($kc) ?></button></form>
+<p class="m" style="margin-top:12px">Nechcete využít slevu? <a href="?t=<?= $h($t) ?>">Napište nám jiný vzkaz</a>.</p>
 <?php else: ?><h1>Nabídka č. <?= $h($cislo) ?></h1><p class="m">Zabere to půl minuty. Bezpečné dveře · KK SYSTEM</p>
 <?php if ($zprava): ?><p class="c"><?= $h($zprava) ?></p><?php endif; ?>
 <form method="post"><input type="hidden" name="t" value="<?= $h($t) ?>">
