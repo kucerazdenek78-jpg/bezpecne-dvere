@@ -4,10 +4,14 @@
 // Snapshot položky: {jed_id, jmeno, byt, ulice, telefon, zavada, oprava, cena, max(bool), plati}
 
 const OK_NAVRH_STAVY = ['odeslano' => 'Odesláno ke schválení', 'schvaleno' => 'Schváleno', 'zavolat' => 'Žádá o telefon'];
+// druh návrhu: oprava = odsouhlasení opravy; zjisteni = souhlas se zjištěním/zmapováním závady (účtuje se i bez opravy)
+const OK_NAVRH_DRUHY = ['oprava' => 'oprava', 'zjisteni' => 'zjisteni'];
 
 function ok_navrh_tabulka(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS ok_navrh (id INTEGER PRIMARY KEY AUTOINCREMENT, svj_id INTEGER, komu TEXT, komu_typ TEXT DEFAULT 'svj', nazev TEXT, token TEXT UNIQUE,
     polozky TEXT, cena REAL DEFAULT 0, stav TEXT DEFAULT 'odeslano', odeslal TEXT, odeslano TEXT, reakce_dne TEXT, reakce_tel TEXT, reakce_pozn TEXT)");
+  $sl = array_column($pdo->query('PRAGMA table_info(ok_navrh)')->fetchAll(PDO::FETCH_ASSOC), 'name');
+  if (!in_array('druh', $sl, true)) $pdo->exec("ALTER TABLE ok_navrh ADD COLUMN druh TEXT DEFAULT 'oprava'");
 }
 function ok_navrh_token(): string { return bin2hex(random_bytes(16)); }
 function ok_navrh(PDO $pdo, string $token): ?array {
@@ -33,13 +37,17 @@ function ok_navrh_radek(array $x): array {
 }
 function ok_navrh_cena_txt(array $r): string { return $r['cena'] > 0 ? ($r['max'] ? 'do ' : '') . ok_navrh_kc($r['cena']) : ''; }
 
-// HTML tabulka oprav (inline styly kvůli e-mailu). Použito v e-mailu i na veřejné stránce.
-function ok_navrh_html(array $pol): string {
+// HTML tabulka (inline styly kvůli e-mailu). Použito v e-mailu i na veřejné stránce.
+// $druh: 'oprava' = sloupec Návrh opravy; 'zjisteni' = sloupec Zjištění / zmapování závady.
+function ok_navrh_html(array $pol, string $druh = 'oprava'): string {
   $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
   $td = 'padding:6px 9px;border:1px solid #cbd5e1;font-size:14px;vertical-align:top';
+  $zj = $druh === 'zjisteni';
+  $sl3 = $zj ? 'Zjištění / zmapování závady' : 'Návrh opravy';
+  $celkTxt = $zj ? 'Cena za zjištění celkem s DPH' : 'Cena všech oprav s DPH';
   $h = '<table style="border-collapse:collapse;width:100%;margin:10px 0"><tr style="background:#eef2f7">'
     . '<th style="' . $td . ';text-align:left">Byt / nájemník</th><th style="' . $td . ';text-align:left">Zjištěná závada</th>'
-    . '<th style="' . $td . ';text-align:left">Návrh opravy</th><th style="' . $td . ';text-align:right">Cena s DPH</th></tr>';
+    . '<th style="' . $td . ';text-align:left">' . $sl3 . '</th><th style="' . $td . ';text-align:right">Cena s DPH</th></tr>';
   $celk = 0; $vse = true;
   foreach ($pol as $r) {
     $celk += (float)$r['cena']; if (empty($r['max'])) $vse = false;
@@ -48,7 +56,7 @@ function ok_navrh_html(array $pol): string {
     $h .= '<tr><td style="' . $td . '">' . $kdo . '</td><td style="' . $td . '">' . nl2br($e($r['zavada'])) . '</td>'
       . '<td style="' . $td . '">' . nl2br($e($r['oprava'])) . '</td><td style="' . $td . ';text-align:right;white-space:nowrap">' . $e(ok_navrh_cena_txt($r)) . '</td></tr>';
   }
-  $h .= '<tr style="background:#eef2f7"><th colspan="3" style="' . $td . ';text-align:left">Cena všech oprav s DPH</th>'
+  $h .= '<tr style="background:#eef2f7"><th colspan="3" style="' . $td . ';text-align:left">' . $celkTxt . '</th>'
     . '<th style="' . $td . ';text-align:right;white-space:nowrap">' . ($celk > 0 ? ($vse ? 'do ' : '') . ok_navrh_kc($celk) : '') . '</th></tr></table>';
   return $h;
 }

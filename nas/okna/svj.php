@@ -258,6 +258,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   if ($a === 'navrh_poslat') {
     $id = (int)$_POST['svj_id']; $j = so_svj($pdo, $id); if (!$j) so_jdi('svj.php');
     $komuTyp = ($_POST['komu_typ'] ?? 'svj') === 'najemnik' ? 'najemnik' : 'svj';
+    $druh = ($_POST['druh'] ?? 'oprava') === 'zjisteni' ? 'zjisteni' : 'oprava';
     $komu = array_values(array_filter(array_map('trim', preg_split('/[,;\s]+/', (string)($_POST['email'] ?? ''))), fn($m) => filter_var($m, FILTER_VALIDATE_EMAIL)));
     if (!$komu) so_jdi('svj.php?svj=' . $id . '&chyba=email#byty');
     $ids = array_values(array_filter(array_map('intval', explode(',', (string)($_POST['jed'] ?? '')))));
@@ -266,35 +267,52 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $st = $pdo->prepare("SELECT * FROM so_jed WHERE svj_id=? AND stav='nova' AND id IN ($in) ORDER BY ulice, CAST(byt AS INTEGER), byt, jmeno");
     $st->execute(array_merge([$id], $ids)); $byty = $st->fetchAll(PDO::FETCH_ASSOC);
     if (!$byty) so_jdi('svj.php?svj=' . $id . '&chyba=navrh#byty');
-    $pol = array_map('ok_navrh_radek', $byty); $cena = ok_navrh_celkem($pol);
+    // u „zjištění“ je cena ze součtu položek servisu (ne max. cena opravy) a ve sloupci se ukáže rozpis položek (zjištění, doprava, příplatek…)
+    $pol = array_map(function ($x) use ($druh) {
+      $r = ok_navrh_radek($x);
+      if ($druh === 'zjisteni') {
+        $r['cena'] = (float)($x['cena'] ?? 0); $r['max'] = false;
+        $pj = json_decode((string)($x['polozky'] ?? ''), true);
+        $r['oprava'] = is_array($pj) && $pj ? implode(', ', array_filter(array_map(fn($p) => trim(rtrim(rtrim((string)($p['mn'] ?? 1), '0'), '.') . '× ' . (string)($p['nazev'] ?? '')), $pj))) : 'Zjištění a zmapování závady';
+      }
+      return $r;
+    }, $byty);
+    $cena = ok_navrh_celkem($pol);
     $nazev = $komuTyp === 'najemnik' ? (string)($byty[0]['jmeno'] ?: $j['nazev']) : (string)$j['nazev'];
     $token = ok_navrh_token();
-    $pdo->prepare('INSERT INTO ok_navrh (svj_id, komu, komu_typ, nazev, token, polozky, cena, stav, odeslal, odeslano) VALUES (?,?,?,?,?,?,?,?,?,?)')
-      ->execute([$id, implode(', ', $komu), $komuTyp, $nazev, $token, json_encode($pol, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $cena, 'odeslano', uziv_jmeno(), $ted]);
+    $pdo->prepare('INSERT INTO ok_navrh (svj_id, komu, komu_typ, druh, nazev, token, polozky, cena, stav, odeslal, odeslano) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+      ->execute([$id, implode(', ', $komu), $komuTyp, $druh, $nazev, $token, json_encode($pol, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $cena, 'odeslano', uziv_jmeno(), $ted]);
     require_once OK_APP . '/lib/posta.php';
     $url = ok_navrh_url($cfg, $token);
-    $osloveni = $komuTyp === 'najemnik' ? 'Dobrý den,' : 'Dobrý den,';
-    $uvod = $komuTyp === 'najemnik'
-      ? 'na základě prohlídky oken Vám zasíláme návrh oprav ke schválení. Prosíme o potvrzení níže.'
-      : 'zasíláme návrh oprav v jednotlivých bytech ke schválení. Prosíme o potvrzení níže.';
-    $tlac = '<div style="margin:22px 0"><a href="' . $url . '&a=ano" style="background:#15803d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">✔ Schvaluji opravy</a>'
+    $osloveni = 'Dobrý den,';
+    $zj = $druh === 'zjisteni';
+    $uvod = $zj
+      ? 'při servisu oken jsme u níže uvedených oken zjistili závadu, kterou nelze odstranit běžným seřízením. Abychom zjistili přesnou příčinu, je potřeba okno rozebrat a závadu zmapovat – je to samostatný placený úkon. Prosíme o souhlas, abychom zjištění provedli.'
+      : ($komuTyp === 'najemnik'
+        ? 'na základě prohlídky oken Vám zasíláme návrh opravy ke schválení. Prosíme o potvrzení níže.'
+        : 'zasíláme návrh oprav v jednotlivých bytech ke schválení. Prosíme o potvrzení níže.');
+    $tlacAno = $zj ? '✔ Souhlasím se zjištěním' : '✔ Schvaluji opravy';
+    $tlac = '<div style="margin:22px 0"><a href="' . $url . '&a=ano" style="background:#15803d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">' . $tlacAno . '</a>'
       . '<a href="' . $url . '&a=zavolat" style="background:#f1f5f9;color:#0f2747;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;border:1px solid #cbd5e1">☎ Zavolejte mi</a></div>';
+    $spodek = $zj
+      ? 'Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Po zjištění závady Vám pošleme samostatnou cenu případné opravy ke schválení – tu provedeme až po Vašem dalším souhlasu.'
+      : 'Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Opravu provedeme až po Vašem schválení.';
     $dod = trim((string)$P('text', 2000));
     $htmlTelo = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f2747;max-width:640px">'
       . '<p>' . htmlspecialchars($osloveni) . '</p><p>' . htmlspecialchars($uvod) . '</p>'
       . ($dod !== '' ? '<p>' . nl2br(htmlspecialchars($dod)) . '</p>' : '')
-      . ok_navrh_html($pol)
-      . '<p style="color:#475569;font-size:14px">Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Opravu provedeme až po Vašem schválení.</p>'
+      . ok_navrh_html($pol, $druh)
+      . '<p style="color:#475569;font-size:14px">' . htmlspecialchars($spodek) . '</p>'
       . $tlac
       . '<p style="color:#64748b;font-size:13px">Pokud tlačítka nefungují, otevřete odkaz: <a href="' . $url . '">' . $url . '</a></p>'
       . '<p style="margin-top:18px">Zdeněk Kučera – KK SYSTEM · BEZPEČNÉ DVEŘE CZ<br>+420 725 559 235 · info@kksystem.cz</p></div>';
     $telo = $osloveni . "\n\n" . $uvod . "\n\n" . ($dod !== '' ? $dod . "\n\n" : '')
-      . "Návrh schválíte na odkazu: " . $url . "\n\nZdeněk Kučera – KK SYSTEM · Bezpečné dveře CZ";
-    $predmet = 'Návrh oprav ke schválení – ' . ($komuTyp === 'najemnik' ? $nazev : $j['nazev']);
+      . ($zj ? 'Souhlas potvrdíte na odkazu: ' : 'Návrh schválíte na odkazu: ') . $url . "\n\nZdeněk Kučera – KK SYSTEM · Bezpečné dveře CZ";
+    $predmet = ($zj ? 'Souhlas se zjištěním závady – ' : 'Návrh oprav ke schválení – ') . ($komuTyp === 'najemnik' ? $nazev : $j['nazev']);
     $ok = posli_mail($cfg, $DATA, $komu, [], $cfg['from'], $predmet, $telo, [], $htmlTelo);
     if (!$ok) { $pdo->prepare('DELETE FROM ok_navrh WHERE token=?')->execute([$token]); so_jdi('svj.php?svj=' . $id . '&chyba=mail#byty'); }
     $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
-      ->execute([$id, date('Y-m-d'), 'nabidka', 'Návrh oprav (' . count($pol) . ' ' . ($komuTyp === 'najemnik' ? 'byt – nájemník ' . $nazev : 'bytů – SVJ') . ') odeslán ke schválení na ' . implode(', ', $komu) . ' – ' . ok_navrh_kc($cena), '', $ted, uziv_jmeno()]);
+      ->execute([$id, date('Y-m-d'), 'nabidka', ($zj ? 'Zjištění závady (' : 'Návrh oprav (') . count($pol) . ' ' . ($komuTyp === 'najemnik' ? 'byt – nájemník ' . $nazev : 'bytů – SVJ') . ($zj ? ') odesláno ke schválení na ' : ') odesláno ke schválení na ') . implode(', ', $komu) . ' – ' . ok_navrh_kc($cena), '', $ted, uziv_jmeno()]);
     // zapamatovat e-mail SVJ pro příště, když ho karta ještě nemá
     if ($komuTyp === 'svj' && !$j['email']) $pdo->prepare("UPDATE so_svj SET email=?, upraveno=? WHERE id=? AND (email IS NULL OR email='')")->execute([$komu[0], $ted, $id]);
     so_jdi('svj.php?svj=' . $id . '&ok=navrh_poslano#byty');
@@ -512,23 +530,25 @@ elseif ($svjId !== null):
 <?php if ($kVyr): $kSvj = array_filter($kVyr, fn($x) => ($x['plati'] ?? '') !== 'najemnik'); $kNaj = array_filter($kVyr, fn($x) => ($x['plati'] ?? '') === 'najemnik'); $csv = fn($a) => implode(',', array_map(fn($x) => (int)$x['id'], $a));
   $svjMail = $j['email'] ?: (string)($pdo->query('SELECT email FROM so_jed WHERE svj_id=' . $sid . " AND email IS NOT NULL AND email<>'' AND (plati IS NULL OR plati<>'najemnik') ORDER BY id DESC LIMIT 1")->fetchColumn() ?: ''); ?>
 <div class="box noprint" id="poslat" style="border-left:5px solid #0f2747;margin-top:14px"><h3 style="margin-top:0">✉ Poslat ke schválení e-mailem</h3>
-<p class="mut" style="margin-top:0">Pošle se tomu, kdo opravu platí: byty <b>platí SVJ</b> souhrnně na e-mail SVJ, byty <b>platí nájemník</b> přímo tomu nájemníkovi. Zákazník v e-mailu klikne na <b>Schvaluji</b> / <b>Zavolejte mi</b> a odpověď se vrátí sem.</p>
-<?php if ($kSvj): ?><form method="post" class="ln" style="align-items:flex-end" onsubmit="return confirm('Poslat návrh <?= count($kSvj) ?> oprav ke schválení SVJ?')"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="svj"><input type="hidden" name="jed" value="<?= $e($csv($kSvj)) ?>">
+<p class="mut" style="margin-top:0">Pošle se tomu, kdo opravu platí: byty <b>platí SVJ</b> souhrnně na e-mail SVJ, byty <b>platí nájemník</b> přímo tomu nájemníkovi. Zákazník v e-mailu klikne na <b>Souhlasím / Schvaluji</b> nebo <b>Zavolejte mi</b> a odpověď se vrátí sem.</p>
+<p class="mut" style="margin-top:0;font-size:13px"><b>➡ Zjištění závady</b> = souhlas se zmapováním závady (účtuje se podle položek zápisu servisu, i když pak opravu nechtějí). <b>➡ Oprava ke schválení</b> = odsouhlasení ceny opravy. Ceny obou se berou z položek, které máte u servisu v zápisu.</p>
+<?php $tl = fn($kdo) => '<button class="sec" name="druh" value="zjisteni" style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412" onclick="return confirm(\'Poslat ' . $kdo . ' ke schválení ZJIŠTĚNÍ závady (zmapování)?\')">➡ Zjištění závady</button> <button class="ok" name="druh" value="oprava" onclick="return confirm(\'Poslat ' . $kdo . ' k odsouhlasení OPRAVU?\')">➡ Oprava ke schválení</button>'; ?>
+<?php if ($kSvj): ?><form method="post" class="ln" style="align-items:flex-end"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="svj"><input type="hidden" name="jed" value="<?= $e($csv($kSvj)) ?>">
   <label class="w">SVJ (<?= count($kSvj) ?> <?= count($kSvj) === 1 ? 'byt' : (count($kSvj) < 5 ? 'byty' : 'bytů') ?>) – e-mail<input name="email" type="email" value="<?= $e($svjMail) ?>" required placeholder="e-mail SVJ"></label>
-  <button class="ok">Poslat SVJ ke schválení</button></form>
-  <details class="mut" style="margin:4px 0 2px"><summary>vlastní text e-mailu (nepovinné)</summary><form method="post"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="svj"><input type="hidden" name="jed" value="<?= $e($csv($kSvj)) ?>"><div class="ln"><label class="w">E-mail<input name="email" type="email" value="<?= $e($svjMail) ?>" required></label></div><div class="ln"><label class="w">Úvodní text<textarea name="text" rows="2" placeholder="nepovinná poznámka nad tabulku"></textarea></label></div><button class="ok">Poslat SVJ ke schválení</button></form></details><?php endif; ?>
+  <span><?= $tl('SVJ') ?></span></form>
+  <details class="mut" style="margin:4px 0 2px"><summary>vlastní text e-mailu (nepovinné)</summary><form method="post"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="svj"><input type="hidden" name="jed" value="<?= $e($csv($kSvj)) ?>"><div class="ln"><label class="w">E-mail<input name="email" type="email" value="<?= $e($svjMail) ?>" required></label></div><div class="ln"><label class="w">Úvodní text<textarea name="text" rows="2" placeholder="nepovinná poznámka nad tabulku"></textarea></label></div><?= $tl('SVJ') ?></form></details><?php endif; ?>
 <?php if ($kNaj): ?><div style="margin-top:10px"><b>Byty, které platí nájemník – poslat přímo nájemníkovi:</b>
-<?php foreach ($kNaj as $x): ?><form method="post" class="ln" style="align-items:flex-end;margin-top:6px" onsubmit="return confirm('Poslat návrh opravy nájemníkovi <?= $e($x['jmeno']) ?>?')"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="najemnik"><input type="hidden" name="jed" value="<?= (int)$x['id'] ?>">
+<?php foreach ($kNaj as $x): ?><form method="post" class="ln" style="align-items:flex-end;margin-top:6px"><input type="hidden" name="akce" value="navrh_poslat"><input type="hidden" name="svj_id" value="<?= $sid ?>"><input type="hidden" name="komu_typ" value="najemnik"><input type="hidden" name="jed" value="<?= (int)$x['id'] ?>">
   <label class="w"><?= $e($x['jmeno']) ?><?= $x['byt'] ? ', byt ' . $e($x['byt']) : '' ?> – e-mail<input name="email" type="email" value="<?= $e($x['email']) ?>" required placeholder="e-mail nájemníka"></label>
-  <button class="ok">Poslat</button></form><?php endforeach; ?></div><?php endif; ?></div>
+  <span><?= $tl('nájemníkovi') ?></span></form><?php endforeach; ?></div><?php endif; ?></div>
 <?php endif; ?>
 <?php $navrhy = $pdo->prepare('SELECT * FROM ok_navrh WHERE svj_id=? ORDER BY id DESC'); $navrhy->execute([$sid]); $navrhy = $navrhy->fetchAll(PDO::FETCH_ASSOC);
   if ($navrhy): ?><div class="box noprint" id="navrhy" style="margin-top:14px"><h3 style="margin-top:0">📨 Odeslané návrhy ke schválení</h3>
-<div style="overflow-x:auto"><table><tr><th>Odesláno</th><th>Komu</th><th>Opravy</th><th class="r">Cena</th><th>Stav</th></tr>
-<?php foreach ($navrhy as $nv): $pz = json_decode((string)$nv['polozky'], true) ?: []; $stav = $nv['stav']; ?>
+<div style="overflow-x:auto"><table><tr><th>Odesláno</th><th>Co / komu</th><th>Bytů</th><th class="r">Cena</th><th>Stav</th></tr>
+<?php foreach ($navrhy as $nv): $pz = json_decode((string)$nv['polozky'], true) ?: []; $stav = $nv['stav']; $jeZj = ($nv['druh'] ?? 'oprava') === 'zjisteni'; ?>
 <tr><td class="nowrap"><?= $e(so_datum(substr((string)$nv['odeslano'], 0, 10))) ?><div class="mut"><?= $e($nv['odeslal']) ?></div></td>
-  <td><?= $e($nv['komu']) ?><div class="mut"><?= $nv['komu_typ'] === 'najemnik' ? 'nájemník ' . $e($nv['nazev']) : 'SVJ' ?></div></td>
-  <td><?= count($pz) ?> <?= count($pz) === 1 ? 'byt' : (count($pz) < 5 ? 'byty' : 'bytů') ?></td>
+  <td><span class="st <?= $jeZj ? 'st-nebyl' : 'st-nova' ?>"><?= $jeZj ? '🔍 Zjištění závady' : '🛠 Oprava' ?></span><div class="mut"><?= $nv['komu_typ'] === 'najemnik' ? 'nájemník ' . $e($nv['nazev']) : 'SVJ' ?> · <?= $e($nv['komu']) ?></div></td>
+  <td><?= count($pz) ?></td>
   <td class="r nowrap"><?= $e(ok_navrh_kc($nv['cena'])) ?></td>
   <td><?php if ($stav === 'schvaleno'): ?><span class="st st-hotovo">✔ Schváleno</span><div class="mut"><?= $e(so_datum(substr((string)$nv['reakce_dne'], 0, 10))) ?></div>
     <?php elseif ($stav === 'zavolat'): ?><span class="st st-nebyl">☎ Chce zavolat</span><div class="mut"><?= $e(trim(($nv['reakce_tel'] ? $nv['reakce_tel'] . ' ' : '') . substr((string)$nv['reakce_dne'], 0, 10))) ?></div>

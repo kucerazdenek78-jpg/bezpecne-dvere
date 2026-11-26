@@ -12,6 +12,7 @@ ok_navrh_tabulka($pdo);
 $t = (string)($_GET['t'] ?? $_POST['t'] ?? '');
 $nv = ok_navrh($pdo, $t);
 $pol = $nv ? (json_decode((string)$nv['polozky'], true) ?: []) : [];
+$jeZj = $nv && ($nv['druh'] ?? 'oprava') === 'zjisteni';   // zjištění závady vs. odsouhlasení opravy
 $volba = ($_POST['volba'] ?? $_GET['a'] ?? '') === 'zavolat' ? 'zavolat' : 'ano';
 $hotovo = false;
 
@@ -23,17 +24,17 @@ if ($nv && $nv['stav'] === 'odeslano' && ($_SERVER['REQUEST_METHOD'] ?? '') === 
   $pdo->prepare('UPDATE ok_navrh SET stav=?, reakce_dne=?, reakce_tel=?, reakce_pozn=? WHERE id=? AND stav=\'odeslano\'')->execute([$stav, $ted, $tel, $pozn, $nv['id']]);
   if ($nv['svj_id']) $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
     ->execute([(int)$nv['svj_id'], date('Y-m-d'), 'nabidka',
-      ($stav === 'schvaleno' ? 'Zákazník SCHVÁLIL návrh oprav' : 'Zákazník žádá o telefonický kontakt k návrhu oprav') . ' (' . $nv['komu'] . ')'
+      ($stav === 'schvaleno' ? ($jeZj ? 'Zákazník SOUHLASÍ se zjištěním závady' : 'Zákazník SCHVÁLIL návrh oprav') : ('Zákazník žádá o telefonický kontakt k ' . ($jeZj ? 'zjištění závady' : 'návrhu oprav'))) . ' (' . $nv['komu'] . ')'
         . ($tel !== '' ? ', tel ' . $tel : '') . ($pozn !== '' ? ' – ' . $pozn : ''), '', $ted, 'web']);
   try {
     require_once __DIR__ . '/lib/posta.php';
     $komu = array_values(array_filter((array)($cfg['prijemci']['poptavka']['to'] ?? []), fn($a) => filter_var($a, FILTER_VALIDATE_EMAIL)));
     if (!$komu && filter_var($cfg['from'] ?? '', FILTER_VALIDATE_EMAIL)) $komu = [$cfg['from']];
     if ($komu) {
-      $predmet = ($stav === 'schvaleno' ? '✔ Schváleno – opravy oken' : '☎ Žádá o telefon – opravy oken') . ' – ' . $nv['nazev'];
-      $telo = ($stav === 'schvaleno' ? 'Zákazník SCHVÁLIL návrh oprav oken.' : 'Zákazník žádá o telefonický kontakt k návrhu oprav oken.')
+      $predmet = ($stav === 'schvaleno' ? ($jeZj ? '✔ Souhlas se zjištěním závady – okna' : '✔ Schváleno – opravy oken') : '☎ Žádá o telefon – okna') . ' – ' . $nv['nazev'];
+      $telo = ($stav === 'schvaleno' ? ($jeZj ? 'Zákazník SOUHLASÍ se zjištěním / zmapováním závady.' : 'Zákazník SCHVÁLIL návrh oprav oken.') : ('Zákazník žádá o telefonický kontakt k ' . ($jeZj ? 'zjištění závady.' : 'návrhu oprav oken.')))
         . "\n\nKomu bylo posláno: " . $nv['komu'] . ($nv['komu_typ'] === 'najemnik' ? ' (nájemník ' . $nv['nazev'] . ')' : ' (SVJ ' . $nv['nazev'] . ')')
-        . "\nPočet oprav: " . count($pol) . ", cena " . ok_navrh_kc($nv['cena'])
+        . "\nPočet bytů: " . count($pol) . ", cena " . ok_navrh_kc($nv['cena'])
         . ($tel !== '' ? "\nTelefon: " . $tel : '') . ($pozn !== '' ? "\nPoznámka: " . $pozn : '')
         . "\n\nOtevřít SVJ v kartotéce: " . rtrim((string)($cfg['kartoteka_url'] ?? 'https://kartoteka.dvere.app'), '/') . '/okna/svj.php?svj=' . (int)$nv['svj_id'] . '#navrhy';
       posli_mail($cfg, $DATA, $komu, [], $cfg['from'], $predmet, $telo);
@@ -61,19 +62,20 @@ input,textarea{font:inherit;padding:9px;border:1px solid #cbd5e1;border-radius:8
 <?php if (!$nv): ?>
 <h1>Odkaz není platný</h1><p>Tento odkaz na schválení oprav už neplatí nebo je chybný. Zkontrolujte prosím adresu v e-mailu, nebo nám zavolejte na +420&nbsp;725&nbsp;559&nbsp;235.</p>
 <?php elseif ($hotovo): ?>
-<div class="ok"><b><?= $nv['stav'] === 'schvaleno' ? '✔ Děkujeme, opravy jsou schválené.' : '☎ Děkujeme, ozveme se Vám.' ?></b><br>
-<?= $nv['stav'] === 'schvaleno' ? 'Opravu provedeme a předem se domluvíme na termínu. Ceny nepřesáhnou uvedenou maximální hranici.' : 'Co nejdříve se Vám ozveme telefonicky.' ?></div>
+<div class="ok"><b><?= $nv['stav'] === 'schvaleno' ? ($jeZj ? '✔ Děkujeme za souhlas se zjištěním závady.' : '✔ Děkujeme, opravy jsou schválené.') : '☎ Děkujeme, ozveme se Vám.' ?></b><br>
+<?= $nv['stav'] === 'schvaleno' ? ($jeZj ? 'Domluvíme se na termínu a závadu zmapujeme. Poté Vám pošleme samostatnou cenu případné opravy ke schválení.' : 'Opravu provedeme a předem se domluvíme na termínu. Ceny nepřesáhnou uvedenou maximální hranici.') : 'Co nejdříve se Vám ozveme telefonicky.' ?></div>
 <?php elseif ($jizPotvrzeno): ?>
-<div class="ok"><b><?= $nv['stav'] === 'schvaleno' ? '✔ Tento návrh už je schválený.' : '☎ U tohoto návrhu už evidujeme Váš požadavek o telefonát.' ?></b><br>Děkujeme. Pokud chcete něco upřesnit, zavolejte nám na +420&nbsp;725&nbsp;559&nbsp;235.</div>
+<div class="ok"><b><?= $nv['stav'] === 'schvaleno' ? ($jeZj ? '✔ Souhlas se zjištěním závady už evidujeme.' : '✔ Tento návrh už je schválený.') : '☎ U tohoto návrhu už evidujeme Váš požadavek o telefonát.' ?></b><br>Děkujeme. Pokud chcete něco upřesnit, zavolejte nám na +420&nbsp;725&nbsp;559&nbsp;235.</div>
 <?php else: ?>
-<h1>Návrh oprav ke schválení</h1>
-<p class="mut">Pro <b><?= $e($nv['nazev']) ?></b>. Prosíme o schválení níže uvedených oprav.</p>
-<?= ok_navrh_html($pol) ?>
-<p class="mut">Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Opravu provedeme až po Vašem schválení a domluvě termínu.</p>
+<h1><?= $jeZj ? 'Souhlas se zjištěním závady' : 'Návrh oprav ke schválení' ?></h1>
+<?php if ($jeZj): ?><p class="mut">Pro <b><?= $e($nv['nazev']) ?></b>. Při servisu jsme zjistili závadu, kterou nelze odstranit běžným seřízením. Abychom zjistili přesnou příčinu, je potřeba okno rozebrat a závadu zmapovat – prosíme o souhlas s tímto úkonem.</p>
+<?php else: ?><p class="mut">Pro <b><?= $e($nv['nazev']) ?></b>. Prosíme o schválení níže uvedených oprav.</p><?php endif; ?>
+<?= ok_navrh_html($pol, $nv['druh'] ?? 'oprava') ?>
+<p class="mut"><?= $jeZj ? 'Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Po zjištění Vám pošleme samostatnou cenu případné opravy – tu provedeme až po Vašem dalším souhlasu.' : 'Uvedené ceny jsou maximální a budou vyčísleny podle skutečných nákladů, hranici nepřesáhnou. Opravu provedeme až po Vašem schválení a domluvě termínu.' ?></p>
 <form method="post" class="box">
 <input type="hidden" name="t" value="<?= $e($t) ?>">
-<p style="margin-top:0"><b>Chcete tyto opravy provést?</b></p>
-<label style="display:block;margin:6px 0"><input type="radio" name="volba" value="ano" <?= $volba !== 'zavolat' ? 'checked' : '' ?> style="width:auto"> Ano, <b>schvaluji</b> provedení oprav</label>
+<p style="margin-top:0"><b><?= $jeZj ? 'Souhlasíte se zjištěním závady?' : 'Chcete tyto opravy provést?' ?></b></p>
+<label style="display:block;margin:6px 0"><input type="radio" name="volba" value="ano" <?= $volba !== 'zavolat' ? 'checked' : '' ?> style="width:auto"> <?= $jeZj ? 'Ano, <b>souhlasím</b> se zjištěním závady' : 'Ano, <b>schvaluji</b> provedení oprav' ?></label>
 <label style="display:block;margin:6px 0"><input type="radio" name="volba" value="zavolat" <?= $volba === 'zavolat' ? 'checked' : '' ?> style="width:auto"> Mám dotaz – <b>zavolejte mi</b></label>
 <p style="margin-bottom:4px">Telefon (nepovinné):<br><input name="tel" inputmode="tel" value=""></p>
 <p style="margin-bottom:4px">Poznámka (nepovinné):<br><textarea name="pozn" rows="2"></textarea></p>
