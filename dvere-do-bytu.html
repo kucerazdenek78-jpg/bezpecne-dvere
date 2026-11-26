@@ -277,7 +277,7 @@
 <!-- AKČNÍ PRUH (načítá se z kartotéky přes formulare.dvere.app/akce.php) -->
 <style>
 #akceBar{display:none;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;justify-content:center;background:linear-gradient(90deg,#f97316,#ea580c);color:#fff;padding:.6rem 1rem;font-weight:700;text-align:center;line-height:1.35}
-#akceBar.on{display:flex;position:fixed;left:0;right:0;z-index:1100;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+#akceBar.on{display:flex;position:fixed;left:0;right:0;z-index:900;box-shadow:0 2px 6px rgba(0,0,0,.15)}  /* pod navbar (1000), ať přesah loga firmy zůstane nad pruhem */
 #akceBar .ab-dni{background:#fff;color:#c2410c;border-radius:999px;padding:.12rem .65rem;font-weight:800;white-space:nowrap}
 #akceBar a{color:#fff;text-decoration:underline;white-space:nowrap}
 </style>
@@ -1137,19 +1137,27 @@
       var nav = document.querySelector('.navbar');
       var nh = nav && getComputedStyle(nav).position === 'fixed' ? Math.round(nav.getBoundingClientRect().height) : 0;
       bar.style.top = nh + 'px';
+      bar.style.paddingLeft = '';   // výchozí (pro přepočet)
       var bh = Math.ceil(bar.getBoundingClientRect().height);
-      document.body.style.paddingTop = bh + 'px';
-      var lst = document.querySelector('.md-logo-st');   // štítek „Moje dveře" posadit NA akční pruh (plave na něm, vlevo, svisle na střed)
+      var lst = document.querySelector('.md-logo-st');   // štítek „Moje dveře" posadit NA akční pruh, vpravo od loga firmy
+      var logo = document.querySelector('.nav-logo');
+      var logoR = logo ? Math.round(logo.getBoundingClientRect().right) : 0;
+      var padL = 0;   // odsazení obsahu pruhu doprava, ať logo/štítek nekryjí text
       if (lst) {
-        if (window.innerWidth < 760) { lst.style.display = 'none'; }   // na mobilu by kryl text pruhu – schovat (na fotce dveří štítek zůstává)
+        if (window.innerWidth < 1000) { lst.style.display = 'none'; padL = logoR; }   // užší okna: štítek schovat (na fotce dveří zůstává), jen odsadit za logo
         else {
           lst.style.display = '';
           if (lst.parentElement !== document.body) document.body.appendChild(lst);   // ven z lišty, ať je nad pruhem (jiný stacking kontext)
           var lh = Math.ceil(lst.getBoundingClientRect().height);
-          lst.style.position = 'fixed'; lst.style.left = '14px'; lst.style.marginTop = '0'; lst.style.zIndex = '1101';
+          lst.style.position = 'fixed'; lst.style.left = (logoR + 14) + 'px'; lst.style.marginTop = '0'; lst.style.zIndex = '1101';
           lst.style.top = (nh + Math.max(0, Math.round((bh - lh) / 2))) + 'px';
+          padL = Math.round(lst.getBoundingClientRect().right);
         }
       }
+      if (padL > 0) bar.style.paddingLeft = (padL + 18) + 'px';   // střed textu se posune za logo/štítek
+      bh = Math.ceil(bar.getBoundingClientRect().height);
+      document.body.style.paddingTop = bh + 'px';
+      if (lst && lst.style.display !== 'none') { var lh2 = Math.ceil(lst.getBoundingClientRect().height); lst.style.top = (nh + Math.max(0, Math.round((bh - lh2) / 2))) + 'px'; }
     };
     umisti(); window.addEventListener('resize', umisti);
     window.addEventListener('load', umisti);
