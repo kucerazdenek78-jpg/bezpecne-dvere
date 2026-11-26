@@ -7,8 +7,25 @@
 require __DIR__ . '/lib/start.php';
 $DATA_DIR = ($DATA ?? '') !== '' ? $DATA : '/data';
 $AKCE_FILE = $DATA_DIR . '/akce.json';
+// modely na webu (dvere-do-bytu.html) a jejich výchozí ceny [název, akční, běžná]; běžná 0 = bez přeškrtnutí
+function akce_modely(): array {
+  return [
+    'premium60'  => ['PREMIUM 60', 38890, 42500],
+    'extreme54'  => ['EXTREME 54', 31890, 32890],
+    'magnum56'   => ['MAGNUM 56', 36990, 0],
+    'securido65' => ['SECURIDO 65', 35890, 37890],
+  ];
+}
 function akce_nacti(string $f): array {
   $d = is_file($f) ? (json_decode((string)@file_get_contents($f), true) ?: []) : [];
+  $cin = is_array($d['ceny'] ?? null) ? $d['ceny'] : [];
+  $ceny = [];
+  foreach (akce_modely() as $k => $mm) {
+    $ceny[$k] = [
+      'akce'  => (int)($cin[$k]['akce']  ?? $mm[1]),
+      'bezna' => (int)($cin[$k]['bezna'] ?? $mm[2]),
+    ];
+  }
   return [
     'aktivni'  => !empty($d['aktivni']),
     'nadpis'   => (string)($d['nadpis'] ?? 'Akční ceny dveří do bytu'),
@@ -17,6 +34,7 @@ function akce_nacti(string $f): array {
     'nudge_aktivni' => !empty($d['nudge_aktivni']),
     'nudge_castka'  => (int)($d['nudge_castka'] ?? 0),
     'nudge_text'    => (string)($d['nudge_text'] ?? ''),
+    'ceny'     => $ceny,
   ];
 }
 function akce_plati(array $a): bool {
@@ -37,6 +55,7 @@ if (isset($_GET['api'])) {
     'nadpis'   => $akce['nadpis'],
     'text'     => $akce['text'],
     'plati_do' => $platne ? $akce['plati_do'] : '',
+    'ceny'     => $akce['ceny'],   // ceny modelů jsou nezávislé na termínu akce (web je tahá vždy)
   ], JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -62,7 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'nudge_aktivni' => !empty($_POST['nudge_aktivni']),
     'nudge_castka'  => max(0, (int)preg_replace('/\D/', '', (string)($_POST['nudge_castka'] ?? '0'))),
     'nudge_text'    => trim((string)($_POST['nudge_text'] ?? '')),
+    'ceny'     => [],
   ];
+  foreach (akce_modely() as $k => $mm) {
+    $nov['ceny'][$k] = [
+      'akce'  => max(0, (int)preg_replace('/\D/', '', (string)($_POST['cena_' . $k . '_akce']  ?? '0'))),
+      'bezna' => max(0, (int)preg_replace('/\D/', '', (string)($_POST['cena_' . $k . '_bezna'] ?? '0'))),
+    ];
+  }
   if (@file_put_contents($AKCE_FILE, json_encode($nov, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) === false) $chyba = 'Nepodařilo se uložit soubor ' . $AKCE_FILE;
   else { $akce = akce_nacti($AKCE_FILE); $ulozeno = true; }
 }
@@ -86,6 +112,14 @@ button{background:#1f5fbf;color:#fff;border:0;border-radius:8px;padding:11px 18p
 .stitek{display:inline-flex;align-items:center;gap:8px;background:#fff4e5;color:#8a4b00;border:1px solid #f0c98a;border-radius:999px;padding:7px 14px;font-weight:700}
 .stitek.off{background:#eef1f5;color:#6b7787;border-color:#dce1e8}
 code{background:#eef1f5;padding:2px 6px;border-radius:5px;font-size:13px;word-break:break-all}
+.cm{margin-top:8px}
+.cm-r{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 10px;align-items:end;padding:10px 0;border-top:1px solid #eef1f5}
+.cm-r:first-of-type{border-top:0}
+.cm-nm{grid-column:1 / -1;font-weight:700;color:#0f2747;margin-bottom:-2px}
+.cm label{margin:0 0 3px;font-size:12px;color:#6b7787;font-weight:600}
+.cm-sl{grid-column:1 / -1;font-size:13px;color:#14653a;min-height:18px}
+.cm-sl.warn{color:#b42318;font-weight:700}
+@media (max-width:560px){.cm-r{grid-template-columns:1fr 1fr}.cm-nm,.cm-sl{grid-column:1 / -1}}
 </style></head><body><?php require_once __DIR__ . '/lib/menu.php'; bd_bar('akce'); ?><main>
   <div class="box">
     <h1>🏷️ Akce a slevy</h1>
@@ -110,8 +144,41 @@ code{background:#eef1f5;padding:2px 6px;border-radius:5px;font-size:13px;word-br
       <label for="nudge_text">Doplňující věta (nepovinné)</label>
       <input type="text" id="nudge_text" name="nudge_text" value="<?= $e($akce['nudge_text']) ?>" placeholder="např. Platí jen pro objednávku do 24 hodin.">
 
+      <hr style="border:0;border-top:1px solid #e3e8ef;margin:20px 0">
+      <h2 style="font-size:17px;margin:0 0 4px">💰 Ceny modelů na webu</h2>
+      <p class="mut">Akční cena a běžná (přeškrtnutá) cena na stránce „Dveře do bytu" – cenové pruhy i srovnávací tabulka, a ceny v nových poptávkách/objednávkách z webu. <b>Běžná = cena bez slevy</b> (ukazuje, kam až můžeš jít). Běžná 0 = bez přeškrtnutí. Už vystavené nabídky se nemění.</p>
+      <div class="cm">
+        <?php foreach (akce_modely() as $k => $mm): $c = $akce['ceny'][$k]; ?>
+        <div class="cm-r" data-model="<?= $e($k) ?>">
+          <div class="cm-nm"><?= $e($mm[0]) ?></div>
+          <div><label for="cena_<?= $e($k) ?>_akce">Akční cena (Kč)</label><input type="text" inputmode="numeric" id="cena_<?= $e($k) ?>_akce" name="cena_<?= $e($k) ?>_akce" class="c-akce" value="<?= $c['akce'] > 0 ? $e($c['akce']) : '' ?>" placeholder="0"></div>
+          <div><label for="cena_<?= $e($k) ?>_bezna">Běžná cena bez slevy (Kč)</label><input type="text" inputmode="numeric" id="cena_<?= $e($k) ?>_bezna" name="cena_<?= $e($k) ?>_bezna" class="c-bezna" value="<?= $c['bezna'] > 0 ? $e($c['bezna']) : '' ?>" placeholder="0 = bez přeškrtnutí"></div>
+          <div class="cm-sl"></div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+
       <button type="submit">Uložit</button>
     </form>
+    <script>
+    (function(){
+      function cislo(s){ return parseInt(String(s).replace(/\D/g,''),10) || 0; }
+      function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+      function prepocti(r){
+        var a = cislo(r.querySelector('.c-akce').value), b = cislo(r.querySelector('.c-bezna').value), sl = r.querySelector('.cm-sl');
+        sl.className = 'cm-sl';
+        if (!a) { sl.textContent = ''; return; }
+        if (!b) { sl.textContent = 'Běžná cena nezadaná – bez přeškrtnutí, sleva se nepočítá.'; return; }
+        if (a >= b) { sl.className = 'cm-sl warn'; sl.textContent = '⚠ Akční cena je vyšší nebo stejná jako běžná (' + fmt(b) + ' Kč) – to by nebyla sleva. Dej akční níž.'; return; }
+        var usetri = b - a, pct = Math.round(usetri / b * 100);
+        sl.textContent = 'Sleva ' + fmt(usetri) + ' Kč (' + pct + ' %) · zákazník ušetří oproti běžné ceně ' + fmt(b) + ' Kč.';
+      }
+      [].forEach.call(document.querySelectorAll('.cm-r'), function(r){
+        [].forEach.call(r.querySelectorAll('input'), function(i){ i.addEventListener('input', function(){ prepocti(r); }); });
+        prepocti(r);
+      });
+    })();
+    </script>
   </div>
   <div class="box">
     <h2 style="margin-top:0;font-size:17px">Náhled štítku</h2>

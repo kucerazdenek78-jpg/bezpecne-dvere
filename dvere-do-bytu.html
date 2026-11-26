@@ -65,14 +65,22 @@
     .specs-hero .sbox.top .sbox-sub { color:#cfe9da; }
     @media (max-width:480px) { .specs-hero .sbox-val { font-size:1.4rem; } .specs-hero .sbox.top .sbox-val { font-size:1.7rem; } }
 
-    /* ── PRICE BAR ── */
+    /* ── PRICE BAR (akční cena – zvýrazněná karta) ── */
     .price-note-bar {
-      background:var(--orange-pale); border-left:4px solid var(--orange);
-      border-radius:var(--radius); padding:1rem 1.2rem;
+      background:linear-gradient(135deg,#ffffff 0%, var(--orange-pale) 140%);
+      border:1px solid #f1c79a; border-left:6px solid var(--orange);
+      border-radius:16px; padding:1.05rem 1.25rem;
+      box-shadow:0 10px 26px rgba(234,88,12,.16);
       color:var(--text); font-size:0.9rem; margin-bottom:1.5rem;
     }
-    .price-note-bar strong { color:var(--orange-text); font-size:1.15rem; }
-    .price-note-bar del { color:var(--text-muted); font-size:0.82rem; }
+    .pnb-top { display:flex; flex-wrap:wrap; align-items:baseline; gap:.35rem .7rem; margin-bottom:.45rem; }
+    .pnb-lbl { font-size:.68rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:#fff; background:var(--orange); border-radius:999px; padding:.22rem .62rem; align-self:center; box-shadow:0 2px 6px rgba(234,88,12,.3); }
+    .pnb-cena { font-size:2rem; font-weight:800; color:var(--head); letter-spacing:-.02em; line-height:1; }
+    .pnb-dph { font-size:.8rem; color:var(--text-muted); }
+    .price-note-bar del { color:var(--text-muted); font-size:.85rem; text-decoration-thickness:1px; }
+    .pnb-usetri { font-size:.8rem; font-weight:800; color:#0f7a3d; background:#e7f7ec; border:1px solid #bce6c9; border-radius:999px; padding:.22rem .62rem; white-space:nowrap; align-self:center; }
+    .pnb-note { display:block; font-size:.8rem; color:var(--text); line-height:1.45; }
+    @media (max-width:480px){ .pnb-cena { font-size:1.65rem; } }
 
     /* ── FEATURE BULLETS ── */
     .feature-bullets {
@@ -294,9 +302,14 @@
         </div>
 
         <div class="price-note-bar">
-          <strong>AKČNÍ CENA 38 890 Kč</strong> vč. 12% DPH &nbsp;|&nbsp;
-          <del>běžná cena 42 500 Kč</del><br>
-          <span style="font-size:0.8rem;">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Žádné další poplatky.</span>
+          <div class="pnb-top">
+            <span class="pnb-lbl">Akční cena</span>
+            <span class="pnb-cena"><span data-cena-akce="premium60">38 890</span> Kč</span>
+            <span class="pnb-dph">vč. 12% DPH</span>
+            <del data-cena-del="premium60">běžná cena <span data-cena-bezna="premium60">42 500</span> Kč</del>
+            <span class="pnb-usetri" data-usetri="premium60" style="display:none"></span>
+          </div>
+          <span class="pnb-note">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Žádné další poplatky.</span>
         </div>
 
         <div class="cert-note">
@@ -468,9 +481,14 @@
     <div class="prod-detail-grid reverse">
       <div>
         <div class="price-note-bar">
-          <strong>AKČNÍ CENA 31 890 Kč</strong> vč. 12% DPH &nbsp;|&nbsp;
-          <del>běžná cena 32 890 Kč</del><br>
-          <span style="font-size:0.8rem;">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Bez příplatku za cihlu a zapuštěnou zárubeň. Žádné další poplatky.</span>
+          <div class="pnb-top">
+            <span class="pnb-lbl">Akční cena</span>
+            <span class="pnb-cena"><span data-cena-akce="extreme54">31 890</span> Kč</span>
+            <span class="pnb-dph">vč. 12% DPH</span>
+            <del data-cena-del="extreme54">běžná cena <span data-cena-bezna="extreme54">32 890</span> Kč</del>
+            <span class="pnb-usetri" data-usetri="extreme54" style="display:none"></span>
+          </div>
+          <span class="pnb-note">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Bez příplatku za cihlu a zapuštěnou zárubeň. Žádné další poplatky.</span>
         </div>
 
         <div class="specs-2col specs-hero">
@@ -581,7 +599,13 @@
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.2rem;">Výrobce HT dveře — fóliovaný povrch, ocelovými tyčemi a dřevěným rámem vyztužená konstrukce</p>
 
           <div class="price-note-bar" style="margin-bottom:1.2rem;">
-            <strong>36 990 Kč</strong> vč. 12% DPH — kompletní montáž na klíč vč. dopravy do 40 km. Případné zednické práce (cihla, zapuštěné pouzdro) se platí zvlášť podle stavu zdi.
+            <div class="pnb-top">
+              <span class="pnb-lbl">Cena</span>
+              <span class="pnb-cena"><span data-cena-akce="magnum56">36 990</span> Kč</span>
+              <span class="pnb-dph">vč. 12% DPH</span>
+              <span class="pnb-usetri" data-usetri="magnum56" style="display:none"></span>
+            </div>
+            <span class="pnb-note">Kompletní montáž na klíč vč. dopravy do 40 km. Případné zednické práce (cihla, zapuštěné pouzdro) se platí zvlášť podle stavu zdi.</span>
           </div>
 
           <table class="tech-table" style="margin-bottom:1.2rem;">
@@ -646,9 +670,14 @@
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.2rem;">Celokovové dveře s ANTIPANIC systémem — odemykání zevnitř bez klíče. Certifikace CERTEST + NBÚ (SK)</p>
 
           <div class="price-note-bar" style="margin-bottom:1.2rem;">
-            <strong>AKČNÍ CENA 35 890 Kč</strong> vč. 12% DPH &nbsp;|&nbsp;
-            <del>37 890 Kč</del><br>
-            <span style="font-size:0.8rem;">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Zednické příplatky: zapuštěná zárubeň 2 000 Kč, cihla do 16 cm 2 000 Kč, cihla 17 cm a více 3 000 Kč (panel 0 Kč). Provedení Kombi +2 000 Kč, šíře 90 cm +1 500 Kč.</span>
+            <div class="pnb-top">
+              <span class="pnb-lbl">Akční cena</span>
+              <span class="pnb-cena"><span data-cena-akce="securido65">35 890</span> Kč</span>
+              <span class="pnb-dph">vč. 12% DPH</span>
+              <del data-cena-del="securido65">běžná cena <span data-cena-bezna="securido65">37 890</span> Kč</del>
+              <span class="pnb-usetri" data-usetri="securido65" style="display:none"></span>
+            </div>
+            <span class="pnb-note">Cena zahrnuje kompletní montáž na klíč vč. dopravy do 40 km. Zednické příplatky: zapuštěná zárubeň 2 000 Kč, cihla do 16 cm 2 000 Kč, cihla 17 cm a více 3 000 Kč (panel 0 Kč). Provedení Kombi +2 000 Kč, šíře 90 cm +1 500 Kč.</span>
           </div>
 
           <table class="tech-table" style="margin-bottom:1.2rem;">
@@ -712,10 +741,10 @@
         <tbody>
           <tr class="highlight">
             <td>Cena s montáží</td>
-            <td class="best">38 890 Kč</td>
-            <td>31 890 Kč</td>
-            <td>36 990 Kč</td>
-            <td>35 890 Kč</td>
+            <td class="best"><span data-cena-akce="premium60">38 890</span> Kč</td>
+            <td><span data-cena-akce="extreme54">31 890</span> Kč</td>
+            <td><span data-cena-akce="magnum56">36 990</span> Kč</td>
+            <td><span data-cena-akce="securido65">35 890</span> Kč</td>
           </tr>
           <tr>
             <td>Základní záruka</td>
@@ -1059,10 +1088,40 @@
 <script>
 /* Akční pruh: termín akce se spravuje v kartotéce (Správa → Akce a slevy) a web si ho načte z veřejného API. */
 (function () {
-  var bar = document.getElementById('akceBar'); if (!bar) return;
+  var bar = document.getElementById('akceBar');
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  var MODS = ['premium60', 'extreme54', 'magnum56', 'securido65'];
+  function naplnUsetri() {
+    MODS.forEach(function (k) {
+      var pill = document.querySelector('[data-usetri="' + k + '"]'); if (!pill) return;
+      var aEl = document.querySelector('[data-cena-akce="' + k + '"]'), bEl = document.querySelector('[data-cena-bezna="' + k + '"]');
+      var a = aEl ? parseInt(aEl.textContent.replace(/\D/g, ''), 10) : 0;
+      var b = bEl ? parseInt((bEl.textContent || '').replace(/\D/g, ''), 10) : 0;
+      if (a && b && b > a) { pill.textContent = 'Ušetříte ' + fmtKc(b - a) + ' Kč'; pill.style.display = ''; }
+      else { pill.style.display = 'none'; }
+    });
+  }
+  function fmtKc(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  naplnUsetri();
+  if (!bar) return;
   fetch('https://formulare.dvere.app/akce.php?api=1').then(function (r) { return r.json(); }).then(function (a) {
-    if (!a || !a.aktivni || !a.plati_do) return;
+    if (!a) return;
+    /* ceny modelů (z editoru Správa → Akce a slevy); když číslo chybí/0, necháme napevno zadanou cenu z HTML */
+    if (a.ceny) {
+      MODS.forEach(function (k) {
+        var c = a.ceny[k]; if (!c) return;
+        if (c.akce > 0) [].forEach.call(document.querySelectorAll('[data-cena-akce="' + k + '"]'), function (el) { el.textContent = fmtKc(c.akce); });
+        var dely = document.querySelectorAll('[data-cena-del="' + k + '"]');
+        if (c.bezna > 0) {
+          [].forEach.call(document.querySelectorAll('[data-cena-bezna="' + k + '"]'), function (el) { el.textContent = fmtKc(c.bezna); });
+        } else {
+          [].forEach.call(dely, function (el) { el.style.display = 'none'; });
+          [].forEach.call(document.querySelectorAll('[data-cena-bezna="' + k + '"]'), function (el) { el.textContent = ''; });
+        }
+      });
+      naplnUsetri();
+    }
+    if (!a.aktivni || !a.plati_do) return;
     var konec = new Date(a.plati_do + 'T23:59:59');
     if (isNaN(konec)) return;
     var dnu = Math.ceil((konec - new Date()) / 86400000);
@@ -1076,10 +1135,14 @@
       var nav = document.querySelector('.navbar');
       var nh = nav && getComputedStyle(nav).position === 'fixed' ? Math.round(nav.getBoundingClientRect().height) : 0;
       bar.style.top = nh + 'px';
-      document.body.style.paddingTop = Math.ceil(bar.getBoundingClientRect().height) + 'px';
+      var bh = Math.ceil(bar.getBoundingClientRect().height);
+      document.body.style.paddingTop = bh + 'px';
+      var lst = document.querySelector('.md-logo-st');   // štítek „Moje dveře" pod logem posunout pod akční pruh, ať ho pruh nepřekrývá
+      if (lst) lst.style.marginTop = (bh + 8) + 'px';
     };
     umisti(); window.addEventListener('resize', umisti);
-  }).catch(function () {});
+    window.addEventListener('load', umisti);
+  }).catch(function () { naplnUsetri(); });
 })();
 </script>
 </body>

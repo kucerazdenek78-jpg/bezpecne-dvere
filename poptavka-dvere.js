@@ -926,4 +926,23 @@
     var od = (location.search.match(/[?&]odstin=([^&]+)/) || [])[1];
     if (od) { od = decodeURIComponent(od); var ro = $$('input[name="odstin"]').filter(function (i) { return i.value === od; })[0]; if (ro) { ro.checked = true; } }
     updateSummary(); }
+
+  /* Ceny z editoru (kartotéka → Správa → Akce a slevy). Použijí se jen při platném čísle z API;
+     když API selže nebo vrátí 0, zůstanou ceny napevno zadané výše – formulář i PDF fungují jako dřív.
+     Mění jen živé MODELS pro NOVĚ rozdělanou poptávku/objednávku; už uložené nabídky nijak neovlivní. */
+  try {
+    fetch('https://formulare.dvere.app/akce.php?api=1').then(function (r) { return r.json(); }).then(function (a) {
+      if (!a || !a.ceny) return;
+      var zmena = false;
+      ORDER.forEach(function (k) {
+        var c = a.ceny[k]; if (!c || !MODELS[k]) return;
+        if (c.akce > 0 && c.akce !== MODELS[k].price) { MODELS[k].price = c.akce; zmena = true; }
+        if (c.bezna > 0) { if (MODELS[k].regular !== c.bezna) { MODELS[k].regular = c.bezna; zmena = true; } }
+        else if (MODELS[k].regular) { MODELS[k].regular = 0; zmena = true; }
+      });
+      if (!zmena) return;
+      if (!state.model) buildModels();   // ještě nikdo nevybral model → překreslit ceny v nabídce
+      else updateSummary();              // model už vybraný → přepočítat souhrn s novou cenou
+    }).catch(function () {});
+  } catch (e) {}
 })();
