@@ -264,6 +264,15 @@
   </div>
 </nav>
 
+<!-- AKČNÍ PRUH (načítá se z kartotéky přes formulare.dvere.app/akce.php) -->
+<style>
+#akceBar{display:none;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;justify-content:center;background:linear-gradient(90deg,#f97316,#ea580c);color:#fff;padding:.6rem 1rem;font-weight:700;text-align:center;line-height:1.35}
+#akceBar.on{display:flex;position:fixed;left:0;right:0;z-index:1100;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+#akceBar .ab-dni{background:#fff;color:#c2410c;border-radius:999px;padding:.12rem .65rem;font-weight:800;white-space:nowrap}
+#akceBar a{color:#fff;text-decoration:underline;white-space:nowrap}
+</style>
+<div id="akceBar"></div>
+
 <!-- PAGE HEADER -->
 <div class="prod-hero" id="premium60">
   <div class="container">
@@ -1047,5 +1056,31 @@
 <script src="moje-dvere-stitek.js?v=20261025c"></script>
 <script>window.BD_POM_KONTEXT='byt';</script>
 <script src="konfigurator-erkado/pomocnik.js?v=20261117p" defer></script>
+<script>
+/* Akční pruh: termín akce se spravuje v kartotéce (Správa → Akce a slevy) a web si ho načte z veřejného API. */
+(function () {
+  var bar = document.getElementById('akceBar'); if (!bar) return;
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  fetch('https://formulare.dvere.app/akce.php?api=1').then(function (r) { return r.json(); }).then(function (a) {
+    if (!a || !a.aktivni || !a.plati_do) return;
+    var konec = new Date(a.plati_do + 'T23:59:59');
+    if (isNaN(konec)) return;
+    var dnu = Math.ceil((konec - new Date()) / 86400000);
+    if (dnu < 0) return;
+    var datum = konec.getDate() + '. ' + (konec.getMonth() + 1) + '. ' + konec.getFullYear();
+    var dniTxt = dnu <= 0 ? 'poslední den!' : (dnu === 1 ? 'už jen 1 den' : 'už jen ' + dnu + ' dní');
+    bar.innerHTML = '⏳ <span>' + (a.nadpis ? esc(a.nadpis) + ' — ' : '') + esc(a.text || 'Akce platí do') + ' <b>' + esc(datum) + '</b></span> <span class="ab-dni">' + esc(dniTxt) + '</span> <a href="poptavka-dvere.html?model=premium60">Chci dveře →</a>';
+    bar.classList.add('on');
+    /* navbar je fixní – pruh posadíme hned pod ni a obsah posuneme o výšku pruhu */
+    var umisti = function () {
+      var nav = document.querySelector('.navbar');
+      var nh = nav && getComputedStyle(nav).position === 'fixed' ? Math.round(nav.getBoundingClientRect().height) : 0;
+      bar.style.top = nh + 'px';
+      document.body.style.paddingTop = Math.ceil(bar.getBoundingClientRect().height) + 'px';
+    };
+    umisti(); window.addEventListener('resize', umisti);
+  }).catch(function () {});
+})();
+</script>
 </body>
 </html>

@@ -19,6 +19,11 @@ $__kotva = "      ['uzivatele.php', ";
 if ($__kod !== '' && strpos($__kod, 'prehledy.php') === false && substr_count($__kod, $__kotva) === 1) {
   $__kod = str_replace($__kotva, "      ['prehledy.php', 'Přehledy prodejů', 'prehledy', '📊'],\n" . $__kotva, $__kod);
 }
+// 26. 11. 2026: do ⚙️ Správa přidat 🏷️ Akce a slevy (jen admin; akce.php)
+$__kotva = "      ['uzivatele.php', ";
+if ($__kod !== '' && strpos($__kod, 'akce.php') === false && substr_count($__kod, $__kotva) === 1) {
+  $__kod = str_replace($__kotva, "      ['akce.php', 'Akce a slevy', 'akce', '🏷️'],\n" . $__kotva, $__kod);
+}
 $__kotva = "  \$pol[] = ['zamereni-nove.php', ";
 if ($__kod !== '' && strpos($__kod, 'servis.php?sken=1') === false && substr_count($__kod, $__kotva) === 1) {
   $__kod = str_replace($__kotva, "  \$pol[] = ['servis.php?sken=1', 'Předání dveří (QR)', 'predani', '📷'];\n" . $__kotva, $__kod);
