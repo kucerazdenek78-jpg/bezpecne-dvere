@@ -13,6 +13,18 @@ function ok_navrh_tabulka(PDO $pdo): void {
     polozky TEXT, cena REAL DEFAULT 0, stav TEXT DEFAULT 'odeslano', odeslal TEXT, odeslano TEXT, reakce_dne TEXT, reakce_tel TEXT, reakce_pozn TEXT)");
   $sl = array_column($pdo->query('PRAGMA table_info(ok_navrh)')->fetchAll(PDO::FETCH_ASSOC), 'name');
   if (!in_array('druh', $sl, true)) $pdo->exec("ALTER TABLE ok_navrh ADD COLUMN druh TEXT DEFAULT 'oprava'");
+  if (!in_array('vyrizeno', $sl, true)) $pdo->exec("ALTER TABLE ok_navrh ADD COLUMN vyrizeno TEXT");   // úkol na úvodu kartotéky vyřízen (kdy + kdo)
+}
+
+// Úkoly pro úvodní box kartotéky (box „📞 Zákazníci čekají na reakci“): objednané zmapování závady
+// a žádosti o telefonát, dokud je někdo neoznačí jako vyřízené. Volá lib/terminy.php (jiná DB, proto samostatně).
+function ok_navrh_ukoly(PDO $pdo): array {
+  ok_navrh_tabulka($pdo);
+  return $pdo->query("SELECT * FROM ok_navrh WHERE (vyrizeno IS NULL OR vyrizeno='')
+    AND ((druh='zmapovani' AND stav='schvaleno') OR stav='zavolat') ORDER BY reakce_dne DESC, id DESC")->fetchAll(PDO::FETCH_ASSOC);
+}
+function ok_navrh_ukol_vyrizeno(PDO $pdo, int $id, string $kdo = ''): void {
+  $pdo->prepare("UPDATE ok_navrh SET vyrizeno=? WHERE id=?")->execute([date('Y-m-d H:i:s') . ($kdo !== '' ? ' ' . $kdo : ''), $id]);
 }
 function ok_navrh_token(): string { return bin2hex(random_bytes(16)); }
 function ok_navrh(PDO $pdo, string $token): ?array {
