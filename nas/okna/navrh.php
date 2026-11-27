@@ -4,8 +4,9 @@
 // Snapshot položky: {jed_id, jmeno, byt, ulice, telefon, zavada, oprava, cena, max(bool), plati}
 
 const OK_NAVRH_STAVY = ['odeslano' => 'Odesláno ke schválení', 'schvaleno' => 'Schváleno', 'zavolat' => 'Žádá o telefon'];
-// druh návrhu: oprava = odsouhlasení opravy; zjisteni = souhlas se zjištěním/zmapováním závady (účtuje se i bez opravy)
-const OK_NAVRH_DRUHY = ['oprava' => 'oprava', 'zjisteni' => 'zjisteni'];
+// druh návrhu: oprava = odsouhlasení opravy; zjisteni = souhlas se zjištěním/zmapováním závady (účtuje se i bez opravy);
+// vyuctovani = vyúčtování provedeného servisu; zmapovani = objednávka zmapování závady (2. tlačítko ve vyúčtování)
+const OK_NAVRH_DRUHY = ['oprava' => 'oprava', 'zjisteni' => 'zjisteni', 'vyuctovani' => 'vyuctovani', 'zmapovani' => 'zmapovani'];
 
 function ok_navrh_tabulka(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS ok_navrh (id INTEGER PRIMARY KEY AUTOINCREMENT, svj_id INTEGER, komu TEXT, komu_typ TEXT DEFAULT 'svj', nazev TEXT, token TEXT UNIQUE,
@@ -61,3 +62,19 @@ function ok_navrh_html(array $pol, string $druh = 'oprava'): string {
   return $h;
 }
 function ok_navrh_celkem(array $pol): float { $s = 0; foreach ($pol as $r) $s += (float)$r['cena']; return $s; }
+
+// Tabulka JEN zjištěných závad (byt/okno + popis závady) – bez návrhu opravy a bez cen.
+// Pro objednávku zmapování: při servisu víme jen, ŽE je závada, rozsah a cenu opravy určíme až po zmapování.
+function ok_zavady_html(array $pol): string {
+  $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+  $td = 'padding:6px 9px;border:1px solid #cbd5e1;font-size:14px;vertical-align:top';
+  $h = '<table style="border-collapse:collapse;width:100%;margin:10px 0"><tr style="background:#eef2f7">'
+    . '<th style="' . $td . ';text-align:left;width:34%">Byt / okno</th><th style="' . $td . ';text-align:left">Zjištěná závada</th></tr>';
+  foreach ($pol as $r) {
+    $kdo = $e($r['jmeno']) . ($r['byt'] !== '' ? '<br><span style="color:#64748b">byt ' . $e($r['byt']) . '</span>' : '')
+      . ($r['ulice'] !== '' ? '<br><span style="color:#64748b">' . $e($r['ulice']) . '</span>' : '');
+    $h .= '<tr><td style="' . $td . '">' . $kdo . '</td><td style="' . $td . '">' . nl2br($e($r['zavada'] !== '' ? $r['zavada'] : '—')) . '</td></tr>';
+  }
+  $h .= '</table>';
+  return $h;
+}

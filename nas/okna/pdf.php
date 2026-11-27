@@ -171,7 +171,8 @@ class OknaPdf {
 }
 
 // Vytvoří PDF se seznamem zjištěných závad. $hlav = ['svj'=>..,'servis'=>..,'smlouva'=>..]; $zavady = [['byt'=>,'zavada'=>,'oprava'=>,'cena'=>], ...]
-function okna_pdf_zavady(string $cesta, array $hlav, array $zavady): bool {
+// $sCenami: true = sloupce Byt | Závada | Návrh opravy | Cena + součet; false = jen Byt | Zjištěná závada (bez cen – rozsah a cenu určíme až po zmapování).
+function okna_pdf_zavady(string $cesta, array $hlav, array $zavady, bool $sCenami = true): bool {
   $p = new OknaPdf();
   $p->novaStranka();
   // hlavička
@@ -187,46 +188,68 @@ function okna_pdf_zavady(string $cesta, array $hlav, array $zavady): bool {
   $p->y += 6;
   // tabulka
   $x0 = $p->ml; $prava = $p->w - $p->mr; $celk = $prava - $x0;
-  $cBy = $x0; $cZa = $x0 + $celk * 0.16; $cOp = $x0 + $celk * 0.52; $cCe = $x0 + $celk * 0.86;
-  $wZa = $cOp - $cZa - 8; $wOp = $cCe - $cOp - 8; $wCe = $prava - $cCe;
-  $hlavicka = function () use ($p, $x0, $cBy, $cZa, $cOp, $cCe, $celk, $prava) {
-    $p->obdelnik($x0, $p->y, $celk, 16, '0.93 0.95 0.97');
-    $yT = $p->y; $p->y += 3.5;
-    $p->text('Byt / vchod', 'bold', 9, $cBy); $p->y -= 9 * 1.35;
-    $p->text('Zjištěná závada', 'bold', 9, $cZa); $p->y -= 9 * 1.35;
-    $p->text('Návrh opravy', 'bold', 9, $cOp); $p->y -= 9 * 1.35;
-    $p->text('Cena s DPH', 'bold', 9, $cCe);
-    $p->y = $yT + 16 + 3;
-    $p->cara($x0, $p->y - 2, $prava, $p->y - 2);
-  };
-  $hlavicka();
-  $celkem = 0; $jenMax = true;
-  foreach ($zavady as $z) {
-    $yStart = $p->y;
-    // odhad výšky řádku
-    $p->y = $yStart;
-    $n1 = $p->odstavec(($z['byt'] ?? ''), 'bold', 9, $cBy, $cZa - $cBy - 6); $y1 = $p->y;
-    $p->y = $yStart;
-    $n2 = $p->odstavec(($z['zavada'] ?? '—'), 'reg', 9, $cZa, $wZa); $y2 = $p->y;
-    $p->y = $yStart;
-    $n3 = $p->odstavec(($z['oprava'] ?? ''), 'reg', 9, $cOp, $wOp); $y3 = $p->y;
-    $p->y = $yStart;
-    $cenaTxt = '';
-    if (($z['cena'] ?? 0) > 0) { $cenaTxt = ($z['max'] ?? false ? 'do ' : '') . number_format((float)$z['cena'], 0, ',', ' ') . ' Kč'; $celkem += (float)$z['cena']; if (empty($z['max'])) $jenMax = false; }
-    $p->odstavec($cenaTxt, 'reg', 9, $cCe, $wCe);
-    $p->y = max($y1, $y2, $y3, $p->y) + 4;
-    $p->cara($x0, $p->y - 2, $prava, $p->y - 2, '0.9 0.92 0.94', 0.4);
-    if ($p->y > $p->h - $p->mb - 40) { $p->novaStranka(); $hlavicka(); }
+  if ($sCenami) {
+    $cBy = $x0; $cZa = $x0 + $celk * 0.16; $cOp = $x0 + $celk * 0.52; $cCe = $x0 + $celk * 0.86;
+    $wZa = $cOp - $cZa - 8; $wOp = $cCe - $cOp - 8; $wCe = $prava - $cCe;
+    $hlavicka = function () use ($p, $x0, $cBy, $cZa, $cOp, $cCe, $celk, $prava) {
+      $p->obdelnik($x0, $p->y, $celk, 16, '0.93 0.95 0.97');
+      $yT = $p->y; $p->y += 3.5;
+      $p->text('Byt / vchod', 'bold', 9, $cBy); $p->y -= 9 * 1.35;
+      $p->text('Zjištěná závada', 'bold', 9, $cZa); $p->y -= 9 * 1.35;
+      $p->text('Návrh opravy', 'bold', 9, $cOp); $p->y -= 9 * 1.35;
+      $p->text('Cena s DPH', 'bold', 9, $cCe);
+      $p->y = $yT + 16 + 3;
+      $p->cara($x0, $p->y - 2, $prava, $p->y - 2);
+    };
+    $hlavicka();
+    $celkem = 0; $jenMax = true;
+    foreach ($zavady as $z) {
+      $yStart = $p->y;
+      $p->y = $yStart; $n1 = $p->odstavec(($z['byt'] ?? ''), 'bold', 9, $cBy, $cZa - $cBy - 6); $y1 = $p->y;
+      $p->y = $yStart; $n2 = $p->odstavec(($z['zavada'] ?? '—'), 'reg', 9, $cZa, $wZa); $y2 = $p->y;
+      $p->y = $yStart; $n3 = $p->odstavec(($z['oprava'] ?? ''), 'reg', 9, $cOp, $wOp); $y3 = $p->y;
+      $p->y = $yStart;
+      $cenaTxt = '';
+      if (($z['cena'] ?? 0) > 0) { $cenaTxt = ($z['max'] ?? false ? 'do ' : '') . number_format((float)$z['cena'], 0, ',', ' ') . ' Kč'; $celkem += (float)$z['cena']; if (empty($z['max'])) $jenMax = false; }
+      $p->odstavec($cenaTxt, 'reg', 9, $cCe, $wCe);
+      $p->y = max($y1, $y2, $y3, $p->y) + 4;
+      $p->cara($x0, $p->y - 2, $prava, $p->y - 2, '0.9 0.92 0.94', 0.4);
+      if ($p->y > $p->h - $p->mb - 40) { $p->novaStranka(); $hlavicka(); }
+    }
+    if ($celkem > 0) {
+      $p->y += 2;
+      $p->obdelnik($x0, $p->y, $celk, 17, '0.93 0.95 0.97');
+      $p->y += 4;
+      $p->text('Celkem k odsouhlasení (orientačně, ceny jsou maximální)', 'bold', 9.5, $cBy); $p->y -= 9.5 * 1.35;
+      $p->text(($jenMax ? 'do ' : '') . number_format($celkem, 0, ',', ' ') . ' Kč', 'bold', 9.5, $cCe);
+      $p->y += 10;
+    }
+    $p->y += 6;
+    $p->odstavec('Toto je přehled závad zjištěných při pravidelném servisu oken. Uvedené ceny jsou maximální a budou vyúčtovány podle skutečného rozsahu prací. Oprava bude provedena až po odsouhlasení.', 'reg', 8.5, $x0, $celk);
+  } else {
+    // jen popis závad – bez návrhu opravy a bez cen (rozsah a cenu určíme až po zmapování)
+    $cBy = $x0; $cZa = $x0 + $celk * 0.34; $wBy = $celk * 0.34 - 8; $wZa = $prava - $cZa;
+    $hlavicka = function () use ($p, $x0, $cBy, $cZa, $celk, $prava) {
+      $p->obdelnik($x0, $p->y, $celk, 16, '0.93 0.95 0.97');
+      $yT = $p->y; $p->y += 3.5;
+      $p->text('Byt / okno', 'bold', 9, $cBy); $p->y -= 9 * 1.35;
+      $p->text('Zjištěná závada', 'bold', 9, $cZa);
+      $p->y = $yT + 16 + 3;
+      $p->cara($x0, $p->y - 2, $prava, $p->y - 2);
+    };
+    $hlavicka();
+    foreach ($zavady as $z) {
+      $yStart = $p->y;
+      $p->y = $yStart; $p->odstavec(($z['byt'] ?? ''), 'bold', 9, $cBy, $wBy); $y1 = $p->y;
+      $p->y = $yStart; $p->odstavec(($z['zavada'] ?? '—'), 'reg', 9, $cZa, $wZa); $y2 = $p->y;
+      $p->y = max($y1, $y2) + 4;
+      $p->cara($x0, $p->y - 2, $prava, $p->y - 2, '0.9 0.92 0.94', 0.4);
+      if ($p->y > $p->h - $p->mb - 40) { $p->novaStranka(); $hlavicka(); }
+    }
+    $p->y += 8;
+    $p->odstavec('Při pravidelném servisu jsme u uvedených oken zjistili závadu, kterou nelze odstranit běžným seřízením. '
+      . 'Rozsah poškození a cenu opravy nelze určit bez rozebrání – zmapování závady. Zmapování je samostatný placený úkon; '
+      . 'po jeho objednání se s Vámi spojíme, závadu zmapujeme a teprve poté zašleme konkrétní návrh opravy s cenou ke schválení.', 'reg', 8.5, $x0, $celk);
   }
-  if ($celkem > 0) {
-    $p->y += 2;
-    $p->obdelnik($x0, $p->y, $celk, 17, '0.93 0.95 0.97');
-    $p->y += 4;
-    $p->text('Celkem k odsouhlasení (orientačně, ceny jsou maximální)', 'bold', 9.5, $cBy); $p->y -= 9.5 * 1.35;
-    $p->text(($jenMax ? 'do ' : '') . number_format($celkem, 0, ',', ' ') . ' Kč', 'bold', 9.5, $cCe);
-    $p->y += 10;
-  }
-  $p->y += 6;
-  $p->odstavec('Toto je přehled závad zjištěných při pravidelném servisu oken. Uvedené ceny jsou maximální a budou vyúčtovány podle skutečného rozsahu prací. Oprava bude provedena až po odsouhlasení.', 'reg', 8.5, $x0, $celk);
   return $p->uloz($cesta);
 }

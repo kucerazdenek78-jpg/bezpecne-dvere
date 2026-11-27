@@ -350,7 +350,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (move_uploaded_file((string)$ps['tmp_name'][$i], $dir . '/' . $novy)) { $prilohy[] = [$dir . '/' . $novy, $zaklad . '.' . $ext]; $prilohyN[] = $label; }
       }
     }
-    // seznam zjištěných závad: PDF příloha + přehled do e-mailu
+    // zjištěné závady (bez cen oprav) + nabídka zmapování: PDF příloha + tabulka do e-mailu
+    $zpol = []; $zavadyTab = '';
+    $cenaZmap = $P('cena_zmapovani', 20); $cenaZmapN = $cenaZmap !== '' ? (float)str_replace([' ', ','], ['', '.'], $cenaZmap) : 0.0;
     if (!empty($_POST['zavady_pdf'])) {
       $zb = $pdo->prepare("SELECT * FROM so_jed WHERE svj_id=? AND stav='nova' ORDER BY ulice, CAST(byt AS INTEGER), byt, jmeno"); $zb->execute([$id]);
       $zpol = array_map('ok_navrh_radek', $zb->fetchAll(PDO::FETCH_ASSOC));
@@ -358,10 +360,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         require_once __DIR__ . '/pdf.php';
         if (!is_dir($dir)) @mkdir($dir, 0775, true);
         $pdfCesta = $dir . '/' . date('Ymd-His') . '_zjistene-zavady.pdf';
-        $zForPdf = array_map(fn($r) => ['byt' => trim($r['jmeno'] . ($r['byt'] !== '' ? ', byt ' . $r['byt'] : '') . ($r['ulice'] !== '' ? ', ' . $r['ulice'] : '')), 'zavada' => $r['zavada'], 'oprava' => $r['oprava'], 'cena' => $r['cena'], 'max' => $r['max']], $zpol);
-        if (okna_pdf_zavady($pdfCesta, ['svj' => (string)$j['nazev'], 'servis' => so_datum($datumS), 'smlouva' => $smText], $zForPdf)) {
+        $zForPdf = array_map(fn($r) => ['byt' => trim($r['jmeno'] . ($r['byt'] !== '' ? ', byt ' . $r['byt'] : '') . ($r['ulice'] !== '' ? ', ' . $r['ulice'] : '')), 'zavada' => $r['zavada']], $zpol);
+        if (okna_pdf_zavady($pdfCesta, ['svj' => (string)$j['nazev'], 'servis' => so_datum($datumS), 'smlouva' => $smText], $zForPdf, false)) {
           $prilohy[] = [$pdfCesta, 'zjistene-zavady.pdf']; $prilohyN[] = 'Seznam zjištěných závad';
-          $zavadyHtml = '<p style="margin:14px 0 4px"><b>Zjištěné závady při servisu:</b></p>' . ok_navrh_html($zpol, 'oprava');
+          $zavadyTab = ok_zavady_html($zpol);
         }
       }
     }
@@ -369,6 +371,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $snap = ['datum' => $datumS, 'smlouva' => $smText, 'kolikaty' => $kolik, 'pocet' => $poc, 'interval' => $interText, 'castka' => $castkaN, 'prilohy' => $prilohyN];
     $pdo->prepare('INSERT INTO ok_navrh (svj_id, komu, komu_typ, druh, nazev, token, polozky, cena, stav, odeslal, odeslano) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
       ->execute([$id, implode(', ', $komu), 'svj', 'vyuctovani', (string)$j['nazev'], $token, json_encode($snap, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $castkaN, 'odeslano', uziv_jmeno(), $ted]);
+    // druhý návrh: objednávka zmapování závady (2. tlačítko v témže e-mailu)
+    $tokenZmap = '';
+    if ($zpol) {
+      $tokenZmap = ok_navrh_token();
+      $snapZ = ['svj' => (string)$j['nazev'], 'servis' => $datumS, 'smlouva' => $smText, 'cena_zmapovani' => $cenaZmapN,
+        'zavady' => array_map(fn($r) => ['jmeno' => $r['jmeno'], 'byt' => $r['byt'], 'ulice' => $r['ulice'], 'zavada' => $r['zavada']], $zpol)];
+      $pdo->prepare('INSERT INTO ok_navrh (svj_id, komu, komu_typ, druh, nazev, token, polozky, cena, stav, odeslal, odeslano) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$id, implode(', ', $komu), 'svj', 'zmapovani', (string)$j['nazev'], $tokenZmap, json_encode($snapZ, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $cenaZmapN, 'odeslano', uziv_jmeno(), $ted]);
+    }
     require_once OK_APP . '/lib/posta.php';
     $url = ok_navrh_url($cfg, $token);
     $radky = ['<b>Provedený servis:</b> ' . so_datum($datumS)];
@@ -376,25 +387,41 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($kolik !== '' || $poc !== '') $radky[] = '<b>Pořadí servisu:</b> ' . htmlspecialchars(trim(($kolik !== '' ? $kolik . '.' : '') . ($poc !== '' ? ' z ' . $poc : '')) . ($interText !== '' ? ' (' . $interText . ')' : ''));
     if ($castkaN > 0) $radky[] = '<b>Celkem k úhradě:</b> ' . ok_navrh_kc($castkaN);
     $dod = trim((string)$P('text', 2000));
-    $tlac = '<div style="margin:22px 0"><a href="' . $url . '&a=ano" style="background:#15803d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">✔ Potvrzuji převzetí</a>'
+    $tlac = '<div style="margin:18px 0 8px"><a href="' . $url . '&a=ano" style="background:#15803d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">✔ Potvrzuji převzetí vyúčtování</a>'
       . '<a href="' . $url . '&a=zavolat" style="background:#f1f5f9;color:#0f2747;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;border:1px solid #cbd5e1">☎ Mám dotaz</a></div>';
+    // blok zjištěných závad + objednávka zmapování (druhé tlačítko)
+    $zmapBlok = '';
+    if ($tokenZmap) {
+      $urlZ = ok_navrh_url($cfg, $tokenZmap);
+      $zmapBlok = '<div style="border-top:2px solid #e3e8ef;margin-top:26px;padding-top:16px">'
+        . '<p style="margin:0 0 4px"><b>Při servisu jsme u některých oken zjistili závadu</b></p>'
+        . $zavadyTab
+        . '<p>Uvedené závady nelze odstranit běžným seřízením. <b>Rozsah poškození ani cenu opravy zatím neznáme</b> – zjistíme je až po rozebrání a zmapování závady. Zmapování je samostatný placený úkon; po jeho objednání se s Vámi spojíme, závadu zmapujeme a teprve poté Vám zašleme konkrétní návrh opravy s cenou ke schválení.</p>'
+        . ($cenaZmapN > 0 ? '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;margin:8px 0"><b>Cena za zmapování závady:</b> ' . ok_navrh_kc($cenaZmapN) . ' (s DPH)</div>' : '')
+        . '<p style="margin:10px 0 0">Chcete-li, abychom závadu zmapovali, potvrďte prosím níže:</p>'
+        . '<div style="margin:14px 0 8px"><a href="' . $urlZ . '&a=ano" style="background:#b45309;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">🔧 Objednávám zmapování závady</a>'
+        . '<a href="' . $urlZ . '&a=zavolat" style="background:#f1f5f9;color:#0f2747;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:bold;display:inline-block;border:1px solid #cbd5e1">☎ Mám dotaz</a></div>'
+        . '<p style="color:#64748b;font-size:13px">Pokud tlačítko nefunguje, otevřete odkaz: <a href="' . $urlZ . '">' . $urlZ . '</a></p></div>';
+    }
     $htmlTelo = '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#0f2747;max-width:640px">'
       . '<p>Dobrý den,</p><p>zasíláme vyúčtování provedeného pravidelného servisu oken dle servisní smlouvy (SoD).</p>'
       . ($dod !== '' ? '<p>' . nl2br(htmlspecialchars($dod)) . '</p>' : '')
       . '<div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px;margin:10px 0">' . implode('<br>', $radky) . '</div>'
-      . $zavadyHtml
       . ($prilohyN ? '<p>V příloze zasíláme: ' . htmlspecialchars(implode(', ', $prilohyN)) . '.</p>' : '')
-      . '<p>Prosíme o potvrzení převzetí vyúčtování níže.</p>' . $tlac
-      . '<p style="color:#64748b;font-size:13px">Pokud tlačítka nefungují, otevřete odkaz: <a href="' . $url . '">' . $url . '</a></p>'
+      . '<p>Prosíme o potvrzení převzetí vyúčtování:</p>' . $tlac
+      . $zmapBlok
       . '<p style="margin-top:18px">Zdeněk Kučera – KK SYSTEM · BEZPEČNÉ DVEŘE CZ<br>+420 725 559 235 · info@kksystem.cz</p></div>';
     $telo = "Dobrý den,\n\nzasíláme vyúčtování provedeného pravidelného servisu oken dle servisní smlouvy (SoD).\n\n"
       . 'Servis: ' . so_datum($datumS) . ($smText !== '' ? "\nSmlouva: " . $smText : '') . ($castkaN > 0 ? "\nCelkem: " . ok_navrh_kc($castkaN) : '')
-      . ($prilohyN ? "\nPřílohy: " . implode(', ', $prilohyN) : '') . "\n\nPotvrďte převzetí na odkazu: " . $url . "\n\nZdeněk Kučera – KK SYSTEM · Bezpečné dveře CZ";
+      . ($prilohyN ? "\nPřílohy: " . implode(', ', $prilohyN) : '') . "\n\nPotvrďte převzetí na odkazu: " . $url
+      . ($tokenZmap ? "\n\nPři servisu jsme zjistili závadu, kterou nelze odstranit seřízením. Pro zjištění rozsahu a ceny opravy je nutné zmapování"
+        . ($cenaZmapN > 0 ? ' (cena ' . ok_navrh_kc($cenaZmapN) . ')' : '') . ". Objednat zmapování můžete zde: " . ok_navrh_url($cfg, $tokenZmap) : '')
+      . "\n\nZdeněk Kučera – KK SYSTEM · Bezpečné dveře CZ";
     $predmet = 'Vyúčtování servisu oken – ' . $j['nazev'];
     $ok = posli_mail($cfg, $DATA, $komu, [], $cfg['from'], $predmet, $telo, $prilohy, $htmlTelo);
     if (!$ok) { $pdo->prepare('DELETE FROM ok_navrh WHERE token=?')->execute([$token]); so_jdi('svj.php?svj=' . $id . '&chyba=mail#historie'); }
     $pdo->prepare('INSERT INTO so_historie (svj_id, datum, druh, popis, dokument, vytvoreno, kdo) VALUES (?,?,?,?,?,?,?)')
-      ->execute([$id, date('Y-m-d'), 'jine', 'Vyúčtování servisu (' . so_datum($datumS) . ') odesláno na ' . implode(', ', $komu) . ($castkaN > 0 ? ' – ' . ok_navrh_kc($castkaN) : '') . ($prilohyN ? ' (' . implode(', ', $prilohyN) . ')' : ''), '', $ted, uziv_jmeno()]);
+      ->execute([$id, date('Y-m-d'), 'jine', 'Vyúčtování servisu (' . so_datum($datumS) . ') odesláno na ' . implode(', ', $komu) . ($castkaN > 0 ? ' – ' . ok_navrh_kc($castkaN) : '') . ($prilohyN ? ' (' . implode(', ', $prilohyN) . ')' : '') . ($tokenZmap ? ' + nabídka zmapování závady' . ($cenaZmapN > 0 ? ' za ' . ok_navrh_kc($cenaZmapN) : '') : ''), '', $ted, uziv_jmeno()]);
     so_jdi('svj.php?svj=' . $id . '&ok=vyuct_poslano#historie');
   }
   http_response_code(400); exit('Neznámá akce');
@@ -661,7 +688,10 @@ elseif ($svjId !== null):
 <div class="ln"><label class="w">Úvodní text (nepovinné)<textarea name="text" rows="2" placeholder="nepovinná poznámka"></textarea></label></div>
 <p style="margin:6px 0 2px"><b>Přílohy:</b></p>
 <?php if (!empty($h['soubor'])): ?><label class="mut" style="flex-direction:row;gap:5px;align-items:center;margin-bottom:4px"><input type="checkbox" name="priloha_zapis" value="1" checked style="width:auto"> přiložit zápis o servisu (<?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?>)</label><?php endif; ?>
-<?php if ($kVyr): ?><label class="mut" style="flex-direction:row;gap:5px;align-items:center;margin-bottom:4px"><input type="checkbox" name="zavady_pdf" value="1" style="width:auto"> přiložit <b>seznam zjištěných závad</b> (<?= count($kVyr) ?>) – jako PDF i do textu e-mailu</label><?php endif; ?>
+<?php if ($kVyr): ?><div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 12px;margin:4px 0">
+<label class="mut" style="flex-direction:row;gap:6px;align-items:flex-start;color:#0f2747"><input type="checkbox" name="zavady_pdf" value="1" style="width:auto;margin-top:3px" onchange="this.closest('div').querySelector('.zmap-cena').style.display=this.checked?'':'none'"> <span>přidat <b>zjištěné závady</b> (<?= count($kVyr) ?>) a nabídnout <b>zmapování</b> – do e-mailu přijde přehled závad (jen popis, bez cen oprav), PDF příloha a tlačítko „Objednávám zmapování“. Reálnou cenu opravy pošlete až po zmapování přes „Oprava ke schválení“.</span></label>
+<div class="zmap-cena" style="display:none;margin-top:8px"><label class="w" style="max-width:280px">Cena za zmapování (Kč s DPH)<input name="cena_zmapovani" inputmode="numeric" placeholder="např. 1 500"></label><div class="mut" style="font-size:12px;margin-top:3px">Složíte si ji z ceníku (zmapování + doprava + příplatky). Prázdné = v e-mailu bez ceny.</div></div>
+</div><?php endif; ?>
 <div class="vyuct-pril">
 <?php for ($i = 0; $i < 2; $i++): ?><div class="ln pril-radek" style="align-items:flex-end">
   <label class="w">Soubor<input type="file" name="pril_soubor[]" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,.xls,.xlsx,.ods,.odt"></label>
