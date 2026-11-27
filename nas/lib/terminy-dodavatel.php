@@ -60,10 +60,35 @@ function dodavatel_box_html0(PDO $pdo, ?int $ted = null): string {
     . '<h3 style="margin:2px 0 6px;font-size:15px;color:#0f2747">📦 Zaplaceno, ještě neobjednáno u dodavatele (' . count($vse) . ')</h3>' . $radky . '</div>';
 }
 
+// Mobilní zobrazení seznamu objednávek jako karet (27. 11. 2026): na úzkých obrazovkách byla tabulka
+// se 7 sloupci nečitelná a zvýraznění nezaplacené zálohy roztahovalo sloupec „Stav" přes ostatní (vypadalo
+// to jako překryv). Tady se ze seznamu (jen top-level tabulka v <main>, ne tabulky v detailu) udělají karty.
+// Řeší se CSS injektovaným do seznamu (kartoteka.php je velký a needituje se přímo).
+function kartoteka_mobil_css(): string {
+  return '<style>@media(max-width:760px){'
+    . 'main>table{display:block;border:0;background:transparent;overflow:visible}'
+    . 'main>table tr{display:flex;flex-direction:column;background:#fff;border:1px solid #e1e6ee;border-radius:10px;margin:0 0 10px;padding:10px 13px}'
+    . 'main>table tr:first-child{display:none}'   /* hlavička */
+    . 'main>table td{display:block;border:0!important;box-shadow:none!important;background:transparent!important;padding:2px 0;text-align:left!important;white-space:normal!important}'
+    . 'main>table td.hide-m{display:none}'
+    /* pořadí v kartě: číslo → stav(+záloha) → zákazník → model → cena → datum → akce */
+    . 'main>table td:nth-child(2){order:1}main>table td:nth-child(8){order:2}main>table td:nth-child(3){order:3}'
+    . 'main>table td:nth-child(5){order:4}main>table td:nth-child(6){order:5}main>table td:nth-child(1){order:6}main>table td:nth-child(9){order:7}'
+    . 'main>table td:nth-child(2) a{font-weight:700;font-size:1.08em}main>table td:nth-child(3) a{font-weight:600}'
+    . 'main>table td.num{font-weight:700;font-size:1.12em;margin-top:2px;text-align:left!important}'
+    . 'main>table td:nth-child(9){margin-top:4px}main>table td:nth-child(9) .btn{margin:2px 4px 0 0}'
+    /* zvýraznění zálohy: obarví se celá karta (rámeček), ne jen roztažený sloupec */
+    . 'main>table tr.pt-ceka{background:#fff7ec;border-color:#e8650a;border-left:5px solid #e8650a}'
+    . 'main>table tr.pt-pozde{background:#fdecec;border-color:#c81e1e;border-left:5px solid #c81e1e}'
+    . 'main>table tr.pt-pozde a{color:#7a0c0c}.pt-info{margin-top:5px}.pt-pod{font-size:12px}'
+    . '}</style>';
+}
+
 // 24. 11. 2026: kartoteka.php volá dodavatel_box_html() nad seznamem; přidává se k němu i zvýraznění objednávek
 // s nezaplacenou zálohou (lib/platba-termin.php). Původní box je beze změny v dodavatel_box_html0().
 function dodavatel_box_html(PDO $pdo, ?int $ted = null): string {
-  $h = dodavatel_box_html0($pdo, $ted);
+  $h = kartoteka_mobil_css();   // mobil: seznam jako karty (vždy, i když žádné boxy nejsou)
+  $h .= dodavatel_box_html0($pdo, $ted);
   try { require_once __DIR__ . '/platba-termin.php'; $h .= platba_termin_seznam_html($pdo, $ted); } catch (Throwable $e) {}
   try { require_once __DIR__ . '/tral-prenos.php'; $h .= tral_seznam_html($pdo); } catch (Throwable $e) {}   // tlačítko „Do TRALu“ u objednávek ERKADO
   return $h;
