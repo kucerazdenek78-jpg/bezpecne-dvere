@@ -330,18 +330,39 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $castka = $P('castka', 20); $castkaN = $castka !== '' ? (float)str_replace([' ', ','], ['', '.'], $castka) : 0.0;
     $datumS = $h ? (string)$h['datum'] : date('Y-m-d');
     // přílohy
-    $prilohy = []; $prilohyN = []; $dir = so_dok_dir($id);
+    $prilohy = []; $prilohyN = []; $zavadyHtml = ''; $dir = so_dok_dir($id);
     if (!empty($_POST['priloha_zapis']) && $h && !empty($h['soubor']) && is_file($dir . '/' . $h['soubor'])) { $prilohy[] = [$dir . '/' . $h['soubor'], preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])]; $prilohyN[] = 'zápis o servisu'; }
-    foreach (['faktura' => 'faktura', 'dalsi' => 'příloha'] as $pole => $oznaceni) {
-      $up = $_FILES[$pole] ?? null;
-      if ($up && ($up['error'] ?? 4) === UPLOAD_ERR_OK && is_uploaded_file($up['tmp_name'])) {
-        $ext = strtolower(pathinfo((string)$up['name'], PATHINFO_EXTENSION));
+    // nahrané přílohy s typem (roletka)
+    $TYP = ['faktura' => 'Faktura', 'predavaci' => 'Předávací protokol', 'navrh' => 'Návrh na opravy', 'zapis' => 'Zápis o servisu', 'foto' => 'Foto', 'jine' => ''];
+    $ps = $_FILES['pril_soubor'] ?? null; $ptyp = (array)($_POST['pril_typ'] ?? []); $pnaz = (array)($_POST['pril_nazev'] ?? []);
+    if ($ps && is_array($ps['name'] ?? null)) {
+      foreach ($ps['name'] as $i => $nm) {
+        if (($ps['error'][$i] ?? 4) !== UPLOAD_ERR_OK || !is_uploaded_file((string)$ps['tmp_name'][$i])) continue;
+        $ext = strtolower(pathinfo((string)$nm, PATHINFO_EXTENSION));
         if (!isset(SO_DOK_MIME[$ext])) so_jdi('svj.php?svj=' . $id . '&chyba=doktyp#historie');
-        if (($up['size'] ?? 0) > 16 * 1048576) so_jdi('svj.php?svj=' . $id . '&chyba=dokvel#historie');
+        if (($ps['size'][$i] ?? 0) > 16 * 1048576) so_jdi('svj.php?svj=' . $id . '&chyba=dokvel#historie');
         if (!is_dir($dir)) @mkdir($dir, 0775, true);
-        $zaklad = mb_substr(trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', pathinfo((string)$up['name'], PATHINFO_FILENAME))), 0, 80) ?: $oznaceni;
-        $novy = date('Ymd-His') . '_' . $zaklad . '.' . $ext;
-        if (move_uploaded_file($up['tmp_name'], $dir . '/' . $novy)) { $prilohy[] = [$dir . '/' . $novy, $zaklad . '.' . $ext]; $prilohyN[] = $pole === 'faktura' ? 'faktura' : $zaklad . '.' . $ext; }
+        $typ = (string)($ptyp[$i] ?? 'jine');
+        $vlastni = mb_substr(trim((string)($pnaz[$i] ?? '')), 0, 80);
+        $label = $TYP[$typ] ?? ''; if ($label === '') $label = $vlastni !== '' ? $vlastni : (pathinfo((string)$nm, PATHINFO_FILENAME) ?: 'příloha');
+        $zaklad = mb_substr(trim(preg_replace('/[\x00-\x1f\/\\\\:*?"<>|]+/u', '_', pathinfo((string)$nm, PATHINFO_FILENAME))), 0, 80) ?: 'priloha';
+        $novy = date('Ymd-His') . '_' . $i . '_' . $zaklad . '.' . $ext;
+        if (move_uploaded_file((string)$ps['tmp_name'][$i], $dir . '/' . $novy)) { $prilohy[] = [$dir . '/' . $novy, $zaklad . '.' . $ext]; $prilohyN[] = $label; }
+      }
+    }
+    // seznam zjištěných závad: PDF příloha + přehled do e-mailu
+    if (!empty($_POST['zavady_pdf'])) {
+      $zb = $pdo->prepare("SELECT * FROM so_jed WHERE svj_id=? AND stav='nova' ORDER BY ulice, CAST(byt AS INTEGER), byt, jmeno"); $zb->execute([$id]);
+      $zpol = array_map('ok_navrh_radek', $zb->fetchAll(PDO::FETCH_ASSOC));
+      if ($zpol) {
+        require_once __DIR__ . '/pdf.php';
+        if (!is_dir($dir)) @mkdir($dir, 0775, true);
+        $pdfCesta = $dir . '/' . date('Ymd-His') . '_zjistene-zavady.pdf';
+        $zForPdf = array_map(fn($r) => ['byt' => trim($r['jmeno'] . ($r['byt'] !== '' ? ', byt ' . $r['byt'] : '') . ($r['ulice'] !== '' ? ', ' . $r['ulice'] : '')), 'zavada' => $r['zavada'], 'oprava' => $r['oprava'], 'cena' => $r['cena'], 'max' => $r['max']], $zpol);
+        if (okna_pdf_zavady($pdfCesta, ['svj' => (string)$j['nazev'], 'servis' => so_datum($datumS), 'smlouva' => $smText], $zForPdf)) {
+          $prilohy[] = [$pdfCesta, 'zjistene-zavady.pdf']; $prilohyN[] = 'Seznam zjištěných závad';
+          $zavadyHtml = '<p style="margin:14px 0 4px"><b>Zjištěné závady při servisu:</b></p>' . ok_navrh_html($zpol, 'oprava');
+        }
       }
     }
     $token = ok_navrh_token();
@@ -361,6 +382,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
       . '<p>Dobrý den,</p><p>zasíláme vyúčtování provedeného pravidelného servisu oken dle servisní smlouvy (SoD).</p>'
       . ($dod !== '' ? '<p>' . nl2br(htmlspecialchars($dod)) . '</p>' : '')
       . '<div style="background:#f8fafc;border:1px solid #e3e8ef;border-radius:8px;padding:12px 14px;margin:10px 0">' . implode('<br>', $radky) . '</div>'
+      . $zavadyHtml
       . ($prilohyN ? '<p>V příloze zasíláme: ' . htmlspecialchars(implode(', ', $prilohyN)) . '.</p>' : '')
       . '<p>Prosíme o potvrzení převzetí vyúčtování níže.</p>' . $tlac
       . '<p style="color:#64748b;font-size:13px">Pokud tlačítka nefungují, otevřete odkaz: <a href="' . $url . '">' . $url . '</a></p>'
@@ -637,10 +659,18 @@ elseif ($svjId !== null):
 <div class="ln"><label>Tento servis je<input name="kolikaty" value="<?= $hss ? (int)$hss['hotovo'] : '' ?>" size="3" inputmode="numeric"></label><label>z počtu<input name="pocet_sml" value="<?= $hss ? (int)$hss['pocet'] : '' ?>" size="3" inputmode="numeric"></label><label class="w">Interval<input name="interval_text" placeholder="doplní se ze smlouvy"></label></div>
 <div class="ln"><label>Částka k úhradě s DPH<input name="castka" placeholder="nepovinné" size="12"></label></div>
 <div class="ln"><label class="w">Úvodní text (nepovinné)<textarea name="text" rows="2" placeholder="nepovinná poznámka"></textarea></label></div>
-<p style="margin:6px 0 2px"><b>Přílohy:</b><?php if (empty($h['soubor'])): ?> <span class="mut">(zápis není nahraný – nahrajte ho výše u „upravit“, nebo přiložte fakturu/další soubor)</span><?php endif; ?></p>
+<p style="margin:6px 0 2px"><b>Přílohy:</b></p>
 <?php if (!empty($h['soubor'])): ?><label class="mut" style="flex-direction:row;gap:5px;align-items:center;margin-bottom:4px"><input type="checkbox" name="priloha_zapis" value="1" checked style="width:auto"> přiložit zápis o servisu (<?= $e(preg_replace('/^\d{8}-\d{6}_/', '', (string)$h['soubor'])) ?>)</label><?php endif; ?>
-<div class="ln"><label class="w">Faktura (PDF)<input type="file" name="faktura" accept=".pdf,.jpg,.jpeg,.png"></label><label class="w">Další příloha<input type="file" name="dalsi" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"></label></div>
-<button class="ok" onclick="return confirm('Poslat SVJ vyúčtování servisu e-mailem?')">✉ Poslat vyúčtování</button>
+<?php if ($kVyr): ?><label class="mut" style="flex-direction:row;gap:5px;align-items:center;margin-bottom:4px"><input type="checkbox" name="zavady_pdf" value="1" style="width:auto"> přiložit <b>seznam zjištěných závad</b> (<?= count($kVyr) ?>) – jako PDF i do textu e-mailu</label><?php endif; ?>
+<div class="vyuct-pril">
+<?php for ($i = 0; $i < 2; $i++): ?><div class="ln pril-radek" style="align-items:flex-end">
+  <label class="w">Soubor<input type="file" name="pril_soubor[]" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,.xls,.xlsx,.ods,.odt"></label>
+  <label>Typ<select name="pril_typ[]" onchange="this.closest('.pril-radek').querySelector('.pril-vlastni').style.display=this.value==='jine'?'':'none'"><option value="faktura">Faktura</option><option value="predavaci">Předávací protokol</option><option value="navrh">Návrh na opravy</option><option value="zapis">Zápis o servisu</option><option value="foto">Foto</option><option value="jine">Jiné…</option></select></label>
+  <label class="w pril-vlastni" style="display:none">Vlastní název<input name="pril_nazev[]" placeholder="název přílohy"></label>
+</div><?php endfor; ?>
+<button type="button" class="sec" onclick="var b=this.closest('.vyuct-pril'),r=b.querySelector('.pril-radek'),c=r.cloneNode(true);c.querySelectorAll('input').forEach(function(i){i.value=''});c.querySelector('select').selectedIndex=0;c.querySelector('.pril-vlastni').style.display='none';b.insertBefore(c,this)">+ další příloha</button>
+</div>
+<button class="ok" style="margin-top:8px" onclick="return confirm('Poslat SVJ vyúčtování servisu e-mailem?')">✉ Poslat vyúčtování</button>
 </form></details><?php endif; ?></td></tr>
 <?php endforeach; ?></table></div><?php endif; ?>
 <details class="noprint"><summary>+ Zapsat provedený servis / dokument</summary><?php $hForm(['id' => 0, 'datum' => date('Y-m-d'), 'druh' => 'servis', 'smlouva_id' => $smlouvy && $smlouvy[0]['aktivni'] ? $smlouvy[0]['id'] : null, 'popis' => '', 'dokument' => (string)($j['slozka'] ?? '') !== '' ? $j['slozka'] . '/' : '']); ?>
