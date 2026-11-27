@@ -1,4 +1,7 @@
 <?php
+// Plná logika hlídání termínů. Fyzicky v data/okna-app/ (app/lib není zapisovatelné instalátorem),
+// includuje ji tenký wrapper app/lib/terminy.php, který předá TERMINY_LIB = app/lib (kvůli sousedním require).
+if (!defined('TERMINY_LIB')) define('TERMINY_LIB', __DIR__);
 // Hlídání termínů (3. 11. 2026):
 //  1) poptávka, na kterou se zákazníkovi slibuje reakce do 48 hodin od přijetí → upozornění na úvodní stránce + e-mail firmě, když zbývá 12 h nebo termín uplynul
 //  2) nabídka poslaná zákazníkovi, která zůstala bez odezvy → e-mail zákazníkovi (po 3 dnech a 2 dny před koncem platnosti nabídky, pole nabidka_do)
@@ -38,7 +41,7 @@ function terminy_montaz_url(PDO $pdo, array $cfg, int $id): string {
 }
 function terminy_jmeno(array $d): string { return trim(((string)($d['jmeno'] ?? '')) . ' ' . ((string)($d['prijmeni'] ?? ''))); }
 function terminy_hist(PDO $pdo, int $id, string $akce, string $popis = ''): void {
-  try { if (!function_exists('hist_pis')) { require_once __DIR__ . '/zamek.php'; } zamek_init($pdo); hist_pis($pdo, $id, $akce, $popis); } catch (Throwable $e) {}
+  try { if (!function_exists('hist_pis')) { require_once TERMINY_LIB . '/zamek.php'; } zamek_init($pdo); hist_pis($pdo, $id, $akce, $popis); } catch (Throwable $e) {}
 }
 
 // otevřené poptávky s termínem reakce; zbývá = sekund do termínu (záporné = po termínu)
@@ -111,7 +114,7 @@ function terminy_dalsi_kdy(array $x): string {
 }
 // pošle připomínku nabídky (kolo 1–3) a zapíše ji ke všem záznamům skupiny; vrací true/false
 function terminy_poslat_nabidku(PDO $pdo, array $cfg, string $DATA, array $x, int $kolo, bool $suchy = false): bool {
-  require_once __DIR__ . '/posta.php';
+  require_once TERMINY_LIB . '/posta.php';
   $url = $suchy ? terminy_base($cfg) . '/hodnoceni.php?t=(zkouška)' : terminy_hodnoceni_url($pdo, $cfg, $x['id']);
   [$predmet, $telo] = $kolo === 1 ? terminy_text_nabidka_1($x, $url) : ($kolo === 2 ? terminy_text_nabidka_2($x, $url) : terminy_text_nabidka_3($x, $url));
   $cc = $cfg['prijemci']['objednavka_zakaznik']['cc'] ?? [];
@@ -138,7 +141,7 @@ function terminy_akce(PDO $pdo): string {
   if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !isset($_POST['term_akce'])) return '';
   $ak = (string)$_POST['term_akce']; $id = (int)($_POST['id'] ?? 0); if ($id <= 0) return '';
   $kdo = function_exists('uziv_jmeno') ? uziv_jmeno() : '';
-  if ($ak === 'okna_hotovo') { if (is_file(__DIR__ . '/okna-ukoly.php')) { require_once __DIR__ . '/okna-ukoly.php'; $m = okna_ukoly_akce($kdo); if ($m !== '') return $m; } return ''; }
+  if ($ak === 'okna_hotovo') { if (is_file(TERMINY_LIB . '/okna-ukoly.php')) { require_once TERMINY_LIB . '/okna-ukoly.php'; $m = okna_ukoly_akce($kdo); if ($m !== '') return $m; } return ''; }
   if ($ak === 'hotovo') { $pdo->prepare('UPDATE zadosti SET nab_reakce_hotovo=? WHERE id=?')->execute([date('Y-m-d H:i:s') . ($kdo !== '' ? " $kdo" : ''), $id]); terminy_hist($pdo, $id, 'reakce zákazníka vyřízena'); return 'Označeno jako vyřízené.'; }
   $sk = null; foreach (terminy_nabidky_skupiny(terminy_nabidky($pdo)) as $g) if (in_array($id, $g['ids'], true)) $sk = $g;
   if (!$sk) return 'Nabídka už není ve stavu Odeslána.';
@@ -158,7 +161,7 @@ function terminy_akce(PDO $pdo): string {
 
 // pruh pod horní lištou na úvodní stránce (jen když je co hlídat)
 function terminy_banner(): void {
-  if (is_file(__DIR__ . '/navaznost.php')) { try { require_once __DIR__ . '/navaznost.php'; vz_box(0); } catch (Throwable $e) {} }   // 5. 11. 2026: dotaz, které poptávky uzavřít (lib/navaznost.php)
+  if (is_file(TERMINY_LIB . '/navaznost.php')) { try { require_once TERMINY_LIB . '/navaznost.php'; vz_box(0); } catch (Throwable $e) {} }   // 5. 11. 2026: dotaz, které poptávky uzavřít (lib/navaznost.php)
   try {
     $pdo = db(); terminy_tabulky($pdo);
     $zprava = terminy_akce($pdo);
@@ -206,7 +209,7 @@ function terminy_banner(): void {
     }
   } catch (Throwable $e) {}
   // úkoly z modulu Servis oken (okna.sqlite): objednané zmapování závady + žádosti o telefonát
-  if (is_file(__DIR__ . '/okna-ukoly.php')) { try { require_once __DIR__ . '/okna-ukoly.php'; foreach (okna_ukoly_html($h, $tl) as $u) $ukoly[] = $u; } catch (Throwable $e) {} }
+  if (is_file(TERMINY_LIB . '/okna-ukoly.php')) { try { require_once TERMINY_LIB . '/okna-ukoly.php'; foreach (okna_ukoly_html($h, $tl) as $u) $ukoly[] = $u; } catch (Throwable $e) {} }
   $hod = [];
   try {
     foreach ($pdo->query("SELECT id, cislo, nab_hodnoceni, nab_hodnoceni_dne, nab_hodnoceni_srozum, nab_hodnoceni_pozn, nab_reakce, nab_reakce_pozn, data_json FROM zadosti WHERE typ='nabidka' AND nab_hodnoceni_dne IS NOT NULL AND nab_hodnoceni_dne<>'' AND nab_hodnoceni_dne >= date('now','-30 days') ORDER BY nab_hodnoceni_dne DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC) as $r) {
